@@ -14,13 +14,11 @@
   #matHint.on{opacity:1;transform:translate(-50%,0)} #matHint em{font-style:normal;color:var(--gold)} #matHint .ok{color:#8fe06a}
   #saveChip{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:61;background:rgba(12,18,40,.88);border:1px solid rgba(143,224,106,.6);color:#bff0a8;border-radius:999px;padding:4px 12px;font-family:var(--pixel);font-size:12px;opacity:0;transition:opacity .4s;pointer-events:none}
   #saveChip.on{opacity:1}
-  #obj{pointer-events:auto;cursor:pointer}
   #mmap{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(56px + env(safe-area-inset-top,0px));width:clamp(92px,24vh,132px);height:clamp(92px,24vh,132px);border-radius:50%;pointer-events:auto;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.45);border:2px solid rgba(244,240,230,.75);background:#0b1016}
-  body.infield #btnMute{top:calc(56px + clamp(92px,24vh,132px) + 10px + env(safe-area-inset-top,0px))}
-  .qtabs{display:flex;gap:6px;margin:4px 0 10px;flex-wrap:wrap}.qtabs button{border:1px solid rgba(244,240,230,.3);background:transparent;border-radius:999px;padding:5px 12px;font-family:var(--pixel);font-size:13px;color:#f4f0e6}.qtabs button.on{background:var(--gold);color:#1a1208;border-color:var(--gold)}
-  .qrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid rgba(244,240,230,.16);border-radius:8px;padding:7px 10px;margin-bottom:6px;font-size:14px}
+  .qtabs{display:flex;gap:6px;margin:4px 0 10px;flex-wrap:wrap;padding-right:48px}.qtabs button{min-height:44px;border:1px solid rgba(244,240,230,.3);background:transparent;border-radius:999px;padding:5px 16px;font-family:var(--pixel);font-size:13px;color:#f4f0e6;cursor:pointer}.qtabs button.on{background:var(--gold);color:#1a1208;border-color:var(--gold)}
+  .qrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--card-line);border-radius:var(--r2);padding:7px 8px 7px 12px;margin-bottom:6px;font-size:14px;line-height:1.45}
   .qrow small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.qrow.tr{border-color:var(--gold);background:rgba(243,193,90,.08)}
-  .qrow button{border:1px solid var(--gold);background:transparent;color:var(--gold);border-radius:999px;padding:5px 12px;font-family:var(--pixel);font-size:12px;min-height:34px}
+  .qrow button{border:1px solid var(--gold);background:transparent;color:var(--gold);border-radius:999px;padding:5px 16px;font-family:var(--pixel);font-size:13px;min-height:44px;min-width:88px;white-space:nowrap;cursor:pointer}.qrow.tr button{background:var(--gold);color:#241a08}
   .story p{line-height:1.8;font-size:14px;margin:0 0 10px}.story h4{margin:10px 0 4px;color:var(--gold);font-family:var(--pixel);font-weight:400}
   .forge .qrow .cmp{font-family:var(--pixel);font-size:13px}.forge .fg-up{color:#8fe06a;display:inline}.forge .fg-ng{color:#e8857a;display:inline}.forge .cmp{display:inline}`;
   document.head.appendChild(css);
@@ -149,4 +147,9 @@
 
   // ---------- 8. わが家の 立て札 ヒント ----------
   let bh = false; H.frame.push(() => { if (bh || G().region !== 0 || !K.baseSite || K.busy) return; if (Math.hypot(K.player.x - K.baseSite.x, K.player.z - K.baseSite.z) < 12) { bh = true; if (!G().baseLv) K.tip('<b>わが家の 建設予定地</b><span>ここに ブロックや 家具を 置くと「わが家」が 育つ。 立て札を しらべると くわしく わかる。</span>', 4200); } });
+  // ---------- 9. しらべるボタン：ラベルを 丸ボタンに おさめる（空白で 2行・長い語は 文字を 縮める） ----------
+  const actL = $('btnActLabel'); let actT = '';
+  if (actL) { const fit = () => { const t = actL.textContent.trim(); if (t === actT) return; actT = t; const w = Math.max(1, ...t.split(/\s+/).map(x => [...x].length));
+      actL.parentElement.style.setProperty('--fit', Math.max(.7, Math.min(1, 4.6 / w)).toFixed(2)); };
+    new MutationObserver(fit).observe(actL, { childList: true, characterData: true, subtree: true }); fit(); }
 })();

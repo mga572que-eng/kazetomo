@@ -22,12 +22,16 @@
   K.applyRatio = applyRatio; addEventListener('resize', applyRatio); if (window.visualViewport) visualViewport.addEventListener('resize', applyRatio); addEventListener('orientationchange', () => setTimeout(applyRatio, 300));
   apply(); applyRatio();
   // ---- 自動画質（3秒ごとに平均FPSを見る） ----
-  let acc = 0, frames = 0, good = 0;
-  K.HOOK.frame.push(dt => {
-    if (O.quality !== 'auto') return; acc += dt; frames++;
+  // ヒステリシス：一度 下げたら このセッションでは 上げない（ユーザーが 画質を えらび直すと 解除）。 計測は フィールド操作中だけ（メニュー・戦闘・会話中や 復帰直後は 捨てる）
+  let acc = 0, frames = 0, good = 0, warm = 0; K.autoQLock = false;
+  const sampling = md => md === 'field' && K.phase === 'field' && !(K.MENUS && K.MENUS.length) && !document.body.classList.contains('inbattle') && !document.hidden;
+  K.HOOK.frame.push((dt, T, r, md) => {
+    if (O.quality !== 'auto') return;
+    if (!sampling(md)) { acc = 0; frames = 0; warm = 0; return; }
+    if ((warm += dt) < 1.5) return; acc += dt; frames++;
     if (acc < 3) return; const fps = frames / acc; acc = 0; frames = 0;
-    if (fps < 36 && World.quality > 0) { autoQ = World.quality - 1; World.setQuality(autoQ); good = 0; K.toast(`画質を 自動で 下げました（${['低', '中', '高'][autoQ]}）`, 1600); }
-    else if (fps > 57 && World.quality < autoMax) { if (++good >= 4) { autoQ = World.quality + 1; World.setQuality(autoQ); good = 0; } } else good = 0;
+    if (fps < 36 && World.quality > 0) { autoQ = World.quality - 1; World.setQuality(autoQ); good = 0; K.autoQLock = true; warm = 0; K.toast(`画質を 自動で 下げました（${['低', '中', '高'][autoQ]}）`, 1600); }
+    else if (!K.autoQLock && fps > 57 && World.quality < autoMax) { if (++good >= 4) { autoQ = World.quality + 1; World.setQuality(autoQ); good = 0; warm = 0; } } else good = 0;
   });
   // ---- UI ----
   function seg(name, key, opts) { return `<div class="opt-row"><span>${name}</span><div class="seg">${opts.map(([v, l]) => `<button type="button" data-k="${key}" data-v="${v}" class="${String(O[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div></div>`; }
@@ -47,7 +51,7 @@
           ${seg('画面の 比率', 'ratio', [['auto', 'じどう（おすすめ）'], ['19.5:9', 'iPhone（ノッチあり）'], ['16:9', 'iPhone SE・16:9'], ['3:2', '3:2'], ['4:3', 'iPad・4:3']])}
           <p class="st-eq">いまの 画質：${['低', '中', '高'][World.quality]}（${O.quality === 'auto' ? 'じどう調整中' : '固定'}）</p>`;
         el.querySelector('.m-x').onclick = () => { Music.sfx('cancel'); K.closeMenu(M, -1); };
-        el.querySelectorAll('.seg button').forEach(b => b.onclick = () => { const k = b.dataset.k; let v = b.dataset.v; v = v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v; O[k] = v; if (k === 'quality') autoQ = null; apply(); if (k === 'ratio') applyRatio(); store(); Music.sfx('cursor'); paint(); });
+        el.querySelectorAll('.seg button').forEach(b => b.onclick = () => { const k = b.dataset.k; let v = b.dataset.v; v = v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v; O[k] = v; if (k === 'quality') { autoQ = null; K.autoQLock = false; } apply(); if (k === 'ratio') applyRatio(); store(); Music.sfx('cursor'); paint(); });
         el.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => { O[r.dataset.k] = +r.value; r.nextElementSibling.textContent = r.value; apply(); store(); });
         el.querySelectorAll('input[type=range]').forEach(r => r.onchange = () => Music.sfx('cursor'));
       };

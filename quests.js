@@ -150,7 +150,7 @@
     return s.text + prog; };
   const giverNpc = Q => K.NPCS.find(n => n.id === Q.giver && n.r === Q.r);
   const giverName = Q => { const n = giverNpc(Q); return n ? (n.nm || (DATA.cast[n.id] || {}).name) : ''; };
-  const avail = Q => !q(Q.id).s && (!Q.req || done(Q.req)) && (!Q.when || Q.when()) && (Q.key == null || (G().order === Q.key && (Q.key > 0 || G().flags.mio)));
+  const avail = Q => !q(Q.id).s && (!Q.req || done(Q.req)) && (!Q.when || Q.when()) && (Q.key == null || (G().order === Q.key && (Q.key > 0 || G().flags.metGen)));
   // 1ステップ 進める（達成なら 次へ。 全部 おわれば 報告待ち）
   function advance(Q) { const st = q(Q.id); st.step = st.step || 0; st.fin = st.fin || [];
     for (let i = 0; i < Math.min(st.step, Q.steps.length); i++) if (!stepOk(Q, st, i)) { st.step = i; break; }

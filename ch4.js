@@ -45,8 +45,8 @@
       if (F().c4done && !F().superDone) cand(R3.trench, 'abyss', R3.trench.x, R3.trench.z, 5); } });
   H.labels.dive = 'あわの鈴を 鳴らす'; H.labels.surface = '泡に のって 地上へ'; H.labels.lh = t => `${LH_NAME[t.o.i]}を しらべる`; H.labels.palace = '深淵の宮の 扉'; H.labels.abyss = '深淵を のぞきこむ';
   H.acts.dive = async () => { if (!(await K.confirm('あわの鈴を 鳴らして 海の底へ もぐる？'))) return; Music.sfx('magic');
-    await K.travel(3, R3.pier.x, R3.pier.z - 4, Math.PI); if (!F().c4arrive) await arrive(); };
-  H.acts.surface = async () => { if (!(await K.confirm('泡に のって 風灯の島へ もどる？'))) return; Music.sfx('magic'); await K.travel(0, cape.x, cape.z, 0); };
+    await K.travel(3, R3.pier.x, R3.pier.z - 4, Math.PI, { kind: 'dive', sub: '— あわの道を ぬけて —' }); if (!F().c4arrive) await arrive(); };
+  H.acts.surface = async () => { if (!(await K.confirm('泡に のって 風灯の島へ もどる？'))) return; Music.sfx('magic'); await K.travel(0, cape.x, cape.z, 0, { kind: 'surface', sub: '— 泡に のって 地上へ —' }); };
 
   async function arrive() {
     await K.say(['——泡の 道を ぬけると、そこは 光の ゆれる 海の底だった。',
@@ -151,5 +151,5 @@
   const tm = document.getElementById('titleMenu');
   if (tm) { const b = document.createElement('button'); b.className = 't-btn'; b.type = 'button'; b.id = 'btnCh4'; b.textContent = '第4章から あそぶ'; const c3 = document.getElementById('btnCh3');
     if (c3 && c3.nextSibling) tm.insertBefore(b, c3.nextSibling); else tm.appendChild(b); b.onclick = () => { Music.sfx('ok'); K.showSlots ? K.showSlots('new', 4) : null; }; }
-  const sub = document.querySelector('.logo-sub'); if (sub) sub.textContent = '第一章 ともしびの継ぎ手 ／ 第二章 星くずの大陸 ／ 第三章 天空の星巣 ／ 第四章 海の底';
+  const sub = document.querySelector('.logo-sub'); if (sub) { let rc = K.DEBUG ? 4 : 1; for (const k of ['kazetomo-rpg-3', 'kazetomo-rpg-3-s2', 'kazetomo-rpg-3-s3']) try { const f = ((JSON.parse(localStorage.getItem(k) || 'null') || {}).G || {}).flags || {}; rc = Math.max(rc, f.c4start ? 4 : f.c3start ? 3 : f.c2start ? 2 : 1); } catch (e) {} sub.textContent = ['第一章 ともしびの継ぎ手', '第二章 星くずの大陸', '第三章 天空の星巣', '第四章 海の底'].slice(0, rc).join(' ／ '); }
 })();

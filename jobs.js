@@ -141,12 +141,12 @@
   .jobp .slist,.jobp .sdet{max-height:calc(var(--app-h,100vh) - 128px)}
   .jrow{grid-template-columns:22px 1fr auto;padding:3px 8px;line-height:1.35}.jrow .ji{font-size:15px;text-align:center;color:var(--gold)}.jrow .xp{margin:1px 0 0;height:4px}.jrow small{display:inline;margin-left:6px}
   .jobp .sdet h4{flex-wrap:wrap}.jobp .sdet h4 .buy{margin-left:auto;padding:4px 14px;font-size:14px}.jobp .sdet h4 .eq,.jobp .sdet h4 .jlock{margin-left:auto;font-size:12px}
-  .jrow .now{font-size:11px;color:#241a08;background:var(--gold);border-radius:4px;padding:0 5px;margin-left:4px}
+  .jrow .now{font-size:12px;color:#241a08;background:var(--gold);border-radius:4px;padding:0 5px;margin-left:4px}
   .jst{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:12px}.jst td{padding:0 6px 0 0;white-space:nowrap}.jst td:first-child{color:var(--muted)}
   .jsk{list-style:none;margin:0;padding:0;display:grid;gap:1px;font-size:12px}.jsk li{display:grid;grid-template-columns:40px 1fr;gap:6px}.jsk .l{color:var(--muted)}.jsk .have{color:#8fe06a}.jsk .nx{color:#ffe9b8}.jsk small{color:var(--muted)}
   .jeff{font-size:12px;color:#ffe9b8}.jlock{font-size:12px;color:#f08a6a}
   .jcols{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
-  @media (max-height:430px){.jobp{padding:6px 10px}.jobp h3{font-size:15px;margin:0}.jobp .tabs{margin:2px 0 4px}.jobp .tab{padding:2px 8px;font-size:12px}.jobp .slist,.jobp .sdet{max-height:calc(var(--app-h,100vh) - 96px)}.jrow{padding:2px 6px}.jobp .sdet h4 .buy{padding:3px 12px;font-size:13px}.jobp .sdet{gap:3px}.jobp .buy{padding:5px 14px;font-size:14px}}
+  @media (max-height:430px){.jobp{padding:6px 10px}.jobp h3{font-size:15px;margin:0}.jobp .tabs{margin:2px 0 4px}.jobp .tab{padding:2px 10px;font-size:12px}.jobp .slist,.jobp .sdet{max-height:calc(var(--app-h,100vh) - 120px)}.jrow{padding:2px 6px}.jobp .sdet h4 .buy{padding:3px 12px;font-size:13px}.jobp .sdet{gap:3px}.jobp .buy{padding:5px 14px;font-size:14px}}
   @media (max-width:520px){.jobp .shop-body{grid-template-columns:1fr}.jcols{grid-template-columns:1fr}}`;
   document.head.appendChild(css);
 

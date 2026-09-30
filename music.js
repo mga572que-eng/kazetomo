@@ -141,30 +141,43 @@ const Music = (() => {
       mel: [{ s: 'G4:.5 C5:.5 E5:.5 G5:.5 C6:2 | B5:.75 A5:.25 G5:1 E5:1 C5:1 | D5:1.5 E5:.5 F5:1 A5:1 | G5:4 | A5:1.5 G5:.5 F5:1 D5:1 | E5:1.5 D5:.5 C5:1 A4:1 | B4:1 C5:1 D5:1 G5:1 | C6:3 R:1',
         parts: [['trumpet', 0, .9], ['violin', 12, .45]] }],
       ch: 'C:4 C:2 G/B:2 Dm:2 F:2 G:4 F:2 Dm:2 C:2 Am:2 G:2 G7:2 C:4' },
-    village: { bpm: 126, bpb: 3, style: 'waltz', loop: true,
-      mel: [{ s: 'C5:1 F5:1 A5:1 | G5:2 F5:1 | E5:1 G5:1 C6:1 | A5:3 | Bb5:1 A5:1 G5:1 | A5:1 F5:1 D5:1 | E5:1 F5:1 G5:1 | C5:3 | C5:1 F5:1 A5:1 | C6:2 A5:1 | Bb5:1 D6:1 Bb5:1 | A5:3 | G5:1 Bb5:1 A5:1 | G5:1 E5:1 C5:1 | D5:1 E5:1 G5:1 | F5:3',
-        parts: [['oboe', 0, .9], ['flute', 12, .35]] }],
-      ch: 'F:3 C:3 C:3 F:3 Bb:3 Dm:3 C:3 C7:3 F:3 F:3 Bb:3 F:3 Gm:3 C:3 C7:3 F:3' },
-    field: { bpm: 104, bpb: 4, style: 'march', loop: true,
-      mel: [{ s: 'D5:1.5 E5:.5 F#5:1 A5:1 | B5:1.5 A5:.5 F#5:1 D5:1 | E5:1.5 F#5:.5 G5:1 B5:1 | A5:3 R:1 | B5:1.5 A5:.5 G5:1 E5:1 | F#5:1.5 E5:.5 D5:1 B4:1 | G5:1 F#5:1 E5:1 D5:1 | E5:3 R:1 | F#5:1.5 G5:.5 A5:1 D6:1 | C#6:1.5 B5:.5 A5:2 | B5:1 G5:1 E5:1 G5:1 | A5:1.5 F#5:.5 D5:2 | G5:1.5 F#5:.5 E5:1 B5:1 | A5:1.5 G5:.5 F#5:1 D5:1 | E5:1 F#5:.5 G5:.5 A5:1 C#5:1 | D5:4',
-        parts: [['violin', 0, 1], ['horn', -12, .45]] }],
-      ch: 'D:4 Bm:4 G:2 Em:2 D:4 G:4 D:2 Bm:2 Em:2 A:2 A:4 D:4 A:4 Em:4 D:4 G:4 D:4 A7:4 D:4' },
-    night: { bpm: 76, bpb: 4, style: 'nocturne', loop: true,
-      mel: [{ s: 'D5:1.5 E5:.5 F#5:1 A5:1 | B5:1.5 A5:.5 F#5:1 D5:1 | E5:1.5 F#5:.5 G5:1 B5:1 | A5:3 R:1 | B5:1.5 A5:.5 G5:1 E5:1 | F#5:1.5 E5:.5 D5:1 B4:1 | G5:1 F#5:1 E5:1 D5:1 | E5:3 R:1 | F#5:1.5 G5:.5 A5:1 D6:1 | C#6:1.5 B5:.5 A5:2 | B5:1 G5:1 E5:1 G5:1 | A5:1.5 F#5:.5 D5:2 | G5:1.5 F#5:.5 E5:1 B5:1 | A5:1.5 G5:.5 F#5:1 D5:1 | E5:1 F#5:.5 G5:.5 A5:1 C#5:1 | D5:4',
-        parts: [['flute', 0, .85]] }],
-      ch: 'D:4 Bm:4 G:2 Em:2 D:4 G:4 D:2 Bm:2 Em:2 A:2 A:4 D:4 A:4 Em:4 D:4 G:4 D:4 A7:4 D:4' },
-    battle: { bpm: 152, bpb: 4, style: 'battle', loop: true,
-      mel: [{ s: 'A5:.5 E5:.5 A5:.5 C6:.5 B5:1 A5:1 | G#5:.5 E5:.5 G#5:.5 B5:.5 A5:2 | F5:.5 A5:.5 D6:.5 C6:.5 B5:.5 A5:.5 G#5:.5 A5:.5 | B5:3 R:1 | C6:.5 B5:.5 A5:.5 G5:.5 F5:1 A5:1 | B5:.5 A5:.5 G5:.5 F5:.5 E5:2 | D5:.5 E5:.5 F5:.5 G5:.5 A5:.5 B5:.5 C6:.5 D6:.5 | E6:3 R:1 | E6:1 D6:.5 C6:.5 B5:1 A5:1 | D6:1 C6:.5 B5:.5 A5:1 G#5:1 | C6:1 B5:.5 A5:.5 G5:1 F5:1 | E5:2 G#5:2 | A5:.5 B5:.5 C6:.5 D6:.5 E6:1 C6:1 | F6:1 E6:.5 D6:.5 C6:1 B5:1 | A5:.5 G#5:.5 A5:.5 B5:.5 C6:.5 B5:.5 A5:.5 G#5:.5 | A5:3 R:1',
-        parts: [['violin', -12, 1], ['trumpet', -12, .5]] }],
-      ch: 'Am:4 E:4 Dm:2 E:2 E:4 F:4 G:2 C:2 Dm:2 G:2 C:2 E:2 Am:4 Dm:2 E:2 F:2 Dm:2 E:4 Am:4 Dm:2 G:2 E7:4 Am:4' },
+    village: { bpm: 126, bpb: 3, style: 'waltz', loop: true, secs: [
+      { mel: [{ s: 'C5:1 F5:1 A5:1 | G5:2 F5:1 | E5:1 G5:1 C6:1 | A5:3 | Bb5:1 A5:1 G5:1 | A5:1 F5:1 D5:1 | E5:1 F5:1 G5:1 | C5:3 | C5:1 F5:1 A5:1 | C6:2 A5:1 | Bb5:1 D6:1 Bb5:1 | A5:3 | G5:1 Bb5:1 A5:1 | G5:1 E5:1 C5:1 | D5:1 E5:1 G5:1 | F5:3', parts: [['oboe', 0, .9], ['flute', 12, .35]] }], ch: 'F:3 C:3 C:3 F:3 Bb:3 Dm:3 C:3 C7:3 F:3 F:3 Bb:3 F:3 Gm:3 C:3 C7:3 F:3' },
+      // B：ニ短調へ ひとやすみ（バイオリンが うたう）
+      { mel: [{ s: 'A5:2 D6:1 | D6:1 C6:1 Bb5:1 | G5:2 Bb5:1 | A5:3 | F5:1 A5:1 D6:1 | E6:2 C6:1 | D6:1 Bb5:1 G5:1 | C6:3 | C6:1 A5:1 F5:1 | F5:1 G5:1 Bb5:1 | D6:2 C6:1 | Bb5:1 A5:1 G5:1 | A5:1 C6:1 F6:1 | E6:1 D6:1 A5:1 | Bb5:1 G5:1 E5:1 | F5:3',
+        parts: [['violin', -12, .75], ['harp', 0, .3]] }], ch: 'Dm:3 Bb:3 Gm:3 A:3 Dm:3 C:3 Bb:3 C:3 F:3 Bb:3 Gm:3 C:3 F:3 Dm:3 C7:3 F:3' },
+      // A'：フルートと グロッケンで 明るく くりかえし
+      { mel: [{ s: 'C5:1 F5:1 A5:1 | G5:2 F5:1 | E5:1 G5:1 C6:1 | A5:3 | Bb5:1 A5:1 G5:1 | A5:1 F5:1 D5:1 | E5:1 F5:1 G5:1 | C5:3 | C5:1 F5:1 A5:1 | C6:2 A5:1 | Bb5:1 D6:1 Bb5:1 | A5:3 | G5:1 Bb5:1 A5:1 | G5:1 E5:1 C5:1 | D5:1 E5:1 G5:1 | F5:3', parts: [['flute', 0, .8], ['glock', 12, .22], ['pizz', -12, .35]] }], ch: 'F:3 C:3 C:3 F:3 Bb:3 Dm:3 C:3 C7:3 F:3 F:3 Bb:3 F:3 Gm:3 C:3 C7:3 F:3' }] },
+    field: { bpm: 104, bpb: 4, style: 'march', loop: true, secs: [
+      { mel: [{ s: 'D5:1.5 E5:.5 F#5:1 A5:1 | B5:1.5 A5:.5 F#5:1 D5:1 | E5:1.5 F#5:.5 G5:1 B5:1 | A5:3 R:1 | B5:1.5 A5:.5 G5:1 E5:1 | F#5:1.5 E5:.5 D5:1 B4:1 | G5:1 F#5:1 E5:1 D5:1 | E5:3 R:1 | F#5:1.5 G5:.5 A5:1 D6:1 | C#6:1.5 B5:.5 A5:2 | B5:1 G5:1 E5:1 G5:1 | A5:1.5 F#5:.5 D5:2 | G5:1.5 F#5:.5 E5:1 B5:1 | A5:1.5 G5:.5 F#5:1 D5:1 | E5:1 F#5:.5 G5:.5 A5:1 C#5:1 | D5:4', parts: [['violin', 0, 1], ['horn', -12, .45]] }], ch: 'D:4 Bm:4 G:2 Em:2 D:4 G:4 D:2 Bm:2 Em:2 A:2 A:4 D:4 A:4 Em:4 D:4 G:4 D:4 A7:4 D:4' },
+      // B：ロ短調の 広い 野原（フルートと 讃歌風の 伴奏）
+      { style: 'hymn', mel: [{ s: 'F#5:2 E5:1 D5:1 | B4:1.5 D5:.5 G5:2 | G5:1 F#5:1 E5:1 B4:1 | C#5:3 R:1 | D5:1 F#5:1 B5:1.5 A5:.5 | G5:1 F#5:1 E5:2 | E5:1 F#5:1 G5:1 A5:1 | F#5:3 R:1 | B5:2 A5:1 G5:1 | A5:2 F#5:1 D5:1 | E5:1 G5:1 B5:1 D6:1 | C#6:3 R:1 | D6:1.5 C#6:.5 B5:1 F#5:1 | G5:1.5 A5:.5 B5:1 G5:1 | E5:1 G5:1 A5:1 C#5:1 | D5:2 A4:1 D5:1',
+        parts: [['flute', 0, .85], ['oboe', -12, .3]] }], ch: 'Bm:4 G:4 Em:4 F#:4 Bm:4 G:4 A:4 D:4 G:4 D/F#:4 Em:4 A:4 Bm:4 G:4 Em:2 A7:2 D:4' },
+      // A'：トランペットで 主題を もう一度
+      { mel: [{ s: 'D5:1.5 E5:.5 F#5:1 A5:1 | B5:1.5 A5:.5 F#5:1 D5:1 | E5:1.5 F#5:.5 G5:1 B5:1 | A5:3 R:1 | B5:1.5 A5:.5 G5:1 E5:1 | F#5:1.5 E5:.5 D5:1 B4:1 | G5:1 F#5:1 E5:1 D5:1 | E5:3 R:1 | F#5:1.5 G5:.5 A5:1 D6:1 | C#6:1.5 B5:.5 A5:2 | B5:1 G5:1 E5:1 G5:1 | A5:1.5 F#5:.5 D5:2 | G5:1.5 F#5:.5 E5:1 B5:1 | A5:1.5 G5:.5 F#5:1 D5:1 | E5:1 F#5:.5 G5:.5 A5:1 C#5:1 | D5:4', parts: [['trumpet', 0, .7], ['violin', 12, .3], ['glock', 12, .12]] }], ch: 'D:4 Bm:4 G:2 Em:2 D:4 G:4 D:2 Bm:2 Em:2 A:2 A:4 D:4 A:4 Em:4 D:4 G:4 D:4 A7:4 D:4' }] },
+    // 夜：オリジナル（ホ短調の ノクターン → ト長調の 星空 → くりかえし）
+    night: { bpm: 76, bpb: 4, style: 'nocturne', loop: true, secs: [
+      { mel: [{ s: 'B4:1 E5:1 G5:1.5 F#5:.5 | E5:2 B4:2 | C5:1 E5:1 A5:1.5 G5:.5 | F#5:3 D#5:1 | E5:1 G5:1 B5:1.5 A5:.5 | G5:1 E5:1 C6:2 | B5:1 A5:1 F#5:1 D#5:1 | E5:4', parts: [['flute', 0, .8], ['strings', -12, .22]] }], ch: 'Em:4 Cmaj7:4 Am7:4 B7:4 Em:4 Cmaj7:4 Am:2 B7:2 Em:4' },
+      { mel: [{ s: 'D5:1 G5:1 B5:1 D6:1 | C#6:1.5 A5:.5 F#5:2 | G5:1 B5:1 E6:1.5 D6:.5 | C6:3 R:1 | A5:1 C6:1 E6:1 D6:1 | D6:1.5 C6:.5 A5:1 F#5:1 | G5:1 A5:1 B5:1 D6:1 | B5:4',
+        parts: [['violin', -12, .6], ['glock', 12, .14]] }], ch: 'G:4 D/F#:4 Em:4 C:4 Am7:4 D:4 C:2 D:2 G:4' },
+      { mel: [{ s: 'B4:1 E5:1 G5:1.5 F#5:.5 | E5:2 B4:2 | C5:1 E5:1 A5:1.5 G5:.5 | F#5:3 D#5:1 | E5:1 G5:1 B5:1.5 A5:.5 | G5:1 E5:1 C6:2 | B5:1 A5:1 F#5:1 D#5:1 | E5:4', parts: [['oboe', 0, .7], ['flute', 12, .2]] }], ch: 'Em:4 Cmaj7:4 Am7:4 B7:4 Em:4 Cmaj7:4 Am:2 B7:2 Em:4' }] },
+    battle: { bpm: 152, bpb: 4, style: 'battle', loop: true, secs: [
+      { mel: [{ s: 'A5:.5 E5:.5 A5:.5 C6:.5 B5:1 A5:1 | G#5:.5 E5:.5 G#5:.5 B5:.5 A5:2 | F5:.5 A5:.5 D6:.5 C6:.5 B5:.5 A5:.5 G#5:.5 A5:.5 | B5:3 R:1 | C6:.5 B5:.5 A5:.5 G5:.5 F5:1 A5:1 | B5:.5 A5:.5 G5:.5 F5:.5 E5:2 | D5:.5 E5:.5 F5:.5 G5:.5 A5:.5 B5:.5 C6:.5 D6:.5 | E6:3 R:1 | E6:1 D6:.5 C6:.5 B5:1 A5:1 | D6:1 C6:.5 B5:.5 A5:1 G#5:1 | C6:1 B5:.5 A5:.5 G5:1 F5:1 | E5:2 G#5:2 | A5:.5 B5:.5 C6:.5 D6:.5 E6:1 C6:1 | F6:1 E6:.5 D6:.5 C6:1 B5:1 | A5:.5 G#5:.5 A5:.5 B5:.5 C6:.5 B5:.5 A5:.5 G#5:.5 | A5:3 R:1', parts: [['violin', -12, 1], ['trumpet', -12, .5]] }], ch: 'Am:4 E:4 Dm:2 E:2 E:4 F:4 G:2 C:2 Dm:2 G:2 C:2 E:2 Am:4 Dm:2 E:2 F:2 Dm:2 E:4 Am:4 Dm:2 G:2 E7:4 Am:4' },
+      // B：ヘ長調へ ぬける 反撃の 主題（トランペット）
+      { mel: [{ s: 'A5:1 C6:1 F6:1.5 E6:.5 | D6:1 B5:1 G5:2 | E6:.5 D6:.5 B5:.5 G5:.5 E5:1 G5:1 | A5:3 R:1 | F5:.5 G5:.5 A5:.5 C6:.5 F6:1 E6:1 | D6:.5 C6:.5 B5:.5 A5:.5 G5:2 | G#5:1 B5:1 E6:1 D6:1 | B5:3 R:1 | D6:1 F6:1 E6:.5 D6:.5 C6:1 | B5:1 D6:1 G5:2 | C6:1 E6:1 D6:.5 C6:.5 B5:1 | A5:2 E5:2 | F5:.5 A5:.5 C6:.5 F6:.5 E6:1 C6:1 | D6:.5 B5:.5 G5:.5 B5:.5 D6:1 G6:1 | E6:1 D6:.5 C6:.5 B5:1 G#5:1 | E5:.5 F5:.5 G#5:.5 A5:.5 B5:.5 C6:.5 D6:.5 E6:.5',
+        parts: [['trumpet', -12, .9], ['violin', 0, .35]] }], ch: 'F:4 G:4 Em:4 Am:4 F:4 G:4 E:4 E7:4 Dm:4 G:4 C:4 Am:4 F:4 G:4 E:4 E7:4' },
+      // A'：オクターブ上の バイオリン＋金管で もりあげる
+      { mel: [{ s: 'A5:.5 E5:.5 A5:.5 C6:.5 B5:1 A5:1 | G#5:.5 E5:.5 G#5:.5 B5:.5 A5:2 | F5:.5 A5:.5 D6:.5 C6:.5 B5:.5 A5:.5 G#5:.5 A5:.5 | B5:3 R:1 | C6:.5 B5:.5 A5:.5 G5:.5 F5:1 A5:1 | B5:.5 A5:.5 G5:.5 F5:.5 E5:2 | D5:.5 E5:.5 F5:.5 G5:.5 A5:.5 B5:.5 C6:.5 D6:.5 | E6:3 R:1 | E6:1 D6:.5 C6:.5 B5:1 A5:1 | D6:1 C6:.5 B5:.5 A5:1 G#5:1 | C6:1 B5:.5 A5:.5 G5:1 F5:1 | E5:2 G#5:2 | A5:.5 B5:.5 C6:.5 D6:.5 E6:1 C6:1 | F6:1 E6:.5 D6:.5 C6:1 B5:1 | A5:.5 G#5:.5 A5:.5 B5:.5 C6:.5 B5:.5 A5:.5 G#5:.5 | A5:3 R:1', parts: [['violin', 0, .75], ['brass', -12, .5], ['glock', 12, .1]] }], ch: 'Am:4 E:4 Dm:2 E:2 E:4 F:4 G:2 C:2 Dm:2 G:2 C:2 E:2 Am:4 Dm:2 E:2 F:2 Dm:2 E:4 Am:4 Dm:2 G:2 E7:4 Am:4' }] },
     boss: { bpm: 132, bpb: 4, style: 'boss', loop: true,
       mel: [{ s: 'D5:1 D5:.5 E5:.5 F5:1 A5:1 | G#5:2 A5:2 | Bb5:1 A5:.5 G5:.5 F5:1 E5:1 | D5:1 C#5:1 D5:2 | F5:1 F5:.5 G5:.5 A5:1 D6:1 | C#6:2 A5:2 | Bb5:.5 C6:.5 Bb5:.5 A5:.5 G5:.5 F5:.5 E5:.5 G5:.5 | A5:4 | D6:1.5 C6:.5 Bb5:1 A5:1 | G5:1.5 F5:.5 E5:1 C#5:1 | D5:1 F5:1 A5:1 D6:1 | E6:2 C#6:2 | F6:1.5 E6:.5 D6:1 A5:1 | Bb5:1.5 A5:.5 G5:1 E5:1 | F5:1 E5:1 D5:1 C#5:1 | D5:4',
         parts: [['brass', -12, .9], ['violin', 0, .55]] }],
       ch: 'Dm:4 E:2 A:2 Gm:4 A:2 Dm:2 Dm:4 A:4 Gm:2 C:2 F:2 A:2 Bb:4 Gm:2 A:2 Dm:4 A:4 Dm:4 Gm:2 A:2 Bb:2 A:2 Dm:4' },
-    ending: { bpm: 72, bpb: 4, style: 'hymn', loop: true,
-      mel: [{ s: 'G4:.5 C5:.5 E5:.5 G5:.5 C6:2 | B5:.75 A5:.25 G5:1 E5:1 C5:1 | D5:1.5 E5:.5 F5:1 A5:1 | G5:4 | A5:1.5 G5:.5 F5:1 D5:1 | E5:1.5 D5:.5 C5:1 A4:1 | B4:1 C5:1 D5:1 G5:1 | C6:3 R:1',
-        parts: [['violin', 0, .8], ['flute', 12, .3]] }],
-      ch: 'C:4 C:2 G/B:2 Dm:2 F:2 G:4 F:2 Dm:2 C:2 Am:2 G:2 G7:2 C:4' },
+    // エンディング：オリジナル（ヘ長調の 讃歌 → ニ短調で ふりかえり → 金管で 大きく 帰結）
+    ending: { bpm: 72, bpb: 4, style: 'hymn', loop: true, secs: [
+      { mel: [{ s: 'C5:1 F5:1 A5:1.5 G5:.5 | G5:2 E5:1 C5:1 | D5:1 F5:1 A5:1 D6:1 | C6:2 Bb5:1 A5:1 | A5:1.5 Bb5:.5 C6:1 F5:1 | G5:1 A5:1 Bb5:1 D6:1 | C6:1 Bb5:1 A5:1 G5:1 | F5:4', parts: [['violin', 0, .75], ['flute', 12, .22]] }], ch: 'F:4 C/E:4 Dm:4 Bb:4 F/A:4 Gm:4 C:2 C7:2 F:4' },
+      { style: 'nocturne', mel: [{ s: 'A5:1 D6:1 C6:1 A5:1 | Bb5:1.5 A5:.5 G5:1 F5:1 | G5:1 Bb5:1 D6:1.5 C6:.5 | C#6:3 R:1 | D6:1 F6:1 E6:1 D6:1 | D6:1.5 C6:.5 Bb5:2 | Bb5:1 A5:1 G5:1 E5:1 | C6:2 E5:1 G5:1',
+        parts: [['oboe', 0, .7], ['strings', -12, .3]] }], ch: 'Dm:4 Bb:4 Gm:4 A:4 Dm:4 Bb:4 Gm:2 C7:2 C:4' },
+      { style: 'fanfare', mel: [{ s: 'C5:1 F5:1 A5:1.5 G5:.5 | G5:2 E5:1 C5:1 | D5:1 F5:1 A5:1 D6:1 | C6:2 Bb5:1 A5:1 | A5:1.5 Bb5:.5 C6:1 F5:1 | G5:1 A5:1 Bb5:1 D6:1 | C6:1 Bb5:1 A5:1 G5:1 | F5:4', parts: [['violin', 12, .55], ['horn', 0, .5], ['trumpet', 0, .3]] }], ch: 'F:4 C/E:4 Dm:4 Bb:4 F/A:4 Gm:4 C:2 C7:2 F:4' }] },
     dungeon: { bpm: 84, bpb: 4, style: 'nocturne', loop: true,
       mel: [{ s: 'E5:1 G5:1 B5:2 | A5:1 G5:1 F#5:2 | G5:1 E5:1 C5:2 | D#5:4 | E5:1 G5:1 B5:2 | C6:1 B5:1 A5:2 | G5:1 F#5:1 D#5:1 F#5:1 | E5:4',
         parts: [['oboe', 0, .8], ['strings', -12, .35]] }],
@@ -210,15 +223,28 @@ const Music = (() => {
       mel: [{ s: 'D5:.5 F#5:.5 A5:.5 D6:1.5 C#6:.5 D6:4 R:.5', parts: [['horn', 0, 1], ['violin', 12, .5], ['harp', 12, .6]] }], ch: 'D:4 A:2 D:2' },
     inn: { bpm: 84, bpb: 4, style: 'hymn', loop: false,
       mel: [{ s: 'F5:1 A5:1 C6:1 F6:3', parts: [['flute', 0, .8], ['harp', 0, .6]] }], ch: 'F:3 F:3' },
+    chapter: { bpm: 100, bpb: 4, style: 'fanfare', loop: false,
+      mel: [{ s: 'F4:.5 C5:.5 F5:.5 A5:1.5 G5:.5 A5:.5 C6:3', parts: [['horn', 0, .9], ['violin', 12, .45], ['harp', 12, .5]] }], ch: 'F:2 C:2 F:3' },
+    voyage: { bpm: 110, bpb: 4, style: 'hymn', loop: false,
+      mel: [{ s: 'D5:.5 F#5:.5 A5:1 B5:.5 A5:.5 F#5:1 G5:.5 B5:.5 D6:3', parts: [['oboe', 0, .85], ['flute', 12, .3]] }], ch: 'D:2 G:2 D:4' },
+    skyflight: { bpm: 104, bpb: 4, style: 'fanfare', loop: false,
+      mel: [{ s: 'Bb4:.5 Eb5:.5 G5:.5 Bb5:.5 Eb6:2 D6:1 Bb5:1 Eb6:2', parts: [['flute', 0, .8], ['violin', 0, .45], ['glock', 12, .2]] }], ch: 'Eb:2 Ab:2 Bb:2 Eb:2' },
+    dive: { bpm: 96, bpb: 4, style: 'nocturne', loop: false,
+      mel: [{ s: 'A5:1 F5:1 D5:1 A4:1 Bb4:1 D5:1 F5:2', parts: [['flute', 0, .8], ['glock', 12, .15]] }], ch: 'Dm:4 Bb:2 F:2' },
     gameover: { bpm: 60, bpb: 4, style: 'hymn', loop: false,
       mel: [{ s: 'A4:1 G#4:1 A4:1 E4:3', parts: [['oboe', 0, .8]] }], ch: 'Am:3 E:1 Am:2' },
   };
 
+  // def.secs があれば A→B→A' の ように 区間を つなげる（各区間で 伴奏スタイルを かえられる）
   function compile(def) {
-    const chs = parseChords(def.ch); const E = accomp(chs.ch, def.style, def.bpb); let len = chs.len;
-    for (const m of def.mel) { const p = parseMel(m.s); len = Math.max(len, p.len);
-      for (const e of p.ev) for (const [inst, sh, v] of m.parts) E.push({ t: e.t, inst, n: e.n.map(x => x + sh), d: e.d * .95, v }); }
-    E.sort((a, b) => a.t - b.t); return { E, len, bpm: def.bpm, loop: def.loop };
+    const E = []; let off = 0;
+    for (const sec of def.secs || [def]) {
+      const chs = parseChords(sec.ch); let len = chs.len;
+      for (const e of accomp(chs.ch, sec.style || def.style, def.bpb)) { e.t += off; E.push(e); }
+      for (const m of sec.mel) { const p = parseMel(m.s); len = Math.max(len, p.len);
+        for (const e of p.ev) for (const [inst, sh, v] of m.parts) E.push({ t: e.t + off, inst, n: e.n.map(x => x + sh), d: e.d * .95, v }); }
+      off += len; }
+    E.sort((a, b) => a.t - b.t); return { E, len: off, bpm: def.bpm, loop: def.loop };
   }
   const compiled = {};
 
@@ -246,11 +272,24 @@ const Music = (() => {
     if (cur) { const old = cur.bus; old.gain.cancelScheduledValues(now); old.gain.setValueAtTime(old.gain.value, now); old.gain.linearRampToValueAtTime(0, now + (opts.cut ? .08 : .7)); setTimeout(() => old.disconnect(), 1500); }
     const bus = C.createGain(); bus.gain.value = 1; bus.connect(musicBus);
     cur = { name, song: compiled[name], bus, start: now + .12, idx: 0, loopN: 0, then: opts.then || null, done: false };
+    startClock(); pump();
   }
   function jingle(name, then) { play(name, { restart: true, cut: true, then }); }
-  function tick() {
+  // ---------- scheduler：rAF から 切りはなした タイマー（Worker 優先 → setInterval）で 1秒先まで 予約 ----------
+  // 描画が カクついても 音は 落ちない。 Music.tick() は 互換のため 残す（時計が 止まっている ときだけ 補助）
+  let clock = null, lastPump = 0; const HORIZON = 1.0, PERIOD = 90;
+  function startClock() {
+    if (clock) return; const cb = () => { try { pump(); } catch (e) { console.error(e); } };
+    const fallback = () => { if (clock && clock.w) try { clock.w.terminate(); } catch (_) {} clock = { id: setInterval(cb, PERIOD) }; };
+    try { const src = 'let i=0;onmessage=e=>{clearInterval(i);i=setInterval(()=>postMessage(0),e.data)}';
+      const w = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' }))); w.onmessage = cb; w.onerror = e => { if (e && e.preventDefault) e.preventDefault(); fallback(); }; w.postMessage(PERIOD); clock = { w };
+    } catch (e) { fallback(); }
+  }
+  function tick() { if (C && cur && !cur.done && performance.now() - lastPump > 300) { try { pump(); } catch (e) { console.error(e); } } }
+  function pump() {
+    lastPump = performance.now();
     if (!C || !cur || cur.done) return;
-    const s = cur.song, spb = 60 / s.bpm, horizon = C.currentTime + .35;
+    const s = cur.song, spb = 60 / s.bpm, horizon = C.currentTime + HORIZON;
     while (true) {
       if (cur.idx >= s.E.length) {
         if (!s.loop) { cur.done = true; const endAt = cur.start + s.len * spb; const then = cur.then;

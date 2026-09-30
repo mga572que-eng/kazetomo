@@ -179,16 +179,47 @@ vec3 tone(vec3 c){ c*=1.14; float lu=dot(c,vec3(.299,.587,.114)); c=max(mix(vec3
 `;
   const FS_DEPTH = `#version 300 es
 precision mediump float; out vec4 o; void main(){ o=vec4(1.); }`;
+  // 道の デカール（地形シェーダで 土色に・草を よける）。 World.setPaths(region, [[x0,z0,x1,z1,w],...]) で 設定（最大8本）
+  const PATHF = `
+uniform vec4 uPath[8]; uniform float uPathW[8]; uniform float uPathN;
+float pathD(vec2 p){ float d=1e4; for(int i=0;i<8;i++){ if(float(i)>=uPathN) break; vec4 s=uPath[i]; vec2 ab=s.zw-s.xy; float t=clamp(dot(p-s.xy,ab)/max(dot(ab,ab),1e-4),0.,1.); d=min(d, length(p-s.xy-ab*t)-uPathW[i]); } return d; }
+float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
+`;
+  const PATHS = [0, 1, 2, 3].map(() => ({ s: new Float32Array(32), w: new Float32Array(8), n: 0 }));
+  function setPaths(r, list) { const P0 = PATHS[r]; P0.n = Math.min(8, list.length); list.slice(0, 8).forEach((l, i) => { P0.s.set(l.slice(0, 4), i * 4); P0.w[i] = l[4] || 1; }); }
+  let grsCells = new Int16Array(2 * 210 * 210), grsCB, grsN = 0;
 
-  let P = {}, VAO = {}, hmTex, shTex, shFbo, SHS, TER_COUNT, GRID, GSP, terPB, terNB;
-  function terrainArrays() { const Pp = new Float32Array(N * N * 3), Nn = new Float32Array(N * N * 3);
-    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const k = j * N + i; Pp.set([-WORLD / 2 + i * SP, H[k], -WORLD / 2 + j * SP], k * 3);
-      const l = H[j * N + Math.max(i - 1, 0)], r = H[j * N + Math.min(i + 1, N - 1)], d = H[Math.max(j - 1, 0) * N + i], u = H[Math.min(j + 1, N - 1) * N + i];
-      Nn.set(V.norm([l - r, 2 * SP, d - u]), k * 3); } return [Pp, Nn]; }
+  let P = {}, VAO = {}, hmTex, shTex, shFbo, SHS, GRID, GSP, terPB, terNB, grsKey = '', shValid = false;
   function setRegion(r) { if (r === REGION && terPB) return; REGION = r; fillH(r);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, hmTex); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, N, N, gl.RED, gl.FLOAT, H);
     const [Pp, Nn] = terrainArrays(); gl.bindBuffer(gl.ARRAY_BUFFER, terPB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, Pp); gl.bindBuffer(gl.ARRAY_BUFFER, terNB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, Nn);
+    chunkBounds(); grsKey = ''; shValid = false;
     Blocks.into(r); blocksDirty = true; }
+  // ---------- terrain chunks (10×10, 3 LODs, skirts) ----------
+  // 頂点バッファ = N×N の 地表 + N×N の スカート（SKD だけ 下げた 複製）。 インデックスは LOD ごとに チャンク順で 並べ、連続する 可視チャンクを 1回の draw に まとめる
+  const CHN = 10, CQ = (N - 1) / CHN, LODS = [1, 2, 4], SKD = 7; let chOff, chCnt, chBox, chLod, chVis;
+  function terrainArrays() { const Pp = new Float32Array(N * N * 6), Nn = new Float32Array(N * N * 6);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const k = j * N + i, x = -WORLD / 2 + i * SP, z = -WORLD / 2 + j * SP;
+      const l = H[j * N + Math.max(i - 1, 0)], r = H[j * N + Math.min(i + 1, N - 1)], d = H[Math.max(j - 1, 0) * N + i], u = H[Math.min(j + 1, N - 1) * N + i];
+      const n = V.norm([l - r, 2 * SP, d - u]); Pp[k * 3] = x; Pp[k * 3 + 1] = H[k]; Pp[k * 3 + 2] = z; Nn.set(n, k * 3);
+      const q = (k + N * N) * 3; Pp[q] = x; Pp[q + 1] = H[k] - SKD; Pp[q + 2] = z; Nn.set(n, q); } return [Pp, Nn]; }
+  function terrainIndex() { const L = []; chOff = LODS.map(() => new Int32Array(CHN * CHN)); chCnt = LODS.map(() => new Int32Array(CHN * CHN)); let c = 0;
+    LODS.forEach((s, li) => { for (let cj = 0; cj < CHN; cj++) for (let ci = 0; ci < CHN; ci++) { const i0 = ci * CQ, j0 = cj * CQ, n = CQ / s, v = (a, b) => (j0 + b * s) * N + i0 + a * s; chOff[li][cj * CHN + ci] = c;
+      for (let b = 0; b < n; b++) for (let a = 0; a < n; a++) { const p = v(a, b), q = v(a + 1, b), r = v(a, b + 1), t = v(a + 1, b + 1); L.push(p, r, q, q, r, t); c += 6; }
+      const edge = (f) => { for (let k = 0; k < n; k++) { const t0 = f(k), t1 = f(k + 1), b0 = t0 + N * N, b1 = t1 + N * N; L.push(t0, t1, b0, t1, b1, b0); c += 6; } };
+      if (cj > 0) edge(k => v(k, 0)); if (cj < CHN - 1) edge(k => v(k, n)); if (ci > 0) edge(k => v(0, k)); if (ci < CHN - 1) edge(k => v(n, k));
+      chCnt[li][cj * CHN + ci] = c - chOff[li][cj * CHN + ci]; } });
+    return new Uint32Array(L); }
+  function chunkBounds() { if (!chBox) { chBox = new Float32Array(CHN * CHN * 6); chLod = new Int8Array(CHN * CHN); chVis = new Uint8Array(CHN * CHN); }
+    for (let cj = 0; cj < CHN; cj++) for (let ci = 0; ci < CHN; ci++) { let lo = 1e9, hi = -1e9;
+      for (let j = cj * CQ; j <= (cj + 1) * CQ; j++) for (let i = ci * CQ; i <= (ci + 1) * CQ; i++) { const h = H[j * N + i]; if (h < lo) lo = h; if (h > hi) hi = h; }
+      const o = (cj * CHN + ci) * 6; chBox[o] = -WORLD / 2 + ci * CQ * SP; chBox[o + 1] = lo - SKD; chBox[o + 2] = -WORLD / 2 + cj * CQ * SP; chBox[o + 3] = chBox[o] + CQ * SP; chBox[o + 4] = hi + .5; chBox[o + 5] = chBox[o + 2] + CQ * SP; } }
+  // ---------- frustum helpers（列優先の VP 行列から 6平面） ----------
+  function planesOf(m, out) { out = out || new Float32Array(24); const R = i => [m[i], m[4 + i], m[8 + i], m[12 + i]], r0 = R(0), r1 = R(1), r2 = R(2), r3 = R(3);
+    [[1, r0], [-1, r0], [1, r1], [-1, r1], [1, r2], [-1, r2]].forEach(([s, r], k) => { const a = r3[0] + s * r[0], b = r3[1] + s * r[1], c = r3[2] + s * r[2], d = r3[3] + s * r[3], l = Math.hypot(a, b, c) || 1;
+      out[k * 4] = a / l; out[k * 4 + 1] = b / l; out[k * 4 + 2] = c / l; out[k * 4 + 3] = d / l; }); return out; }
+  function boxIn(Pl, x0, y0, z0, x1, y1, z1) { for (let k = 0; k < 24; k += 4) { const a = Pl[k], b = Pl[k + 1], c = Pl[k + 2]; if (a * (a > 0 ? x1 : x0) + b * (b > 0 ? y1 : y0) + c * (c > 0 ? z1 : z0) + Pl[k + 3] < 0) return false; } return true; }
+  function sphIn(Pl, x, y, z, r) { for (let k = 0; k < 24; k += 4) if (Pl[k] * x + Pl[k + 1] * y + Pl[k + 2] * z + Pl[k + 3] < -r) return false; return true; }
   const meshes = [];
   const Geo = () => ({ p: [], n: [], c: [] });
   function tri(G, a, b, c, col, ctr) { if (typeof col === 'function') col = col(); let n = V.norm(V.cross(V.sub(b, a), V.sub(c, a)));
@@ -508,18 +539,32 @@ precision mediump float; out vec4 o; void main(){ o=vec4(1.); }`;
     return G;
   }
   // ---------- mesh (instanced) ----------
+  // m.data / m.set / m.n / m.dirty は そのまま（game.js・各モジュールの 契約）。 GPU へは 毎フレーム 視錐台（影は ライト箱）で 間引いた 詰め直しを 送る
   function makeMesh(G, maxN, opts = {}) {
-    const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
-    attr(0, buf(new Float32Array(G.p)), 3); attr(1, buf(new Float32Array(G.n)), 3);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf(new Float32Array(G.c))); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0);
-    const data = new Float32Array(maxN * 5); const ib = buf(data, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 3, gl.FLOAT, false, 20, 0); gl.vertexAttribDivisor(3, 1);
-    gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 20, 12); gl.vertexAttribDivisor(4, 1);
-    gl.enableVertexAttribArray(5); gl.vertexAttribPointer(5, 1, gl.FLOAT, false, 20, 16); gl.vertexAttribDivisor(5, 1);
-    const m = { vao, ib, data, count: G.p.length / 3, n: 0, sway: opts.sway || 0, cast: opts.cast !== false, dirty: true,
-      set(i, x, y, z, s, r) { data.set([x, y, z, s, r], i * 5); this.dirty = true; } };
+    const pb = buf(new Float32Array(G.p)), nb = buf(new Float32Array(G.n)), cb = buf(new Float32Array(G.c));
+    const data = new Float32Array(maxN * 5);
+    const mk = () => { const vao = gl.createVertexArray(); gl.bindVertexArray(vao); attr(0, pb, 3); attr(1, nb, 3);
+      gl.bindBuffer(gl.ARRAY_BUFFER, cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0);
+      const ib = buf(new Float32Array(maxN * 5), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 3, gl.FLOAT, false, 20, 0); gl.vertexAttribDivisor(3, 1);
+      gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 20, 12); gl.vertexAttribDivisor(4, 1);
+      gl.enableVertexAttribArray(5); gl.vertexAttribPointer(5, 1, gl.FLOAT, false, 20, 16); gl.vertexAttribDivisor(5, 1); return [vao, ib]; };
+    const [vao, ib] = mk(), [svao, sib] = mk();
+    // 形の 外接球（y軸回転に 不変）： 中心の 高さ cy・半径 br（スケール1あたり）
+    let rxz = 0, y0 = 1e9, y1 = -1e9; for (let i = 0; i < G.p.length; i += 3) { rxz = Math.max(rxz, Math.hypot(G.p[i], G.p[i + 2])); y0 = Math.min(y0, G.p[i + 1]); y1 = Math.max(y1, G.p[i + 1]); }
+    if (!(y1 >= y0)) { y0 = y1 = 0; }
+    const m = { vao, ib, svao, sib, data, cdata: new Float32Array(maxN * 5), count: G.p.length / 3, n: 0, vn: 0, sn: 0, maxN, sway: opts.sway || 0, cast: opts.cast !== false, dirty: true,
+      cy: (y0 + y1) / 2, br: Math.hypot(rxz, (y1 - y0) / 2) + (opts.sway ? .4 : .05),
+      set(i, x, y, z, s, r) { const o = i * 5; data[o] = x; data[o + 1] = y; data[o + 2] = z; data[o + 3] = s; data[o + 4] = r; this.dirty = true; } };
     meshes.push(m); return m;
   }
+  // 可視インスタンスだけを 詰めて アップロード（返り値＝描く数）
+  function cullMesh(m, Pl, vaoIb, maxD, cx, cz) { const d = m.data, o = m.cdata, n = Math.min(m.n, m.maxN); let k = 0;
+    for (let i = 0; i < n; i++) { const b = i * 5, s = Math.abs(d[b + 3]); if (!(s > 1e-4)) continue; const x = d[b], z = d[b + 2], r = m.br * s;
+      if (maxD && (x - cx) * (x - cx) + (z - cz) * (z - cz) > (maxD + r) * (maxD + r)) continue;
+      if (!sphIn(Pl, x, d[b + 1] + m.cy * s, z, r)) continue;
+      const q = k * 5; o[q] = x; o[q + 1] = d[b + 1]; o[q + 2] = z; o[q + 3] = d[b + 3]; o[q + 4] = d[b + 4]; k++; }
+    if (k) { gl.bindBuffer(gl.ARRAY_BUFFER, vaoIb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, o, 0, k * 5); } return k; }
 
   // ---------- init ----------
   let quadVAO, triVAO, partVAO, cubeVAO, blockIB, blockN = 0, blockData = new Float32Array(4 * 9000), ghostIB, ghostVAO;
@@ -573,6 +618,7 @@ void main(){ vW=aP; vN=aN; gl_Position=uVP*vec4(aP,1.); }`;
     P.ter = prog(TVS, `#version 300 es
 precision highp float; in vec3 vW; in vec3 vN; out vec4 o; uniform float uRegion;
 ${COMMON}
+${PATHF}
 void main(){
   vec3 n=normalize(vN); float slope=1.-n.y;
   float m1=fbm(vW.xz*.045), m2=fbm(vW.xz*.011+4.);
@@ -612,14 +658,13 @@ void main(){
     float ru=smoothstep(34.,22.,length(vW.xz-vec2(150.,-20.))); c=mix(c, vec3(.62,.54,.42)*(.85+.25*fbm(vW.xz*.3)), ru*.8);
     c=mix(c, vec3(.18,.36,.14)*(.9+.2*m1), smoothstep(-60.,-90.,vW.x)*(1.-sn)*(1.-de)*smoothstep(.3,.2,slope)*.6);
   }
+  if(uPathN>.5){ float pd=pathD(vW.xz)+(m1-.5)*.7; vec3 dirt=mix(vec3(.60,.51,.37),vec3(.70,.62,.46),fbm(vW.xz*.7)); c=mix(c, dirt*(.88+.2*m1), smoothstep(.45,-.35,pd)*.8*smoothstep(.45,.2,slope)); }
   o=vec4(tone(fogIt(lightIt(c,n,vW,.15),vW)),1.);
 }`);
     P.terD = prog(TVS, FS_DEPTH);
     VAO.ter = gl.createVertexArray(); gl.bindVertexArray(VAO.ter);
     { const [Pp, Nn] = terrainArrays(); terPB = buf(Pp, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); terNB = buf(Nn, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); attr(0, terPB, 3); attr(1, terNB, 3);
-      const I = new Uint32Array((N - 1) * (N - 1) * 6); let c = 0;
-      for (let j = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) { const a = j * N + i, b = a + 1, d = a + N, e = d + 1; I[c++] = a; I[c++] = d; I[c++] = b; I[c++] = b; I[c++] = d; I[c++] = e; }
-      buf(I, gl.ELEMENT_ARRAY_BUFFER); TER_COUNT = c; }
+      buf(terrainIndex(), gl.ELEMENT_ARRAY_BUFFER); chunkBounds(); }
 
     // water
     P.wat = prog(`#version 300 es
@@ -655,37 +700,41 @@ void main(){
 
     // grass
     P.grs = prog(`#version 300 es
-layout(location=0) in vec3 aP;
+layout(location=0) in vec3 aP; layout(location=1) in vec2 aCell;
 uniform mat4 uVP; uniform vec3 uPlayer; uniform vec3 uCenter; uniform float uT; uniform float uWorld,uSp,uN,uGsp; uniform int uG; uniform sampler2D uHm; uniform float uRegion; uniform vec3 uCam;
 out vec3 vW; out float vY; out vec3 vTint;
+${PATHF}
 float hs(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float Hm(vec2 xz){ return texture(uHm,((xz+uWorld*.5)/uSp+.5)/uN).r; }
 float vnz(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(hs(i),hs(i+vec2(1,0)),f.x),mix(hs(i+vec2(0,1)),hs(i+vec2(1,1)),f.x),f.y); }
 void main(){
-  int gx=gl_InstanceID%uG, gz=gl_InstanceID/uG;
-  vec2 base=floor(uCenter.xz/uGsp)*uGsp; vec2 cell=base+(vec2(gx,gz)-float(uG)*.5)*uGsp; vec2 cid=floor(cell/uGsp+.5);
+  vec2 base=floor(uCenter.xz/uGsp)*uGsp; vec2 cell=base+(aCell-float(uG)*.5)*uGsp; vec2 cid=floor(cell/uGsp+.5);
   float r1=hs(cid),r2=hs(cid+3.7),r3=hs(cid+9.1),r4=hs(cid+1.3);
   vec2 xz=cell+(vec2(r1,r2)-.5)*uGsp; float h=Hm(xz); float e=1.2;
   vec3 n=normalize(vec3(Hm(xz-vec2(e,0))-Hm(xz+vec2(e,0)),2.*e,Hm(xz-vec2(0,e))-Hm(xz+vec2(0,e))));
   float R=float(uG)*uGsp*.5; float dist=length(xz-uCenter.xz); float fade=1.-smoothstep(R*.55,R*.95,dist);
   float patchN=vnz(xz*.06)*.7+vnz(xz*.23)*.3;
   float village=uRegion>2.5 ? smoothstep(14.,22.,length(xz-vec2(0.,130.)))*smoothstep(26.,34.,length(xz-vec2(0.,-175.)))*smoothstep(4.,6.,h) : uRegion>1.5 ? smoothstep(12.,20.,length(xz-vec2(0.,70.)))*smoothstep(50.,62.,length(xz-vec2(0.,-160.)))*smoothstep(3.,6.,h) : uRegion<.5 ? smoothstep(10.,14.,abs(length(xz)-14.)+ (length(xz)>24.?20.:0.)) : smoothstep(18.,26.,length(xz-vec2(0.,165.)))*smoothstep(26.,36.,length(xz-vec2(150.,-20.)))*(1.-smoothstep(40.,80.,xz.x+25.*sin(xz.y*.02)))*(1.-smoothstep(-100.,-140.,xz.y+20.*sin(xz.x*.025)))*(1.-smoothstep(30.,38.,h));
-  float ok=smoothstep(1.4,2.2,h)*smoothstep(.74,.82,n.y)*(1.-smoothstep(40.,44.,h))*fade*(uRegion<.5 ? .25+.75*village : village);
-  float height=(.32+r3*.55)*(.55+patchN*.95)*ok*smoothstep(1.2,3.5,length(vec3(xz.x,h,xz.y)-uCam))*mix(.35,1.,smoothstep(.3,.9,length(xz-uPlayer.xz)));
+  float ok=smoothstep(1.4,2.2,h)*smoothstep(.74,.82,n.y)*(1.-smoothstep(40.,44.,h))*fade*(uRegion<.5 ? .25+.75*village : village)*pathMask(xz);
+  bool sea=uRegion>2.5;
+  float height=(.32+r3*.55)*(.55+patchN*.95)*ok*smoothstep(1.2,3.5,length(vec3(xz.x,h,xz.y)-uCam))*mix(.35,1.,smoothstep(.3,.9,length(xz-uPlayer.xz)))*(sea?1.5:1.);
   float ang=r4*6.2831; vec2 dir=vec2(cos(ang),sin(ang)); float t=aP.y;
   vec2 wd=normalize(vec2(1.,.45));
   float wave=sin(uT*1.9-dot(xz,wd)*.22+r1*.8)*.5+.5; float gust=smoothstep(.3,.9,vnz(xz*.025-wd*uT*.9));
   float bend=(.18+.35*wave+.75*gust*wave)*t*t;
   vec2 pv=xz-uPlayer.xz; float pd=length(pv); vec2 push=pd<1.3? normalize(pv+1e-4)*(1.3-pd)*1.1*t : vec2(0);
-  vec2 off=(wd*bend+push)*height;
-  vec3 wp=vec3(xz.x,h,xz.y)+vec3(-dir.y,0.,dir.x)*aP.x*.085+vec3(off.x, t*height*(1.-.35*min(bend,1.)), off.y);
+  vec2 off=(wd*bend+push)*height; float wx=aP.x*.085;
+  if(sea){ float ph=uT*1.15+r1*6.2831; // 海草：リボン状に 波うつ
+    off=(vec2(sin(ph+t*2.8), cos(ph*.83+t*2.3+r2*3.))*(.16*t+.22*t*t)+push*.6)*height; wx=sign(aP.x)*.1*(1.-.45*t*t); bend=.1; }
+  vec3 wp=vec3(xz.x,h,xz.y)+vec3(-dir.y,0.,dir.x)*wx+vec3(off.x, t*height*(1.-.35*min(bend,1.)), off.y);
   vW=wp; vY=t; vTint=vec3(patchN, gust*wave, r3); gl_Position=uVP*vec4(wp,1.);
 }`, `#version 300 es
-precision highp float; in vec3 vW; in float vY; in vec3 vTint; out vec4 o;
+precision highp float; in vec3 vW; in float vY; in vec3 vTint; out vec4 o; uniform float uRegion;
 ${COMMON}
 void main(){
   vec3 baseC=mix(vec3(.17,.38,.08), vec3(.3,.52,.12), vTint.x);
   vec3 tipC=mix(vec3(.46,.7,.22), vec3(.8,.78,.36), smoothstep(.55,.85,vTint.x)*.6+vTint.z*.2);
+  if(uRegion>2.5){ baseC=mix(vec3(.04,.17,.13), vec3(.1,.24,.12), vTint.x); tipC=mix(vec3(.2,.46,.34), vec3(.5,.5,.2), vTint.z*.7+smoothstep(.6,.9,vTint.x)*.3); tipC=mix(tipC, vec3(.62,.3,.36), step(.93,vTint.z)*.7); }
   vec3 c=mix(baseC, tipC, vY)+vec3(.10,.10,.04)*vTint.y*vY;
   vec3 col=lightIt(c, vec3(0.,1.,0.), vW, .4);
   col+=c*uLC*pow(max(dot(normalize(vW-uCam),uL),0.),6.)*.7*vY*(1.-uNight);
@@ -694,7 +743,8 @@ void main(){
     VAO.grs = gl.createVertexArray(); gl.bindVertexArray(VAO.grs);
     { const L = [[.5, 0], [.4, .4], [.25, .75], [0, 1]], A = [];
       for (let s = 0; s < 3; s++) { const [w0, y0] = L[s], [w1, y1] = L[s + 1]; A.push(-w0, y0, 0, w0, y0, 0, -w1, y1, 0, w0, y0, 0, w1, y1, 0, -w1, y1, 0); }
-      attr(0, buf(new Float32Array(A)), 3); }
+      attr(0, buf(new Float32Array(A)), 3);
+      grsCB = buf(grsCells, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.SHORT, false, 0, 0); gl.vertexAttribDivisor(1, 1); }
 
     // objects
     const OVS = `#version 300 es
@@ -795,8 +845,9 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
     return true;
   }
   let QL = 2, shOff = false, shCleared = false, partN = 260;
-  function setQuality(q) { QL = Math.max(0, Math.min(2, q)); GRID = [84, 140, 210][QL]; GSP = [.5, .36, .31][QL]; shOff = QL === 0; shCleared = false; partN = [110, 200, 260][QL]; resize(); }
-  function resize() { const dpr = Math.min(devicePixelRatio || 1, [.85, 1.15, COARSE ? 1.4 : 1.6][QL]); W = cv.width = Math.round((window.__vw || innerWidth) * dpr); Hh = cv.height = Math.round((window.__vh || innerHeight) * dpr); }
+  // 低画質は DPR 1.0（.85 は ぼやける）→ 草・粒子・地形LOD距離で 補う
+  function setQuality(q) { QL = Math.max(0, Math.min(2, q)); GRID = [76, 140, 210][QL]; GSP = [.5, .36, .31][QL]; shOff = QL === 0; shCleared = false; shValid = false; grsKey = ''; partN = [90, 200, 260][QL]; resize(); }
+  function resize() { const dpr = Math.min(devicePixelRatio || 1, [1, 1.15, COARSE ? 1.4 : 1.6][QL]); W = cv.width = Math.round((window.__vw || innerWidth) * dpr); Hh = cv.height = Math.round((window.__vh || innerHeight) * dpr); }
 
   // ---------- sky palette ----------
   const mix3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
@@ -806,7 +857,28 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
   function skyInfo(tod) { const a = (tod - .25) * Math.PI * 2; const sun = V.norm([Math.cos(a) * .85, Math.sin(a), .42]); return { sun, night: smooth(.04, -.18, sun[1]) }; }
 
   // ---------- render ----------
-  let lastVP = null;
+  let lastVP = null; const plV = new Float32Array(24), plL = new Float32Array(24); let shAge = 0, shC = null, shL = [0, 1, 0], shLVP = null, bkts = [];
+  // 可視チャンクを LOD ごとに まとめ、インデックスが 連続する ものは 1回の drawElements に 結合
+  function drawTer(Pl) { let s = -1, e = -1;
+    for (let L = 0; L < LODS.length; L++) for (let c = 0; c < CHN * CHN; c++) { if (chLod[c] !== L) continue; const o = c * 6;
+      if (!boxIn(Pl, chBox[o], chBox[o + 1], chBox[o + 2], chBox[o + 3], chBox[o + 4], chBox[o + 5])) continue;
+      const off = chOff[L][c], n = chCnt[L][c]; if (off === e) e += n; else { if (s >= 0) gl.drawElements(gl.TRIANGLES, e - s, gl.UNSIGNED_INT, s * 4); s = off; e = off + n; } }
+    if (s >= 0) gl.drawElements(gl.TRIANGLES, e - s, gl.UNSIGNED_INT, s * 4); }
+  function drawBlocks(Pl) { gl.bindVertexArray(cubeVAO); gl.bindBuffer(gl.ARRAY_BUFFER, blockIB); let s = -1, e = -1;
+    const flush = () => { if (s < 0) return; gl.vertexAttribPointer(3, 4, gl.FLOAT, false, 16, s * 16); gl.drawArraysInstanced(gl.TRIANGLES, 0, 36, e - s); };
+    for (const b of bkts) { if (!boxIn(Pl, b.x0, b.y0, b.z0, b.x1, b.y1, b.z1)) continue; if (b.s === e) e += b.n; else { flush(); s = b.s; e = b.s + b.n; } }
+    flush(); gl.vertexAttribPointer(3, 4, gl.FLOAT, false, 16, 0); }
+  // 草：プレイヤー中心の グリッドを 10×10 セルの タイルに 分け、視錐台・半径・水面下の タイルを 除いて インスタンス列を つくる
+  function grassCells(Pl, player) { const G = GRID, bx = Math.floor(player[0] / GSP) * GSP, bz = Math.floor(player[2] / GSP) * GSP;
+    const key = G + ',' + bx + ',' + bz + ',' + REGION + ',' + Array.from(Pl, v => Math.round(v * 60)).join(','); if (key === grsKey) return; grsKey = key;
+    const R = G * GSP * .5 * .95 + GSP, TS = 10; let k = 0;
+    for (let tj = 0; tj < G; tj += TS) for (let ti = 0; ti < G; ti += TS) { const i1 = Math.min(G, ti + TS), j1 = Math.min(G, tj + TS);
+      const x0 = bx + (ti - G / 2 - .5) * GSP, x1 = bx + (i1 - G / 2 + .5) * GSP, z0 = bz + (tj - G / 2 - .5) * GSP, z1 = bz + (j1 - G / 2 + .5) * GSP;
+      const nx = clamp(player[0], x0, x1) - player[0], nz = clamp(player[2], z0, z1) - player[2]; if (nx * nx + nz * nz > R * R) continue;
+      let lo = 1e9, hi = -1e9; for (const [sx, sz] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1], [(x0 + x1) / 2, (z0 + z1) / 2]]) { const h = hAt(sx, sz); lo = Math.min(lo, h); hi = Math.max(hi, h); }
+      if (hi < .9 || lo > 45) continue; if (!boxIn(Pl, x0 - 1.6, lo - .3, z0 - 1.6, x1 + 1.6, hi + 2.6, z1 + 1.6)) continue;
+      for (let j = tj; j < j1; j++) for (let i = ti; i < i1; i++) { grsCells[k++] = i; grsCells[k++] = j; } }
+    grsN = k / 2; if (k) { gl.bindBuffer(gl.ARRAY_BUFFER, grsCB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, grsCells, 0, k); } }
   function render(S) {
     const { eye, tgt, tod, T, player, lantern, beaconU, fx, ghost, darkness = 0 } = S;
     const proj = persp(1.05, W / Hh, .1, 1800), view = lookAt(eye, tgt, [0, 1, 0]), VP = mul(proj, view); lastVP = VP;
@@ -822,39 +894,53 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
     const ts = 2 * R / SHS; lv[12] = Math.round(lv[12] / ts) * ts; lv[13] = Math.round(lv[13] / ts) * ts;
     const LVP = mul(ortho(-R, R, -R, R, 1, 380), lv);
 
-    // upload dynamic instances
-    for (const m of meshes) if (m.dirty) { gl.bindBuffer(gl.ARRAY_BUFFER, m.ib); gl.bufferSubData(gl.ARRAY_BUFFER, 0, m.data, 0, m.n * 5); m.dirty = false; }
-    if (blocksDirty) { blockN = 0; for (const [k, t] of blocks) { if (blockN >= 9000) break; const [x, y, z] = k.split(',').map(Number); blockData.set([x, y, z, t], blockN * 4); blockN++; }
-      gl.bindBuffer(gl.ARRAY_BUFFER, blockIB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, blockData, 0, blockN * 4); blocksDirty = false; }
+    const PlV = planesOf(VP, plV);
+    // blocks: 16m バケツ順に 並べ替えて アップロード（描画は 可視バケツの 連続区間ごと）
+    if (blocksDirty) { const L = []; for (const [k, t] of blocks) { if (L.length >= 9000) break; const [x, y, z] = k.split(',').map(Number); L.push([((Math.floor(x / 16) + 64) << 8) | (Math.floor(z / 16) + 64), x, y, z, t]); }
+      L.sort((a, b) => a[0] - b[0]); blockN = L.length; bkts = [];
+      L.forEach((e, i) => { blockData[i * 4] = e[1]; blockData[i * 4 + 1] = e[2]; blockData[i * 4 + 2] = e[3]; blockData[i * 4 + 3] = e[4]; let b = bkts[bkts.length - 1];
+        if (!b || b.k !== e[0]) bkts.push(b = { k: e[0], s: i, n: 0, x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9 });
+        b.n++; b.x0 = Math.min(b.x0, e[1]); b.y0 = Math.min(b.y0, e[2]); b.z0 = Math.min(b.z0, e[3]); b.x1 = Math.max(b.x1, e[1] + 1); b.y1 = Math.max(b.y1, e[2] + 1); b.z1 = Math.max(b.z1, e[3] + 1); });
+      gl.bindBuffer(gl.ARRAY_BUFFER, blockIB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, blockData, 0, blockN * 4); blocksDirty = false; shValid = false; }
+    // terrain LOD（カメラからの 距離で チャンクごとに 選ぶ）
+    { const LD = [[40, 95], [56, 130], [72, 170]][QL]; for (let c = 0; c < CHN * CHN; c++) { const o = c * 6;
+      const dx = Math.max(chBox[o] - eye[0], 0, eye[0] - chBox[o + 3]), dy = Math.max(chBox[o + 1] + SKD - eye[1], 0, eye[1] - chBox[o + 4]), dz = Math.max(chBox[o + 2] - eye[2], 0, eye[2] - chBox[o + 5]);
+      const d = Math.hypot(dx, dy * .5, dz); chLod[c] = d < LD[0] ? 0 : d < LD[1] ? 1 : 2; } }
 
     gl.disable(gl.CULL_FACE);
-    // ---- shadow pass ----
-    gl.bindFramebuffer(gl.FRAMEBUFFER, shFbo); gl.viewport(0, 0, SHS, SHS);
-    gl.enable(gl.DEPTH_TEST); gl.depthMask(true); if (!shOff || !shCleared) gl.clear(gl.DEPTH_BUFFER_BIT); shCleared = true;
-    if (!shOff) { gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2.2, 4);
-    gl.useProgram(P.terD.p); gl.uniformMatrix4fv(P.terD.u.uVP, false, LVP); gl.bindVertexArray(VAO.ter); gl.drawElements(gl.TRIANGLES, TER_COUNT, gl.UNSIGNED_INT, 0);
-    gl.useProgram(P.objD.p); gl.uniformMatrix4fv(P.objD.u.uVP, false, LVP); gl.uniform1f(P.objD.u.uT, T);
-    for (const m of meshes) if (m.cast && m.n) { gl.uniform1f(P.objD.u.uSway, m.sway); gl.bindVertexArray(m.vao); gl.drawArraysInstanced(gl.TRIANGLES, 0, m.count, m.n); }
-    if (blockN) { gl.useProgram(P.blkD.p); gl.uniformMatrix4fv(P.blkD.u.uVP, false, LVP); gl.uniform1f(P.blkD.u.uInflate, 0); gl.bindVertexArray(cubeVAO); gl.drawArraysInstanced(gl.TRIANGLES, 0, 36, blockN); }
-    gl.disable(gl.POLYGON_OFFSET_FILL); }
+    // ---- shadow pass（2〜3フレームに1回。 光の中心が 動いた・光の向きが 変わった・ブロックが 変わったときは すぐ） ----
+    if (shOff) { if (!shCleared) { gl.bindFramebuffer(gl.FRAMEBUFFER, shFbo); gl.viewport(0, 0, SHS, SHS); gl.depthMask(true); gl.clear(gl.DEPTH_BUFFER_BIT); shCleared = true; } shValid = false; shLVP = LVP; }
+    else { shAge++; const moved = !shValid || !shC || Math.hypot(center[0] - shC[0], center[1] - shC[1], center[2] - shC[2]) > 2.5 || V.dot(Ldir, shL) < .9997;
+      if (moved || shAge >= (QL >= 2 ? 2 : 3)) { shAge = 0; shValid = true; shC = center; shL = Ldir; shLVP = LVP; shCleared = true; const PlL = planesOf(LVP, plL);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, shFbo); gl.viewport(0, 0, SHS, SHS); gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.clear(gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2.2, 4);
+        gl.useProgram(P.terD.p); gl.uniformMatrix4fv(P.terD.u.uVP, false, LVP); gl.bindVertexArray(VAO.ter); drawTer(PlL);
+        gl.useProgram(P.objD.p); gl.uniformMatrix4fv(P.objD.u.uVP, false, LVP); gl.uniform1f(P.objD.u.uT, T);
+        for (const m of meshes) { m.sn = m.cast && m.n ? cullMesh(m, PlL, m.sib) : 0; if (m.sn) { gl.uniform1f(P.objD.u.uSway, m.sway); gl.bindVertexArray(m.svao); gl.drawArraysInstanced(gl.TRIANGLES, 0, m.count, m.sn); } }
+        if (blockN) { gl.useProgram(P.blkD.p); gl.uniformMatrix4fv(P.blkD.u.uVP, false, LVP); gl.uniform1f(P.blkD.u.uInflate, 0); drawBlocks(PlL); }
+        gl.disable(gl.POLYGON_OFFSET_FILL); } }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, W, Hh);
+    // upload dynamic instances（視錐台カリング済み）
+    for (const m of meshes) { m.vn = m.n ? cullMesh(m, PlV, m.ib) : 0; m.dirty = false; }
 
-    const lan = [lantern[0], lantern[1], lantern[2], lantern[3]];
+    const lan = [lantern[0], lantern[1], lantern[2], lantern[3]], PT = PATHS[REGION];
     function common(p) { const u = p.u; gl.useProgram(p.p);
       gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uL, Ldir); gl.uniform3fv(u.uLC, Lc);
       gl.uniform3fv(u.uSkyZ, Pal.z); gl.uniform3fv(u.uSkyH, Pal.h); gl.uniform3fv(u.uCam, eye); gl.uniform1f(u.uNight, night); gl.uniform1f(u.uT, T);
       gl.uniform4fv(u.uBeacon, beaconU); gl.uniform4fv(u.uPL, lan); gl.uniform1f(u.uFlick, flick);
-      gl.uniform1i(u.uHm, 0); gl.uniform1i(u.uShadow, 1); gl.uniformMatrix4fv(u.uLVP, false, LVP); gl.uniform1f(u.uShTex, 1 / SHS);
-      gl.uniform1f(u.uWorld, WORLD); gl.uniform1f(u.uSp, SP); gl.uniform1f(u.uN, N); gl.uniform1f(u.uRegion, REGION); gl.uniform1f(u.uUW, REGION === 3 ? 1 : 0); gl.uniform2f(u.uRes, W, Hh); }
+      gl.uniform1i(u.uHm, 0); gl.uniform1i(u.uShadow, 1); gl.uniformMatrix4fv(u.uLVP, false, shLVP); gl.uniform1f(u.uShTex, 1 / SHS);
+      gl.uniform1f(u.uWorld, WORLD); gl.uniform1f(u.uSp, SP); gl.uniform1f(u.uN, N); gl.uniform1f(u.uRegion, REGION); gl.uniform1f(u.uUW, REGION === 3 ? 1 : 0); gl.uniform2f(u.uRes, W, Hh);
+      if (u.uPathN) { gl.uniform1f(u.uPathN, PT.n); if (PT.n) { gl.uniform4fv(u.uPath, PT.s); gl.uniform1fv(u.uPathW, PT.w); } } }
 
     gl.disable(gl.DEPTH_TEST); gl.depthMask(false); gl.disable(gl.BLEND);
     common(P.sky); gl.uniformMatrix4fv(P.sky.u.uInvVP, false, inv(VP)); gl.uniform3fv(P.sky.u.uSun, sun); gl.uniform1f(P.sky.u.uStars, S.stars ?? 1); gl.bindVertexArray(triVAO); gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LEQUAL); gl.clear(gl.DEPTH_BUFFER_BIT);
-    common(P.ter); gl.bindVertexArray(VAO.ter); gl.drawElements(gl.TRIANGLES, TER_COUNT, gl.UNSIGNED_INT, 0);
-    common(P.obj); for (const m of meshes) if (m.n) { gl.uniform1f(P.obj.u.uSway, m.sway); gl.bindVertexArray(m.vao); gl.drawArraysInstanced(gl.TRIANGLES, 0, m.count, m.n); }
-    if (blockN) { common(P.blk); gl.uniform1f(P.blk.u.uGhost, 0); gl.uniform1f(P.blk.u.uInflate, 0); gl.bindVertexArray(cubeVAO); gl.drawArraysInstanced(gl.TRIANGLES, 0, 36, blockN); }
-    common(P.grs); gl.uniform3fv(P.grs.u.uPlayer, player); gl.uniform3fv(P.grs.u.uCenter, player); gl.uniform1i(P.grs.u.uG, GRID); gl.uniform1f(P.grs.u.uGsp, GSP);
-    gl.bindVertexArray(VAO.grs); gl.drawArraysInstanced(gl.TRIANGLES, 0, 18, GRID * GRID);
+    common(P.ter); gl.bindVertexArray(VAO.ter); drawTer(PlV);
+    common(P.obj); for (const m of meshes) if (m.vn) { gl.uniform1f(P.obj.u.uSway, m.sway); gl.bindVertexArray(m.vao); gl.drawArraysInstanced(gl.TRIANGLES, 0, m.count, m.vn); }
+    if (blockN) { common(P.blk); gl.uniform1f(P.blk.u.uGhost, 0); gl.uniform1f(P.blk.u.uInflate, 0); drawBlocks(PlV); }
+    grassCells(PlV, player);
+    if (grsN) { common(P.grs); gl.uniform3fv(P.grs.u.uPlayer, player); gl.uniform3fv(P.grs.u.uCenter, player); gl.uniform1i(P.grs.u.uG, GRID); gl.uniform1f(P.grs.u.uGsp, GSP);
+      gl.bindVertexArray(VAO.grs); gl.drawArraysInstanced(gl.TRIANGLES, 0, 18, grsN); }
 
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
     if (REGION !== 3) { common(P.wat); gl.bindVertexArray(VAO.wat); gl.drawArrays(gl.TRIANGLES, 0, 6); }
@@ -866,6 +952,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
     common(P.fx); gl.bindVertexArray(quadVAO);
     const camR = [view[0], view[4], view[8]], camU = [view[1], view[5], view[9]];
     for (const f of fx) {
+      if (!sphIn(PlV, f.p[0], f.p[1], f.p[2], Math.hypot(f.size[0], f.size[1]) * 1.05) || !(f.grow ?? 1)) continue; // 画面外・透明の ビルボードは 描かない
       let r = camR, u = camU;
       if (f.cyl) { const toC = V.norm([eye[0] - f.p[0], 0, eye[2] - f.p[2]]); r = V.norm(V.cross([0, 1, 0], toC)); u = [0, 1, 0]; }
       gl.uniform3fv(P.fx.u.uRight, r); gl.uniform3fv(P.fx.u.uUp, u); gl.uniform1f(P.fx.u.uType, f.type); gl.uniform1f(P.fx.u.uGrow, f.grow ?? 1);
@@ -878,5 +965,5 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
   function project(p) { const m = lastVP; if (!m) return null; const x = m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], y = m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13], w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
     if (w <= .1) return null; return [(x / w * .5 + .5) * (window.__vw || innerWidth), (1 - (y / w * .5 + .5)) * (window.__vh || innerHeight)]; }
 
-  return { setQuality, get quality() { return QL; }, init, resize, render, project, hAt, nAt, surfaceAt, skyInfo, Blocks, setRegion, biomeAt, speciesGeo, propGeo, seg, TOWN1, RUINS1, TOWN2, TOWER2, ISL2, TOWN3, PALACE3, LH3, TRENCH3, get region() { return REGION; }, Geo, prism, ico, shade, solid, hex, human, creature, shadowGeo, makeMesh, fbm, rnd, WORLD, V, clamp, lerp, smooth };
+  return { setQuality, get quality() { return QL; }, init, resize, render, project, hAt, nAt, surfaceAt, skyInfo, Blocks, setRegion, biomeAt, speciesGeo, propGeo, seg, TOWN1, RUINS1, TOWN2, TOWER2, ISL2, TOWN3, PALACE3, LH3, TRENCH3, get region() { return REGION; }, Geo, prism, ico, shade, solid, hex, human, creature, shadowGeo, makeMesh, setPaths, fbm, rnd, WORLD, V, clamp, lerp, smooth };
 })();
