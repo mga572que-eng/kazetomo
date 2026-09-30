@@ -30,10 +30,11 @@
   // ---------- 1. 地名を 画面の まんなかに ----------
   function areas() { const r = K.REG[G().region], out = [], rg = G().region;
     out.push({ id: 't' + rg, x: r.town.x, z: r.town.z, r: 30, n: K.townName(rg), s: K.regionName(rg) });
-    if (rg === 0) { r.beacons.forEach(b => out.push({ id: 'b' + b.i, x: b.x, z: b.z, r: 15, n: `灯台「${DATA.trials[b.i].name}」`, s: b.lit ? '灯が ともっている' : 'ボスが まちうける 灯台' })); if (G().order >= 5 && r.shrine) out.push({ id: 'sh', x: r.shrine.x, z: r.shrine.z, r: 16, n: '宵の祠', s: '風灯の島' }); if (K.baseSite) out.push({ id: 'base', x: K.baseSite.x, z: K.baseSite.z, r: 11, n: 'わが家', s: G().baseLv ? `レベル${G().baseLv}` : '建設予定地（立て札を しらべよう）' }); }
+    if (rg === 0) { r.beacons.forEach(b => out.push({ id: 'b' + b.i, x: b.x, z: b.z, r: 15, n: DATA.trials[b.i].name, s: b.lit ? '灯が ともっている' : 'ボスが まちうける 灯台' })); if (G().order >= 5 && r.shrine) out.push({ id: 'sh', x: r.shrine.x, z: r.shrine.z, r: 16, n: '宵の祠', s: '風灯の島' }); if (K.baseSite) out.push({ id: 'base', x: K.baseSite.x, z: K.baseSite.z, r: 11, n: 'わが家', s: G().baseLv ? `レベル${G().baseLv}` : '建設予定地（立て札を しらべよう）' }); }
     if (rg === 1) out.push({ id: 'ru', x: World.RUINS1[0], z: World.RUINS1[1], r: 34, n: '星の遺跡', s: '霧の大陸' });
     if (rg === 2) { (r.shrines || []).forEach(sh => out.push({ id: 'w' + sh.i, x: sh.x, z: sh.z, r: 14, n: DATA.windTrials[sh.i].name, s: '風の祠' })); if (r.tower) out.push({ id: 'tw', x: r.tower.x, z: r.tower.z, r: 30, n: '星巣の塔', s: '天空の浮島' }); }
     if (rg === 3) { (r.lh || []).forEach(L => out.push({ id: 'l' + L.i, x: L.x, z: L.z, r: 16, n: ['藻の灯台', '甲羅の灯台', '雷の灯台'][L.i], s: 'ボスが まちうける 沈んだ灯台' })); if (r.palace) out.push({ id: 'pl', x: r.palace.x, z: r.palace.z, r: 24, n: '深淵の宮', s: '海の底' }); if (r.trench) out.push({ id: 'tr', x: r.trench.x, z: r.trench.z, r: 30, n: '深淵の谷', s: '海の底' }); }
+    for (const a of K.extraAreas || []) if (a.rg === rg) out.push(a);
     for (const sh of DATA.shrines || []) if (sh.r === rg && sh.pos) out.push({ id: 's' + sh.id, x: sh.pos.x, z: sh.pos.z, r: 10, n: sh.name, s: '試練の祠' });
     return out; }
   let cur = null, lastRg = -1, bnT = 0, aT = 0;
@@ -86,7 +87,8 @@
       const ab = el.querySelector('[data-a]'); if (ab) ab.onclick = () => { if (!can(aC)) return; for (const [k, v] of Object.entries(aC)) G().inv[k] -= v; for (const k in G().eq) if (G().eq[k].a < ha + 1) G().eq[k].a = ha + 1; G().party.forEach(x => { const r = x.hp / x.st.hp; K.calc(x); x.hp = Math.round(x.st.hp * r); }); Music.sfx('place'); K.toast(`${aNext.name}を みんなに つくった！`, 1800); K.save(); paint(); }; };
     paint(); $('ui').appendChild(el); K.MENUS.push(M); }); }
   K.forgeUI = forgeUI;
-  H.talks.gen = async () => { if (!F().metGen) return 'pass'; const c = await K.menu({ title: 'ゲンの工房', items: [{ label: 'ぶき・ぼうぐを つくる', sub: 'キャラごと・いまと 比較' }, { label: 'はなす' }] });
+  const prevGen = H.talks.gen;
+  H.talks.gen = async n => { if (prevGen) { const r = await prevGen(n); if (r !== 'pass') return; } if (!F().metGen) return 'pass'; const c = await K.menu({ title: 'ゲンの工房', items: [{ label: 'ぶき・ぼうぐを つくる', sub: 'キャラごと・いまと 比較' }, { label: 'はなす' }] });
     if (c === 0) return forgeUI(); if (c === 1) return 'pass'; };
 
   // ---------- 5. 防具屋を 武器屋の となりに ----------
@@ -125,6 +127,7 @@
     { k: 'c4done', t: '第4章　海の底', s: '父から 託された「あわの鈴」で 海の底へ。 アワの里の 長老ウシオに たのまれ、沈んだ 三つの 灯台に 灯を ともし、深淵の宮で 深みの王を 光へ かえした。' } ];
   function quests() { const Q = [], g = G();
     Q.push({ id: 'main', n: 'メインストーリー', d: K.objective().t, p: K.objective().p });
+    if (K.reqList) Q.push(...K.reqList());
     for (const sh of DATA.shrines || []) if (sh.pos && !(g.shrineDone || {})[sh.id]) Q.push({ id: 's' + sh.id, n: `試練の祠：${sh.name}`, d: `${K.regionName(sh.r)}　${sh.hint}`, p: { x: sh.gate.x, z: sh.gate.z }, r: sh.r });
     if (K.baseSite && (g.baseLv || 0) < 5) Q.push({ id: 'base', n: `わが家づくり（Lv${g.baseLv || 0}/5）`, d: `${K.regionName(0)}　${(DATA.baseLevels[g.baseLv || 0] || {}).text || ''}`, p: K.baseSite.sign, r: 0 });
     for (const b of g.bounties || []) Q.push({ id: 'q' + (b.id || b.text), n: `ギルドの依頼`, d: b.text + (b.n ? `（${b.c || 0}/${b.n}）` : ''), p: null });

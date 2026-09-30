@@ -284,6 +284,9 @@ const HUMANS = {
   kurou: { skin: '#e8dccb', hair: '#eeeaf2', hairStyle: 'long', lock: '#1e1b2a', eye: [.45, .5, .7], top: '#3e4256', robe: true, mantle: true, lantern: true, lanternCol: [.72, .5, 1], tall: 1.12, wide: .88, beard: 'big' },
   tsumugi: { skin: '#fadfca', hair: '#8fbf6a', hairStyle: 'buns', eye: [.5, .35, .2], top: '#fbfbf6', bottom: '#6aa84f', robe: true, kid: true, glasses: true, satchel: true, notebook: true },
   baldo: { skin: '#d99a6c', hair: '#eeeae2', hairStyle: 'short', eye: [.25, .38, .5], top: '#23324a', bottom: '#1b2638', belly: true, wide: 1.25, beard: 'big', hat: 'bicorne', accent: '#1b2638', epaulet: true, trim: '#d8b24a' },
+  nami: { skin: '#e2b894', hair: '#5a3a2a', hairStyle: 'bob', eye: [.35, .25, .15], top: '#c8584a', bottom: '#4a3a3a', skirt: '#8a4a3a', shawl: '#f0e0c0', accent: '#f3c15a' },
+  ryou: { skin: '#c48a64', hair: '#2a2a30', hairStyle: 'short', eye: [.2, .2, .2], top: '#3a6a8a', bottom: '#2a3a4a', sleeve: 'rolled', beard: 'stubble', wide: 1.15 },
+  chibi: { skin: '#f0cfa8', hair: '#d8783a', hairStyle: 'twin', eye: [.3, .5, .3], top: '#f0c040', bottom: '#4a6aa8', kid: true, scale: .8 },
   ushio: { skin: '#d8b89a', hair: '#9fd8d0', hairStyle: 'long', eye: [.2, .5, .55], top: '#3a8a9a', robe: true, beard: 'big', scale: 1, shawl: '#e8f4f0', accent: '#f3c15a' },
   kai: { skin: '#e8c8a8', hair: '#3a6a8a', hairStyle: 'bob', eye: [.25, .45, .6], top: '#5ab0c0', bottom: '#2a4a5a', kid: true, accent: '#ffe08a' },
   soyogi: { skin: '#ecd9c4', hair: '#f6f6fb', hairStyle: 'floor', eye: [.45, .5, .65], top: '#e8e2f4', robe: true, kid: true, scale: .95, chime: true, stoop: true, shawl: '#b8a8e0' },
@@ -523,11 +526,12 @@ function objective() {
   if (!F.metGen) return { t: 'おじの ゲンの 工房へ いこう', p: npcAt('gen', 0) };
   if (!F.mio) return { t: '広場の ミオに 声を かけよう', p: npcAt('mio', 0) };
   if (G.order < 5) { if (G.region !== 0) return { t: '風灯の島へ もどろう', p: npcAt('baldo', 1) };
+    if (HOOK.beaconObj) { const o = HOOK.beaconObj(); if (o) return o; }
     let best = null, bd = 1e9; for (const b of r0.beacons) if (!b.lit) { const d = Math.hypot(b.x - player.x, b.z - player.z); if (d < bd) { bd = d; best = b; } }
     const T = DATA.trials[best.i], st = G.trial[best.i]; const lv = DATA.guardLv[G.order];
-    let step; if (!st.seen) step = `灯台「${T.name}」を しらべる`; else if (!trialDone(best)) step = best.i === 0 ? `灯の欠片を 集める ${st.shards || 0}/3` : `群れを しずめる ${st.waves || 0}/3`;
+    let step; if (!st.seen) step = `「${T.name}」の 番人を たおす`; else if (!HOOK.beaconGate && !trialDone(best)) step = best.i === 0 ? `灯の欠片を 集める ${st.shards || 0}/3` : `群れを しずめる ${st.waves || 0}/3`;
     else if (!best.guard) step = best.i === 3 ? '夜に 灯台の 番人と たたかう' : best.act.top ? `${best.i === 1 ? '塔の てっぺん' : '浮き足場'}で 番人と たたかう` : '灯台の 番人と たたかう';
-    else if (!fuelOk(best)) step = `燃料を 集める（${fuelTxt(best)}）`; else step = best.act.top ? `${best.i === 1 ? '塔の てっぺん' : '浮き足場'}で 火を ともす` : '火を ともす';
+    else if (!HOOK.beaconGate && !fuelOk(best)) step = `燃料を 集める（${fuelTxt(best)}）`; else step = best.act.top ? `${best.i === 1 ? '塔の てっぺん' : '浮き足場'}で 火を ともす` : '火を ともす';
     return { t: `【灯台 ${G.order}/5・推奨Lv${lv}】${step}`, p: best.act.top && st.seen ? best.act : best }; }
   if (!F.cleared) return { t: `【決戦・推奨Lv${DATA.bossCfg.yomikage[0]}】島で いちばん 高い 場所、宵の祠へ`, p: r0.shrine };
   if (!F.c2start) return { t: '【第2章】広場の クロウと 話そう', p: npcAt('kurou', 0) };
@@ -910,11 +914,12 @@ function trialDone(b) { const st = G.trial[b.i]; return b.i === 0 ? (st.shards |
 async function beaconEvent(b, atTop) {
   if (!G.flags.metGen) { await say(['灯台の 足もとに、黒い 気配が うずまいている。', who('sora', 'worried', '……まずは 村で じゅんびを しよう。')]); return; }
   const T = DATA.trials[b.i], st = G.trial[b.i];
+  if (HOOK.beaconGate) { const g = HOOK.beaconGate(b); if (g) { await say(g); return; } }
   if (!st.seen) { st.seen = 1; await say([`【灯台の試練　${T.name}】`, T.text, `（火を ともす 燃料：${fuelTxt(b)}）`]); }
   if (b.act.top && !atTop) { await say([b.i === 1 ? '火皿は 灯台ではなく、となりの 高い 塔の てっぺんに ある。 がんばりゲージが あれば 壁を よじ登れる。 ブロックで 階段を 作っても いい。'
     : '火皿は 崖の 先に 浮かぶ 足場の 上だ。 風布で 滑空するか、ブロックで 橋を かけよう。']); return; }
-  if (b.i === 0 && (st.shards || 0) < 3) { await say([`灯の欠片が 足りない（${st.shards || 0}/3）。 灯台の まわりで 光っている 欠片を さがそう。`]); return; }
-  if (b.i === 2 && (st.waves || 0) < 3) {
+  if (!HOOK.beaconGate && b.i === 0 && (st.shards || 0) < 3) { await say([`灯の欠片が 足りない（${st.shards || 0}/3）。 灯台の まわりで 光っている 欠片を さがそう。`]); return; }
+  if (!HOOK.beaconGate && b.i === 2 && (st.waves || 0) < 3) {
     if (!(await confirm(`かげものの 群れが せまってくる。（推奨Lv${DATA.guardLv[G.order]}） 迎えうつ？`))) return;
     for (let w = st.waves || 0; w < 3; w++) {
       await say([`第${w + 1}波！`]); const lv = Math.max(1, DATA.guardLv[G.order] - 3 + w);
@@ -941,9 +946,10 @@ async function beaconEvent(b, atTop) {
     else await say([`${DATA.enemies[gid].name}の かげが はれて、光の 粒に なって 消えていった。`]);
     save();
   }
-  if (!fuelOk(b)) { await say([`火皿は 冷えきっている。 燃料が 足りない。`, `（必要：${fuelTxt(b)}）`, '（木を 切ると 薪と 葉っぱ、岩を 掘ると 石、夜の いきものから 夜露の しずくが 手に入る）']); return; }
-  if (!(await confirm(`燃料（${Object.entries(fuelOf(b)).map(([k, v]) => DATA.items[k].name + v).join('・')}）を つかって 火を ともしますか？`))) return;
-  for (const [k, v] of Object.entries(fuelOf(b))) G.inv[k] -= v;
+  if (!HOOK.beaconGate && !fuelOk(b)) { await say([`火皿は 冷えきっている。 燃料が 足りない。`, `（必要：${fuelTxt(b)}）`, '（木を 切ると 薪と 葉っぱ、岩を 掘ると 石、夜の いきものから 夜露の しずくが 手に入る）']); return; }
+  if (HOOK.beaconGate) { if (!(await confirm('灯台に 火を ともしますか？'))) return; }
+  else { if (!(await confirm(`燃料（${Object.entries(fuelOf(b)).map(([k, v]) => DATA.items[k].name + v).join('・')}）を つかって 火を ともしますか？`))) return;
+    for (const [k, v] of Object.entries(fuelOf(b))) G.inv[k] -= v; }
   b.lit = true; b.t = 0; const k = G.order; G.order++;
   Music.jingle('light', fieldSong()); allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; });
   await wait(900);
@@ -1908,7 +1914,7 @@ function frameBody(now) {
   const lan = [player.x + Math.cos(player.yaw) * .44 + Math.sin(player.yaw) * .14, player.y + .85, player.z - Math.sin(player.yaw) * .44 + Math.cos(player.yaw) * .14, lightMon ? 2.6 : 1.6];
   fx.push({ type: 1, p: lan.slice(0, 3), size: [.9, .9], grow: night * .5 });
   const beaconU = new Float32Array(20); if (G.region === 0) r.beacons.forEach((b, i) => beaconU.set([b.fireAt[0], b.fireAt[1] + .25, b.fireAt[2], b.lit ? 1 : 0], i * 4));
-  if (G.region === 0 && phase === 'field') { const b0 = r.beacons[0]; if (!b0.lit) for (const sh of b0.shards) if (!sh.got) fx.push({ type: 1, p: [sh.x, sh.y + .7, sh.z], size: [1.6, 1.6], grow: 1.5, tint: [1, .8, .35] }); }
+  if (G.region === 0 && phase === 'field') { const b0 = r.beacons[0]; if (!b0.lit) b0.shards.forEach((sh, k) => { if (!(G.trial[0].got || []).includes(k)) fx.push({ type: 1, p: [sh.x, sh.y + .7, sh.z], size: [1.6, 1.6], grow: 1.5, tint: [1, .8, .35] }); }); }
   let ghost = null; if (G.build && md === 'field') { const [x, y, z] = buildCell(); ghost = [x, y, z, G.mat]; }
   if (DEBUG) { const hid = window.__norender ? 'hidden' : ''; if (cv.style.visibility !== hid) cv.style.visibility = hid; }
   if (!(DEBUG && window.__norender)) World.render({ eye, tgt, tod: G.tod, T, player: [player.x, player.y, player.z], lantern: lan, beaconU, fx, ghost, darkness, stars: G.flags.c3done ? 1.7 : G.flags.c3start ? .35 : 1 });
@@ -1969,7 +1975,7 @@ function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() 
 window.KZ = { HOOK, get G() { return G; }, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
   say, who, nm, menu, panel, confirm, run, toast, tip, gain, save, load, hud, fade, wait, R, esc, $, floatText, runBattle, mkMon, mkHuman, calc, fixTeam, battleParty, allMembers, member, nameOf, inParty,
   defeated, fieldSong, warpTo, credits, rest, objective, need, regionName: r => REGION_NAME[r], townName: r => TOWN_NAME[r], get enemies() { return enemies; }, set enemies(v) { enemies = v; },
-  surfaceAt, hAt, Blocks, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
+  surfaceAt, hAt, Blocks, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, buildHouse, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
 if (DEBUG) window.__dbg = { shrineEvent, cam, calc, skyTravel2: () => skyTravel(2), get busy() { return busy; }, get phase() { return phase; }, setupCh3, skyTravel, fluteEvent, windEvent, towerGateEvent, finalEvent3, talkSoyogi, buildBridge, objective, credits, questLog, mapPanel, skillMenu, statusPanel, G: () => G, player, REG, runBattle, say, run, mkHuman, mkMon, setupCh2, startField, sail, talk, NPCS, beaconEvent, midbossEvent, altarEvent, openMenu, dexMenu, fixTeam, craftMenu,
   tp: (x, z) => { player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); } };
 })();
