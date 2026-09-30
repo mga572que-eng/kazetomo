@@ -75,7 +75,21 @@ const World = (() => {
     const dw = Math.hypot(x - TOWER2[0], z - TOWER2[1]); if (dw < 26) h = lerp(h, 24, smooth(26, 14, dw));
     return h;
   }
-  const GEN = [genHeight, genHeight1, genHeight2];
+  // 海の底 (region 3): 光のとどく 海底の 盆地。 北に 深淵の宮、南に アワの里
+  const TOWN3 = [0, 130], PALACE3 = [0, -175], LH3 = [[-150, 20], [150, 40], [10, -60]], TRENCH3 = [-120, -150];
+  function genHeight3(x, z) {
+    const d = Math.max(Math.abs(x), Math.abs(z)) / (WORLD * .5);
+    const n = fbm(x * .006 + 21, z * .006 - 13, 5), r = ridge(x * .005 - 9, z * .005 + 3, 4);
+    let h = 8 + (n - .45) * 14 + Math.pow(r, 2.6) * 26;
+    const dunes = Math.sin(x * .07 + fbm(x * .01, z * .01, 2) * 6) * .8; h += dunes * smooth(20, 0, Math.abs(n - .45) * 60);
+    const wall = smooth(.8, 1.0, d + (vn(x * .02, z * .02) - .5) * .1); h = lerp(h, 46 + fbm(x * .02, z * .02, 3) * 20, wall);
+    const tr = Math.hypot(x - TRENCH3[0], z - TRENCH3[1]); h = lerp(h, 2.2, smooth(34, 16, tr + (vn(x * .05, z * .05) - .5) * 12));
+    for (const [lx, lz] of LH3) h = lerp(h, 11, smooth(20, 11, Math.hypot(x - lx, z - lz)));
+    h = lerp(h, 8, smooth(34, 22, Math.hypot(x - TOWN3[0], z - TOWN3[1])));
+    h = lerp(h, 14, smooth(40, 26, Math.hypot(x - PALACE3[0], z - PALACE3[1])));
+    return Math.max(h, 2.2);
+  }
+  const GEN = [genHeight, genHeight1, genHeight2, genHeight3];
   let REGION = 0;
   const H = new Float32Array(N * N);
   function fillH(r) { for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) H[j * N + i] = GEN[r](-WORLD / 2 + i * SP, -WORLD / 2 + j * SP); }
@@ -83,6 +97,7 @@ const World = (() => {
   function hAt(x, z) { const fx = clamp((x + WORLD / 2) / SP, 0, N - 1.001), fz = clamp((z + WORLD / 2) / SP, 0, N - 1.001), i = fx | 0, j = fz | 0, tx = fx - i, tz = fz - j, k = j * N + i;
     return lerp(lerp(H[k], H[k + 1], tx), lerp(H[k + N], H[k + N + 1], tx), tz); }
   function biomeAt(x, z) { const h = hAt(x, z);
+    if (REGION === 3) { if (Math.hypot(x - TRENCH3[0], z - TRENCH3[1]) < 36) return 'trench'; if (h > 30) return 'rock'; const k = fbm(x * .02 + 3, z * .02 + 8, 3); return k > .58 ? 'coral' : k < .4 ? 'kelp' : 'sand'; }
     if (REGION === 2) { if (h < 3) return 'void'; if (Math.hypot(x - TOWER2[0], z - TOWER2[1]) < 72) return 'crystal'; if (h > 30) return 'rock'; return fbm(x * .015 + 7, z * .015 - 3, 3) > .56 ? 'forest' : 'grass'; }
     if (REGION === 0) { if (h < 2.6) return 'shore'; if (h > 18) return 'rock'; return fbm(x * .012 + 40, z * .012 + 40, 3) > .52 ? 'forest' : 'grass'; }
     if (Math.hypot(x - RUINS1[0], z - RUINS1[1]) < 40) return 'ruins';
@@ -90,7 +105,7 @@ const World = (() => {
   function nAt(x, z) { const e = 1; return V.norm([hAt(x - e, z) - hAt(x + e, z), 2 * e, hAt(x, z - e) - hAt(x, z + e)]); }
 
   // ---------- blocks ----------
-  const RB = [{ b: new Map(), p: new Set() }, { b: new Map(), p: new Set() }, { b: new Map(), p: new Set() }];
+  const RB = [{ b: new Map(), p: new Set() }, { b: new Map(), p: new Set() }, { b: new Map(), p: new Set() }, { b: new Map(), p: new Set() }];
   let blocks = RB[0].b, protectedB = RB[0].p; let blocksDirty = true;
   const bkey = (x, y, z) => x + ',' + y + ',' + z;
   const Blocks = {
@@ -124,7 +139,7 @@ const World = (() => {
   const COMMON = `
 precision highp sampler2DShadow;
 uniform vec3 uL; uniform vec3 uLC; uniform vec3 uSkyZ; uniform vec3 uSkyH; uniform vec3 uCam; uniform float uNight; uniform float uT;
-uniform vec4 uBeacon[5]; uniform vec4 uPL; uniform float uFlick;
+uniform vec4 uBeacon[5]; uniform vec4 uPL; uniform float uFlick; uniform float uUW;
 uniform sampler2DShadow uShadow; uniform mat4 uLVP; uniform float uShTex;
 float hs(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float vnz(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -145,6 +160,7 @@ vec3 lightIt(vec3 alb, vec3 n, vec3 p, float wrap){
   vec3 fill=mix(uSkyH,uSkyZ,.5)*vec3(.46,.48,.5)+uLC*vec3(.15,.1,.04);
   vec3 amb=mix(mix(uLC*vec3(.4,.28,.17), fill, n.y*.5+.5), ambN, uNight);
   vec3 c=alb*(amb+uLC*d);
+  if(uUW>.5){ vec2 q=p.xz*.35; float k1=vnz(q+vec2(uT*.35,uT*.2)), k2=vnz(q*1.7-vec2(uT*.28,-uT*.31)); float cs=pow(1.-abs(k1-k2),10.); c+=alb*uLC*cs*.32*max(n.y,0.)*(1.-uNight*.8); }
   for(int i=0;i<5;i++){ if(uBeacon[i].w<.5) continue;
     vec3 v=uBeacon[i].xyz-p; float r=length(v);
     c+=alb*vec3(1.,.55,.25)*(1./(1.+r*r*.012))*max(dot(n,v/r)*.7+.3,0.)*(.35+uNight*2.2)*uFlick; }
@@ -153,6 +169,7 @@ vec3 lightIt(vec3 alb, vec3 n, vec3 p, float wrap){
   return c;
 }
 vec3 fogIt(vec3 c, vec3 p){ vec3 d=p-uCam; float dist=length(d);
+  if(uUW>.5){ float fu=1.-exp(-max(dist-6.,0.)*.021); vec3 fcu=mix(uSkyH, uSkyZ, clamp(.5-d.y/dist,0.,1.)); return mix(c*mix(vec3(1.),vec3(.7,.95,1.05),clamp(dist*.02,0.,1.)), fcu, clamp(fu,0.,1.)); }
   float hk=mix(1.4,.55,smoothstep(-10.,70.,p.y)); float f=1.-exp(-max(dist-38.,0.)*.0024*hk); f*=f*(3.-2.*f);
   vec3 fc=mix(uSkyH, uSkyZ, clamp(d.y/dist,0.,1.)*.5);
   fc+=uLC*pow(max(dot(normalize(d),uL),0.),8.)*.25*(1.-uNight);
@@ -532,6 +549,8 @@ precision highp float; in vec2 vP; out vec4 o; uniform mat4 uInvVP; uniform vec3
 ${COMMON}
 void main(){
   vec4 w=uInvVP*vec4(vP,1.,1.); vec3 dir=normalize(w.xyz/w.w-uCam); float y=dir.y;
+  if(uUW>.5){ vec3 cu=mix(uSkyZ*.55, uSkyH*1.15, smoothstep(-.4,.95,y)); float ray=pow(max(y,0.),3.)*(.5+.5*sin(dir.x*18.+uT*.6)*sin(dir.z*14.-uT*.45)); cu+=uLC*ray*.35*(1.-uNight*.7);
+    if(y>.2){ vec2 sq=dir.xz/y*3.+uT*.05; cu+=uLC*pow(1.-abs(vnz(sq)-vnz(sq*1.3+4.)),12.)*smoothstep(.2,.9,y)*.5; } o=vec4(tone(cu),1.); return; }
   vec3 col=mix(uSkyH, uSkyZ, pow(clamp(y,0.,1.),.55)); col=mix(col, uSkyH*.75, smoothstep(0.,-.25,y));
   float sd=max(dot(dir,uSun),0.); float up=smoothstep(-.12,.02,uSun.y);
   col+=uLC*(pow(sd,900.)*14.+pow(sd,24.)*.35+pow(sd,4.)*.08)*up;
@@ -564,6 +583,16 @@ void main(){
   c=mix(c, sand, smoothstep(2.2,1.,vW.y+(m1-.5)*1.2)); c=mix(c, sand*.62, smoothstep(0.,-1.5,vW.y));
   c=mix(c, vec3(.93,.95,.98), smoothstep(46.,52.,vW.y+m1*6.)*smoothstep(.55,.8,n.y));
   if(uRegion<.5){ float path=smoothstep(3.5,1.5,abs(length(vW.xz)-14.))*step(length(vW.xz),24.); c=mix(c, vec3(.62,.54,.40)*(.9+.2*m1), path*.7); }
+  else if(uRegion>2.5){
+    vec3 sd=mix(vec3(.60,.58,.48), vec3(.72,.68,.54), m1); sd*=.9+.12*sin(vW.x*.9+vW.z*.4+fbm(vW.xz*.2)*5.);
+    vec3 rk=mix(vec3(.30,.36,.40), vec3(.46,.50,.50), fbm(vW.xz*.2+vW.y*.3));
+    float cr=smoothstep(.56,.66,fbm(vW.xz*.02+vec2(3.,8.))); vec3 coral=mix(vec3(.95,.45,.45), vec3(1.,.66,.3), fbm(vW.xz*.3)); coral=mix(coral, vec3(.62,.42,.86), step(.62,fbm(vW.xz*.12+2.)));
+    float kl=smoothstep(.42,.36,fbm(vW.xz*.02+vec2(3.,8.))); vec3 kelp=mix(vec3(.2,.42,.26), vec3(.34,.56,.3), m1);
+    c=mix(sd, rk, smoothstep(.22,.34,slope+(m1-.5)*.12)); c=mix(c, coral*(.8+.3*fbm(vW.xz*1.3)), cr*.75*smoothstep(.4,.2,slope)); c=mix(c, kelp, kl*.7*smoothstep(.4,.2,slope));
+    float tn=smoothstep(26.,12.,length(vW.xz-vec2(0.,130.))); c=mix(c, vec3(.86,.84,.78)*(.9+.2*m1), tn*.7);
+    float pl=smoothstep(30.,16.,length(vW.xz-vec2(0.,-175.))); vec3 marble=mix(vec3(.62,.66,.78),vec3(.78,.8,.9),step(.5,fract(floor(vW.x*.5)*.5+floor(vW.z*.5)*.5))); c=mix(c, marble, pl*.85);
+    c=mix(c, vec3(.05,.08,.16), smoothstep(8.,2.5,vW.y)*.8);
+  }
   else if(uRegion>1.5){
     vec3 g2=mix(vec3(.24,.52,.16), vec3(.46,.68,.2), m1); g2=mix(g2, vec3(.66,.66,.36), smoothstep(.55,.8,m2)*.5);
     g2=mix(g2, vec3(.95,.80,.86), smoothstep(.78,.86,fbm(vW.xz*.35+3.))*.35);
@@ -594,11 +623,11 @@ void main(){
 
     // water
     P.wat = prog(`#version 300 es
-layout(location=0) in vec2 aP; uniform mat4 uVP; uniform float uRegion; out vec3 vW; void main(){ vW=vec3(aP.x,uRegion>1.5?-26.:0.,aP.y); gl_Position=uVP*vec4(vW,1.); }`, `#version 300 es
+layout(location=0) in vec2 aP; uniform mat4 uVP; uniform float uRegion; out vec3 vW; void main(){ vW=vec3(aP.x,(uRegion>1.5&&uRegion<2.5)?-26.:0.,aP.y); gl_Position=uVP*vec4(vW,1.); }`, `#version 300 es
 precision highp float; in vec3 vW; out vec4 o; uniform sampler2D uHm; uniform float uWorld, uSp, uN; uniform float uRegion;
 ${COMMON}
 void main(){
-  if(uRegion>1.5){
+  if(uRegion>1.5&&uRegion<2.5){
     vec2 q=vW.xz*.011+vec2(uT*.008,uT*.003); float c1=fbm(q); float c2=fbm(q*3.3+c1*1.6-uT*.015);
     float lit=clamp(.5+(c2-.45)*1.6,0.,1.);
     vec3 base=mix(uSkyH*.82+vec3(.03,.03,.06), uLC*.92+uSkyZ*.22+vec3(.08), lit);
@@ -640,7 +669,7 @@ void main(){
   vec3 n=normalize(vec3(Hm(xz-vec2(e,0))-Hm(xz+vec2(e,0)),2.*e,Hm(xz-vec2(0,e))-Hm(xz+vec2(0,e))));
   float R=float(uG)*uGsp*.5; float dist=length(xz-uCenter.xz); float fade=1.-smoothstep(R*.55,R*.95,dist);
   float patchN=vnz(xz*.06)*.7+vnz(xz*.23)*.3;
-  float village=uRegion>1.5 ? smoothstep(12.,20.,length(xz-vec2(0.,70.)))*smoothstep(50.,62.,length(xz-vec2(0.,-160.)))*smoothstep(3.,6.,h) : uRegion<.5 ? smoothstep(10.,14.,abs(length(xz)-14.)+ (length(xz)>24.?20.:0.)) : smoothstep(18.,26.,length(xz-vec2(0.,165.)))*smoothstep(26.,36.,length(xz-vec2(150.,-20.)))*(1.-smoothstep(40.,80.,xz.x+25.*sin(xz.y*.02)))*(1.-smoothstep(-100.,-140.,xz.y+20.*sin(xz.x*.025)))*(1.-smoothstep(30.,38.,h));
+  float village=uRegion>2.5 ? smoothstep(14.,22.,length(xz-vec2(0.,130.)))*smoothstep(26.,34.,length(xz-vec2(0.,-175.)))*smoothstep(4.,6.,h) : uRegion>1.5 ? smoothstep(12.,20.,length(xz-vec2(0.,70.)))*smoothstep(50.,62.,length(xz-vec2(0.,-160.)))*smoothstep(3.,6.,h) : uRegion<.5 ? smoothstep(10.,14.,abs(length(xz)-14.)+ (length(xz)>24.?20.:0.)) : smoothstep(18.,26.,length(xz-vec2(0.,165.)))*smoothstep(26.,36.,length(xz-vec2(150.,-20.)))*(1.-smoothstep(40.,80.,xz.x+25.*sin(xz.y*.02)))*(1.-smoothstep(-100.,-140.,xz.y+20.*sin(xz.x*.025)))*(1.-smoothstep(30.,38.,h));
   float ok=smoothstep(1.4,2.2,h)*smoothstep(.74,.82,n.y)*(1.-smoothstep(40.,44.,h))*fade*(uRegion<.5 ? .25+.75*village : village);
   float height=(.32+r3*.55)*(.55+patchN*.95)*ok*smoothstep(1.2,3.5,length(vec3(xz.x,h,xz.y)-uCam))*mix(.35,1.,smoothstep(.3,.9,length(xz-uPlayer.xz)));
   float ang=r4*6.2831; vec2 dir=vec2(cos(ang),sin(ang)); float t=aP.y;
@@ -783,7 +812,8 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
     const proj = persp(1.05, W / Hh, .1, 1800), view = lookAt(eye, tgt, [0, 1, 0]), VP = mul(proj, view); lastVP = VP;
     const { sun, night: n0 } = skyInfo(tod); const night = Math.max(n0, darkness);
     let Pal = palette(sun[1]); if (darkness > 0) Pal = { z: mix3(Pal.z, [.05, .02, .09], darkness), h: mix3(Pal.h, [.12, .06, .16], darkness), l: mix3(Pal.l, [.3, .2, .4], darkness) };
-    const Ldir = sun[1] > -.02 ? sun : V.norm([-sun[0], -sun[1], -sun[2]]);
+    if (REGION === 3) { const dn = 1 - night * .75; Pal = { z: [.015 * dn, .1 * dn, .2 * dn], h: [.05 * dn, .34 * dn, .44 * dn], l: [.62 * dn + .05, .9 * dn + .05, .95 * dn + .1] }; }
+    const Ldir = REGION === 3 ? V.norm([.25, 1, .2]) : sun[1] > -.02 ? sun : V.norm([-sun[0], -sun[1], -sun[2]]);
     const Lc = Pal.l.map(c => c * (sun[1] > -.02 ? smooth(-.03, .12, sun[1]) * .9 + .1 : 1));
     const flick = .85 + .15 * Math.sin(T * 9.3) * Math.sin(T * 5.7 + 1.3);
     // light VP (stabilized)
@@ -815,7 +845,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
       gl.uniform3fv(u.uSkyZ, Pal.z); gl.uniform3fv(u.uSkyH, Pal.h); gl.uniform3fv(u.uCam, eye); gl.uniform1f(u.uNight, night); gl.uniform1f(u.uT, T);
       gl.uniform4fv(u.uBeacon, beaconU); gl.uniform4fv(u.uPL, lan); gl.uniform1f(u.uFlick, flick);
       gl.uniform1i(u.uHm, 0); gl.uniform1i(u.uShadow, 1); gl.uniformMatrix4fv(u.uLVP, false, LVP); gl.uniform1f(u.uShTex, 1 / SHS);
-      gl.uniform1f(u.uWorld, WORLD); gl.uniform1f(u.uSp, SP); gl.uniform1f(u.uN, N); gl.uniform1f(u.uRegion, REGION); gl.uniform2f(u.uRes, W, Hh); }
+      gl.uniform1f(u.uWorld, WORLD); gl.uniform1f(u.uSp, SP); gl.uniform1f(u.uN, N); gl.uniform1f(u.uRegion, REGION); gl.uniform1f(u.uUW, REGION === 3 ? 1 : 0); gl.uniform2f(u.uRes, W, Hh); }
 
     gl.disable(gl.DEPTH_TEST); gl.depthMask(false); gl.disable(gl.BLEND);
     common(P.sky); gl.uniformMatrix4fv(P.sky.u.uInvVP, false, inv(VP)); gl.uniform3fv(P.sky.u.uSun, sun); gl.uniform1f(P.sky.u.uStars, S.stars ?? 1); gl.bindVertexArray(triVAO); gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -827,7 +857,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
     gl.bindVertexArray(VAO.grs); gl.drawArraysInstanced(gl.TRIANGLES, 0, 18, GRID * GRID);
 
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
-    common(P.wat); gl.bindVertexArray(VAO.wat); gl.drawArrays(gl.TRIANGLES, 0, 6);
+    if (REGION !== 3) { common(P.wat); gl.bindVertexArray(VAO.wat); gl.drawArrays(gl.TRIANGLES, 0, 6); }
     if (ghost) { common(P.blk); gl.uniform1f(P.blk.u.uGhost, .35); gl.uniform1f(P.blk.u.uInflate, .02); gl.bindBuffer(gl.ARRAY_BUFFER, ghostIB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(ghost));
       gl.bindVertexArray(ghostVAO); gl.drawArraysInstanced(gl.TRIANGLES, 0, 36, 1); }
 
@@ -848,5 +878,5 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
   function project(p) { const m = lastVP; if (!m) return null; const x = m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], y = m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13], w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
     if (w <= .1) return null; return [(x / w * .5 + .5) * innerWidth, (1 - (y / w * .5 + .5)) * innerHeight]; }
 
-  return { setQuality, get quality() { return QL; }, init, resize, render, project, hAt, nAt, surfaceAt, skyInfo, Blocks, setRegion, biomeAt, speciesGeo, propGeo, seg, TOWN1, RUINS1, TOWN2, TOWER2, ISL2, get region() { return REGION; }, Geo, prism, ico, shade, solid, hex, human, creature, shadowGeo, makeMesh, fbm, rnd, WORLD, V, clamp, lerp, smooth };
+  return { setQuality, get quality() { return QL; }, init, resize, render, project, hAt, nAt, surfaceAt, skyInfo, Blocks, setRegion, biomeAt, speciesGeo, propGeo, seg, TOWN1, RUINS1, TOWN2, TOWER2, ISL2, TOWN3, PALACE3, LH3, TRENCH3, get region() { return REGION; }, Geo, prism, ico, shade, solid, hex, human, creature, shadowGeo, makeMesh, fbm, rnd, WORLD, V, clamp, lerp, smooth };
 })();

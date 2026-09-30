@@ -517,3 +517,72 @@ DATA.combos = [
   { id: 'cb_soyouta', a: 'haru', b: 'mio', name: 'そよ風の歌', mp: 8, tg: 'party', heal: 40, healPct: .35, cure: true, buff: 'atk', fx: 'song', desc: 'ハル＋ミオ：全員を 回復・状態異常を なおし こうげき アップ' },
 ];
 for (const c of DATA.combos) DATA.skills[c.id] = { ...c, mp: 0, verb: 'くりだした' };
+
+// ================= 第4章：海の底 =================
+Object.assign(DATA.items, {
+  shinju: { name: 'しんじゅ', mat: true, sell: 120, desc: '海の底で とれる 光る 玉。 高く うれる' },
+  awanosuzu: { name: 'あわの鈴', key: true, desc: '鳴らすと 泡の 道が ひらき、海の底へ もぐれる' },
+});
+Object.assign(DATA.skills, {
+  // カイト（灯台守）
+  toudai: { type: 'light', name: '灯台の光', mp: 5, tg: 'enemy', power: 1.8, magic: true, verb: 'てらした', fx: 'light', desc: '敵1体に ひかりの 魔法' },
+  ikari: { type: 'water', name: 'いかり投げ', mp: 4, tg: 'enemy', power: 1.9, verb: 'なげた', fx: 'water', desc: '敵1体に みずの 大ダメージ' },
+  shiosai: { name: 'しおさいの守り', mp: 6, tg: 'party', buff: 'def', verb: 'となえた', fx: 'heal', desc: '3ターン 味方全員の ぼうぎょ ×1.5' },
+  oonamigiri: { type: 'water', name: '大波斬り', mp: 10, tg: 'enemies', power: 1.55, verb: 'はなった', fx: 'water', desc: '敵全体に みずの 大ダメージ' },
+  tomoshibi: { type: 'light', name: '導きの灯', mp: 14, tg: 'enemies', power: 1.8, magic: true, verb: 'ともした', fx: 'light', desc: '敵全体に ひかりの 大魔法' },
+  // 海の いきもの・番人
+  sumi: { type: 'dark', name: 'すみはき', mp: 4, tg: 'enemy', power: 1.4, slow: true, verb: 'はいた', fx: 'dark' },
+  awadama: { type: 'water', name: 'あわだま', mp: 3, tg: 'enemy', power: 1.55, verb: 'はなった', fx: 'water' },
+  sango: { type: 'earth', name: 'さんごの槍', mp: 5, tg: 'enemy', power: 1.8, verb: 'つきだした', fx: 'rock' },
+  chouchin: { type: 'light', name: 'ちょうちんの光', mp: 6, tg: 'enemies', power: 1.25, magic: true, verb: 'てらした', fx: 'light' },
+  uzushio: { type: 'water', name: 'うずしお', mp: 9, tg: 'enemies', power: 1.4, magic: true, verb: 'よびおこした', fx: 'water' },
+  shimetsuke: { name: 'しめつけ', tg: 'one', power: 1.5, slow: true },
+  hasami: { name: 'きょだいばさみ', tg: 'one', power: 2.0 },
+  denkou: { type: 'light', name: 'でんこう', tg: 'all', power: 1.05, ail: ['para', .25] },
+  kurasumi: { type: 'dark', name: 'やみの すみ', tg: 'all', power: 1.0, ail: ['poison', .3] },
+  fukamikui: { type: 'dark', name: '深み喰らい', tg: 'all', power: 1.95, drain: 20 },
+  shinkai: { type: 'water', name: '深海の 圧', tg: 'all', power: 2.05 },
+  kaiko: { type: 'water', name: '大渦の 咆哮', tg: 'all', power: 1.9 },
+});
+Object.assign(DATA.species, {
+  pukuawa: SP({ no: 39, name: 'プクアワ', arch: 'fish', col: ['#9fe6ff', '#4fa8d8', '#fff2a0'], feat: ['fins'], type: 'water', hab: { r: 3, b: ['sand', 'kelp'], t: 'any', w: 10 }, base: [50, 18, 18, 14, 16], grow: [8, 2.6, 3, 2.4, 1.6], sk: [['awadama', 1], ['mizu', 1], ['nami', 42]], evo: { to: 'oopuku', lv: 44 }, desc: 'おどろくと ぷくっと ふくらむ。 中身は ほとんど 泡。' }),
+  oopuku: SP({ no: 40, name: 'オオプクアワ', arch: 'fish', col: ['#6fcaf0', '#2f78b0', '#ffe070'], feat: ['fins', 'crown'], size: 1.5, type: 'water', base: [72, 24, 24, 20, 17], grow: [10.5, 3, 3.8, 3.2, 1.6], sk: [['awadama', 1], ['nami', 1], ['uzushio', 1]], desc: '海の 泡を あつめて 巨大化した。 ふくらむと 船より 大きい。' }),
+  hitoden: SP({ no: 41, name: 'ヒトデン', arch: 'sprite', col: ['#ffb070', '#e07040', '#fff6d0'], feat: ['halo'], type: 'light', hab: { r: 3, b: ['coral', 'sand'], t: 'night', w: 7 }, base: [46, 24, 16, 14, 18], grow: [7, 3.4, 2.8, 2.2, 1.8], sk: [['matataki', 1], ['iyashikaze', 1], ['ginga', 44]], desc: '夜に なると 星のように 光る ヒトデ。 空の 星と 話せるらしい。' }),
+  takosumi: SP({ no: 42, name: 'タコスミ', arch: 'sprite', col: ['#c07ad8', '#7a3a98', '#ffe0f0'], feat: ['ears'], type: 'dark', hab: { r: 3, b: ['kelp', 'rock'], t: 'any', w: 9 }, base: [52, 20, 20, 14, 17], grow: [8, 2.8, 3.4, 2.4, 1.7], sk: [['sumi', 1], ['yami', 1], ['uzushio', 43]], evo: { to: 'oodako', lv: 45 }, desc: 'すみで 絵を かくのが とくい。 たいてい 自分の 顔。' }),
+  oodako: SP({ no: 43, name: 'オオダコ', arch: 'sprite', col: ['#a04ac0', '#5a1a78', '#ffd0e8'], feat: ['ears', 'horns'], size: 1.5, type: 'dark', base: [78, 26, 27, 20, 18], grow: [11, 3.2, 4.2, 3.2, 1.7], sk: [['sumi', 1], ['yami', 1], ['uzushio', 1]], desc: '八本の 腕で 沈んだ 宝を あつめる。 一本は いつも 頭を かいている。' }),
+  sangoron: SP({ no: 44, name: 'サンゴロン', arch: 'golem', col: ['#ff8a8a', '#c04a5a', '#fff0d0'], feat: ['core'], size: 1.3, type: 'earth', hab: { r: 3, b: ['coral'], t: 'any', w: 8 }, base: [70, 12, 22, 26, 8], grow: [11, 1.6, 3.8, 4.2, .8], sk: [['sango', 1], ['iwa', 1], ['jishin', 44]], desc: 'さんごが 千年 かけて 立ちあがった。 せなかに 小魚が すんでいる。' }),
+  chouchinan: SP({ no: 45, name: 'チョウチンアン', arch: 'fish', col: ['#3a4a78', '#1a2244', '#fff0a0'], feat: ['fins', 'halo'], type: 'light', hab: { r: 3, b: ['trench', 'rock'], t: 'any', w: 7 }, base: [56, 26, 22, 16, 15], grow: [8.5, 3.6, 3.6, 2.6, 1.5], sk: [['chouchin', 1], ['awadama', 1], ['ginga', 46]], desc: '深い 海の 道しるべ。 ちょうちんの 光で 迷子を 家へ 送りとどける。' }),
+  uminokami: SP({ no: 46, name: 'ウミノカミ', arch: 'fish', col: ['#e8f8ff', '#6ab8e8', '#ffe38a'], feat: ['fins', 'halo', 'crown'], size: 1.9, type: 'water', legend: true, hab: { r: 3, b: ['trench'], t: 'night', w: 1 }, base: [100, 36, 30, 26, 20], grow: [13, 4.6, 4.8, 4, 1.9], sk: [['uzushio', 1], ['ginga', 1], ['iyashikaze', 1]], desc: '海の 灯を 見守る 神さま。 千年に 一度だけ 深淵から 顔を 出す。' }),
+});
+DATA.speciesOrder = Object.keys(DATA.species).sort((a, b) => DATA.species[a].no - DATA.species[b].no);
+Object.assign(DATA.enemies, {
+  kaisouG: { name: '藻の番人モズク', spArt: 'oodako', type: 'grass', boss: true, acts: [['atk', .45], ['shimetsuke', .3], ['kurasumi', .25]] },
+  kaniG: { name: '甲羅の番人ガンザ', spArt: 'sangoron', type: 'earth', boss: true, acts: [['atk', .45], ['hasami', .35], ['jinarashi', .2]] },
+  ikaG: { name: '雷の番人イカヅチ', spArt: 'chouchinan', type: 'light', boss: true, acts: [['atk', .4], ['denkou', .35], ['uzushio', .25]] },
+  fukami: { name: '深みの王', spArt: 'oopuku', type: 'dark', boss: true, twice: true, acts: [['atk', .35], ['kurasumi', .25], ['uzushio', .2], ['denkou', .2]] },
+  shinen: { name: '深淵の主', spArt: 'uminokami', type: 'dark', boss: true, twice: true, acts: [['atk', .3], ['fukamikui', .2], ['kurasumi', .2], ['denkou', .15], ['uzushio', .15]] },
+});
+Object.assign(DATA.bossCfg, { kaisouG: [41, 8.5, 1.35, 1.05], kaniG: [43, 9, 1.38, 1.2], ikaG: [45, 8.5, 1.4, 1], fukami: [47, 6.4, .98, 1.05], shinen: [55, 8.4, 1.08, 1.15] });
+for (const id of ['kaisouG', 'kaniG', 'ikaG', 'fukami', 'shinen']) { const [L, H, A, D] = DATA.bossCfg[id]; const d = DATA.enemies[id]; d.lv = L; d.hp = Math.round(H * (30 + 14 * L)); d.atk = Math.round(A * (8 + 3.2 * L)); d.def = Math.round(D * (6 + 2.4 * L)); d.spd = Math.round(6 + 1.1 * L); d.exp = Math.round((30 + L * 12) * (d.twice ? 2 : 1.3) * 3); d.gold = Math.round(L * 60); }
+CHG('kaniG', 'daijishin'); CHG('ikaG', 'kaiko'); CHG('fukami', 'shinkai'); CHG('shinen', 'fukamikui');
+// 海の 装備
+DATA.gear.sora.push({ name: '潮騒の剣', atk: 58, price: 8800, sea: true });
+DATA.gear.mio.push({ name: '真珠の竪琴', atk: 36, price: 7600, sea: true });
+DATA.gear.riku.push({ name: '海槍ワダツミ', atk: 44, price: 8200, sea: true });
+DATA.gear.sana.push({ name: '潮見の杖', atk: 32, price: 7200, sea: true });
+DATA.gear.haru.push({ name: '潮風の扇', atk: 36, price: 7800, sea: true });
+DATA.gear.kaito = [{ name: '灯台守の いかり', atk: 30 }, { name: '深海の いかり', atk: 46, price: 8400, sea: true }];
+DATA.armor.push({ name: '人魚の鱗よろい', def: 36, price: 7400, sea: true });
+// カイト（父・灯台守）
+DATA.party.kaito = { base: { hp: 46, mp: 18, atk: 16, def: 12, spd: 12 }, grow: { hp: 7.4, mp: 2.8, atk: 2.9, def: 2.2, spd: 1.3 }, skills: [['toudai', 1], ['ikari', 1], ['shiosai', 1]] };
+DATA.boards.kaito = [
+  { id: 'k1', name: '灯台守の腕', desc: 'こうげき +10%', cost: 1, eff: { atk: .1 } },
+  { id: 'k2', name: '海の男', desc: 'HP +12%', cost: 1, eff: { hp: .12 } },
+  { id: 'k3', name: '大波斬り', desc: '技：敵全体に みずの 大ダメージ', cost: 2, skill: 'oonamigiri', req: 'k1' },
+  { id: 'k4', name: '父の背中', desc: 'ぼうぎょ +15%', cost: 2, eff: { def: .15 }, req: 'k2' },
+  { id: 'k5', name: '見張り', desc: '会心の 確率 アップ', cost: 2, eff: { crit: .06 }, req: 'k3' },
+  { id: 'k6', name: 'ふんばり', desc: 'HP・ぼうぎょ +10%', cost: 3, eff: { hp: .1, def: .1 }, req: 'k4' },
+  { id: 'k7', name: '導きの灯', desc: '技：敵全体に ひかりの 大魔法', cost: 4, skill: 'tomoshibi', req: 'k5' },
+  { id: 'k8', name: '灯台の誇り', desc: 'こうげき・HP +12%', cost: 4, eff: { atk: .12, hp: .12 }, req: 'k6' } ];
+DATA.combos.push({ id: 'cb_oyako', a: 'kaito', b: 'sora', name: '親子の灯', mp: 12, tg: 'enemies', power: 2.3, type: 'light', magic: true, buff: 'def', fx: 'light', desc: 'カイト＋ソラ：敵全体に 光の 大ダメージ＋みんなの ぼうぎょ アップ' });
+DATA.skills.cb_oyako = { ...DATA.combos[DATA.combos.length - 1], mp: 0, verb: 'くりだした' };

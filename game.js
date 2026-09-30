@@ -35,7 +35,7 @@ function buildPier(x0, z0, dirZ, len) { for (let i = 0; i < len; i++) for (let w
 const rng = (seed) => () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 
 // ================= region 0: 風灯の島 =================
-const REG = [{}, {}, {}];
+const REG = [{}, {}, {}, {}];
 {
   const r = REG[0]; World.setRegion(0);
   r.beacons = [];
@@ -152,11 +152,29 @@ const REG = [{}, {}, {}];
   for (let k = 0; k < 400 && r.skyRocks.length < 34; k++) { const x = (rr() - .5) * 900, z = (rr() - .5) * 900; if (I.some(A => Math.hypot(A.x - x, A.z - z) < A.r + 26)) continue;
     r.skyRocks.push({ x, z, y: -6 + rr() * 80, s: 1.6 + rr() * 4.5, r: rr() * 6.28, ph: rr() * 6.28 }); }
 }
+// ================= region 3: 海の底 =================
+{
+  const r = REG[3]; World.setRegion(3); const [TX, TZ] = World.TOWN3; r.town = { x: TX, z: TZ };
+  r.houses = [{ id: 'ushio', x: TX, z: TZ - 16 }, { id: 'inn', x: TX - 15, z: TZ - 2 }, { id: 'item', x: TX + 15, z: TZ - 4 }, { id: 'weapon', x: TX + 11, z: TZ + 12 }];
+  r.houses.forEach((h, i) => { h.face = [TX, TZ]; buildHouse(h, [{ wall: 6, roof: 7, corner: 10 }, { wall: 4, roof: 7 }, { wall: 6, roof: 7 }, { wall: 1, roof: 7 }][i]); });
+  for (const [x, z] of [[TX - 7, TZ + 7], [TX + 7, TZ + 7], [TX - 7, TZ - 8], [TX + 7, TZ - 8]]) { const b = Math.floor(hAt(x + .5, z + .5)); Blocks.set(x, b, z, 6, true); Blocks.set(x, b + 1, z, 7, true); Blocks.set(x, b + 2, z, 2, true); }
+  r.pier = { x: TX + .5, z: TZ + 24 }; r.ship = { x: 0, z: 9999, yaw: 0 };
+  r.statue = { x: TX - 4, z: TZ + 5 }; r.fire = { x: TX + 4, z: TZ + 3 }; r.board = { x: TX + 3, z: TZ - 9 }; r.home = r.houses[1];
+  r.lh = World.LH3.map(([x, z], i) => ({ i, x, z, y: hAt(x, z) }));
+  // 沈んだ 灯台（石レンガの 塔・ガラスの 灯室）
+  for (const L of r.lh) { const b = Math.floor(L.y); for (let y = b; y < b + 9; y++) for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) { const e = Math.abs(dx) === 2 || Math.abs(dz) === 2; if (!e || (y === b + 1 && dz === 2 && Math.abs(dx) < 1)) continue; if ((y + dx * 3 + dz * 5 + L.i) % 7 === 0 && y > b + 2) continue; Blocks.set(Math.floor(L.x) + dx, y, Math.floor(L.z) + dz, 6, true); }
+    for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) Blocks.set(Math.floor(L.x) + dx, b + 9, Math.floor(L.z) + dz, 1, true);
+    for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) Blocks.set(Math.floor(L.x) + dx, b + 10, Math.floor(L.z) + dz, 7, true); L.fire = [L.x + .5, b + 10.6, L.z + .5]; L.top = b + 10; }
+  const [PX, PZ] = World.PALACE3; r.palace = { x: PX, z: PZ, y: hAt(PX, PZ) };
+  { const b = Math.floor(r.palace.y); for (let a = 0; a < 16; a++) { const an = a / 16 * Math.PI * 2; const x = Math.round(PX + Math.cos(an) * 14), z = Math.round(PZ + Math.sin(an) * 14); if (Math.abs(an - Math.PI / 2) < .3) continue; for (let y = b; y < b + 7 + (a % 2) * 2; y++) Blocks.set(x, y, z, a % 2 ? 6 : 4, true); Blocks.set(x, b + 7 + (a % 2) * 2, z, 7, true); } }
+  const [RX, RZ] = World.TRENCH3; r.trench = { x: RX, z: RZ, y: hAt(RX, RZ) };
+}
 let bridgeBuilt = false;
 function buildBridge() { if (bridgeBuilt) return; bridgeBuilt = true; for (const [x, y, z, t] of REG[2].bridgePlan) Blocks.set(x, y, z, t, true, 2); }
 function scatter(regionIdx) {
   const r = REG[regionIdx]; World.setRegion(regionIdx); const rn = rng(1000 + regionIdx * 17); const W = World.rnd;
   const avoid = (x, z, d) => Math.hypot(x - r.town.x, z - r.town.z) < 30 || (r.beacons || []).some(b => Math.hypot(b.x - x, b.z - z) < d) || (r.shrine && Math.hypot(r.shrine.x - x, r.shrine.z - z) < 14)
+    || (regionIdx === 3 && (r.lh.some(L => Math.hypot(L.x - x, L.z - z) < 14) || Math.hypot(x - r.palace.x, z - r.palace.z) < 24))
     || (regionIdx === 1 && Math.hypot(x - World.RUINS1[0], z - World.RUINS1[1]) < 30) || Math.hypot(x - r.pier.x, z - r.pier.z) < 12
     || (regionIdx === 2 && (r.shrines.some(s => Math.hypot(s.x - x, s.z - z) < 12) || Math.hypot(x - r.tower.x, z - r.tower.z) < 20 || Math.hypot(x - r.tower.x, z - r.tower.z + 9) < 10 || r.updrafts.some(u => Math.hypot(u.x - x, u.z - z) < 6)));
   r.trees = []; r.rocks = []; r.bushes = []; r.shrooms = []; r.seeds = [];
@@ -178,17 +196,17 @@ function scatter(regionIdx) {
     const peak = [[6, 0], [-6, 0], [0, 6], [0, -6]].every(([dx, dz]) => hAt(x + dx, z + dz) < h - .4);
     if (!peak && rn() > .03) continue; if (r.seeds.some(s => Math.hypot(s.x - x, s.z - z) < 25)) continue; r.seeds.push({ id: regionIdx + ':' + r.seeds.length, x, z, y: h }); }
   r.chests = r.chests || [];
-  const extra = regionIdx === 2 ? [{ gear: ['haru', 1] }, { gold: 1200 }, { give: { kumowata: 6 } }, { give: { stew: 1 } }, { give: { hoshikake: 3 } }, { gold: 2000 }] : regionIdx ? [{ gold: 300 }, { give: { pan: 3 } }, { gear: ['riku', 2] }, { give: { hoshikake: 1 } }, { gold: 500 }, { give: { ganbari: 2 } }] : [{ gold: 120 }, { give: { shizuku: 2 } }, { give: { nakayoshi: 2 } }, { gold: 200 }];
+  const extra = regionIdx === 3 ? [{ gold: 2500 }, { give: { shinju: 2 } }, { give: { stew: 2 } }, { give: { hoshikake: 3 } }, { gold: 4000 }, { give: { shinju: 3 } }] : regionIdx === 2 ? [{ gear: ['haru', 1] }, { gold: 1200 }, { give: { kumowata: 6 } }, { give: { stew: 1 } }, { give: { hoshikake: 3 } }, { gold: 2000 }] : regionIdx ? [{ gold: 300 }, { give: { pan: 3 } }, { gear: ['riku', 2] }, { give: { hoshikake: 1 } }, { gold: 500 }, { give: { ganbari: 2 } }] : [{ gold: 120 }, { give: { shizuku: 2 } }, { give: { nakayoshi: 2 } }, { gold: 200 }];
   let ci = 0; for (let k = 0; k < 8000 && ci < extra.length; k++) { const x = (rn() - .5) * 460, z = (rn() - .5) * 460, h = hAt(x, z); if (h < 6 || avoid(x, z, 12) || nAt(x, z)[1] < .7) continue;
     if (r.chests.some(c => Math.hypot(c.x - x, c.z - z) < 60)) continue; r.chests.push({ id: 'h' + regionIdx + '_' + ci, x, z, loot: extra[ci] }); ci++; }
   r.chests.forEach(c => { c.y = surfaceAt(c.x, c.z, 99); });
 }
-scatter(2); scatter(1); scatter(0);
+scatter(3); scatter(2); scatter(1); scatter(0);
 World.setRegion(0);
 
 // ================= meshes =================
 const { Geo, prism, ico, shade, solid, hex } = World;
-const maxOf = k => Math.max(REG[0][k].length, REG[1][k].length, REG[2][k].length, 1);
+const maxOf = k => Math.max(REG[0][k].length, REG[1][k].length, REG[2][k].length, REG[3][k].length, 1);
 const treeGeo = Geo(); prism(treeGeo, .2, .13, -.2, 1.9, 6, shade([.36, .25, .16], .2));
 ico(treeGeo, 1.15, [0, 2.35, 0], shade([.28, .49, .19], .28), .28); ico(treeGeo, .95, [.55, 2.9, .25], shade([.34, .56, .22], .28), .28); ico(treeGeo, .8, [-.35, 3.35, -.2], shade([.40, .62, .25], .28), .3);
 const mTree = World.makeMesh(treeGeo, maxOf('trees'), { sway: 1 });
@@ -266,6 +284,8 @@ const HUMANS = {
   kurou: { skin: '#e8dccb', hair: '#eeeaf2', hairStyle: 'long', lock: '#1e1b2a', eye: [.45, .5, .7], top: '#3e4256', robe: true, mantle: true, lantern: true, lanternCol: [.72, .5, 1], tall: 1.12, wide: .88, beard: 'big' },
   tsumugi: { skin: '#fadfca', hair: '#8fbf6a', hairStyle: 'buns', eye: [.5, .35, .2], top: '#fbfbf6', bottom: '#6aa84f', robe: true, kid: true, glasses: true, satchel: true, notebook: true },
   baldo: { skin: '#d99a6c', hair: '#eeeae2', hairStyle: 'short', eye: [.25, .38, .5], top: '#23324a', bottom: '#1b2638', belly: true, wide: 1.25, beard: 'big', hat: 'bicorne', accent: '#1b2638', epaulet: true, trim: '#d8b24a' },
+  ushio: { skin: '#d8b89a', hair: '#9fd8d0', hairStyle: 'long', eye: [.2, .5, .55], top: '#3a8a9a', robe: true, beard: 'big', scale: 1, shawl: '#e8f4f0', accent: '#f3c15a' },
+  kai: { skin: '#e8c8a8', hair: '#3a6a8a', hairStyle: 'bob', eye: [.25, .45, .6], top: '#5ab0c0', bottom: '#2a4a5a', kid: true, accent: '#ffe08a' },
   soyogi: { skin: '#ecd9c4', hair: '#f6f6fb', hairStyle: 'floor', eye: [.45, .5, .65], top: '#e8e2f4', robe: true, kid: true, scale: .95, chime: true, stoop: true, shawl: '#b8a8e0' },
   inn: { skin: '#f0cfae', hair: '#6a4a3a', hairStyle: 'bun', top: '#b5654a', robe: true, apron: true },
   item: { skin: '#e8c4a0', hair: '#2a2a2a', hairStyle: 'short', top: '#4a7a5a', bottom: '#3a3a44', band: true, accent: '#e8d8a0', satchel: true },
@@ -283,10 +303,10 @@ const need = lv => Math.round(10 * Math.pow(lv, 1.5));
 const spFor = lv => (lv - 1) + Math.floor(lv / 5);
 let uidN = 1;
 let G = { v: 3, name: 'ソラ', region: 0, party: [], mons: [], team: [], inv: { mi: 3, pan: 0, shizuku: 0, maki: 0, ishi: 0, suna: 0, ha: 0, nakayoshi: 0, hane: 0, hoshikake: 0, kinoko: 0, yakimi: 0, kinojiru: 0, ganbari: 0, stew: 0 },
-  blk: {}, gold: 50, eq: { sora: { w: 0, a: 0 }, mio: { w: 0, a: 0 }, riku: { w: 0, a: 0 }, sana: { w: 0, a: 0 }, haru: { w: 0, a: 0 } }, flags: {}, met: { sora: true }, order: 0, tod: .3, play: 0,
-  dex: { seen: {}, got: {} }, stam: 100, stamMax: 100, hpBonus: 0, seeds: 0, seedGot: {}, chests: {}, bounties: [], bountyDone: 0, rewards: {}, mat: 0, lit: [0, 0, 0, 0, 0], guard: [0, 0, 0, 0, 0], placed: [[], [], []], pos: null, wtrial: [{}, {}, {}], wind: [0, 0, 0],
-  sp: { sora: 0, mio: 0, riku: 0, sana: 0, haru: 0 }, board: { sora: [], mio: [], riku: [], sana: [], haru: [] }, hpPct: 0, trial: [{}, {}, {}, {}, {}], itemSeen: {}, tips: {}, speed: 1, auto: false, rankClaimed: {}, bosses: 0 };
-const HUMAN_IDS = ['sora', 'mio', 'riku', 'sana', 'haru'];
+  blk: {}, gold: 50, eq: { sora: { w: 0, a: 0 }, mio: { w: 0, a: 0 }, riku: { w: 0, a: 0 }, sana: { w: 0, a: 0 }, haru: { w: 0, a: 0 }, kaito: { w: 0, a: 0 } }, flags: {}, met: { sora: true }, order: 0, tod: .3, play: 0,
+  dex: { seen: {}, got: {} }, stam: 100, stamMax: 100, hpBonus: 0, seeds: 0, seedGot: {}, chests: {}, bounties: [], bountyDone: 0, rewards: {}, mat: 0, lit: [0, 0, 0, 0, 0], guard: [0, 0, 0, 0, 0], placed: [[], [], [], []], pos: null, wtrial: [{}, {}, {}], wind: [0, 0, 0],
+  sp: { sora: 0, mio: 0, riku: 0, sana: 0, haru: 0, kaito: 0 }, board: { sora: [], mio: [], riku: [], sana: [], haru: [], kaito: [] }, hpPct: 0, trial: [{}, {}, {}, {}, {}], itemSeen: {}, tips: {}, speed: 1, auto: false, rankClaimed: {}, bosses: 0 };
+const HUMAN_IDS = ['sora', 'mio', 'riku', 'sana', 'haru', 'kaito'];
 function calc(m) {
   const st = {};
   if (m.kind === 'human') { const d = DATA.party[m.id]; for (const k of ['hp', 'mp', 'atk', 'def', 'spd']) st[k] = d.base[k] + d.grow[k] * (m.lv - 1);
@@ -323,7 +343,7 @@ let SLOT = 1; const OLD_KEY = 'kazetomo-rpg-1'; const keyOf = n => n === 1 ? 'ka
 function slotInfo(n) { try { const raw = localStorage.getItem(keyOf(n)) || (n === 1 && localStorage.getItem(OLD_KEY)); if (!raw) return null; const d = JSON.parse(raw), g = d.G || {}; const F = g.flags || {};
   const ch = F.c4done ? '第4章クリア' : F.c3done ? (F.c4start ? '第4章' : '第3章クリア') : F.c2done ? '第3章' : F.cleared ? '第2章' : '第1章';
   const lv = Math.max(1, ...((g.party || d.party || []).map(m => m.lv || 1))); const t = Math.floor((g.play || 0) / 60); return { name: g.name || d.name || 'ソラ', ch, lv, time: `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}` }; } catch (e) { return null; } }
-function save() { try { G.pos = { x: player.x, z: player.z, y: player.y }; G.placed = [Blocks.placed(0), Blocks.placed(1), Blocks.placed(2)]; G.lit = REG[0].beacons.map(b => b.lit ? 1 : 0); G.guard = REG[0].beacons.map(b => b.guard ? 1 : 0);
+function save() { try { G.pos = { x: player.x, z: player.z, y: player.y }; G.placed = [Blocks.placed(0), Blocks.placed(1), Blocks.placed(2), Blocks.placed(3)]; G.lit = REG[0].beacons.map(b => b.lit ? 1 : 0); G.guard = REG[0].beacons.map(b => b.guard ? 1 : 0);
   localStorage.setItem(keyOf(SLOT), JSON.stringify({ G, uidN })); return true; } catch (e) { return false; } }
 function hasSave() { return [1, 2, 3].some(n => slotInfo(n)); }
 function load() { try {
@@ -336,7 +356,7 @@ function load() { try {
     G.mons.forEach(m => { G.dex.got[m.id] = 1; G.dex.seen[m.id] = 1; }); G.team = []; }
   G.party.forEach(calc); G.mons.forEach(calc); fixTeam();
   REG[0].beacons.forEach((b, i) => { b.lit = !!G.lit[i]; b.guard = !!G.guard[i]; });
-  Blocks.load(G.placed[0] || [], 0); Blocks.load(G.placed[1] || [], 1); Blocks.load(G.placed[2] || [], 2);
+  Blocks.load(G.placed[0] || [], 0); Blocks.load(G.placed[1] || [], 1); Blocks.load(G.placed[2] || [], 2); Blocks.load(G.placed[3] || [], 3);
   G.mons.forEach(m => { if (!m.iv) m.iv = { hp: 8, mp: 8, atk: 8, def: 8, spd: 8 }; if (m.bond == null) m.bond = 20; if (!m.extra) m.extra = []; calc(m); });
   for (const f of HOOK.load) f(G);
   for (const k of HUMAN_IDS) if (!G.eq[k]) G.eq[k] = { w: 0, a: 0 }; if (!G.wind) G.wind = [0, 0, 0]; if (G.wind.every(Boolean)) G.flags.c3bridge = true; if (G.flags.c3bridge) buildBridge(); G.build = false; if (G.flags.c3done && G.flags.c3reunion === undefined && G.region === 0) G.flags.c3reunion = true;
@@ -537,7 +557,7 @@ function objective() {
 const WIND_BOSS = ['tsumujikaze', 'kumokurage', 'hoshigarasu'];
 const DEX_N = DATA.speciesOrder.length;
 const SEED_N = () => REG.reduce((a, r) => a + r.seeds.length, 0);
-const REGION_NAME = ['風灯の島', '霧の大陸', '天空の浮島'], TOWN_NAME = ['風見の村', '港町ミナト', '雲の里ククル'];
+const REGION_NAME = ['風灯の島', '霧の大陸', '天空の浮島', '海の底'], TOWN_NAME = ['風見の村', '港町ミナト', '雲の里ククル', 'アワの里'];
 
 // ================= interaction =================
 let target = null, sandCd = 0;
@@ -742,7 +762,7 @@ async function sail(dest) {
   G.region = dest; World.setRegion(dest); enemies = []; const r = REGr();
   player.x = r.pier.x; player.z = r.pier.z - 8; player.y = surfaceAt(player.x, player.z, 99); player.vx = player.vz = player.vy = 0; trail.length = 0; cam.yaw = Math.PI; player.yaw = Math.PI;
   Music.play(fieldSong(), { restart: true }); await wait(400); await fade(false); save(); }
-async function talkInn() { const sky = G.region === 2, cost = sky ? 40 : 20; const c = await menu({ title: sky ? '雲の宿「ふわり亭」' : '宿屋「うみねこ亭」', items: [{ label: 'とまる', sub: `${cost}G・全回復＋記録`, disabled: G.gold < cost }, { label: 'はなす' }] });
+async function talkInn() { const sky = G.region === 2, sea = G.region === 3, cost = sea ? 60 : sky ? 40 : 20; const c = await menu({ title: sea ? '泡の宿「あぶく亭」' : sky ? '雲の宿「ふわり亭」' : '宿屋「うみねこ亭」', items: [{ label: 'とまる', sub: `${cost}G・全回復＋記録`, disabled: G.gold < cost }, { label: 'はなす' }] });
   if (c === 0) await rest(cost); else if (c === 1) await say([sky ? nm('雲の宿の 主人', '雲わたの 布団は ふかふかだよ。 ……星が 減ってから、夜が さびしくてねえ。') : nm('宿屋の おかみ', '最近は 夜に なると 空が ざわつくのよ。 星が 東の 砂漠へ 落ちていくの。')]); }
 // ================= ショップ UI（v5） =================
 const ICON = (() => { const w = (b) => `<svg viewBox="0 0 32 32" class="ic" aria-hidden="true">${b}</svg>`;
@@ -765,21 +785,21 @@ const ICON = (() => { const w = (b) => `<svg viewBox="0 0 32 32" class="ic" aria
   };
   const map = { mi: ['fruit', '#e05050'], pan: ['bread', '#d8a060'], shizuku: ['potion', '#6fb2f0'], nakayoshi: ['fruit', '#ff8ac4'], hane: ['feather', '#f4f0e6'], maki: ['log', '#8a5a34'], ishi: ['rock', '#9a968e'], suna: ['rock', '#e0c890'],
     ha: ['feather', '#6fbf5a'], hoshikake: ['star', '#ffe38a'], kinoko: ['fruit', '#c0553a'], yakimi: ['fruit', '#b06030'], kinojiru: ['bowl', '#c08a50'], ganbari: ['bowl', '#8fe06a'], stew: ['bowl', '#f3c15a'], kumowata: ['cloud', '#ffffff'], dokukeshi: ['feather', '#8fe06a'], ...(HOOK.icons || {}) };
-  const wep = { sora: 'sword', mio: 'harp', riku: 'spear', sana: 'staff', haru: 'fan' };
+  const wep = { sora: 'sword', mio: 'harp', riku: 'spear', sana: 'staff', haru: 'fan', kaito: 'spear' };
   return { item: k => { const [f, c] = map[k] || (HOOK.icons || {})[k] || ['star', '#ccc']; return I[f](c); }, gear: (id, tier) => I[wep[id] || 'sword'](['#c9ced6', '#d8b884', '#f3c15a', '#9fd0ff', '#ffe38a', '#c9b8ff'][Math.min(tier, 5)]), armor: tier => I.armor(['#8a7a60', '#a07a50', '#9a968e', '#b8c0d0', '#c9b8ff', '#ffffff'][Math.min(tier, 5)]) }; })();
 const KEEPER = { weapon: ['weapon', '武器と防具の店', 'いらっしゃい！ いい品が そろってるよ。'], item: ['item', '道具屋', 'まいど！ 旅の 備えは 万全かい？'] };
 function shopUI(kind) {
   return new Promise(res => {
-    const sky = G.region === 2; const shopName = kind === 'weapon' ? (sky ? '空の武具屋' : '武器と防具の店') : (sky ? '空の道具屋' : '道具屋');
+    const sky = G.region === 2, sea = G.region === 3; const shopName = kind === 'weapon' ? (sea ? '海の武具屋' : sky ? '空の武具屋' : '武器と防具の店') : (sea ? '海の道具屋' : sky ? '空の道具屋' : '道具屋');
     const tabs = kind === 'weapon' ? [['w', 'ぶき'], ['a', 'ぼうぐ'], ['s', 'うる']] : [['i', 'かう'], ['s', 'うる']];
     let tab = tabs[0][0], sel = 0, qty = 1, armed = null, line = kind === 'weapon' ? (sky ? '雲の上の 鍛冶は 軽くて 強いのさ。' : 'いらっしゃい！ いい品が そろってるよ。') : (sky ? '空の 旅には がんばり串が 欠かせないよ。' : 'まいど！ 旅の 備えは 万全かい？');
     const el = document.createElement('div'); el.className = 'win panel shop';
     const M = { el, panel: true, items: [], res }; const close = () => { closeMenu(M, -1); hud(); };
     const nameM = m => esc(nameOf(m)); const face = m => `<span class="fc">${Art.portrait(m.id, 'smile')}</span>`;
     const rows = () => {
-      if (tab === 'w') { const out = []; for (const m of G.party) DATA.gear[m.id].forEach((g, i) => { if (g.price && !!g.sky === sky) out.push({ t: 'w', m, i, g, name: g.name, price: g.price, sub: nameOf(m), icon: ICON.gear(m.id, i), dis: G.eq[m.id].w >= i }); }); return out; }
-      if (tab === 'a') return DATA.armor.map((a, i) => ({ t: 'a', i, a, name: a.name, price: a.price, sub: `ぼうぎょ ${a.def}`, icon: ICON.armor(i), dis: G.party.every(m => G.eq[m.id].a >= i) })).filter(o => o.price && !!o.a.sky === sky);
-      if (tab === 'i') { const ids = (sky ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : ['mi', 'pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi']).concat(HOOK.shopExtra ? HOOK.shopExtra(G.region) : []); return ids.map(k => ({ t: 'i', k, name: DATA.items[k].name, price: DATA.items[k].price, sub: `もち ${G.inv[k] || 0}`, icon: ICON.item(k) })); }
+      if (tab === 'w') { const out = []; for (const m of G.party) DATA.gear[m.id].forEach((g, i) => { if (g.price && !!g.sky === sky && !!g.sea === sea) out.push({ t: 'w', m, i, g, name: g.name, price: g.price, sub: nameOf(m), icon: ICON.gear(m.id, i), dis: G.eq[m.id].w >= i }); }); return out; }
+      if (tab === 'a') return DATA.armor.map((a, i) => ({ t: 'a', i, a, name: a.name, price: a.price, sub: `ぼうぎょ ${a.def}`, icon: ICON.armor(i), dis: G.party.every(m => G.eq[m.id].a >= i) })).filter(o => o.price && !!o.a.sky === sky && !!o.a.sea === sea);
+      if (tab === 'i') { const ids = (sea ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : sky ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : ['mi', 'pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi']).concat(HOOK.shopExtra ? HOOK.shopExtra(G.region) : []); return ids.map(k => ({ t: 'i', k, name: DATA.items[k].name, price: DATA.items[k].price, sub: `もち ${G.inv[k] || 0}`, icon: ICON.item(k) })); }
       return Object.keys(DATA.items).filter(k => (G.inv[k] || 0) > 0 && DATA.items[k].sell).map(k => ({ t: 's', k, name: DATA.items[k].name, price: DATA.items[k].sell, sub: `もち ${G.inv[k]}${DATA.items[k].mat ? '・素材' : ''}`, icon: ICON.item(k) })); };
     const detail = o => {
       if (!o) return `<div class="sdet"><p class="st-eq">${tab === 's' ? 'うれる ものが ない。' : '品物が ない。'}</p></div>`;
@@ -1121,10 +1141,10 @@ async function defeated() {
 function fade(on) { return new Promise(r => { $('fade').classList.toggle('on', on); setTimeout(r, 900); }); }
 async function credits(ch) {
   Music.play('ending', { restart: true });
-  const c = DATA.cast; const list = (ch === 1 ? ['sora', 'mio', 'riku', 'kaito', 'yui', 'gen', 'nagi', 'yomi'] : ch === 2 ? ['sora', 'mio', 'riku', 'sana', 'tsumugi', 'baldo', 'kurou'] : ['sora', 'mio', 'riku', 'sana', 'haru', 'soyogi', 'kurou']).map(k => k === 'kurou' ? { k, n: 'クロウ', r: 'かつての灯台守' } : { k, n: k === 'sora' ? esc(G.name) : c[k].name, r: `${c[k].role}・${c[k].title}` });
-  const el = $('credits'); el.innerHTML = `<div class="cr-roll"><h2>ともしびアイランド</h2><p class="cr-sub">${['', '第一章　ともしびの継ぎ手', '第二章　星くずの大陸', '第三章　天空の星巣'][ch]}</p>${list.map(o => `<div class="cr-row"><div class="cr-face">${Art.portrait(o.k, o.k === 'yomi' ? 'neutral' : 'smile')}</div><div><b>${o.n}</b><span>${o.r}</span></div></div>`).join('')}
+  const c = DATA.cast; const list = (ch === 1 ? ['sora', 'mio', 'riku', 'kaito', 'yui', 'gen', 'nagi', 'yomi'] : ch === 2 ? ['sora', 'mio', 'riku', 'sana', 'tsumugi', 'baldo', 'kurou'] : ch === 3 ? ['sora', 'mio', 'riku', 'sana', 'haru', 'soyogi', 'kurou'] : ['sora', 'mio', 'riku', 'sana', 'haru', 'kaito', 'yui', 'kurou']).map(k => k === 'kurou' ? { k, n: 'クロウ', r: 'かつての灯台守' } : { k, n: k === 'sora' ? esc(G.name) : c[k].name, r: `${c[k].role}・${c[k].title}` });
+  const el = $('credits'); el.innerHTML = `<div class="cr-roll"><h2>ともしびアイランド</h2><p class="cr-sub">${['', '第一章　ともしびの継ぎ手', '第二章　星くずの大陸', '第三章　天空の星巣', '第四章　海の底'][ch]}</p>${list.map(o => `<div class="cr-row"><div class="cr-face">${Art.portrait(o.k, o.k === 'yomi' ? 'neutral' : 'smile')}</div><div><b>${o.n}</b><span>${o.r}</span></div></div>`).join('')}
     <p class="cr-h">いきもの</p><p>なかま ${Object.keys(G.dex.got).length} / ${DEX_N} 種</p><p class="cr-h">音楽</p><p>オリジナル・オーケストラ</p><p class="cr-h">企画</p><p>あなた</p><p class="cr-h">制作</p><p>Claude</p>
-    <p class="cr-end">${['', 'そして 灯は、帰る場所の しるしに なった。', '星は 空へ 還り、旅は つづく。', 'そして 星は、帰る場所を 照らしつづける。'][ch]}</p><p class="cr-end">— ${['', '第一章 おわり', 'つづく', '第三章 おわり'][ch]} —</p></div><button class="btn-close" type="button">旅に もどる</button>`;
+    <p class="cr-end">${['', 'そして 灯は、帰る場所の しるしに なった。', '星は 空へ 還り、旅は つづく。', 'そして 星は、帰る場所を 照らしつづける。', 'そして 灯は、海の いちばん 深い 場所まで とどいた。'][ch]}</p><p class="cr-end">— ${['', '第一章 おわり', 'つづく', '第三章 おわり', '第四章 おわり ・ ありがとう'][ch]} —</p></div><button class="btn-close" type="button">旅に もどる</button>`;
   el.hidden = false; await new Promise(r => el.querySelector('.btn-close').addEventListener('click', r, { once: true })); el.hidden = true; Music.play(fieldSong());
 }
 
@@ -1135,6 +1155,7 @@ $('bSpd').addEventListener('click', () => { G.speed = G.speed === 1 ? 2 : G.spee
 $('bAuto').addEventListener('click', () => { G.auto = !G.auto; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF';
   if (G.auto) for (const M of MENUS.slice().reverse()) if (M.el.classList.contains('m-battle')) closeMenu(M, 'auto'); });
 function wildLevel(x, z) { if (G.region === 0) return Math.max(1, 1 + G.order * 3 + (G.flags.cleared ? 4 : 0) + Math.floor(R() * 2));
+  if (G.region === 3) { const b = World.biomeAt(x, z); return ({ sand: 40, kelp: 41, coral: 42, rock: 44, trench: 47 }[b] || 40) + Math.floor(R() * 3) + (G.flags.c4done ? 5 : 0); }
   if (G.region === 2) { const b = World.biomeAt(x, z); return ({ grass: 29, forest: 30, rock: 32, crystal: 33 }[b] || 29) + Math.floor(R() * 3) + (G.flags.c3done ? 6 : 0); }
   const b = World.biomeAt(x, z); const base = { grass: 15, shore: 16, forest: 18, desert: 20, snow: 22, ruins: 24 }[b] || 15; return base + Math.floor(R() * 3) + (G.flags.c2done ? 3 : 0) + (G.flags.c3done ? 3 : 0); }
 const S0 = spec => SPC[spec.sp] || {};
@@ -1480,6 +1501,7 @@ async function itemMenu() {
       if (it.healAll) { G.inv[k]--; allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); Music.sfx('heal'); toast('みんな 全回復した！', 1200); hud(); continue; }
       const P = battleParty(); const j = await menu({ title: `だれに つかう？`, items: P.map(m => ({ label: nameOf(m), sub: `HP ${m.hp}/${m.st.hp}  MP ${m.mp}/${m.st.mp}` })), where: 'side' });
       if (j >= 0) useItemField(k, P[j]); } } }
+async function travel(dest, x, z, yaw = Math.PI) { await fade(true); G.region = dest; World.setRegion(dest); enemies = []; player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.vx = player.vz = player.vy = 0; player.glide = false; trail.length = 0; cam.yaw = yaw; player.yaw = yaw; player.safe = { x, z }; Music.play(fieldSong(), { restart: true }); await wait(400); await fade(false); save(); }
 async function warpTo(x, z) { await fade(true); player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.safe = { x, z }; player.vx = player.vz = player.vy = 0; trail.length = 0; enemies = []; await wait(200); await fade(false); }
 const mapCache = {};
 function mapImage() {
@@ -1495,6 +1517,7 @@ function mapPanel() { return new Promise(res => {
   marks.push(`<span class="mk town" style="${pos(r.town.x, r.town.z)}">${TOWN_NAME[G.region]}</span>`);
   if (G.region === 0) { r.beacons.forEach(b => marks.push(`<span class="mk bc${b.lit ? ' lit' : ''}" style="${pos(b.x, b.z)}" title="${DATA.trials[b.i].name}">${b.lit ? '🔥' : '◇'}</span>`)); if (G.order >= 5) marks.push(`<span class="mk" style="${pos(r.shrine.x, r.shrine.z)}">⛩</span>`); }
   else if (G.region === 1) { marks.push(`<span class="mk ru" style="${pos(World.RUINS1[0], World.RUINS1[1])}">星の遺跡</span>`); }
+  else if (G.region === 3) { r.lh.forEach(L => marks.push(`<span class="mk bc${(G.lh || [])[L.i] ? ' lit' : ''}" style="${pos(L.x, L.z)}">${(G.lh || [])[L.i] ? '🔥' : '◇'}</span>`)); marks.push(`<span class="mk ru" style="${pos(r.palace.x, r.palace.z)}">深淵の宮</span>`); }
   else { r.shrines.forEach(sh => marks.push(`<span class="mk bc${G.wind[sh.i] ? ' lit' : ''}" style="${pos(sh.x, sh.z)}" title="${DATA.windTrials[sh.i].name}">${G.wind[sh.i] ? '🌀' : '◇'}</span>`)); marks.push(`<span class="mk ru" style="${pos(r.tower.x, r.tower.z)}">星巣の塔</span>`); }
   marks.push(`<span class="mk" style="${pos(r.pier.x, r.pier.z)}">⚓</span>`);
   for (const f of HOOK.mapMarks) marks.push(...f(G.region, pos));
@@ -1675,7 +1698,7 @@ function frameBody(now) {
     if (jumpReq && md === 'field') {
       if (player.ground && !player.swim) { player.vy = 8.4; player.ground = false; }
       else if (player.glide) player.glide = false;
-      else if (!player.ground && !wallClimb && G.flags.glider && !player.tired && G.stam > 1) { player.glide = true; player.deploy = 0; Music.sfx('wind'); }
+      else if (!player.ground && !wallClimb && G.flags.glider && G.region !== 3 && !player.tired && G.stam > 1) { player.glide = true; player.deploy = 0; Music.sfx('wind'); }
     }
     jumpReq = false;
     if (inUD && !player.ground && !player.glide && G.flags.glider && !player.tired && G.stam > 1 && !wallClimb && player.vy < 2) { player.glide = true; player.deploy = 0; Music.sfx('wind'); }
@@ -1684,11 +1707,11 @@ function frameBody(now) {
       const sink = -(base + Math.pow(Math.abs(player.bank || 0), 1.4) * 2.6 + Math.max(0, (player.gSpd || 0) - (G.flags.glider2 ? 10.5 : 8)) * .35) * (player.y - gh < 1.6 ? .45 : 1);
       if (inUD) player.vy = Math.min(player.vy + 30 * dt * player.deploy, 9.5); else player.vy = lerp(player.vy, sink, Math.min(1, dt * (player.vy < sink ? 2.6 + 3 * player.deploy : 1.4)));
       player.y += player.vy * dt; }
-    else { player.vy -= 22 * dt; player.y += player.vy * dt; }
+    else { player.vy -= (G.region === 3 ? 11 : 22) * dt; if (G.region === 3) player.vy = Math.max(player.vy, -7); player.y += player.vy * dt; }
     if (player.y <= gh) { if (!player.ground && player.vy < -6.5) { for (let k = 0; k < 3; k++) puffs.push({ x: player.x + (R() - .5) * .8, y: gh + .1, z: player.z + (R() - .5) * .8, t: 0, big: 1 }); Music.sfx('step'); } player.y = gh; player.vy = 0; player.ground = true; player.glide = false; } else if (player.y > gh + .15) player.ground = false;
     dustT -= dt; if (sprint && player.ground && hsp0() > 6 && dustT <= 0) { dustT = .2; puffs.push({ x: player.x - Math.sin(player.yaw) * .4, y: player.y + .05, z: player.z - Math.cos(player.yaw) * .4, t: 0 }); }
     if (player.glide) { glideT -= dt; if (glideT <= 0) { glideT = .06; const rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw); for (const sx of [-1, 1]) streaks.push({ x: player.x + rx * sx * 1.3, y: player.y + 2.5, z: player.z + rz * sx * 1.3, t: 0 }); } }
-    const using = (sprint ? 14 : 0) + ((climbing && im > .1) || wallClimb ? 12 : 0) + (player.glide ? (G.flags.glider2 ? 2.2 : 4.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
+    const using = (sprint ? 14 : 0) + ((climbing && im > .1) || wallClimb ? 12 : 0) + (player.glide && !G.flags.glider3 ? (G.flags.glider2 ? 2.2 : 4.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
     if (using > 0) G.stam = Math.max(0, G.stam - using * dt); else if (player.ground && !player.swim) G.stam = Math.min(G.stamMax, G.stam + (moved < .01 ? 40 : 26) * dt);
     if (G.stam <= 0) { player.tired = true; player.glide = false; } if (player.tired && G.stam > G.stamMax * .35) player.tired = false;
     if (player.swim && G.stam <= 0) { toast('おぼれかけて、岸に もどった……', 1600); const s = player.safe || r.pier; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99); G.stam = G.stamMax * .5; player.tired = false; }
@@ -1871,7 +1894,7 @@ function setupCh2() {
   fixTeam(); player.x = 1; player.z = 8; player.y = surfaceAt(1, 8, 99); }
 function setupCh3() {
   setupCh2(); Object.assign(G.flags, { c2start: 1, c2arrive: 1, dex: 1, c2rumor: 1, c2mid: 1, c2done: 1 }); G.region = 1; World.setRegion(1);
-  G.sp = { sora: 0, mio: 0, riku: 0, sana: 0, haru: 0 }; G.board = { sora: [], mio: [], riku: [], sana: [], haru: [] };
+  G.sp = { sora: 0, mio: 0, riku: 0, sana: 0, haru: 0, kaito: 0 }; G.board = { sora: [], mio: [], riku: [], sana: [], haru: [], kaito: [] };
   G.party = [mkHuman('sora', 29), mkHuman('mio', 29), mkHuman('riku', 29), mkHuman('sana', 29)];
   for (const m of G.party) { for (const n of DATA.boards[m.id]) { if (n.req && !G.board[m.id].includes(n.req)) continue; if (G.sp[m.id] >= n.cost) { G.sp[m.id] -= n.cost; G.board[m.id].push(n.id); } } calc(m); m.hp = m.st.hp; m.mp = m.st.mp; } G.eq.sora.w = 4; G.eq.mio.w = 2; G.eq.riku.w = 2; G.eq.sana.w = 1; HUMAN_IDS.forEach(k => G.eq[k].a = 4);
   G.mons = [mkMon('watafuwari', 28), mkMon('sunawaniking', 27), mkMon('homura', 27)]; ['watapoko', 'watafuwari', 'sunawani', 'sunawaniking', 'hibana', 'homura', 'yukiusa', 'kazetaka', 'morinoko'].forEach(k => { G.dex.seen[k] = 1; G.dex.got[k] = 1; });
@@ -1889,7 +1912,7 @@ function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() 
 window.KZ = { HOOK, get G() { return G; }, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
   say, who, nm, menu, panel, confirm, run, toast, tip, gain, save, load, hud, fade, wait, R, esc, $, floatText, runBattle, mkMon, mkHuman, calc, fixTeam, battleParty, allMembers, member, nameOf, inParty,
   defeated, fieldSong, warpTo, credits, rest, objective, need, regionName: r => REGION_NAME[r], townName: r => TOWN_NAME[r], get enemies() { return enemies; }, set enemies(v) { enemies = v; },
-  surfaceAt, hAt, Blocks, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, cookMenu, craftMenu, monPanel, ranch, DEX_N: () => DATA.speciesOrder.length, SEED_N };
+  surfaceAt, hAt, Blocks, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, cookMenu, craftMenu, monPanel, ranch, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
 if (DEBUG) window.__dbg = { shrineEvent, cam, calc, skyTravel2: () => skyTravel(2), get busy() { return busy; }, get phase() { return phase; }, setupCh3, skyTravel, fluteEvent, windEvent, towerGateEvent, finalEvent3, talkSoyogi, buildBridge, objective, credits, questLog, mapPanel, skillMenu, statusPanel, G: () => G, player, REG, runBattle, say, run, mkHuman, mkMon, setupCh2, startField, sail, talk, NPCS, beaconEvent, midbossEvent, altarEvent, openMenu, dexMenu, fixTeam, craftMenu,
   tp: (x, z) => { player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); } };
 })();

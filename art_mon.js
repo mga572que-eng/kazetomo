@@ -64,7 +64,7 @@
       return s; };
     const BROW = (x, y, r, kind, side) => { if (!kind) return ''; const k = side; // side -1 left eye, 1 right eye
       const inner = kind === 'angry' ? r * .75 : kind === 'up' ? r * 1.5 : (side < 0 ? r * 1.5 : r * .75), outer = kind === 'angry' ? r * 1.45 : kind === 'up' ? r * 1.2 : (side < 0 ? r * 1.25 : r * 1.35);
-      return LN(`M${x - k * r * 1.05} ${y - outer}L${x + k * r * .6} ${y - inner}`, Math.max(4, r * .5)); };
+      return LN(`M${x + k * r * 1.05} ${y - outer}L${x - k * r * .6} ${y - inner}`, Math.max(4, r * .5)); };
     const EYES = (x, y, dx, r, op = {}) => EYE(x - dx, y, r, op) + EYE(x + dx, y, r, op) + BROW(x - dx, y, r, op.brow, -1) + BROW(x + dx, y, r, op.brow, 1);
     const MOUTH = (x, y, w, type = 'grin') => { let s = '';
       const open = `M${x - w} ${y}Q${x} ${y + w * .3} ${x + w} ${y}Q${x + w * .85} ${y + w * 1.05} ${x} ${y + w * 1.05}Q${x - w * .85} ${y + w * 1.05} ${x - w} ${y}Z`;
@@ -81,6 +81,8 @@
 
     const evo = (S.size || 1) > 1.2;
     const id = sp;
+    const BOSS = sh && ['oodako', 'sangoron', 'chouchinan', 'oopuku', 'uminokami'].includes(id);
+    const bm = m => BOSS ? 'toothy' : m, bb = x => BOSS ? 'angry' : x;
     // ================= species =================
     if (id === 'watapoko' || id === 'watafuwari') {
       const E = evo;
@@ -341,6 +343,79 @@
       out.push(`<circle cx="100" cy="140" r="${E ? 22 : 16}" fill="${core}" opacity=".35"/>`, star5(100, 140, E ? 14 : 11, core, 3.5));
       out.push(EYES(100, 102, E ? 22 : 18, E ? 11 : 10, { look: [.2, 0], brow: E ? 'angry' : 'mis' }), MOUTH(100, 118, E ? 12 : 10, E ? 'toothy' : 'grin'));
     }
+    else if (id === 'pukuawa' || id === 'oopuku') {
+      const E = evo, fin = mix(a, c, .4);
+      out.push(PART('M146 110 C162 94 176 90 190 92 C184 110 184 130 190 148 C176 148 160 140 146 128 Z', fin, .4));
+      out.push(...Array.from({ length: 12 }, (_, i) => { const an = i / 12 * 6.283 - 1.57 + .26, R = 54, L = E ? 24 : 14, x = 100 + Math.cos(an) * R, y = 112 + Math.sin(an) * R, px = -Math.sin(an) * 7, py = Math.cos(an) * 7, tx = 100 + Math.cos(an) * (R + L), ty = 112 + Math.sin(an) * (R + L);
+        return FLAT(`M${(x + px).toFixed(1)} ${(y + py).toFixed(1)}L${tx.toFixed(1)} ${ty.toFixed(1)}L${(x - px).toFixed(1)} ${(y - py).toFixed(1)}Z`, mix(a, '#ffffff', .35), 4.5); }));
+      if (E) out.push(LIMB('M100 60 L100 30 M100 44 L84 30 M100 40 L116 24 M84 30 L78 16 M116 24 L126 14', 8, sh ? c : '#ff7a8a'), ...[[100, 28], [78, 14], [126, 12], [84, 30]].map(([x, y]) => PART(cp(x, y, 5), sh ? c : '#ffb0b8', .2, 4)));
+      out.push(PART(cp(100, 112, 56), a), PART(ep(100, 138, 38, 24), mix(c, '#ffffff', .3), .5), HI(72, 80, 12, 7));
+      out.push(...[[76, 72], [124, 70], [140, 92], [60, 96], [100, 64]].map(([x, y]) => FLAT(cp(x, y, 4), b, 0)));
+      out.push(PAIR('M48 118 C34 108 22 114 24 128 C32 128 38 130 46 136 Z', fin, .3));
+      out.push(EYES(100, 104, 22, 13, { look: [.25, .1], brow: bb(E ? 'angry' : 'up') }), MOUTH(100, 128, E ? 14 : 11, bm(E ? 'toothy' : 'buck')));
+      out.push(...[[30, 62, 7], [42, 40, 4.5], [170, 46, 6], [178, 28, 3.5]].map(([x, y, r]) => FLAT(cp(x, y, r), sh ? 'none' : '#ffffff', 3) + (sh ? '' : `<circle cx="${x - r * .35}" cy="${y - r * .35}" r="${r * .3}" fill="${OL}" opacity=".0"/>`)));
+    }
+    else if (id === 'hitoden') {
+      out.push(`<circle cx="100" cy="110" r="66" fill="${c}" opacity="${sh ? .12 : .25}"/>`);
+      out.push(`<ellipse cx="100" cy="16" rx="26" ry="7" fill="none" stroke="${OL}" stroke-width="10"/><ellipse cx="100" cy="16" rx="26" ry="7" fill="none" stroke="${sh ? c : '#fff3a0'}" stroke-width="4.5"/>`);
+      const pts = Array.from({ length: 10 }, (_, i) => { const an = -Math.PI / 2 + i * Math.PI / 5, R = i % 2 ? 38 : 80; return [+(100 + Math.cos(an) * R).toFixed(1), +(112 + Math.sin(an) * R * (i === 4 || i === 6 ? .92 : 1)).toFixed(1)]; });
+      out.push(PART(rpoly(pts, 13), a), HI(90, 52, 5, 9, 10));
+      out.push(...[[100, 50], [100, 66], [50, 94], [64, 100], [150, 94], [136, 100], [70, 160], [78, 146], [130, 160], [122, 146]].map(([x, y]) => FLAT(cp(x, y, 3.5), c, 0)));
+      out.push(EYES(100, 108, 16, 11, { look: [.3, 0], brow: 'mis' }), MOUTH(100, 126, 10, 'fang'));
+      out.push(star4(30, 40, 7, sh ? c : '#fff6c0', 2.5), star4(172, 170, 6, sh ? c : '#fff6c0', 2.5));
+    }
+    else if (id === 'takosumi' || id === 'oodako') {
+      const E = evo, ink = sh ? '#0e0a20' : '#2a2438';
+      const tent = (x, k) => { const d = x < 100 ? -1 : 1, s = (E ? 1.4 : 1) * k; return `M${x} 138 C${x + d * 8 * s} 166 ${x + d * 30 * s} 172 ${x + d * 34 * s} 158 C${x + d * 36 * s} 150 ${x + d * 28 * s} 147 ${x + d * 23 * s} 153`; };
+      out.push(...[[66, 1], [80, .7], [92, .45], [108, .45], [120, .7], [134, 1]].map(([x, k]) => LIMB(tent(x, k), E ? 16 : 12, a)));
+      out.push(...[[48, 162], [152, 162], [70, 172], [130, 172]].map(([x, y]) => FLAT(cp(x, y, 2.8), c, 0)));
+      if (E) { out.push(LIMB('M142 116 C176 108 180 64 152 50', 13, a), LIMB('M58 120 C30 124 20 108 26 94', 13, a), PART(cp(26, 90, 10), gold, .3), LN('M22 90 h8', 3)); }
+      else out.push(LIMB('M58 122 C36 116 30 98 40 84', 11, a), LIMB('M40 84 L30 54', 5, sh ? c : '#b07a44'), PART('M30 54 C22 46 24 34 30 28 C36 36 38 46 30 54 Z', ink, .2, 4));
+      out.push(PAIR('M48 86 C30 76 20 82 20 96 C28 96 36 100 44 106 Z', dk, .4));
+      out.push(PART(E ? 'M100 22 C150 22 168 62 166 98 C164 130 138 148 100 148 C62 148 36 130 34 98 C32 62 50 22 100 22 Z' : 'M100 34 C140 34 158 66 156 100 C154 130 132 146 100 146 C68 146 46 130 44 100 C42 66 60 34 100 34 Z', a), HI(70, E ? 46 : 56, 11, 7));
+      out.push(...[[124, 56], [138, 76], [66, 70], [112, 42]].map(([x, y], i) => FLAT(cp(x, y, i % 2 ? 4 : 5.5), c, 0)));
+      if (E) out.push(HORN(72, 36, 58, 14, 8, sh ? c : '#ffd0e8'), HORN(128, 36, 142, 14, 8, sh ? c : '#ffd0e8'));
+      else out.push(PART('M60 52 C62 28 122 20 144 38 C152 46 146 54 138 52 C118 44 88 44 66 58 Z', ink, .3), FLAT(cp(104, 28, 4), ink, 3));
+      out.push(EYES(100, 100, 19, 12, { look: [.3, .1], brow: bb(E ? 'angry' : 'mis') }), MOUTH(100, 122, E ? 13 : 10, bm(E ? 'toothy' : 'fang')));
+      if (!E) out.push(FLAT('M150 178 C144 170 150 162 158 166 C166 160 174 170 166 176 C170 184 156 186 150 178 Z', ink, 0), FLAT(cp(172, 160, 3), ink, 0));
+    }
+    else if (id === 'sangoron') {
+      const coral = sh ? c : mix(a, '#ffffff', .2), pearl = sh ? '#ff6fe0' : '#fffaf0';
+      const fish = (x, y, col, d = 1) => FLAT(`M${x} ${y}m${-9 * d} 0c0 -5 ${4 * d} -7 ${9 * d} -7c${6 * d} 0 ${9 * d} 4 ${9 * d} 7c0 3 ${-3 * d} 7 ${-9 * d} 7c${-5 * d} 0 ${-9 * d} -2 ${-9 * d} -7z`, col, 3) + FLAT(`M${x - 8 * d} ${y}l${-9 * d} -6v12z`, col, 3) + `<circle cx="${x + 4 * d}" cy="${y - 1}" r="1.8" fill="${OL}"/>`;
+      out.push(LIMB('M70 64 C60 44 46 36 40 22 M60 46 C50 44 42 48 36 44 M128 64 C140 44 152 34 160 20 M142 44 C152 42 160 46 166 42 M100 50 L100 26', 10, coral), ...[[40, 20], [34, 44], [160, 18], [168, 42], [100, 24]].map(([x, y]) => PART(cp(x, y, 6), coral, .2, 4)));
+      out.push(fish(150, 58, sh ? c : '#ffd23a', 1), fish(52, 36, sh ? c : '#5fd8ff', -1), fish(120, 18, sh ? c : '#ffb0e0', 1));
+      out.push(LIMB('M78 160 L74 176', 22, dk), LIMB('M122 160 L126 176', 22, dk), FOOT(72, 180, 1.1), FOOT(128, 180, 1.1));
+      out.push(PART(rpoly([[100, 50], [148, 62], [166, 104], [156, 150], [128, 168], [72, 168], [44, 150], [34, 104], [52, 62]], 24), a), HI(64, 76, 10, 6));
+      out.push(...[[66, 128], [138, 130], [76, 150], [126, 152], [58, 104], [144, 106], [100, 158]].map(([x, y]) => FLAT(cp(x, y, 4), b, 2.5)));
+      out.push(LIMB('M46 100 C30 110 24 124 28 136', 18, a), LIMB(mirror('M46 100 C30 110 24 124 28 136'), 18, a));
+      const claw = 'M30 124 C10 126 4 150 18 164 C22 154 28 150 38 150 C34 160 38 168 48 168 C58 152 52 130 30 124 Z';
+      out.push(PART(claw, dk, .5), PART(mirror(claw), dk, .5));
+      out.push(`<circle cx="100" cy="132" r="20" fill="${pearl}" opacity=".3"/>`, PART(cp(100, 132, 11), pearl, .3), HI(96, 128, 4, 2.5));
+      out.push(EYES(100, 88, 16, 10, { brow: 'angry' }), MOUTH(100, 106, 13, bm('tusk')));
+    }
+    else if (id === 'chouchinan') {
+      const lure = sh ? '#ffe95a' : c;
+      out.push(`<circle cx="44" cy="30" r="24" fill="${lure}" opacity=".35"/>`, LIMB('M94 66 C94 32 72 18 52 26', 5, dk), PART(cp(44, 30, 12), lure, .3), HI(40, 26, 4, 3));
+      out.push(PART('M150 110 C166 92 180 86 192 88 C186 106 186 128 192 146 C178 144 164 136 150 124 Z', dk, .4), PART('M100 66 L110 44 L118 62 L128 46 L136 68 Z', dk, .3));
+      out.push(PART('M22 118 C22 80 58 62 96 64 C134 66 158 88 158 116 C158 150 130 170 90 170 C52 170 22 152 22 118 Z', a), HI(62, 80, 12, 6));
+      out.push(PART('M118 128 C132 132 144 148 140 160 C128 156 118 146 112 136 Z', dk, .3));
+      out.push(FLAT('M18 112 Q58 124 100 114 Q92 164 54 162 Q22 156 18 112 Z', mouthC, 4.5), `<ellipse cx="60" cy="152" rx="16" ry="5" fill="${tongueC}"/>`);
+      let t = ''; for (let i = 0; i < 7; i++) { const x = 26 + i * 11; t += FLAT(`M${x} ${116 + i * .4}L${x + 4} ${132}L${x + 8} ${117 + i * .2}Z`, white, 2); }
+      for (let i = 0; i < 5; i++) { const x = 34 + i * 12; t += FLAT(`M${x} ${158 - Math.abs(i - 2) * 1.5}L${x + 4} ${142}L${x + 8} ${158 - Math.abs(i - 2) * 1.5}Z`, white, 2); }
+      out.push(t, ...[[112, 90], [128, 104], [100, 106], [138, 88]].map(([x, y]) => FLAT(cp(x, y, 3.2), lure, 0)));
+      out.push(EYE(72, 90, 14, { look: [-.4, 0] }), BROW(72, 90, 14, bb('up'), 1));
+    }
+    else if (id === 'uminokami') {
+      out.push(`<circle cx="84" cy="70" r="46" fill="none" stroke="${OL}" stroke-width="12"/><circle cx="84" cy="70" r="46" fill="none" stroke="${gold}" stroke-width="6"/>`, ...[0, 60, 120, 180, 240, 300].map(r => star4(84 + Math.cos(r / 57.3) * 46, 70 + Math.sin(r / 57.3) * 46, 5, gold, 2)));
+      const coil = 'M76 112 C40 136 52 178 108 174 C160 170 182 138 164 108 C152 90 128 96 132 116';
+      out.push(...[[62, 148, -40], [96, 172, 10], [150, 158, 50], [172, 118, 100]].map(([x, y, r]) => PART(`M${x - 9} ${y}L${x} ${y - 18}L${x + 9} ${y}Z`, mix(a, b, .6), .3, 4.5).replace(/<use href="(#[^"]+)"/g, `<use href="$1" transform="rotate(${r} ${x} ${y})"`)));
+      out.push(LIMB(coil, 30, a), LN(coil, 9, mix(a, '#ffffff', .6)), PART('M132 116 C120 104 124 90 134 86 C134 96 142 100 150 98 C146 108 140 116 132 116 Z', mix(a, b, .5), .3));
+      out.push(PART('M120 48 C146 28 172 26 192 36 C172 44 162 54 152 70 C144 60 132 56 120 60 Z', mix(a, b, .5), .4), PART('M50 50 C34 30 18 24 6 30 C20 38 28 50 34 64 Z', mix(a, b, .5), .4));
+      out.push(PART('M40 72 C40 42 64 28 90 30 C120 32 138 52 136 76 C134 104 112 120 86 120 C58 120 40 102 40 72 Z', a), PART('M46 96 C56 116 116 120 130 96 C124 116 106 122 86 122 C66 122 52 114 46 96 Z', mix(c, '#ffffff', .4), .3), HI(62, 46, 11, 6));
+      out.push(PART('M72 34 L68 14 L82 28 Z', gold, .2, 4), PART('M88 30 L92 8 L100 30 Z', gold, .2, 4), PART('M108 34 L116 16 L118 38 Z', gold, .2, 4), PART(cp(90, 32, 6), sh ? '#ff7fe0' : '#bff0ff', .2, 3.5));
+      out.push(LN('M46 96 C28 100 16 114 20 130', 3.5, gold), LN('M120 104 C136 112 144 128 140 142', 3.5, gold));
+      out.push(EYES(86, 72, 20, 11, { look: [-.1, .1], brow: 'angry' }), MOUTH(86, 98, 13, bm('fang')));
+    }
     else { // safety fallback: generic imp
       out.push(FOOT(84, 180, .8), FOOT(116, 180, .8), PART(cp(100, 110, 50), a), EYES(100, 104, 18, 11), MOUTH(100, 126, 11, 'grin'));
     }
@@ -348,9 +423,9 @@
     // ---------- assemble ----------
     let pre = '';
     const big = (S.size || 1);
-    const sc = Math.min(1.04, .9 + (big - 1) * .3);
+    const sc = { uminokami: .9, oodako: .96, oopuku: .97 }[id] || Math.min(1.04, .9 + (big - 1) * .3);
     if (S.legend && !sh) { pre += `<circle cx="100" cy="106" r="96" fill="url(#${uid}la)"/>`; defs.push(`<radialGradient id="${uid}la"><stop offset="0" stop-color="#fff3b0" stop-opacity=".8"/><stop offset=".6" stop-color="#ffd36a" stop-opacity=".25"/><stop offset="1" stop-color="#ffd36a" stop-opacity="0"/></radialGradient>`); }
-    if (sh) { pre += `<circle cx="100" cy="110" r="94" fill="url(#${uid}la)"/>`; defs.push(`<radialGradient id="${uid}la"><stop offset="0" stop-color="#7a3ae0" stop-opacity=".5"/><stop offset=".7" stop-color="#3a1a80" stop-opacity=".2"/><stop offset="1" stop-color="#3a1a80" stop-opacity="0"/></radialGradient>`); }
+    if (sh) { pre += `<circle cx="100" cy="110" r="94" fill="url(#${uid}la)"/>`; defs.push(`<radialGradient id="${uid}la"><stop offset="0" stop-color="#7a3ae0" stop-opacity="${BOSS ? .8 : .5}"/><stop offset=".7" stop-color="#3a1a80" stop-opacity=".2"/><stop offset="1" stop-color="#3a1a80" stop-opacity="0"/></radialGradient>`); }
     pre += `<ellipse cx="100" cy="190" rx="${48 * sc}" ry="6.5" fill="#1d1420" opacity="${sh ? .45 : .22}"/>`;
     let post = '';
     if (sh) post += ['M22 150c-12-6-10-22 2-22c-5 5-2 11 5 10', 'M178 120c12-6 10-22-2-22c5 5 2 11-5 10', 'M40 52c-8-10 0-22 12-18c-7 3-7 10-1 12'].map(d => `<path d="${d}" fill="none" stroke="#7a4ae0" stroke-width="5" stroke-linecap="round" opacity=".8"/>`).join('') + `<circle cx="30" cy="100" r="3.5" fill="#b58cff"/><circle cx="170" cy="160" r="3" fill="#b58cff"/><circle cx="160" cy="40" r="2.5" fill="#ff7fe0"/>`;
