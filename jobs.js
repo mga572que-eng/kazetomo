@@ -134,11 +134,11 @@
 
   // ---------- 見た目（スタイル） ----------
   const css = document.createElement('style');
-  css.textContent = `.jobp{width:min(900px,calc(100vw - 24px));padding:10px 14px;background:rgba(12,18,40,.985)}
+  css.textContent = `.jobp{width:min(900px,calc(var(--app-w,100vw) - 24px));padding:10px 14px;background:rgba(12,18,40,.985)}
   .jobp h3{margin:0 0 4px;font-size:17px}.jobp h3 small{font-size:12px;color:var(--muted)}
   .jobp .tabs .tab .fc{display:inline-block;width:18px;height:18px;border-radius:50%;overflow:hidden;vertical-align:-4px;margin-right:4px;background:#1c2744}.jobp .tabs .tab .fc svg{width:100%;height:100%;transform:scale(1.3) translateY(6%)}
   .jobp .shop-body{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
-  .jobp .slist,.jobp .sdet{max-height:calc(100vh - 128px)}
+  .jobp .slist,.jobp .sdet{max-height:calc(var(--app-h,100vh) - 128px)}
   .jrow{grid-template-columns:22px 1fr auto;padding:3px 8px;line-height:1.35}.jrow .ji{font-size:15px;text-align:center;color:var(--gold)}.jrow .xp{margin:1px 0 0;height:4px}.jrow small{display:inline;margin-left:6px}
   .jobp .sdet h4{flex-wrap:wrap}.jobp .sdet h4 .buy{margin-left:auto;padding:4px 14px;font-size:14px}.jobp .sdet h4 .eq,.jobp .sdet h4 .jlock{margin-left:auto;font-size:12px}
   .jrow .now{font-size:11px;color:#241a08;background:var(--gold);border-radius:4px;padding:0 5px;margin-left:4px}
@@ -146,7 +146,7 @@
   .jsk{list-style:none;margin:0;padding:0;display:grid;gap:1px;font-size:12px}.jsk li{display:grid;grid-template-columns:40px 1fr;gap:6px}.jsk .l{color:var(--muted)}.jsk .have{color:#8fe06a}.jsk .nx{color:#ffe9b8}.jsk small{color:var(--muted)}
   .jeff{font-size:12px;color:#ffe9b8}.jlock{font-size:12px;color:#f08a6a}
   .jcols{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
-  @media (max-height:430px){.jobp{padding:6px 10px}.jobp h3{font-size:15px;margin:0}.jobp .tabs{margin:2px 0 4px}.jobp .tab{padding:2px 8px;font-size:12px}.jobp .slist,.jobp .sdet{max-height:calc(100vh - 96px)}.jrow{padding:2px 6px}.jobp .sdet h4 .buy{padding:3px 12px;font-size:13px}.jobp .sdet{gap:3px}.jobp .buy{padding:5px 14px;font-size:14px}}
+  @media (max-height:430px){.jobp{padding:6px 10px}.jobp h3{font-size:15px;margin:0}.jobp .tabs{margin:2px 0 4px}.jobp .tab{padding:2px 8px;font-size:12px}.jobp .slist,.jobp .sdet{max-height:calc(var(--app-h,100vh) - 96px)}.jrow{padding:2px 6px}.jobp .sdet h4 .buy{padding:3px 12px;font-size:13px}.jobp .sdet{gap:3px}.jobp .buy{padding:5px 14px;font-size:14px}}
   @media (max-width:520px){.jobp .shop-body{grid-template-columns:1fr}.jcols{grid-template-columns:1fr}}`;
   document.head.appendChild(css);
 

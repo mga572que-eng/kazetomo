@@ -5,6 +5,7 @@
   const KEY = 'kazetomo-opt';
   const DEF = { bgm: 75, se: 70, text: 1, quality: 'auto', lefty: false, look: 1, calm: false, ratio: 'auto' };
   let O = { ...DEF }; try { Object.assign(O, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+  if (O.rv !== 2) { O.ratio = 'auto'; O.rv = 2; try { localStorage.setItem(KEY, JSON.stringify(O)); } catch (e) {} } // 旧版の 比率バグ対策：一度 自動に もどす
   const store = () => { try { localStorage.setItem(KEY, JSON.stringify(O)); } catch (e) {} };
   let autoMax = 2, autoQ = null;
   function apply() {
@@ -16,6 +17,7 @@
   function applyRatio() { const r = { '16:9': 16 / 9, '19.5:9': 19.5 / 9, '4:3': 4 / 3, '3:2': 3 / 2 }[O.ratio] || 0; const vv = window.visualViewport; const iw = vv ? vv.width : innerWidth, ih = vv ? vv.height : innerHeight; const b = document.body;
     if (!r) { window.__vw = 0; window.__vh = 0; ['position', 'left', 'top', 'width', 'height', 'transform'].forEach(k => b.style[k] = ''); }
     else { let w = iw, h = iw / r; if (h > ih) { h = ih; w = ih * r; } window.__vw = Math.round(w); window.__vh = Math.round(h); Object.assign(b.style, { position: 'fixed', left: Math.round((iw - w) / 2) + 'px', top: Math.round((ih - h) / 2) + 'px', width: Math.round(w) + 'px', height: Math.round(h) + 'px', transform: 'translateZ(0)' }); document.documentElement.style.background = '#000'; }
+    const de = document.documentElement; de.style.setProperty('--app-w', (window.__vw || iw) + 'px'); de.style.setProperty('--app-h', (window.__vh || ih) + 'px');
     try { World.resize(); } catch (e) {} }
   K.applyRatio = applyRatio; addEventListener('resize', applyRatio); if (window.visualViewport) visualViewport.addEventListener('resize', applyRatio); addEventListener('orientationchange', () => setTimeout(applyRatio, 300));
   apply(); applyRatio();
