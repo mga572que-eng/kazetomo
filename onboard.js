@@ -33,19 +33,21 @@ body.modal .ob-hint,body.inbattle .ob-hint{opacity:0!important}
   function placeLook() { const left = K.HOOK.OPT.lefty; hLook.style.left = left ? 'calc(22vw)' : ''; hLook.style.right = left ? '' : 'calc(24vw)'; hLook.style.top = '34vh'; }
   function placeAct() { const b = document.getElementById('btnAct'); if (!b) return; const r = b.getBoundingClientRect(); if (!r.width) return; hAct.style.left = ''; hAct.style.right = Math.max(8, innerWidth - r.right) + 'px'; hAct.style.top = Math.max(4, r.top - 44) + 'px'; }
   const bAct = document.getElementById('btnAct'); if (bAct) bAct.addEventListener('pointerdown', () => { if (hAct && K.phase === 'field') { done('obAct', hAct); hAct = null; } }, true);
-  let actT = 0;
+  let actT = 0, lookT = 0, rc0 = 0;
   H.frame.push((dt, T, r, md) => {
     const g = G(); if (!g || K.phase !== 'field') return; const t = tips(); const P = K.player;
     if (COARSE) {
-      const free = md === 'field';
-      if (!t.obMove && !hMove && free) { hMove = mk('ob-move', '<div class="ob-ring"><i></i></div><b>ドラッグで いどう</b>'); placeMove(); spawn = { x: P.x, z: P.z }; requestAnimationFrame(() => hMove && hMove.classList.add('on')); }
-      if (hMove) { hMove.classList.toggle('on', free); if (spawn && Math.hypot(P.x - spawn.x, P.z - spawn.z) > 2.5) { done('obMove', hMove); hMove = null; } }
-      if (!t.obLook && !hLook && free && (t.obMove || hMove)) { hLook = mk('ob-look', '<div class="ob-swipe"><i></i></div><b>ドラッグで 視点</b>'); placeLook(); inAt0 = K.cam.inAt || 0; requestAnimationFrame(() => hLook && hLook.classList.add('on')); }
-      if (hLook) { hLook.classList.toggle('on', free); if ((K.cam.inAt || 0) !== inAt0) { done('obLook', hLook); hLook = null; } }
-      // しらべるボタン：はじめて 何かを しらべられる とき
+      // 同時に 出すのは 1つだけ（しらべる ＞ いどう ＞ 視点）。 つくるモード・会話中は 全部 かくす。 名札（#tlabel）が 出ている間は いどう/視点を かくす
+      const free = md === 'field' && !document.body.classList.contains('building'); const tl = document.getElementById('tlabel'); const lab = !!(tl && !tl.hidden);
       const ready = bAct && bAct.classList.contains('ready');
-      if (!t.obAct && !hAct && free && ready) { hAct = mk('ob-act', '<b>ここを タップで しらべる</b>'); placeAct(); requestAnimationFrame(() => hAct && hAct.classList.add('on')); }
-      if (hAct) { actT -= dt; if (actT <= 0) { actT = .3; placeAct(); } hAct.classList.toggle('on', free && ready); if (md === 'busy' && !K.MENUS.length) { done('obAct', hAct); hAct = null; } }
+      if (!t.obMove && !hMove && free) { hMove = mk('ob-move', '<div class="ob-ring"><i></i></div><b>ドラッグで いどう</b>'); placeMove(); spawn = { x: P.x, z: P.z }; }
+      if (hMove && spawn && Math.hypot(P.x - spawn.x, P.z - spawn.z) > 2.5) { done('obMove', hMove); hMove = null; }
+      if (!t.obLook && !hLook && free && t.obMove) { hLook = mk('ob-look', '<div class="ob-swipe"><i></i></div><b>ドラッグで 視点</b>'); placeLook(); inAt0 = K.cam.inAt || 0; lookT = 0; rc0 = K.cam.rcN || 0; }
+      if (hLook) { if (free) lookT += dt; if ((K.cam.inAt || 0) !== inAt0 || lookT > 20 || (K.cam.rcN || 0) - rc0 > 1) { done('obLook', hLook); hLook = null; } }
+      if (!t.obAct && !hAct && free && ready) { hAct = mk('ob-act', '<b>ここを タップで しらべる</b>'); placeAct(); }
+      if (hAct) { actT -= dt; if (actT <= 0) { actT = .3; placeAct(); } if (md === 'busy' && !K.MENUS.length) { done('obAct', hAct); hAct = null; } }
+      const show = !free ? null : hAct && ready ? hAct : lab ? null : hMove || hLook;
+      for (const h of [hMove, hLook, hAct]) if (h) h.classList.toggle('on', h === show);
     }
     // ---- 最初の 戦闘：ユイの 家 → ゲンの 工房の 道に 弱い いきもの 1匹 ----
     const F = g.flags;
@@ -59,10 +61,10 @@ body.modal .ob-hint,body.inbattle .ob-hint{opacity:0!important}
   });
   let tutSpawned = false;
   function tutSpot() { const a = K.npcAt('yui', 0), b = K.npcAt('gen', 0); if (!a || !b) return null;
-    for (const u of [.42, .5, .35, .58, .3, .65]) for (const off of [0, 2, -2, 4, -4]) { const L = Math.hypot(b.x - a.x, b.z - a.z) || 1, nx = -(b.z - a.z) / L, nz = (b.x - a.x) / L;
+    for (const u of [.6, .55, .65, .5, .7, .45]) for (const off of [0, 2, -2, 4, -4]) { const L = Math.hypot(b.x - a.x, b.z - a.z) || 1, nx = -(b.z - a.z) / L, nz = (b.x - a.x) / L;
       const x = a.x + (b.x - a.x) * u + nx * off, z = a.z + (b.z - a.z) * u + nz * off, h = K.hAt(x, z); let blk = false;
       for (let y = Math.floor(h); y <= Math.floor(h) + 2; y++) for (const [dx, dz] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) if (K.Blocks.has(Math.floor(x) + dx, y, Math.floor(z) + dz)) blk = true;
-      if (!blk && h > .3) return { x, z }; }
+      if (!blk && h > .3 && Math.hypot(x - K.player.x, z - K.player.z) > 9) return { x, z }; }
     return null; }
   H.load.push(() => { tutSpawned = false; });
 })();

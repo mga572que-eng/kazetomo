@@ -7,6 +7,7 @@
   css.textContent = `
   #areaBn{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:34;text-align:center;pointer-events:none;opacity:0;transition:opacity .7s, transform .7s}
   #areaBn.on{opacity:1;transform:translate(-50%,-56%)}
+  body.inbattle #areaBn,body.modal #areaBn{opacity:0!important;transition:none}
   #areaBn b{display:block;font-family:"Mochiy Pop One",var(--display);font-size:clamp(26px,7vh,46px);font-weight:400;color:#fff6d8;letter-spacing:.14em;text-shadow:0 3px 0 rgba(40,20,10,.8),0 0 24px rgba(0,0,0,.6)}
   #areaBn i{display:block;font-style:normal;font-family:var(--pixel);font-size:clamp(11px,2.6vh,15px);color:var(--gold);letter-spacing:.3em;margin-top:6px;text-shadow:0 2px 6px rgba(0,0,0,.8)}
   #areaBn:before,#areaBn:after{content:"";display:block;height:2px;width:min(60vw,420px);margin:8px auto;background:linear-gradient(90deg,transparent,rgba(243,193,90,.9),transparent)}
@@ -36,7 +37,12 @@
     for (const sh of DATA.shrines || []) if (sh.r === rg && sh.pos) out.push({ id: 's' + sh.id, x: sh.pos.x, z: sh.pos.z, r: 10, n: sh.name, s: '試練の祠' });
     return out; }
   let cur = null, lastRg = -1, bnT = 0, aT = 0;
-  function banner(n, s) { bn.innerHTML = `<b>${n}</b><i>${s || ''}</i>`; bn.classList.add('on'); clearTimeout(bnT); bnT = setTimeout(() => bn.classList.remove('on'), 2600); Music.sfx('swoosh'); }
+  // バトル中・メニュー／パネル表示中は 出さずに 待たせ、閉じたら 出す（8秒 以上 たったら 捨てる）
+  const bnBlocked = () => document.body.classList.contains('inbattle') || document.body.classList.contains('modal') || K.MENUS.length > 0 || K.phase !== 'field';
+  let bnPend = null;
+  function banner(n, s) { if (bnBlocked()) { bnPend = { n, s, t: performance.now() }; return; } bnPend = null; bn.innerHTML = `<b>${n}</b><i>${s || ''}</i>`; bn.classList.add('on'); clearTimeout(bnT); bnT = setTimeout(() => bn.classList.remove('on'), 2600); Music.sfx('swoosh'); }
+  H.frame.push(() => { if (bnBlocked()) { if (bn.classList.contains('on')) { bn.classList.remove('on'); clearTimeout(bnT); } return; }
+    if (bnPend) { const p = bnPend; bnPend = null; if (performance.now() - p.t < 8000) banner(p.n, p.s); } });
   H.frame.push(dt => { if (K.phase !== 'field') return; aT -= dt; if (aT > 0) return; aT = .25; const P = K.player;
     if (G().region !== lastRg) { lastRg = G().region; cur = null; if (K.busy) { lastRg = -1; return; } banner(K.regionName(G().region), '—'); aT = 3; return; }
     const A = areas(); const inA = A.find(a => Math.hypot(P.x - a.x, P.z - a.z) < a.r);

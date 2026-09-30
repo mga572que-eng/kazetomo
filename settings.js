@@ -15,7 +15,12 @@
     if (O.quality === 'auto') { if (autoQ == null) autoQ = World.quality; World.setQuality(autoQ); } else World.setQuality({ low: 0, mid: 1, high: 2 }[O.quality]);
   }
   function applyRatio() { const r = { '16:9': 16 / 9, '19.5:9': 19.5 / 9, '4:3': 4 / 3, '3:2': 3 / 2 }[O.ratio] || 0; const vv = window.visualViewport; const iw = vv ? vv.width : innerWidth, ih = vv ? vv.height : innerHeight; const b = document.body;
-    if (!r) { window.__vw = 0; window.__vh = 0; ['position', 'left', 'top', 'width', 'height', 'transform'].forEach(k => b.style[k] = ''); }
+    if (!r) { window.__vw = 0; window.__vh = 0; ['position', 'left', 'top', 'width', 'height', 'transform'].forEach(k => b.style[k] = '');
+      // iOS の ホーム画面アプリで 下に 黒い帯が でる 不具合（innerHeight が 画面より 小さい）対策：画面いっぱいに 広げる
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+      if (ios && standalone && screen.width && screen.height) { const land = innerWidth > innerHeight; const sw = land ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height), sh = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+        if (sh - innerHeight > 4 || sw - innerWidth > 4) { window.__vw = sw; window.__vh = sh; document.documentElement.style.height = sh + 'px'; Object.assign(b.style, { position: 'fixed', left: '0px', top: '0px', width: sw + 'px', height: sh + 'px' }); const cvs = document.getElementById('game'); if (cvs) Object.assign(cvs.style, { width: sw + 'px', height: sh + 'px', bottom: 'auto', right: 'auto' }); } } }
     else { let w = iw, h = iw / r; if (h > ih) { h = ih; w = ih * r; } window.__vw = Math.round(w); window.__vh = Math.round(h); Object.assign(b.style, { position: 'fixed', left: Math.round((iw - w) / 2) + 'px', top: Math.round((ih - h) / 2) + 'px', width: Math.round(w) + 'px', height: Math.round(h) + 'px', transform: 'translateZ(0)' }); document.documentElement.style.background = '#000'; }
     const de = document.documentElement; de.style.setProperty('--app-w', (window.__vw || iw) + 'px'); de.style.setProperty('--app-h', (window.__vh || ih) + 'px');
     try { World.resize(); } catch (e) {} }

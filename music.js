@@ -168,52 +168,73 @@ const Music = (() => {
         parts: [['trumpet', -12, .9], ['violin', 0, .35]] }], ch: 'F:4 G:4 Em:4 Am:4 F:4 G:4 E:4 E7:4 Dm:4 G:4 C:4 Am:4 F:4 G:4 E:4 E7:4' },
       // A'：オクターブ上の バイオリン＋金管で もりあげる
       { mel: [{ s: 'A5:.5 E5:.5 A5:.5 C6:.5 B5:1 A5:1 | G#5:.5 E5:.5 G#5:.5 B5:.5 A5:2 | F5:.5 A5:.5 D6:.5 C6:.5 B5:.5 A5:.5 G#5:.5 A5:.5 | B5:3 R:1 | C6:.5 B5:.5 A5:.5 G5:.5 F5:1 A5:1 | B5:.5 A5:.5 G5:.5 F5:.5 E5:2 | D5:.5 E5:.5 F5:.5 G5:.5 A5:.5 B5:.5 C6:.5 D6:.5 | E6:3 R:1 | E6:1 D6:.5 C6:.5 B5:1 A5:1 | D6:1 C6:.5 B5:.5 A5:1 G#5:1 | C6:1 B5:.5 A5:.5 G5:1 F5:1 | E5:2 G#5:2 | A5:.5 B5:.5 C6:.5 D6:.5 E6:1 C6:1 | F6:1 E6:.5 D6:.5 C6:1 B5:1 | A5:.5 G#5:.5 A5:.5 B5:.5 C6:.5 B5:.5 A5:.5 G#5:.5 | A5:3 R:1', parts: [['violin', 0, .75], ['brass', -12, .5], ['glock', 12, .1]] }], ch: 'Am:4 E:4 Dm:2 E:2 E:4 F:4 G:2 C:2 Dm:2 G:2 C:2 E:2 Am:4 Dm:2 E:2 F:2 Dm:2 E:4 Am:4 Dm:2 G:2 E7:4 Am:4' }] },
-    boss: { bpm: 132, bpb: 4, style: 'boss', loop: true,
-      mel: [{ s: 'D5:1 D5:.5 E5:.5 F5:1 A5:1 | G#5:2 A5:2 | Bb5:1 A5:.5 G5:.5 F5:1 E5:1 | D5:1 C#5:1 D5:2 | F5:1 F5:.5 G5:.5 A5:1 D6:1 | C#6:2 A5:2 | Bb5:.5 C6:.5 Bb5:.5 A5:.5 G5:.5 F5:.5 E5:.5 G5:.5 | A5:4 | D6:1.5 C6:.5 Bb5:1 A5:1 | G5:1.5 F5:.5 E5:1 C#5:1 | D5:1 F5:1 A5:1 D6:1 | E6:2 C#6:2 | F6:1.5 E6:.5 D6:1 A5:1 | Bb5:1.5 A5:.5 G5:1 E5:1 | F5:1 E5:1 D5:1 C#5:1 | D5:4',
-        parts: [['brass', -12, .9], ['violin', 0, .55]] }],
-      ch: 'Dm:4 E:2 A:2 Gm:4 A:2 Dm:2 Dm:4 A:4 Gm:2 C:2 F:2 A:2 Bb:4 Gm:2 A:2 Dm:4 A:4 Dm:4 Gm:2 A:2 Bb:2 A:2 Dm:4' },
+    boss: { bpm: 132, bpb: 4, style: 'boss', loop: true, secs: [
+      { mel: [{ s: 'D5:1 D5:.5 E5:.5 F5:1 A5:1 | G#5:2 A5:2 | Bb5:1 A5:.5 G5:.5 F5:1 E5:1 | D5:1 C#5:1 D5:2 | F5:1 F5:.5 G5:.5 A5:1 D6:1 | C#6:2 A5:2 | Bb5:.5 C6:.5 Bb5:.5 A5:.5 G5:.5 F5:.5 E5:.5 G5:.5 | A5:4 | D6:1.5 C6:.5 Bb5:1 A5:1 | G5:1.5 F5:.5 E5:1 C#5:1 | D5:1 F5:1 A5:1 D6:1 | E6:2 C#6:2 | F6:1.5 E6:.5 D6:1 A5:1 | Bb5:1.5 A5:.5 G5:1 E5:1 | F5:1 E5:1 D5:1 C#5:1 | D5:4', parts: [['brass', -12, .9], ['violin', 0, .55]] }], ch: 'Dm:4 E:2 A:2 Gm:4 A:2 Dm:2 Dm:4 A:4 Gm:2 C:2 F:2 A:2 Bb:4 Gm:2 A:2 Dm:4 A:4 Dm:4 Gm:2 A:2 Bb:2 A:2 Dm:4' },
+      // B：変ロ長調で たたみかける
+      { mel: [{ s: 'D6:1 D6:.5 C6:.5 Bb5:1 F5:1 | A5:2 C6:2 | G5:1 G5:.5 A5:.5 Bb5:1 D6:1 | C#6:2 E6:2 | F6:1 E6:.5 D6:.5 A5:1 F5:1 | G5:1.5 A5:.5 Bb5:1 D6:1 | G#5:1 B5:1 E6:1 D6:1 | C#6:4 | D5:.5 F5:.5 A5:.5 D6:.5 F6:1 D6:1 | Bb5:.5 D6:.5 G6:.5 D6:.5 Bb5:2 | C6:.5 E6:.5 G6:.5 E6:.5 C6:1 G5:1 | A5:4 | Bb5:1 A5:.5 G5:.5 F5:1 D5:1 | G5:1 Bb5:.5 D6:.5 G6:2 | E6:1 C#6:1 A5:1 G5:1 | D6:2 R:2', parts: [['trumpet', -12, .8], ['violin', 0, .45]] }], ch: 'Bb:4 F:4 Gm:4 A:4 Dm:4 Bb:4 E:4 A:4 Dm:4 Gm:4 C:4 F:4 Bb:4 Gm:4 A7:4 Dm:4' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'D5:1 D5:.5 E5:.5 F5:1 A5:1 | G#5:2 A5:2 | Bb5:1 A5:.5 G5:.5 F5:1 E5:1 | D5:1 C#5:1 D5:2 | F5:1 F5:.5 G5:.5 A5:1 D6:1 | C#6:2 A5:2 | Bb5:.5 C6:.5 Bb5:.5 A5:.5 G5:.5 F5:.5 E5:.5 G5:.5 | A5:4 | D6:1.5 C6:.5 Bb5:1 A5:1 | G5:1.5 F5:.5 E5:1 C#5:1 | D5:1 F5:1 A5:1 D6:1 | E6:2 C#6:2 | F6:1.5 E6:.5 D6:1 A5:1 | Bb5:1.5 A5:.5 G5:1 E5:1 | F5:1 E5:1 D5:1 C#5:1 | D5:4', parts: [['violin', 0, .7], ['brass', -12, .7], ['trumpet', 0, .2]] }], ch: 'Dm:4 E:2 A:2 Gm:4 A:2 Dm:2 Dm:4 A:4 Gm:2 C:2 F:2 A:2 Bb:4 Gm:2 A:2 Dm:4 A:4 Dm:4 Gm:2 A:2 Bb:2 A:2 Dm:4' }] },
     // エンディング：オリジナル（ヘ長調の 讃歌 → ニ短調で ふりかえり → 金管で 大きく 帰結）
     ending: { bpm: 72, bpb: 4, style: 'hymn', loop: true, secs: [
       { mel: [{ s: 'C5:1 F5:1 A5:1.5 G5:.5 | G5:2 E5:1 C5:1 | D5:1 F5:1 A5:1 D6:1 | C6:2 Bb5:1 A5:1 | A5:1.5 Bb5:.5 C6:1 F5:1 | G5:1 A5:1 Bb5:1 D6:1 | C6:1 Bb5:1 A5:1 G5:1 | F5:4', parts: [['violin', 0, .75], ['flute', 12, .22]] }], ch: 'F:4 C/E:4 Dm:4 Bb:4 F/A:4 Gm:4 C:2 C7:2 F:4' },
       { style: 'nocturne', mel: [{ s: 'A5:1 D6:1 C6:1 A5:1 | Bb5:1.5 A5:.5 G5:1 F5:1 | G5:1 Bb5:1 D6:1.5 C6:.5 | C#6:3 R:1 | D6:1 F6:1 E6:1 D6:1 | D6:1.5 C6:.5 Bb5:2 | Bb5:1 A5:1 G5:1 E5:1 | C6:2 E5:1 G5:1',
         parts: [['oboe', 0, .7], ['strings', -12, .3]] }], ch: 'Dm:4 Bb:4 Gm:4 A:4 Dm:4 Bb:4 Gm:2 C7:2 C:4' },
       { style: 'fanfare', mel: [{ s: 'C5:1 F5:1 A5:1.5 G5:.5 | G5:2 E5:1 C5:1 | D5:1 F5:1 A5:1 D6:1 | C6:2 Bb5:1 A5:1 | A5:1.5 Bb5:.5 C6:1 F5:1 | G5:1 A5:1 Bb5:1 D6:1 | C6:1 Bb5:1 A5:1 G5:1 | F5:4', parts: [['violin', 12, .55], ['horn', 0, .5], ['trumpet', 0, .3]] }], ch: 'F:4 C/E:4 Dm:4 Bb:4 F/A:4 Gm:4 C:2 C7:2 F:4' }] },
-    dungeon: { bpm: 84, bpb: 4, style: 'nocturne', loop: true,
-      mel: [{ s: 'E5:1 G5:1 B5:2 | A5:1 G5:1 F#5:2 | G5:1 E5:1 C5:2 | D#5:4 | E5:1 G5:1 B5:2 | C6:1 B5:1 A5:2 | G5:1 F#5:1 D#5:1 F#5:1 | E5:4',
-        parts: [['oboe', 0, .8], ['strings', -12, .35]] }],
-      ch: 'Em:4 D:4 C:4 B:4 Em:4 Am:4 B:4 Em:4' },
-    town: { bpm: 112, bpb: 4, style: 'march', loop: true,
-      mel: [{ s: 'G5:1 E5:.5 G5:.5 C6:1 G5:1 | A5:1 F5:.5 A5:.5 C6:2 | B5:1 G5:.5 B5:.5 D6:1 B5:1 | C6:3 R:1 | E6:1 D6:.5 C6:.5 A5:1 C6:1 | B5:1 A5:.5 G5:.5 E5:2 | F5:1 A5:1 G5:1 B4:1 | C5:3 R:1',
-        parts: [['flute', 0, .8], ['pizz', -12, .5]] }],
-      ch: 'C:4 F:4 G:4 C:4 Am:4 Em:4 F:2 G:2 C:4' },
-    sky: { bpm: 100, bpb: 3, style: 'waltz', loop: true,
-      mel: [{ s: 'Bb4:1 Eb5:1 G5:1 | Bb5:2 G5:1 | Ab5:1 G5:1 F5:1 | G5:3 | Ab5:1 C6:1 Bb5:1 | Ab5:1 G5:1 F5:1 | G5:1 Eb5:1 C5:1 | D5:3 | Bb4:1 Eb5:1 G5:1 | Bb5:2 Eb6:1 | D6:1 C6:1 Bb5:1 | C6:3 | Ab5:1 C6:1 Eb6:1 | D6:1 Bb5:1 G5:1 | Ab5:1 F5:1 D5:1 | Eb5:3',
-        parts: [['flute', 0, .8], ['violin', 12, .3], ['horn', -12, .35]] }],
-      ch: 'Eb:3 Eb:3 Ab:3 Eb:3 Ab:3 Fm:3 Cm:3 Bb:3 Eb:3 Eb:3 Bb:3 Ab:3 Ab:3 Eb:3 Bb7:3 Eb:3' },
-    skytown: { bpm: 100, bpb: 4, style: 'march', loop: true,
-      mel: [{ s: 'A5:.5 C6:.5 A5:.5 F5:.5 G5:1 C5:1 | A5:.5 Bb5:.5 C6:.5 D6:.5 C6:2 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:1 G5:1 | F5:3 R:1 | D6:1 C6:.5 Bb5:.5 A5:1 F5:1 | G5:1 A5:.5 Bb5:.5 C6:2 | Bb5:.5 A5:.5 G5:.5 A5:.5 Bb5:1 E5:1 | F5:3 R:1',
-        parts: [['oboe', 0, .8], ['pizz', -12, .5], ['glock', 12, .2]] }],
-      ch: 'F:4 F:2 Bb:2 C:2 C7:2 F:4 Bb:4 F:2 C:2 Gm:2 C7:2 F:4' },
-    tower: { bpm: 80, bpb: 4, style: 'nocturne', loop: true,
-      mel: [{ s: 'D5:1 F5:1 A5:1 D6:1 | C#6:2 A5:2 | Bb5:1 A5:1 G5:1 F5:1 | E5:4 | F5:1 A5:1 C6:1 F6:1 | E6:2 C6:2 | D6:1 C6:1 Bb5:1 A5:1 | A5:4',
-        parts: [['strings', 0, .7], ['harp', 12, .35], ['flute', 12, .22]] }],
-      ch: 'Dm:4 A:4 Gm:4 A:4 F:4 C:4 Bb:4 A:4' },
-    lastboss: { bpm: 144, bpb: 4, style: 'boss', loop: true,
-      mel: [{ s: 'E5:.5 E5:.5 G5:.5 B5:.5 E6:1 D6:1 | C6:.5 B5:.5 A5:.5 G5:.5 F#5:2 | G5:.5 A5:.5 B5:.5 C6:.5 D6:1 B5:1 | E6:3 R:1 | E6:.5 D6:.5 C6:.5 B5:.5 A5:1 C6:1 | B5:.5 A5:.5 G5:.5 F#5:.5 E5:2 | C6:1 B5:1 A5:1 F#5:1 | G5:1 A5:1 B5:2 | E6:1.5 D#6:.5 E6:1 B5:1 | C6:1.5 B5:.5 A5:1 E5:1 | F#5:1 G5:1 A5:1 D#5:1 | E5:4',
-        parts: [['brass', -12, .85], ['violin', 0, .6], ['trumpet', 0, .22]] }],
-      ch: 'Em:4 Am:2 B:2 Em:2 G:2 B:4 C:2 Am:2 Em:2 B:2 Am:2 D:2 G:2 B7:2 Em:4 C:4 Am:2 B:2 Em:4' },
-    sea: { bpm: 80, bpb: 3, style: 'waltz', loop: true,
-      mel: [{ s: 'D5:1 F5:1 A5:1 | G5:2 F5:1 | E5:1 F5:1 G5:1 | A5:3 | C6:1 A5:1 F5:1 | G5:1.5 F5:.5 E5:1 | D5:1 E5:1 C5:1 | D5:3 | F5:1 A5:1 D6:1 | C6:2 A5:1 | Bb5:1 A5:1 G5:1 | A5:3 | G5:1 Bb5:1 D6:1 | C6:1 A5:1 F5:1 | E5:1 G5:1 C#5:1 | D5:3',
-        parts: [['flute', 0, .7], ['harp', -12, .45], ['strings', -12, .25]] }],
-      ch: 'Dm:3 Gm:3 C:3 F:3 F:3 Bb:3 Gm:3 Dm:3 Dm:3 F:3 Gm:3 Dm:3 Bb:3 F:3 A7:3 Dm:3' },
-    seatown: { bpm: 96, bpb: 4, style: 'march', loop: true,
-      mel: [{ s: 'C5:.5 F5:.5 A5:.5 C6:.5 A5:1 F5:1 | G5:.5 A5:.5 Bb5:.5 G5:.5 A5:2 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:1 C5:1 | F5:3 R:1 | A5:1 C6:.5 D6:.5 C6:1 A5:1 | Bb5:.5 C6:.5 Bb5:.5 A5:.5 G5:2 | A5:.5 G5:.5 F5:.5 E5:.5 D5:1 E5:1 | F5:3 R:1',
-        parts: [['oboe', 0, .7], ['harp', -12, .45], ['glock', 12, .18]] }],
-      ch: 'F:4 C:4 Bb:2 C:2 F:4 F:4 Gm:4 Bb:2 C:2 F:4' },
-    seaboss: { bpm: 138, bpb: 4, style: 'boss', loop: true,
-      mel: [{ s: 'D5:.5 D5:.5 F5:.5 A5:.5 D6:1 C6:1 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:2 | F5:.5 G5:.5 A5:.5 Bb5:.5 C6:1 A5:1 | D6:3 R:1 | D6:.5 C6:.5 Bb5:.5 A5:.5 G5:1 Bb5:1 | A5:.5 G5:.5 F5:.5 E5:.5 D5:2 | Bb5:1 A5:1 G5:1 E5:1 | D5:4',
-        parts: [['brass', -12, .85], ['violin', 0, .55], ['trumpet', 0, .2]] }],
-      ch: 'Dm:4 Gm:2 A:2 Dm:2 F:2 Bb:2 A:2 Gm:2 C:2 Dm:2 Bb:2 Gm:2 A:2 Dm:4' },
+    dungeon: { bpm: 84, bpb: 4, style: 'nocturne', loop: true, secs: [
+      { mel: [{ s: 'E5:1 G5:1 B5:2 | A5:1 G5:1 F#5:2 | G5:1 E5:1 C5:2 | D#5:4 | E5:1 G5:1 B5:2 | C6:1 B5:1 A5:2 | G5:1 F#5:1 D#5:1 F#5:1 | E5:4', parts: [['oboe', 0, .8], ['strings', -12, .35]] }], ch: 'Em:4 D:4 C:4 B:4 Em:4 Am:4 B:4 Em:4' },
+      // B：ト長調の かげり（フルートと ハープ）
+      { mel: [{ s: 'B4:2 E5:1 G5:1 | F#5:3 D5:1 | E5:1 C5:1 A4:2 | B4:4 | C5:1 E5:1 A5:2 | G5:1 E5:1 B4:2 | C5:1 B4:1 A4:1 F#4:1 | B4:4', parts: [['flute', 0, .6], ['harp', -12, .4]] }], ch: 'Em:4 D:4 Am:4 B:4 Am:4 Em:4 Am:2 B7:2 B:4' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'E5:1 G5:1 B5:2 | A5:1 G5:1 F#5:2 | G5:1 E5:1 C5:2 | D#5:4 | E5:1 G5:1 B5:2 | C6:1 B5:1 A5:2 | G5:1 F#5:1 D#5:1 F#5:1 | E5:4', parts: [['violin', 0, .6], ['oboe', -12, .35]] }], ch: 'Em:4 D:4 C:4 B:4 Em:4 Am:4 B:4 Em:4' }] },
+    town: { bpm: 112, bpb: 4, style: 'march', loop: true, secs: [
+      { mel: [{ s: 'G5:1 E5:.5 G5:.5 C6:1 G5:1 | A5:1 F5:.5 A5:.5 C6:2 | B5:1 G5:.5 B5:.5 D6:1 B5:1 | C6:3 R:1 | E6:1 D6:.5 C6:.5 A5:1 C6:1 | B5:1 A5:.5 G5:.5 E5:2 | F5:1 A5:1 G5:1 B4:1 | C5:3 R:1', parts: [['flute', 0, .8], ['pizz', -12, .5]] }], ch: 'C:4 F:4 G:4 C:4 Am:4 Em:4 F:2 G:2 C:4' },
+      // B：イ短調で 市場の ざわめき
+      { mel: [{ s: 'E5:1 C5:.5 E5:.5 A5:1 E5:1 | F5:1 A5:.5 C6:.5 A5:2 | G5:1 B5:.5 D6:.5 B5:1 G5:1 | E5:3 R:1 | A5:1 C6:.5 E6:.5 C6:1 A5:1 | F5:1 A5:.5 D6:.5 A5:2 | G5:1 F5:.5 E5:.5 D5:1 B4:1 | D5:3 R:1 | C6:1 A5:.5 C6:.5 F6:1 C6:1 | E6:1 C6:.5 E6:.5 G5:2 | F5:1 A5:.5 D6:.5 F6:1 D6:1 | D6:3 R:1 | E6:1 D6:.5 C6:.5 G5:1 E5:1 | F5:1 A5:.5 C6:.5 A5:1 F5:1 | D5:1 G5:1 B5:1 D6:1 | C6:3 R:1', parts: [['oboe', 0, .75], ['pizz', -12, .45]] }], ch: 'Am:4 F:4 G:4 C:4 Am:4 Dm:4 G:4 G7:4 F:4 C:4 Dm:4 G:4 C:4 F:4 G:2 G7:2 C:4' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'G5:1 E5:.5 G5:.5 C6:1 G5:1 | A5:1 F5:.5 A5:.5 C6:2 | B5:1 G5:.5 B5:.5 D6:1 B5:1 | C6:3 R:1 | E6:1 D6:.5 C6:.5 A5:1 C6:1 | B5:1 A5:.5 G5:.5 E5:2 | F5:1 A5:1 G5:1 B4:1 | C5:3 R:1', parts: [['violin', 0, .6], ['glock', 12, .2], ['pizz', -12, .45]] }], ch: 'C:4 F:4 G:4 C:4 Am:4 Em:4 F:2 G:2 C:4' }] },
+    sky: { bpm: 100, bpb: 3, style: 'waltz', loop: true, secs: [
+      { mel: [{ s: 'Bb4:1 Eb5:1 G5:1 | Bb5:2 G5:1 | Ab5:1 G5:1 F5:1 | G5:3 | Ab5:1 C6:1 Bb5:1 | Ab5:1 G5:1 F5:1 | G5:1 Eb5:1 C5:1 | D5:3 | Bb4:1 Eb5:1 G5:1 | Bb5:2 Eb6:1 | D6:1 C6:1 Bb5:1 | C6:3 | Ab5:1 C6:1 Eb6:1 | D6:1 Bb5:1 G5:1 | Ab5:1 F5:1 D5:1 | Eb5:3', parts: [['flute', 0, .8], ['violin', 12, .3], ['horn', -12, .35]] }], ch: 'Eb:3 Eb:3 Ab:3 Eb:3 Ab:3 Fm:3 Cm:3 Bb:3 Eb:3 Eb:3 Bb:3 Ab:3 Ab:3 Eb:3 Bb7:3 Eb:3' },
+      // B：ハ短調の 雲間（バイオリン）
+      { mel: [{ s: 'G5:2 C6:1 | C6:1 Bb5:1 Ab5:1 | F5:2 Ab5:1 | G5:3 | Eb5:1 G5:1 C6:1 | D6:2 Bb5:1 | C6:1 Ab5:1 F5:1 | Bb5:3 | G5:1 Bb5:1 Eb6:1 | Eb6:2 C6:1 | Ab5:1 C6:1 F6:1 | F6:2 D6:1 | Eb6:1 D6:1 Bb5:1 | C6:1 G5:1 Eb5:1 | F5:1 Ab5:1 D5:1 | Eb5:3', parts: [['violin', 0, .6], ['harp', -12, .4]] }], ch: 'Cm:3 Ab:3 Fm:3 G:3 Cm:3 Bb:3 Ab:3 Bb:3 Eb:3 Ab:3 Fm:3 Bb:3 Eb:3 Cm:3 Bb7:3 Eb:3' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'Bb4:1 Eb5:1 G5:1 | Bb5:2 G5:1 | Ab5:1 G5:1 F5:1 | G5:3 | Ab5:1 C6:1 Bb5:1 | Ab5:1 G5:1 F5:1 | G5:1 Eb5:1 C5:1 | D5:3 | Bb4:1 Eb5:1 G5:1 | Bb5:2 Eb6:1 | D6:1 C6:1 Bb5:1 | C6:3 | Ab5:1 C6:1 Eb6:1 | D6:1 Bb5:1 G5:1 | Ab5:1 F5:1 D5:1 | Eb5:3', parts: [['oboe', 0, .7], ['glock', 12, .18], ['horn', -12, .3]] }], ch: 'Eb:3 Eb:3 Ab:3 Eb:3 Ab:3 Fm:3 Cm:3 Bb:3 Eb:3 Eb:3 Bb:3 Ab:3 Ab:3 Eb:3 Bb7:3 Eb:3' }] },
+    skytown: { bpm: 100, bpb: 4, style: 'march', loop: true, secs: [
+      { mel: [{ s: 'A5:.5 C6:.5 A5:.5 F5:.5 G5:1 C5:1 | A5:.5 Bb5:.5 C6:.5 D6:.5 C6:2 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:1 G5:1 | F5:3 R:1 | D6:1 C6:.5 Bb5:.5 A5:1 F5:1 | G5:1 A5:.5 Bb5:.5 C6:2 | Bb5:.5 A5:.5 G5:.5 A5:.5 Bb5:1 E5:1 | F5:3 R:1', parts: [['oboe', 0, .8], ['pizz', -12, .5], ['glock', 12, .2]] }], ch: 'F:4 F:2 Bb:2 C:2 C7:2 F:4 Bb:4 F:2 C:2 Gm:2 C7:2 F:4' },
+      // B：ニ短調の 風車小路
+      { mel: [{ s: 'D5:.5 F5:.5 A5:.5 D6:.5 C6:1 A5:1 | Bb5:.5 A5:.5 G5:.5 F5:.5 D5:2 | E5:.5 G5:.5 C6:.5 E6:.5 D6:1 C6:1 | A5:3 R:1 | F5:1 A5:.5 D6:.5 C6:1 A5:1 | Bb5:1 G5:.5 D5:.5 G5:2 | C6:.5 Bb5:.5 A5:.5 G5:.5 E5:1 C5:1 | E5:3 R:1 | D6:1 F6:.5 D6:.5 Bb5:1 F5:1 | A5:1 C6:.5 A5:.5 F5:2 | G5:.5 A5:.5 Bb5:.5 D6:.5 G6:1 D6:1 | E6:3 R:1 | F6:1 C6:.5 A5:.5 F5:1 A5:1 | Bb5:1 D6:.5 Bb5:.5 F5:2 | G5:.5 A5:.5 Bb5:.5 G5:.5 E5:1 G5:1 | F5:3 R:1', parts: [['flute', 0, .75], ['pizz', -12, .5]] }], ch: 'Dm:4 Bb:4 C:4 F:4 Dm:4 Gm:4 C:4 C7:4 Bb:4 F:4 Gm:4 C:4 F:4 Bb:4 C:2 C7:2 F:4' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'A5:.5 C6:.5 A5:.5 F5:.5 G5:1 C5:1 | A5:.5 Bb5:.5 C6:.5 D6:.5 C6:2 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:1 G5:1 | F5:3 R:1 | D6:1 C6:.5 Bb5:.5 A5:1 F5:1 | G5:1 A5:.5 Bb5:.5 C6:2 | Bb5:.5 A5:.5 G5:.5 A5:.5 Bb5:1 E5:1 | F5:3 R:1', parts: [['violin', 0, .6], ['pizz', -12, .5], ['glock', 12, .22]] }], ch: 'F:4 F:2 Bb:2 C:2 C7:2 F:4 Bb:4 F:2 C:2 Gm:2 C7:2 F:4' }] },
+    tower: { bpm: 80, bpb: 4, style: 'nocturne', loop: true, secs: [
+      { mel: [{ s: 'D5:1 F5:1 A5:1 D6:1 | C#6:2 A5:2 | Bb5:1 A5:1 G5:1 F5:1 | E5:4 | F5:1 A5:1 C6:1 F6:1 | E6:2 C6:2 | D6:1 C6:1 Bb5:1 A5:1 | A5:4', parts: [['strings', 0, .7], ['harp', 12, .35], ['flute', 12, .22]] }], ch: 'Dm:4 A:4 Gm:4 A:4 F:4 C:4 Bb:4 A:4' },
+      // B：変ロ長調で 塔を のぼる
+      { mel: [{ s: 'D5:1 F5:1 Bb5:1 D6:1 | C6:2 A5:2 | G5:1 Bb5:1 D6:1 G6:1 | E6:4 | F6:1 E6:1 D6:1 A5:1 | Bb5:1 D6:1 F6:2 | E6:1 D6:1 Bb5:1 G5:1 | A5:4', parts: [['violin', 0, .6], ['harp', 12, .3], ['cello', -12, .3]] }], ch: 'Bb:4 F:4 Gm:4 A:4 Dm:4 Bb:4 Gm:2 A7:2 A:4' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'D5:1 F5:1 A5:1 D6:1 | C#6:2 A5:2 | Bb5:1 A5:1 G5:1 F5:1 | E5:4 | F5:1 A5:1 C6:1 F6:1 | E6:2 C6:2 | D6:1 C6:1 Bb5:1 A5:1 | A5:4', parts: [['flute', 0, .6], ['strings', -12, .45], ['glock', 12, .12]] }], ch: 'Dm:4 A:4 Gm:4 A:4 F:4 C:4 Bb:4 A:4' }] },
+    lastboss: { bpm: 144, bpb: 4, style: 'boss', loop: true, secs: [
+      { mel: [{ s: 'E5:.5 E5:.5 G5:.5 B5:.5 E6:1 D6:1 | C6:.5 B5:.5 A5:.5 G5:.5 F#5:2 | G5:.5 A5:.5 B5:.5 C6:.5 D6:1 B5:1 | E6:3 R:1 | E6:.5 D6:.5 C6:.5 B5:.5 A5:1 C6:1 | B5:.5 A5:.5 G5:.5 F#5:.5 E5:2 | C6:1 B5:1 A5:1 F#5:1 | G5:1 A5:1 B5:2 | E6:1.5 D#6:.5 E6:1 B5:1 | C6:1.5 B5:.5 A5:1 E5:1 | F#5:1 G5:1 A5:1 D#5:1 | E5:4', parts: [['brass', -12, .85], ['violin', 0, .6], ['trumpet', 0, .22]] }], ch: 'Em:4 Am:2 B:2 Em:2 G:2 B:4 C:2 Am:2 Em:2 B:2 Am:2 D:2 G:2 B7:2 Em:4 C:4 Am:2 B:2 Em:4' },
+      // B：ハ長調へ 反撃の 光（トランペット）
+      { mel: [{ s: 'E5:.5 G5:.5 C6:.5 E6:.5 G6:1 E6:1 | F#6:.5 E6:.5 D6:.5 A5:.5 F#5:2 | B5:.5 D6:.5 F#6:.5 D6:.5 B5:1 F#5:1 | G5:3 R:1 | C6:1 E6:1 G6:1.5 F#6:.5 | F#6:1 D6:1 A5:2 | B5:.5 D#6:.5 F#6:.5 D#6:.5 B5:1 F#5:1 | A5:2 D#5:2 | A5:.5 C6:.5 E6:.5 C6:.5 A5:1 E5:1 | G5:.5 B5:.5 E6:.5 B5:.5 G5:1 E5:1 | C6:1 D6:1 E6:1 G6:1 | F#6:3 R:1 | E6:1 D6:.5 E6:.5 B5:1 G5:1 | C6:1 B5:.5 C6:.5 G5:1 E5:1 | A5:1 C6:1 B5:1 D#6:1 | E6:2 B5:2', parts: [['trumpet', -12, .75], ['violin', 0, .5], ['brass', -24, .3]] }], ch: 'C:4 D:4 Bm:4 Em:4 C:4 D:4 B:4 B7:4 Am:4 Em:4 C:4 D:4 Em:4 C:4 Am:2 B7:2 Em:4' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'E5:.5 E5:.5 G5:.5 B5:.5 E6:1 D6:1 | C6:.5 B5:.5 A5:.5 G5:.5 F#5:2 | G5:.5 A5:.5 B5:.5 C6:.5 D6:1 B5:1 | E6:3 R:1 | E6:.5 D6:.5 C6:.5 B5:.5 A5:1 C6:1 | B5:.5 A5:.5 G5:.5 F#5:.5 E5:2 | C6:1 B5:1 A5:1 F#5:1 | G5:1 A5:1 B5:2 | E6:1.5 D#6:.5 E6:1 B5:1 | C6:1.5 B5:.5 A5:1 E5:1 | F#5:1 G5:1 A5:1 D#5:1 | E5:4', parts: [['violin', 0, .7], ['brass', -12, .7], ['trumpet', 0, .2]] }], ch: 'Em:4 Am:2 B:2 Em:2 G:2 B:4 C:2 Am:2 Em:2 B:2 Am:2 D:2 G:2 B7:2 Em:4 C:4 Am:2 B:2 Em:4' }] },
+    sea: { bpm: 80, bpb: 3, style: 'waltz', loop: true, secs: [
+      { mel: [{ s: 'D5:1 F5:1 A5:1 | G5:2 F5:1 | E5:1 F5:1 G5:1 | A5:3 | C6:1 A5:1 F5:1 | G5:1.5 F5:.5 E5:1 | D5:1 E5:1 C5:1 | D5:3 | F5:1 A5:1 D6:1 | C6:2 A5:1 | Bb5:1 A5:1 G5:1 | A5:3 | G5:1 Bb5:1 D6:1 | C6:1 A5:1 F5:1 | E5:1 G5:1 C#5:1 | D5:3', parts: [['flute', 0, .7], ['harp', -12, .45], ['strings', -12, .25]] }], ch: 'Dm:3 Gm:3 C:3 F:3 F:3 Bb:3 Gm:3 Dm:3 Dm:3 F:3 Gm:3 Dm:3 Bb:3 F:3 A7:3 Dm:3' },
+      // B：ヘ長調の 光の 海流
+      { mel: [{ s: 'A5:2 C6:1 | C6:1 Bb5:1 G5:1 | F5:2 A5:1 | E5:3 | D5:1 F5:1 Bb5:1 | A5:2 F5:1 | G5:1 Bb5:1 D6:1 | C6:3 | C6:1 F6:1 C6:1 | D6:2 A5:1 | Bb5:1 D6:1 F6:1 | E6:3 | D6:1 Bb5:1 G5:1 | F5:1 A5:1 D6:1 | C#6:1 A5:1 E5:1 | D5:3', parts: [['violin', -12, .55], ['harp', 0, .4]] }], ch: 'F:3 C:3 Dm:3 A:3 Bb:3 F:3 Gm:3 C:3 F:3 Dm:3 Bb:3 A:3 Gm:3 Dm:3 A7:3 Dm:3' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'D5:1 F5:1 A5:1 | G5:2 F5:1 | E5:1 F5:1 G5:1 | A5:3 | C6:1 A5:1 F5:1 | G5:1.5 F5:.5 E5:1 | D5:1 E5:1 C5:1 | D5:3 | F5:1 A5:1 D6:1 | C6:2 A5:1 | Bb5:1 A5:1 G5:1 | A5:3 | G5:1 Bb5:1 D6:1 | C6:1 A5:1 F5:1 | E5:1 G5:1 C#5:1 | D5:3', parts: [['oboe', 0, .6], ['harp', -12, .45], ['glock', 12, .12]] }], ch: 'Dm:3 Gm:3 C:3 F:3 F:3 Bb:3 Gm:3 Dm:3 Dm:3 F:3 Gm:3 Dm:3 Bb:3 F:3 A7:3 Dm:3' }] },
+    seatown: { bpm: 96, bpb: 4, style: 'march', loop: true, secs: [
+      { mel: [{ s: 'C5:.5 F5:.5 A5:.5 C6:.5 A5:1 F5:1 | G5:.5 A5:.5 Bb5:.5 G5:.5 A5:2 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:1 C5:1 | F5:3 R:1 | A5:1 C6:.5 D6:.5 C6:1 A5:1 | Bb5:.5 C6:.5 Bb5:.5 A5:.5 G5:2 | A5:.5 G5:.5 F5:.5 E5:.5 D5:1 E5:1 | F5:3 R:1', parts: [['oboe', 0, .7], ['harp', -12, .45], ['glock', 12, .18]] }], ch: 'F:4 C:4 Bb:2 C:2 F:4 F:4 Gm:4 Bb:2 C:2 F:4' },
+      // B：ニ短調の 泡の 路地
+      { mel: [{ s: 'A5:.5 F5:.5 D5:.5 F5:.5 A5:1 D6:1 | D6:.5 C6:.5 Bb5:.5 A5:.5 F5:2 | G5:.5 A5:.5 Bb5:.5 C6:.5 E5:1 G5:1 | A5:3 R:1 | F5:1 A5:.5 D6:.5 F6:1 D6:1 | D6:.5 C6:.5 Bb5:.5 A5:.5 G5:2 | E5:.5 F5:.5 G5:.5 A5:.5 Bb5:1 G5:1 | C6:3 R:1 | C6:1 A5:.5 C6:.5 F6:1 C6:1 | D6:1 Bb5:.5 D6:.5 F6:2 | G5:.5 Bb5:.5 D6:.5 G6:.5 F6:1 D6:1 | E6:3 R:1 | D6:1 A5:.5 F5:.5 D5:1 F5:1 | Bb5:1 A5:.5 G5:.5 F5:1 D5:1 | C5:.5 E5:.5 G5:.5 Bb5:.5 C6:1 E5:1 | F5:3 R:1', parts: [['flute', 0, .65], ['harp', -12, .45]] }], ch: 'Dm:4 Bb:4 C:4 F:4 Dm:4 Gm:4 C:4 C7:4 F:4 Bb:4 Gm:4 C:4 Dm:4 Bb:4 C:2 C7:2 F:4' },
+      // A'：楽器を かえて 主題を もう一度
+      { mel: [{ s: 'C5:.5 F5:.5 A5:.5 C6:.5 A5:1 F5:1 | G5:.5 A5:.5 Bb5:.5 G5:.5 A5:2 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:1 C5:1 | F5:3 R:1 | A5:1 C6:.5 D6:.5 C6:1 A5:1 | Bb5:.5 C6:.5 Bb5:.5 A5:.5 G5:2 | A5:.5 G5:.5 F5:.5 E5:.5 D5:1 E5:1 | F5:3 R:1', parts: [['violin', 0, .55], ['harp', -12, .45], ['glock', 12, .18]] }], ch: 'F:4 C:4 Bb:2 C:2 F:4 F:4 Gm:4 Bb:2 C:2 F:4' }] },
+    seaboss: { bpm: 138, bpb: 4, style: 'boss', loop: true, secs: [
+      { mel: [{ s: 'D5:.5 D5:.5 F5:.5 A5:.5 D6:1 C6:1 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:2 | F5:.5 G5:.5 A5:.5 Bb5:.5 C6:1 A5:1 | D6:3 R:1 | D6:.5 C6:.5 Bb5:.5 A5:.5 G5:1 Bb5:1 | A5:.5 G5:.5 F5:.5 E5:.5 D5:2 | Bb5:1 A5:1 G5:1 E5:1 | D5:4', parts: [['brass', -12, .85], ['violin', 0, .55], ['trumpet', 0, .2]] }], ch: 'Dm:4 Gm:2 A:2 Dm:2 F:2 Bb:2 A:2 Gm:2 C:2 Dm:2 Bb:2 Gm:2 A:2 Dm:4' },
+      // B：変ロ長調へ 深みの 渦（トランペット）
+      { mel: [{ s: 'F5:.5 Bb5:.5 D6:.5 F6:.5 D6:1 Bb5:1 | C6:.5 E6:.5 G6:.5 E6:.5 C6:2 | C#6:.5 A5:.5 E5:.5 A5:.5 C#6:1 E6:1 | D6:3 R:1 | G5:.5 Bb5:.5 D6:.5 G6:.5 F6:1 D6:1 | E6:.5 C#6:.5 A5:.5 C#6:.5 E6:2 | F6:1 E6:.5 D6:.5 C6:1 Bb5:1 | A5:2 C#6:2 | D6:.5 D6:.5 F6:.5 D6:.5 A5:1 F5:1 | G5:.5 G5:.5 C6:.5 G5:.5 E5:1 C5:1 | D5:.5 F5:.5 Bb5:.5 D6:.5 F6:1 D6:1 | C#6:3 R:1 | Bb5:1 A5:.5 G5:.5 D6:1 G5:1 | A5:1 F5:.5 D5:.5 A5:1 D6:1 | E6:.5 D6:.5 C#6:.5 A5:.5 G5:1 E5:1 | D5:.5 E5:.5 F5:.5 G5:.5 A5:.5 C6:.5 C#6:.5 E6:.5', parts: [['trumpet', -12, .8], ['violin', 0, .45]] }], ch: 'Bb:4 C:4 A:4 Dm:4 Gm:4 A:4 Bb:4 A7:4 Dm:4 C:4 Bb:4 A:4 Gm:4 Dm:4 A7:4 Dm:4' },
+      { mel: [{ s: 'D5:.5 D5:.5 F5:.5 A5:.5 D6:1 C6:1 | Bb5:.5 A5:.5 G5:.5 F5:.5 E5:2 | F5:.5 G5:.5 A5:.5 Bb5:.5 C6:1 A5:1 | D6:3 R:1 | D6:.5 C6:.5 Bb5:.5 A5:.5 G5:1 Bb5:1 | A5:.5 G5:.5 F5:.5 E5:.5 D5:2 | Bb5:1 A5:1 G5:1 E5:1 | D5:4', parts: [['violin', 0, .7], ['brass', -12, .6], ['glock', 12, .1]] }], ch: 'Dm:4 Gm:2 A:2 Dm:2 F:2 Bb:2 A:2 Gm:2 C:2 Dm:2 Bb:2 Gm:2 A:2 Dm:4' },
+      // B'：弦と 金管で B を くりかえす
+      { mel: [{ s: 'F5:.5 Bb5:.5 D6:.5 F6:.5 D6:1 Bb5:1 | C6:.5 E6:.5 G6:.5 E6:.5 C6:2 | C#6:.5 A5:.5 E5:.5 A5:.5 C#6:1 E6:1 | D6:3 R:1 | G5:.5 Bb5:.5 D6:.5 G6:.5 F6:1 D6:1 | E6:.5 C#6:.5 A5:.5 C#6:.5 E6:2 | F6:1 E6:.5 D6:.5 C6:1 Bb5:1 | A5:2 C#6:2 | D6:.5 D6:.5 F6:.5 D6:.5 A5:1 F5:1 | G5:.5 G5:.5 C6:.5 G5:.5 E5:1 C5:1 | D5:.5 F5:.5 Bb5:.5 D6:.5 F6:1 D6:1 | C#6:3 R:1 | Bb5:1 A5:.5 G5:.5 D6:1 G5:1 | A5:1 F5:.5 D5:.5 A5:1 D6:1 | E6:.5 D6:.5 C#6:.5 A5:.5 G5:1 E5:1 | D5:.5 E5:.5 F5:.5 G5:.5 A5:.5 C6:.5 C#6:.5 E6:.5', parts: [['violin', 0, .7], ['brass', -12, .55]] }], ch: 'Bb:4 C:4 A:4 Dm:4 Gm:4 A:4 Bb:4 A7:4 Dm:4 C:4 Bb:4 A:4 Gm:4 Dm:4 A7:4 Dm:4' }] },
     // jingles
     victory: { bpm: 120, bpb: 4, style: 'fanfare', loop: false,
       mel: [{ s: 'G4:.5 C5:.5 E5:.5 G5:1.5 E5:.5 G5:1 C6:3 R:.5', parts: [['trumpet', 0, 1], ['violin', 12, .4]] }], ch: 'C:4 G:2 C:2' },

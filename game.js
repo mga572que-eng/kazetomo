@@ -525,7 +525,7 @@ function stamHud() { const s = $('stam'); const f = G.stam / G.stamMax; s.style.
 const tipQ = []; let tipBusy = false, tipCur = '';
 function tip(html, key, ms) { if (typeof key === 'number') { ms = key; key = null; } if (key) { if (G.tips[key]) return; G.tips[key] = 1; }
   if (html === tipCur || tipQ.some(q => q.h === html)) return; if (tipQ.length >= 6) tipQ.shift(); tipQ.push({ h: html, ms }); if (!tipBusy) nextTip(); }
-function tipBlocked() { const bn = document.getElementById('areaBn'); return (bn && bn.classList.contains('on')) || $('fade').classList.contains('on') || $('swipe').classList.contains('go'); }
+function tipBlocked() { const bn = document.getElementById('areaBn'); return !$('battle').hidden || document.body.classList.contains('inbattle') || (bn && bn.classList.contains('on')) || $('fade').classList.contains('on') || $('swipe').classList.contains('go'); }
 function nextTip() { const el = $('tip'); if (!tipQ.length) { tipBusy = false; tipCur = ''; el.classList.remove('on'); return; } tipBusy = true;
   if (tipBlocked()) { setTimeout(nextTip, 250); return; }
   const q = tipQ.shift(); tipCur = q.h; el.innerHTML = q.h; el.classList.add('on');
@@ -1280,66 +1280,106 @@ function fxAt(el, kind, opt = {}) { if (!el) return; const r = el.getBoundingCli
 function screenFx(kind) { const f = $('bFlash'); f.className = 'bflash ' + kind; void f.offsetWidth; f.classList.add('go'); }
 // ---- バトル背景：地域・バイオームごとの 描き割りステージ（表示中は フィールドの 3D描画を 止める → 軽い） ----
 const STAGES = {
-  meadow: { sky: ['#4f9be0', '#98cdf0', '#f6e8c4'], far: '#86aeb8', near: '#4d8a58', g: ['#79b85e', '#3d7a3a'], sil: 'hills', pt: 'leaf', sun: 1 },
-  forest: { sky: ['#3f82b8', '#86bcd4', '#d6e8c2'], far: '#5d8a78', near: '#28543a', g: ['#4e8a3c', '#244e28'], sil: 'trees', pt: 'leaf' },
-  shore: { sky: ['#3f96dc', '#98d4f0', '#fff0d2'], far: '#4aa6cc', near: '#3a88b0', g: ['#ecdcac', '#c4a878'], sil: 'sea', pt: 'spark', sun: 1 },
-  highland: { sky: ['#5690cc', '#a6c6e0', '#e8e2d4'], far: '#8a9ab4', near: '#5e6e62', g: ['#8a9a6a', '#56664a'], sil: 'mountains', pt: 'dust' },
-  desert: { sky: ['#e0924e', '#f6c888', '#fff0c8'], far: '#d6a070', near: '#b87a4a', g: ['#ecc484', '#bc8a48'], sil: 'dunes', pt: 'sand', sun: 1 },
-  snow: { sky: ['#7392c0', '#b6c8e2', '#eef2f8'], far: '#a4b6d2', near: '#dfe8f6', g: ['#f2f6fc', '#b8c6de'], sil: 'mountains', pt: 'snow' },
-  ruins: { sky: ['#5e6c86', '#9ca4ae', '#d8d0c0'], far: '#88867a', near: '#56564e', g: ['#8a8a70', '#56563f'], sil: 'ruins', pt: 'dust' },
-  skyisle: { sky: ['#347fdc', '#8cc6f8', '#f2f9ff'], far: '#ffffff', near: '#dbe8ff', g: ['#8fd07a', '#4e9048'], sil: 'clouds', pt: 'spark', sun: 1, float: 1 },
-  skyrock: { sky: ['#4270bc', '#94b6e8', '#e8f0ff'], far: '#ffffff', near: '#98a0b8', g: ['#a4a4ae', '#6a6a7a'], sil: 'clouds', pt: 'spark', float: 1 },
-  crystal: { sky: ['#2e2270', '#7458b4', '#dab8f2'], far: '#a48ee0', near: '#5e42a8', g: ['#8a70c8', '#40327e'], sil: 'crystals', pt: 'spark' },
-  seabed: { sky: ['#07284f', '#15608e', '#4aaec6'], far: '#2a6886', near: '#174666', g: ['#c8b890', '#86785e'], sil: 'reef', pt: 'bubble', sea: 1 },
-  kelp: { sky: ['#062a40', '#156270', '#3a9e9a'], far: '#1a5858', near: '#0c3a2e', g: ['#6a8a60', '#34543a'], sil: 'kelp', pt: 'bubble', sea: 1 },
-  coral: { sky: ['#08386c', '#2878ae', '#6ac8d8'], far: '#c46a8a', near: '#86386a', g: ['#e0c8a0', '#9c8464'], sil: 'coral', pt: 'bubble', sea: 1 },
-  trench: { sky: ['#01040c', '#05142a', '#0a2846'], far: '#0a2036', near: '#040a16', g: ['#1a2a3a', '#080e18'], sil: 'reef', pt: 'glow', sea: 1 },
+  meadow: { sky: ['#4f9be0', '#98cdf0', '#f6e8c4'], far: '#86aeb8', near: '#4d8a58', g: ['#79b85e', '#3d7a3a'], sil: 'hills', fg: 'grass', pt: 'leaf', sun: 1 },
+  forest: { sky: ['#3f82b8', '#86bcd4', '#d6e8c2'], far: '#5d8a78', near: '#28543a', g: ['#4e8a3c', '#244e28'], sil: 'trees', fg: 'canopy', pt: 'leaf' },
+  shore: { sky: ['#3f96dc', '#98d4f0', '#fff0d2'], far: '#4aa6cc', near: '#5a6878', g: ['#ecdcac', '#c4a878'], sil: 'sea', fg: 'palm', pt: 'spark', sun: 1 },
+  highland: { sky: ['#5690cc', '#a6c6e0', '#e8e2d4'], far: '#8a9ab4', near: '#5e6e62', g: ['#8a9a6a', '#56664a'], sil: 'mountains', fg: 'rocks', pt: 'dust' },
+  desert: { sky: ['#e0924e', '#f6c888', '#fff0c8'], far: '#d6a070', near: '#9a6a44', g: ['#ecc484', '#bc8a48'], sil: 'dunes', fg: 'cactus', pt: 'sand', sun: 1 },
+  snow: { sky: ['#7392c0', '#b6c8e2', '#eef2f8'], far: '#a4b6d2', near: '#6a7e98', g: ['#f2f6fc', '#b8c6de'], sil: 'mountains', snowcap: 1, fg: 'pine', pt: 'snow' },
+  ruins: { sky: ['#5e6c86', '#9ca4ae', '#d8d0c0'], far: '#88867a', near: '#56564e', g: ['#8a8a70', '#56563f'], sil: 'ruins', fg: 'column', pt: 'dust' },
+  skyisle: { sky: ['#347fdc', '#8cc6f8', '#f2f9ff'], far: '#ffffff', near: '#5a7a9a', g: ['#8fd07a', '#4e9048'], sil: 'clouds', fg: 'puff', pt: 'spark', sun: 1, float: 1 },
+  skyrock: { sky: ['#4270bc', '#94b6e8', '#e8f0ff'], far: '#ffffff', near: '#5a6078', g: ['#a4a4ae', '#6a6a7a'], sil: 'clouds', fg: 'puff', pt: 'spark', float: 1 },
+  crystal: { sky: ['#2e2270', '#7458b4', '#dab8f2'], far: '#a48ee0', near: '#4a3490', g: ['#8a70c8', '#40327e'], sil: 'crystals', fg: 'shards', pt: 'spark' },
+  seabed: { sky: ['#07284f', '#15608e', '#4aaec6'], far: '#2a6886', near: '#174666', g: ['#c8b890', '#86785e'], sil: 'reef', fg: 'kelp', pt: 'bubble', sea: 1 },
+  kelp: { sky: ['#062a40', '#156270', '#3a9e9a'], far: '#1a5858', near: '#0c3a2e', g: ['#6a8a60', '#34543a'], sil: 'kelp', fg: 'kelp', pt: 'bubble', sea: 1 },
+  coral: { sky: ['#08386c', '#2878ae', '#6ac8d8'], far: '#c46a8a', near: '#86386a', g: ['#e0c8a0', '#9c8464'], sil: 'coral', fg: 'coral', pt: 'bubble', sea: 1 },
+  trench: { sky: ['#01040c', '#05142a', '#0a2846'], far: '#0a2036', near: '#040a16', g: ['#1a2a3a', '#080e18'], sil: 'reef', fg: 'rocks', pt: 'glow', sea: 1 },
+  // 地域ごとの ボス舞台
+  boss0: { sky: ['#1a0a2a', '#6a2a4a', '#e8804a'], far: '#3a2440', near: '#140a18', g: ['#4a3a3a', '#1a1216'], sil: 'lighthouse', fg: 'rocks', pt: 'ember', boss: 1 },
+  boss1: { sky: ['#0e0a22', '#3a2a5a', '#8a6a8a'], far: '#2a2440', near: '#120e1c', g: ['#4a4440', '#1a1816'], sil: 'ruins', fg: 'column', pt: 'meteor', boss: 1 },
+  boss2: { sky: ['#02030e', '#1a1450', '#5a3a9a'], far: '#4a3a8a', near: '#140c34', g: ['#3a2e6a', '#120c28'], sil: 'nest', fg: 'shards', pt: 'star', boss: 1, float: 1 },
+  boss3: { sky: ['#000206', '#04101e', '#0a2036'], far: '#0c2a3a', near: '#02080e', g: ['#12202a', '#04080c'], sil: 'abyss', fg: 'kelp', pt: 'glow', boss: 1, sea: 1 },
 };
-function stageKind(opts) { if (opts.stage && STAGES[opts.stage]) return opts.stage; let b = 'grass'; try { b = World.biomeAt(player.x, player.z); } catch (_) {}
+function stageKind(opts) { if (opts.stage && STAGES[opts.stage]) return opts.stage; if (opts.boss) return 'boss' + Math.min(3, G.region | 0);
+  let b = 'grass'; try { b = World.biomeAt(player.x, player.z); } catch (_) {}
   const r = G.region;
   if (r === 3) return { kelp: 'kelp', coral: 'coral', trench: 'trench' }[b] || 'seabed';
   if (r === 2) return { rock: 'skyrock', crystal: 'crystal' }[b] || 'skyisle';
   if (r === 1) return { shore: 'shore', forest: 'forest', desert: 'desert', snow: 'snow', ruins: 'ruins' }[b] || 'meadow';
   return { shore: 'shore', forest: 'forest', rock: 'highland' }[b] || 'meadow'; }
-// 地平線の シルエット（viewBox 1000×200・下辺まで 塗る）。 far＝遠景、near＝近景
-function silSVG(kind, layer, seed) {
+// 地平線の シルエット（viewBox 1000×200・下辺まで 塗る）。 far＝遠景、near＝近景。 .hi＝明るい ハイライト（雪・光）
+function silSVG(kind, layer, seed, opt = {}) {
   let s = seed >>> 0; const rn = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
   const far = layer === 'far', H = 200, f = n => n.toFixed(0); let d = '', ex = '';
-  const ridge = (n, amp, base, jag) => { let p = `M0 ${H} L0 ${f(base - rn() * amp)}`; for (let i = 1; i <= n; i++) { const x = i / n * 1000, y = base - rn() * amp;
-    p += jag ? ` L${f(x - 500 / n + (rn() - .5) * 30)} ${f(base - amp * (.2 + rn() * .5))} L${f(x)} ${f(y)}` : ` Q${f(x - 500 / n)} ${f(y - amp * .35)} ${f(x)} ${f(y)}`; } return p + ` L1000 ${H} Z`; };
+  const ridge = (n, amp, base, jag, peaks) => { let p = `M0 ${H} L0 ${f(base - rn() * amp)}`; for (let i = 1; i <= n; i++) { const x = i / n * 1000, y = base - rn() * amp;
+    if (jag) { const mx = x - 500 / n + (rn() - .5) * 30, my = base - amp * (.2 + rn() * .5); p += ` L${f(mx)} ${f(my)} L${f(x)} ${f(y)}`; if (peaks) peaks.push([x, y]); }
+    else p += ` Q${f(x - 500 / n)} ${f(y - amp * .35)} ${f(x)} ${f(y)}`; } return p + ` L1000 ${H} Z`; };
+  const canopy = (base, amp, step) => { let p = `M0 ${H} L0 ${base}`; for (let x = 0; x < 1000; x += step) { const r = step * (.5 + rn() * .5), y = base - rn() * amp; p += ` L${f(x)} ${f(y)} A${f(r)} ${f(r)} 0 0 1 ${f(x + step)} ${f(y)}`; } return p + ` L1000 ${base} L1000 ${H} Z`; };
+  const pine = (x, h, w, b = 196) => ` M${f(x - w)} ${b} L${f(x)} ${f(b - h)} L${f(x + w)} ${b} Z M${f(x - w * .8)} ${f(b - h * .35)} L${f(x)} ${f(b - h * 1.1)} L${f(x + w * .8)} ${f(b - h * .35)} Z M${f(x - 2)} 200 L${f(x - 2)} ${b} L${f(x + 2)} ${b} L${f(x + 2)} 200 Z`;
+  const leafy = (x, h, r, b = 196) => { ex += `<circle cx="${f(x)}" cy="${f(b - h)}" r="${f(r)}"/><circle cx="${f(x - r * .7)}" cy="${f(b - h + r * .45)}" r="${f(r * .75)}"/><circle cx="${f(x + r * .75)}" cy="${f(b - h + r * .4)}" r="${f(r * .7)}"/>`; return ` M${f(x - 3)} 200 L${f(x - 2)} ${f(b - h + r * .5)} L${f(x + 2)} ${f(b - h + r * .5)} L${f(x + 3)} 200 Z`; };
+  const isle = (x, y, w, trees) => { let p = ` M${f(x - w)} ${f(y)} Q${f(x)} ${f(y - w * .18)} ${f(x + w)} ${f(y)} L${f(x + w * .55)} ${f(y + w * .35)} L${f(x + w * .1)} ${f(y + w * .8)} L${f(x - w * .3)} ${f(y + w * .45)} Z`;
+    if (trees) for (let k = 0; k < 3; k++) { const tx = x - w * .6 + k * w * .55; p += pine(tx, w * (.35 + rn() * .2), w * .1, y - w * .06); }
+    ex += `<path class="st" style="--sw:2px" d="M${f(x - w * .2)} ${f(y + w * .5)} q4 ${f(w * .3)} -2 ${f(w * .55)} M${f(x + w * .3)} ${f(y + w * .3)} q-3 ${f(w * .25)} 3 ${f(w * .45)}"/>`; return p; };
   switch (kind) {
-    case 'hills': d = ridge(far ? 4 : 6, far ? 60 : 34, far ? 150 : 188, false); break;
-    case 'mountains': d = far ? ridge(7, 120, 186, true) : ridge(9, 40, 196, false); break;
-    case 'dunes': d = ridge(far ? 3 : 4, far ? 46 : 26, far ? 168 : 192, false); break;
-    case 'trees': if (far) d = ridge(9, 44, 160, false); else { d = `M0 ${H} L0 190`; for (let x = -10; x < 1030; x += 20 + rn() * 30) { const h = 50 + rn() * 90, w = 14 + rn() * 12; d += ` L${f(x - w)} 190 L${f(x)} ${f(190 - h)} L${f(x + w)} 190`; } d += ` L1000 190 L1000 ${H} Z`; } break;
-    case 'sea': if (far) { d = `M0 ${H} L0 176 L640 176 Q690 150 740 162 Q770 146 812 170 L1000 176 L1000 ${H} Z`; } else { d = `M0 ${H} L0 194`; for (let x = 0; x <= 1000; x += 50) d += ` Q${x + 25} ${188 + rn() * 3} ${x + 50} 194`; d += ` L1000 ${H} Z`; } break;
-    case 'ruins': if (far) d = ridge(5, 40, 176, false); else { d = `M0 ${H} L0 196 L1000 196 L1000 ${H} Z`;
-      for (let x = 20; x < 1000; x += 90 + rn() * 120) { const h = 50 + rn() * 90, w = 16 + rn() * 12, br = rn() < .5 ? rn() * 18 : 0; d += ` M${f(x)} ${H} L${f(x)} ${f(H - h)} L${f(x + w * .5)} ${f(H - h - br)} L${f(x + w)} ${f(H - h + br * .4)} L${f(x + w)} ${H} Z`; }
-      d += ` M420 ${H} L420 110 Q480 60 540 110 L540 ${H} L522 ${H} L522 120 Q480 86 438 120 L438 ${H} Z`; } break;
+    case 'hills': if (far) d = ridge(4, 60, 150, false); else { d = ridge(6, 30, 190, false); for (let i = 0; i < 5; i++) ex += `<circle cx="${f(rn() * 1000)}" cy="${f(186 + rn() * 6)}" r="${f(8 + rn() * 12)}"/>`; d += leafy(120 + rn() * 100, 70, 26) + leafy(760 + rn() * 120, 56, 20); } break;
+    case 'mountains': { if (far) { const pk = []; d = ridge(7, 120, 186, true, pk); if (opt.snow) for (const [x, y] of pk) if (y < 120) ex += `<path class="hi" d="M${f(x - 20)} ${f(y + 22)} L${f(x)} ${f(y)} L${f(x + 22)} ${f(y + 24)} L${f(x + 8)} ${f(y + 16)} L${f(x - 4)} ${f(y + 26)} Z"/>`; }
+      else { d = ridge(9, 40, 196, false); for (let x = 30; x < 1000; x += 60 + rn() * 90) d += pine(x, 40 + rn() * 50, 12 + rn() * 6); } break; }
+    case 'dunes': d = ridge(far ? 3 : 4, far ? 46 : 26, far ? 168 : 192, false); if (far) ex += `<path d="M600 175 L640 120 L680 175 Z M650 175 L672 146 L694 175 Z"/>`; else for (const x of [180 + rn() * 80, 820 + rn() * 60]) d += ` M${f(x - 5)} 200 L${f(x - 5)} 120 Q${f(x)} 110 ${f(x + 5)} 120 L${f(x + 5)} 200 Z M${f(x - 5)} 160 L${f(x - 18)} 160 L${f(x - 18)} 138 L${f(x - 12)} 138 L${f(x - 12)} 154 L${f(x - 5)} 154 Z M${f(x + 5)} 150 L${f(x + 16)} 150 L${f(x + 16)} 128 L${f(x + 22)} 128 L${f(x + 22)} 156 L${f(x + 5)} 156 Z`; break;
+    case 'trees': if (far) d = canopy(150, 30, 34); else { d = `M0 ${H} L0 196 L1000 196 L1000 ${H} Z`; for (let x = -10; x < 1030; x += 34 + rn() * 50) d += rn() < .5 ? pine(x, 70 + rn() * 70, 16 + rn() * 10) : leafy(x, 60 + rn() * 60, 20 + rn() * 14); } break;
+    case 'sea': if (far) { d = `M0 ${H} L0 178 L620 178 Q680 146 740 160 Q770 140 812 172 L1000 178 L1000 ${H} Z M705 152 L709 118 L717 118 L721 152 Z`; ex += `<circle class="hi" cx="713" cy="116" r="4"/>`; }
+      else { d = `M0 ${H} L0 194 L1000 194 L1000 ${H} Z`; for (const [x, w] of [[90, 90], [880, 110], [520, 40]]) d += ` M${x - w} 200 Q${x - w * .6} ${f(170 - rn() * 20)} ${x} ${f(165 - rn() * 20)} Q${x + w * .7} ${f(168 - rn() * 10)} ${x + w} 200 Z`; } break;
+    case 'ruins': if (far) { d = ridge(5, 40, 176, false); for (let x = 80; x < 1000; x += 140 + rn() * 120) d += ` M${f(x)} 180 L${f(x)} ${f(120 - rn() * 30)} L${f(x + 14)} ${f(118 - rn() * 30)} L${f(x + 14)} 180 Z`; }
+      else { d = `M0 ${H} L0 196 L1000 196 L1000 ${H} Z`;
+        for (let x = 30; x < 1000; x += 110 + rn() * 130) { if (x > 380 && x < 600) continue; const h = 60 + rn() * 80, w = 18 + rn() * 8, br = rn() < .5; d += ` M${f(x)} 200 L${f(x)} ${f(H - h)} L${f(x + w)} ${f(H - h - (br ? 12 : 0))} L${f(x + w)} 200 Z` + (br ? '' : ` M${f(x - 6)} ${f(H - h)} L${f(x + w + 6)} ${f(H - h)} L${f(x + w + 6)} ${f(H - h - 8)} L${f(x - 6)} ${f(H - h - 8)} Z`); }
+        d += ` M430 200 L430 96 Q490 40 550 96 L550 200 L532 200 L532 106 Q490 66 448 106 L448 200 Z M380 200 L388 186 L412 184 L420 200 Z`; } break;
     case 'clouds': if (far) { d = `M0 ${H} L0 176 L1000 176 L1000 ${H} Z`; for (let i = 0; i < 16; i++) ex += `<circle cx="${f(i * 66 + rn() * 30)}" cy="${f(176 + rn() * 10)}" r="${f(22 + rn() * 26)}"/>`; }
-      else { for (const [x, y, w] of [[140 + rn() * 60, 60 + rn() * 30, 60], [800 + rn() * 80, 40 + rn() * 30, 44], [520 + rn() * 60, 120, 26]]) d += ` M${f(x - w)} ${f(y)} Q${f(x)} ${f(y - 14)} ${f(x + w)} ${f(y)} L${f(x + w * .45)} ${f(y + w * .5)} L${f(x)} ${f(y + w * .9)} L${f(x - w * .5)} ${f(y + w * .45)} Z`; } break;
-    case 'crystals': if (far) d = ridge(6, 70, 180, true); else { d = `M0 ${H} L0 196`; for (let x = 0; x < 1030; x += 26 + rn() * 50) { const h = 30 + rn() * 110, w = 8 + rn() * 12, lean = (rn() - .5) * 20; d += ` L${f(x - w)} 196 L${f(x + lean)} ${f(196 - h)} L${f(x + w)} 196`; } d += ` L1000 196 L1000 ${H} Z`; } break;
-    case 'reef': d = far ? ridge(6, 70, 176, false) : ridge(10, 30, 196, true); break;
+      else d = isle(150 + rn() * 60, 70 + rn() * 20, 62, true) + isle(830 + rn() * 70, 44 + rn() * 20, 48, true) + isle(560 + rn() * 50, 130, 26, false); break;
+    case 'crystals': if (far) d = ridge(6, 70, 180, true); else { d = `M0 ${H} L0 196`; for (let x = 0; x < 1030; x += 26 + rn() * 50) { const h = 30 + rn() * 110, w = 8 + rn() * 12, lean = (rn() - .5) * 20; d += ` L${f(x - w)} 196 L${f(x + lean)} ${f(196 - h)} L${f(x + w)} 196`; if (h > 90) ex += `<path class="hi" d="M${f(x + lean)} ${f(196 - h)} L${f(x + w * .6)} 196 L${f(x + lean * .5)} 196 Z"/>`; } d += ` L1000 196 L1000 ${H} Z`; } break;
+    case 'reef': d = far ? ridge(6, 70, 176, false) : ridge(10, 30, 196, true); if (!far) d += ` M620 200 L630 120 Q700 70 770 120 L780 200 L760 200 L752 130 Q700 100 648 130 L640 200 Z`; break;
     case 'kelp': if (far) d = ridge(6, 40, 176, false); else { d = `M0 ${H} L0 196 L1000 196 L1000 ${H} Z`;
       for (let x = 10; x < 1000; x += 28 + rn() * 44) { const h = 80 + rn() * 110, sw = 10 + rn() * 14; ex += `<path class="st" style="--sw:${(5 + rn() * 4).toFixed(1)}px;--kd:${(-rn() * 5).toFixed(1)}s" d="M${f(x)} 200 Q${f(x + sw)} ${f(200 - h * .33)} ${f(x)} ${f(200 - h * .6)} T${f(x + sw * .3)} ${f(200 - h)}"/>`; } } break;
     case 'coral': if (far) d = ridge(7, 50, 180, false); else { d = `M0 ${H} L0 194 L1000 194 L1000 ${H} Z`;
       for (let x = 30; x < 1000; x += 80 + rn() * 110) { const r = 18 + rn() * 26; ex += `<circle cx="${f(x)}" cy="${f(194 - r * .5)}" r="${f(r)}"/><path class="st" style="--sw:5px" d="M${f(x + r + 10)} 200 L${f(x + r + 10)} ${f(160 - rn() * 30)} M${f(x + r + 10)} ${f(178)} L${f(x + r + 26)} ${f(150 - rn() * 20)} M${f(x + r + 10)} 184 L${f(x + r - 6)} ${f(158 - rn() * 20)}"/>`; } } break;
+    case 'lighthouse': if (far) d = ridge(5, 50, 176, false); else { d = `M0 ${H} L0 190 Q300 184 560 190 L700 150 L780 130 L1000 136 L1000 ${H} Z M820 134 L834 34 L866 34 L880 134 Z M826 34 L874 34 L870 22 L830 22 Z M838 22 L850 8 L862 22 Z`; ex += `<path class="hi dim" d="M834 22 L866 22 L866 34 L834 34 Z"/>`; } break;
+    case 'nest': if (far) { d = `M0 ${H} L0 190 L1000 190 L1000 ${H} Z`; for (let i = 0; i < 7; i++) { const x = 60 + i * 140 + rn() * 40, y = 60 + rn() * 80, h = 14 + rn() * 26; d += ` M${f(x)} ${f(y - h)} L${f(x + h * .4)} ${f(y)} L${f(x)} ${f(y + h * .7)} L${f(x - h * .4)} ${f(y)} Z`; } }
+      else { d = `M0 ${H} L0 186 L1000 186 L1000 ${H} Z`; ex += `<path class="st" style="--sw:14px" d="M-20 150 Q200 60 380 150 M1020 150 Q800 50 620 150 M-10 180 Q250 110 500 176 Q750 110 1010 180"/>`; } break;
+    case 'abyss': if (far) { d = ridge(6, 90, 190, true); d += ` M460 190 L470 60 L480 30 L490 60 L500 20 L510 60 L520 30 L530 60 L540 190 Z`; }
+      else { d = `M0 ${H} L0 150 Q60 60 150 40 L170 200 Z M1000 ${H} L1000 140 Q940 50 850 40 L830 200 Z M0 196 L1000 196 L1000 ${H} L0 ${H} Z`; for (const [x, y] of [[150, 60], [850, 56]]) ex += `<circle class="hi glow" cx="${x}" cy="${y}" r="5"/>`; } break;
     default: d = ridge(5, 50, 170, false);
   }
   return `<svg class="bst-sil ${layer}" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true"><path d="${d}"/>${ex}</svg>`; }
+// 手前の 額縁（左右の 端）：画面の へりに 大きな シルエットを おいて 奥行きを だす
+function fgSVG(kind, seed) {
+  let s = seed >>> 0; const rn = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; const f = n => n.toFixed(0); let d = '', ex = '';
+  switch (kind) {
+    case 'grass': for (let i = 0; i < 14; i++) { const x = rn() * 200, h = 60 + rn() * 110, c = (rn() - .5) * 60; d += ` M${f(x - 4)} 300 Q${f(x + c * .5)} ${f(300 - h * .6)} ${f(x + c)} ${f(300 - h)} Q${f(x + c * .4 + 3)} ${f(300 - h * .5)} ${f(x + 5)} 300 Z`; } ex += `<circle class="hi" cx="${f(60 + rn() * 80)}" cy="${f(180 + rn() * 40)}" r="6"/>`; break;
+    case 'canopy': d = 'M0 0 L200 0 Q170 40 120 50 Q150 80 90 90 Q70 130 30 120 Q10 170 0 160 Z M20 0 L34 300 L6 300 L0 0 Z'; for (let i = 0; i < 6; i++) ex += `<circle cx="${f(rn() * 150)}" cy="${f(rn() * 100)}" r="${f(24 + rn() * 26)}"/>`; break;
+    case 'palm': d = 'M30 300 Q40 180 90 90 L98 94 Q54 180 46 300 Z'; ex += '<path d="M94 92 Q140 60 190 90 Q140 74 96 96 Z M94 92 Q60 40 10 50 Q60 60 92 96 Z M94 92 Q120 30 160 20 Q120 50 98 94 Z M94 92 Q50 90 20 130 Q60 100 94 96 Z"/>'; break;
+    case 'rocks': d = 'M0 300 L0 150 Q30 110 80 130 Q120 120 140 170 Q170 190 180 250 L200 300 Z'; ex += '<path class="hi" d="M20 150 Q40 128 70 138 L60 146 Q40 140 26 156 Z"/>'; break;
+    case 'cactus': d = 'M80 300 L80 110 Q95 90 110 110 L110 300 Z M80 200 L50 200 L50 150 Q58 140 66 150 L66 186 L80 186 Z M110 180 L140 180 L140 130 Q148 120 156 130 L156 196 L110 196 Z M0 300 L0 260 Q60 240 200 270 L200 300 Z'; break;
+    case 'pine': d = 'M0 0 L200 30 L150 40 L190 60 L120 66 L160 90 L60 96 L100 116 L0 130 Z'; ex += '<path class="hi" d="M40 12 L160 34 L120 38 Z M30 70 L140 70 L100 78 Z"/>'; break;
+    case 'column': d = 'M40 300 L40 80 L30 80 L30 64 L110 64 L110 80 L100 80 L100 300 Z M0 300 L0 270 L140 262 L160 300 Z'; ex += '<path class="hi" d="M52 90 L58 90 L58 290 L52 290 Z"/>'; break;
+    case 'puff': for (let i = 0; i < 6; i++) ex += `<circle cx="${f(rn() * 180)}" cy="${f(220 + rn() * 70)}" r="${f(30 + rn() * 30)}"/>`; d = 'M0 300 L0 280 L200 280 L200 300 Z'; break;
+    case 'shards': for (let i = 0; i < 5; i++) { const x = 20 + rn() * 150, h = 80 + rn() * 150, w = 12 + rn() * 16; d += ` M${f(x - w)} 300 L${f(x + (rn() - .5) * 30)} ${f(300 - h)} L${f(x + w)} 300 Z`; } ex += '<path class="hi" d="M60 300 L70 150 L74 300 Z"/>'; break;
+    case 'kelp': for (let i = 0; i < 5; i++) { const x = 20 + i * 36 + rn() * 20, h = 150 + rn() * 140; ex += `<path class="st" style="--sw:${f(8 + rn() * 6)}px;--kd:${(-rn() * 4).toFixed(1)}s" d="M${f(x)} 300 Q${f(x + 30)} ${f(300 - h * .35)} ${f(x)} ${f(300 - h * .65)} T${f(x + 10)} ${f(300 - h)}"/>`; } break;
+    case 'coral': d = 'M0 300 L0 230 Q40 200 90 230 Q140 210 170 260 L190 300 Z'; ex += '<path class="st" style="--sw:9px" d="M60 240 L60 150 M60 200 L100 140 M60 180 L24 130 M130 240 L140 170 M140 200 L170 160"/><circle cx="100" cy="140" r="10"/><circle cx="24" cy="128" r="9"/><circle cx="170" cy="158" r="8"/>'; break;
+  }
+  return `<svg viewBox="0 0 200 300" preserveAspectRatio="xMinYMax meet" aria-hidden="true"><path d="${d}"/>${ex}</svg>`; }
 function buildStage(opts) {
-  const kind = stageKind(opts), S = STAGES[kind], boss = !!opts.boss;
-  let night = false; try { night = !S.sea && World.skyInfo(G.tod).night > .5; } catch (_) {}
+  const kind = stageKind(opts), S = STAGES[kind], boss = !!opts.boss || !!S.boss;
+  let night = false; try { night = !S.sea && !S.boss && World.skyInfo(G.tod).night > .5; } catch (_) {}
   let st = $('bStage'); if (!st) { st = document.createElement('div'); st.id = 'bStage'; st.setAttribute('aria-hidden', 'true'); $('battle').prepend(st); }
-  st.className = `bst k-${kind}${boss ? ' boss' : ''}${night ? ' night' : ''}${S.sea ? ' sea' : ''}${S.float ? ' float' : ''}`;
+  st.className = `bst k-${kind}${boss ? ' boss' : ''}${S.boss ? ' rboss' : ''}${night ? ' night' : ''}${S.sea ? ' sea' : ''}${S.float ? ' skyf' : ''}`;
   const sky = night ? ['#060a20', '#141e48', S.float ? '#3a4a80' : '#2e3460'] : S.sky;
   st.style.cssText = `--s0:${sky[0]};--s1:${sky[1]};--s2:${sky[2]};--far:${S.far};--near:${S.near};--g0:${S.g[0]};--g1:${S.g[1]}`;
   const seed = [...kind].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) + (G.region * 101);
   let pts = ''; for (let i = 0; i < 12; i++) pts += `<i style="--x:${(R() * 100).toFixed(1)}%;--y:${(R() * 92).toFixed(1)}%;--d:${(5 + R() * 7).toFixed(1)}s;--dl:${(-R() * 12).toFixed(1)}s;--z:${(.5 + R() * .9).toFixed(2)}"></i>`;
-  st.innerHTML = `<div class="bst-sky"></div>${night ? '<div class="bst-stars"></div><div class="bst-moon"></div>' : S.sun ? '<div class="bst-sun"></div>' : ''}${S.sea ? '<div class="bst-shafts"><i></i><i></i><i></i><i></i></div>' : ''}`
-    + `<div class="bst-par far">${silSVG(S.sil, 'far', seed)}</div><div class="bst-ground"></div><div class="bst-par near">${silSVG(S.sil, 'near', seed + 17)}</div>`
-    + `${boss ? '<div class="bst-aura"></div><div class="bst-bolt"></div>' : ''}<div class="bst-pt p-${S.pt}">${pts}</div><div class="bst-vig"></div>`;
+  const fg = S.fg ? `<div class="bst-fg l">${fgSVG(S.fg, seed + 3)}</div><div class="bst-fg r">${fgSVG(S.fg, seed + 9)}</div>` : '';
+  st.innerHTML = `<div class="bst-sky"></div>${night || S.pt === 'star' ? '<div class="bst-stars"></div>' : ''}${night ? '<div class="bst-moon"></div>' : S.sun ? '<div class="bst-sun"></div>' : ''}${S.sea ? '<div class="bst-shafts"><i></i><i></i><i></i><i></i></div>' : ''}`
+    + `<div class="bst-par far">${silSVG(S.sil, 'far', seed, { snow: S.snowcap })}</div><div class="bst-ground"></div><div class="bst-par near">${silSVG(S.sil, 'near', seed + 17)}</div>`
+    + `${boss ? '<div class="bst-aura"></div><div class="bst-bolt"></div>' : ''}<div class="bst-pt p-${S.pt}">${pts}</div>${fg}<div class="bst-vig"></div>`;
   B.stage = true; }
+if (DEBUG) window.__bstage = buildStage;
 // ---- 地域移動の シネマ（3〜4秒・タップで スキップ）と 章タイトルカード ----
 function skippable(el, ms) { return new Promise(res => { let done = false; const t0 = performance.now();
   const end = () => { if (done) return; done = true; el.removeEventListener('pointerdown', tap); window.removeEventListener('keydown', kd, true); res(); };
@@ -1348,10 +1388,19 @@ function skippable(el, ms) { return new Promise(res => { let done = false; const
   el.addEventListener('pointerdown', tap); window.addEventListener('keydown', kd, true); setTimeout(end, ms); }); }
 const SHIP = '<svg class="cn-ship" viewBox="0 0 200 130"><path d="M100 8 L100 84" stroke="#3a2a1a" stroke-width="4"/><path d="M104 12 Q150 40 104 78 Z" fill="#fff6e0"/><path d="M96 16 Q58 44 96 76 Z" fill="#f4ead0"/><path d="M104 4 L124 10 L104 14 Z" fill="#e8584a"/><path d="M18 84 L184 84 L160 112 L40 112 Z" fill="#6a3a22"/><path d="M26 90 L176 90" stroke="#f3c15a" stroke-width="3"/><circle cx="60" cy="98" r="3" fill="#f3c15a"/><circle cx="84" cy="98" r="3" fill="#f3c15a"/><circle cx="108" cy="98" r="3" fill="#f3c15a"/></svg>';
 const WHALE = '<svg class="cn-whale" viewBox="0 0 300 120"><path d="M8 62 C28 22 120 12 188 40 C212 50 228 58 246 50 L282 26 L272 60 L292 90 L250 72 C226 84 196 98 146 98 C86 100 26 92 8 62 Z" fill="#1c2a5a"/><path d="M20 70 C60 92 130 96 200 80 C160 104 60 100 20 70 Z" fill="#8fb4ff" opacity=".55"/><path d="M110 88 L92 116 L132 94 Z" fill="#1c2a5a"/><circle cx="46" cy="56" r="4" fill="#fff6c9"/><g fill="#fff6c9"><circle cx="120" cy="40" r="2"/><circle cx="150" cy="46" r="1.6"/><circle cx="90" cy="36" r="1.4"/><circle cx="176" cy="54" r="2"/><circle cx="70" cy="44" r="1.2"/></g></svg>';
+// 横に 無限に つながる 帯（波・雲海・岩礁）：幅200%の SVG を 左へ 流す
+function cnStrip(cls, d, fill) { return `<div class="cn-strip ${cls}"><svg viewBox="0 0 2000 100" preserveAspectRatio="none"><path d="${d}" fill="${fill}"/></svg></div>`; }
+const cnWave = (amp, n, base) => { let d = `M0 100 L0 ${base}`; for (let i = 0; i < n; i++) { const x0 = i * 2000 / n, w = 2000 / n; d += ` Q${x0 + w * .25} ${base - amp} ${x0 + w * .5} ${base} T${x0 + w} ${base}`; } return d + ' L2000 100 Z'; };
+const cnBumps = (amp, n, base, seed) => { let d = `M0 100 L0 ${base}`, s = seed; const rn = () => (s = (s * 9301 + 49297) % 233280) / 233280; const pts = []; for (let i = 0; i < n; i++) pts.push(base - rn() * amp); pts.push(pts[0]); for (let i = 1; i <= n; i++) d += ` Q${((i - .5) * 2000 / n).toFixed(0)} ${(Math.min(pts[i - 1], pts[i % n]) - amp * .3).toFixed(0)} ${(i * 2000 / n).toFixed(0)} ${pts[i].toFixed(0)}`; return d + ' L2000 100 Z'; };
+const FISH = '<svg viewBox="0 0 40 16"><path d="M2 8 Q14 0 28 8 Q14 16 2 8 Z M28 8 L38 2 L36 8 L38 14 Z" fill="#0a2a48"/></svg>';
 function cineArt(kind) { let h = ''; const dots = (n, cls) => { let o = ''; for (let i = 0; i < n; i++) o += `<i class="${cls}" style="--x:${(R() * 100).toFixed(1)}%;--y:${(R() * 100).toFixed(1)}%;--d:${(1.6 + R() * 2.4).toFixed(2)}s;--dl:${(-R() * 3).toFixed(2)}s;--z:${(.4 + R()).toFixed(2)}"></i>`; return o; };
-  if (kind === 'sail') h = `<div class="cn-sky"></div><div class="cn-sun"></div><div class="cn-cloud c1"></div><div class="cn-cloud c2"></div><div class="cn-isle"></div><div class="cn-sea"></div><div class="cn-shipw">${SHIP}</div><div class="cn-sea front"></div>${dots(5, 'cn-gull')}`;
-  else if (kind === 'sky' || kind === 'skydown') h = `<div class="cn-sky"></div><div class="cn-stars"></div>${dots(9, 'cn-puff')}<div class="cn-whalew">${WHALE}</div>${dots(14, 'cn-trail')}<div class="cn-cloudsea"></div>`;
-  else h = `<div class="cn-sky"></div><div class="cn-shafts"><i></i><i></i><i></i><i></i><i></i></div>${dots(26, 'cn-bub')}<div class="cn-weed l"></div><div class="cn-weed r"></div>`;
+  if (kind === 'sail') h = `<div class="cn-sky"></div><div class="cn-sun"></div><div class="cn-cloud c1"></div><div class="cn-cloud c2"></div><div class="cn-cloud c3"></div>`
+    + cnStrip('isles', cnBumps(40, 5, 92, 7), '#7b86a6') + `<div class="cn-sea"></div><div class="cn-glint">${dots(16, 'cn-gl')}</div>`
+    + cnStrip('w1', cnWave(5, 14, 40), '#2f6aa8') + `<div class="cn-shipw">${SHIP}</div>` + cnStrip('w2', cnWave(9, 8, 44), '#1d4a88') + cnStrip('w3', cnWave(14, 5, 50), '#123468') + dots(5, 'cn-gull');
+  else if (kind === 'sky' || kind === 'skydown') h = `<div class="cn-sky"></div><div class="cn-stars"></div><div class="cn-moon"></div>` + cnStrip('isles sky', cnBumps(60, 4, 96, 3), '#26336e')
+    + `${dots(9, 'cn-puff')}<div class="cn-whalew">${WHALE}</div>${dots(14, 'cn-trail')}` + cnStrip('csea1', cnBumps(26, 9, 50, 5), '#aab6e8') + cnStrip('csea2', cnBumps(30, 6, 56, 9), '#dfe6ff');
+  else h = `<div class="cn-sky"></div><div class="cn-shafts"><i></i><i></i><i></i><i></i><i></i></div>` + cnStrip('reef1', cnBumps(50, 7, 90, 4), '#0d3a60')
+    + `<div class="cn-school">${Array.from({ length: 7 }, (_, k) => `<i style="--k:${k}">${FISH}</i>`).join('')}</div>${dots(26, 'cn-bub')}` + cnStrip('reef2', cnBumps(40, 5, 70, 11), '#06203a') + '<div class="cn-weed l"></div><div class="cn-weed r"></div>';
   return `<div class="cn-scene">${h}</div>`; }
 async function cinematic(kind, title, sub) {
   releaseInputs(); const ph = phase; phase = 'cut';
@@ -1479,6 +1528,7 @@ async function runBattle(specs, opts = {}) {
     const s = DATA.skills[id];
     if (!isFoe) { const cst = costOf(a, id); if (a.mp < cst) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし MPが たりない！`); return; } a.mp -= cst; }
     redraw(); Music.sfx(s.heal ? 'heal' : 'magic'); screenFx(s.fx || 'light');
+    if (!isFoe && a.kind === 'human') { const ci = bAdd('cutin', `<div class="ci-face">${Art.portrait(a.id, 'determined')}</div><b>${esc(s.name)}</b>`); ci.style.setProperty('--bs', bspd()); setTimeout(() => ci.remove(), 950 / bspd()); }
     await bmsg(`${nameOr(a)}は ${s.name}を ${s.verb || 'はなった'}！`, 250);
     const foesOf = () => isFoe ? aliveP() : aliveF(), alliesOf = () => isFoe ? aliveF() : aliveP();
     if (s.power) { const T = (s.tg === 'enemies' || s.tg === 'all') ? foesOf() : [tgt && tgt.hp > 0 && tgt.foe !== !!isFoe ? tgt : foesOf()[Math.floor(R() * foesOf().length)]];
@@ -1667,7 +1717,7 @@ async function openMenu() { await run(async () => {
     const take = re => { const i = extra.findIndex(x => re.test(String(x.label))); return i < 0 ? null : extra.splice(i, 1)[0]; };
     const story = take(/ストーリー|クエスト/), opt = take(/せってい|設定/);
     const others = [{ ic: '🔨', label: 'クラフト', sub: 'ブロックを つくる', fn: craftMenu }, ...extra.map(x => ({ ic: MENU_IC[x.label] || '✦', label: x.label, sub: x.sub, fn: x.fn, disabled: x.disabled })), { ic: '👥', label: 'じんぶつ', sub: 'であった 人たち', fn: charBook }];
-    const sys = [{ ic: '💾', label: 'きろくする', sub: 'いまの ぼうけんを 保存', fn: async () => { const ok = save(); await panel(`<h3>きろく</h3><p>${ok ? 'ぼうけんの きろくを のこした。' : 'このブラウザでは 保存が できないようだ。'}</p>`); } },
+    const sys = [{ ic: '💾', label: 'きろくする', sub: 'ぼうけんを 保存', fn: async () => { const ok = save(); await panel(`<h3>きろく</h3><p>${ok ? 'ぼうけんの きろくを のこした。' : 'このブラウザでは 保存が できないようだ。'}</p>`); } },
       ...(opt ? [{ ic: '⚙️', label: opt.label, sub: opt.sub, fn: opt.fn }] : []), { ic: '❓', label: 'あそびかた', sub: '操作と しくみ', fn: howtoPanel }];
     const nItems = Object.keys(G.inv).filter(k => G.inv[k] > 0 && DATA.items[k]).length;
     const T = [
@@ -1698,7 +1748,7 @@ async function statusPanel() {
   await panel(`<h3>つよさ　<small>冒険者ランク ${rk.r.r}${rk.nx ? `（次の ${rk.nx.r} まで ${rk.nx.pts - rankPts()}pt）` : ''}${G.title ? `　称号：${esc(G.title)}` : ''}</small></h3><div class="st-grid">${battleParty().map(m => { const hu = m.kind === 'human', eq = hu && G.eq[m.id], W = eq && DATA.gear[m.id][eq.w], A = eq && DATA.armor[eq.a];
     return `<div class="st-card"><div class="st-face">${faceOf(m)}</div><div class="st-main"><div class="st-head"><b>${esc(nameOf(m))}</b><small>Lv${m.lv}</small>${typeTag(m.type)}</div>${expBar(m)}<div class="st-next">つぎのLvまで ${need(m.lv) - m.exp} EXP${hu ? `<span>SP ${G.sp[m.id] || 0}</span>` : ''}</div></div>
     <dl class="st-stats">${cell('HP', `${m.hp}/${m.st.hp}`)}${cell('MP', `${m.mp}/${m.st.mp}`)}${cell('こうげき', m.st.atk)}${cell('ぼうぎょ', m.st.def)}${cell('すばやさ', m.st.spd)}${hu ? cell('そうび', `+${W.atk} / +${A.def}`) : cell('なつき', `${m.bond || 0}/100`)}</dl>
-    <div class="st-sk">${m.skills.map(s => DATA.skills[s].name).join('・') || '—'}</div>${hu ? `<p class="st-eq">ぶき：${W.name}（こうげき+${W.atk}）　ぼうぐ：${A.name}（ぼうぎょ+${A.def}）</p>` : ''}</div>`; }).join('')}</div>
+    <div class="st-sk">${m.skills.map(s => DATA.skills[s].name).join('・') || '—'}</div>${hu ? `<p class="st-eq"><span>ぶき　<b>${W.name}</b>（こうげき+${W.atk}）</span><span>ぼうぐ　<b>${A.name}</b>（ぼうぎょ+${A.def}）</span></p>` : ''}</div>`; }).join('')}</div>
     <p class="st-foot"><span>がんばり <b>${Math.round(G.stamMax)}</b></span><span>ひかりの種 <b>${G.seeds}</b>こ（見つけた ${Object.keys(G.seedGot).length}/${SEED_N()}）</span><span>依頼達成 <b>${G.bountyDone}</b></span>${G.flags.glider ? '<span>風布あり</span>' : ''}</p>`, 'wide'); }
 async function skillMenu() {
   if (!G.tips.skillHelp) { G.tips.skillHelp = 1; await say(['【スキル】 レベルが 上がると スキルポイント（SP）が もらえる。', 'SPを つかって、技を 覚えたり 能力を 伸ばしたり できる。 🔒は 前の マスを 覚えると ひらく。']); }
@@ -1731,8 +1781,8 @@ async function itemMenu() {
       if (it.healAll) { G.inv[k]--; allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); Music.sfx('heal'); toast('みんな 全回復した！', 1200); hud(); continue; }
       const P = battleParty(); const j = await menu({ title: `だれに つかう？`, items: P.map(m => ({ label: nameOf(m), sub: `HP ${m.hp}/${m.st.hp}  MP ${m.mp}/${m.st.mp}` })), where: 'side' });
       if (j >= 0) useItemField(k, P[j]); } } }
-async function travel(dest, x, z, yaw = Math.PI, cine = null) { await fade(true); G.region = dest; World.setRegion(dest); enemies = []; player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.vx = player.vz = player.vy = 0; player.glide = false; trail.length = 0; cam.yaw = yaw; player.yaw = yaw; player.safe = { x, z }; if (cine) await cinematic(cine.kind, cine.title || REGION_NAME[dest], cine.sub); Music.play(fieldSong(), { restart: true }); await wait(cine ? 250 : 400); await fade(false); save(); }
-async function warpTo(x, z) { await fade(true); player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.safe = { x, z }; player.vx = player.vz = player.vy = 0; trail.length = 0; enemies = []; await wait(200); await fade(false); }
+async function travel(dest, x, z, yaw = Math.PI, cine = null) { await fade(true); G.region = dest; World.setRegion(dest); enemies = []; player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.vx = player.vz = player.vy = 0; player.glide = false; trail.length = 0; cam.yaw = yaw; camFrame(yaw); player.yaw = cam.yaw; player.safe = { x, z }; if (cine) await cinematic(cine.kind, cine.title || REGION_NAME[dest], cine.sub); Music.play(fieldSong(), { restart: true }); await wait(cine ? 250 : 400); await fade(false); save(); }
+async function warpTo(x, z) { await fade(true); player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.safe = { x, z }; player.vx = player.vz = player.vy = 0; trail.length = 0; enemies = []; camFrame(cam.yaw); player.yaw = cam.yaw; await wait(200); await fade(false); }
 const mapCache = {};
 function mapImage() {
   if (mapCache[G.region]) return mapCache[G.region];
@@ -1762,10 +1812,20 @@ function mapPanel() { return new Promise(res => {
   const el = document.createElement('div'); el.className = 'win panel mapp';
   el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button><div class="mapwrap"><div class="map"><img src="${mapImage()}" alt="${REGION_NAME[G.region]}の 地図">${marks.join('')}${pins}</div>
     <div class="mapside"><h3>地図：${REGION_NAME[G.region]}</h3><p class="q-now">★ ${ob.t}</p><p class="map-legend"><span><b>▲</b> いま</span><span><b class="g">★</b> 目的地</span>${warps.length ? '<span><b class="g">◆</b> ピンを タップで ワープ</span>' : ''}</p>
-      ${warps.length ? `<p class="mh">ワープ先</p><div class="wlist">${warps.map((w, i) => `<button class="t-btn wbtn" type="button" data-i="${i}">${w.n}</button>`).join('')}</div>` : '<p class="st-eq">最初の 灯台を ともすと ワープが つかえる。</p>'}</div></div>`;
+      ${warps.length ? `<details class="wdet"><summary>ワープ先 一覧（${warps.length}）</summary><div class="wlist">${warps.map((w, i) => `<button class="t-btn wbtn" type="button" data-i="${i}">${w.n}</button>`).join('')}</div></details>` : '<p class="st-eq">最初の 灯台を ともすと ワープが つかえる。</p>'}</div></div>`;
   const M = { el, panel: true, items: [], res }; el.querySelector('.m-x').addEventListener('click', () => { Music.sfx('cancel'); closeMenu(M, -1); });
   el.querySelectorAll('.wbtn,.wp').forEach(b => b.addEventListener('click', async () => { const w = warps[+b.dataset.i]; M.res = () => {}; closeMenu(M, -1); Music.sfx('magic'); await warpTo(w.x, w.z); res('warped'); }));
-  $('ui').appendChild(el); MENUS.push(M); }); }
+  $('ui').appendChild(el); MENUS.push(M); layoutPins(el.querySelector('.map')); }); }
+// ワープピンの ラベルが 重ならないよう 上→下→右→左 の 順に 置き場所を さがす（地図の 外にも はみ出さない）
+function layoutPins(map) { if (!map) return; const mr = map.getBoundingClientRect(); const placed = [], pad = 3;
+  const pins = [...map.querySelectorAll('.wp')]; const anchors = pins.map(p => { p.className = 'wp'; const r = p.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.bottom + 7 }; });
+  const hit = (a, b) => a.l < b.r + pad && a.r > b.l - pad && a.t < b.b + pad && a.b > b.t - pad;
+  pins.forEach((p, i) => { let best = null, bestN = 1e9;
+    for (const d of ['', 'b', 'r', 'l']) { p.className = 'wp' + (d ? ' ' + d : ''); const r = p.getBoundingClientRect(); const box = { l: r.left, r: r.right, t: r.top, b: r.bottom };
+      const out = box.l < mr.left || box.r > mr.right || box.t < mr.top || box.b > mr.bottom;
+      const n = placed.filter(q => hit(box, q)).length + anchors.filter((a, j) => j !== i && a.x > box.l && a.x < box.r && a.y > box.t && a.y < box.b).length + (out ? 5 : 0);
+      if (n < bestN) { bestN = n; best = d; } if (n === 0) break; }
+    p.className = 'wp' + (best ? ' ' + best : ''); const r = p.getBoundingClientRect(); placed.push({ l: r.left, r: r.right, t: r.top, b: r.bottom }); }); }
 async function questLog() {
   const F = G.flags, ck = v => v ? '<b class="ok">✓</b>' : '<b class="ng">□</b>'; const ob = objective(); const rk = rankOf(rankPts());
   const r0 = REG[0];
@@ -1873,10 +1933,10 @@ function blocked(x, z, y) { for (const [ox, oz] of [[-.3, -.3], [.3, -.3], [-.3,
 
 // ================= followers（V字で 2.5〜3.5 うしろ・カメラの 視線を よける） =================
 const folSt = {};
-function followPos(m, i, dt) { const back = i < 2 ? 2.7 : 3.5, lat = (i % 2 ? 1 : -1) * (i < 2 ? 1.15 : 2); const k = m.uid || m.id;
+function followPos(m, i, dt) { const back = i < 2 ? 3.3 : 4.4, lat = (i % 2 ? 1 : -1) * (i < 2 ? 1.7 : 2.8); const k = m.uid || m.id;
   let px = player.x, pz = player.z, acc = 0, bx = px - Math.sin(player.yaw) * back, bz = pz - Math.cos(player.yaw) * back, hy = player.yaw, by = player.y;
   for (const t of trail) { const sd = Math.hypot(t.x - px, t.z - pz); if (sd < 1e-4) continue; if (acc + sd >= back) { const u = (back - acc) / sd; bx = px + (t.x - px) * u; bz = pz + (t.z - pz) * u; hy = Math.atan2(px - t.x, pz - t.z); by = t.y; acc = -1; break; } acc += sd; hy = Math.atan2(px - t.x, pz - t.z); px = t.x; pz = t.z; by = t.y; }
-  if (acc >= 0 && trail.length) { const rem = back - acc; bx = px - Math.sin(hy) * rem; bz = pz - Math.cos(hy) * rem; }
+  if (acc >= 0) { hy = player.yaw; bx = player.x + Math.sin(hy) * .6; bz = player.z + Math.cos(hy) * .6; by = player.y; } // 足あとが まだ 短い（出発直後）：手前を ふさがず 左右に ならぶ
   let gx = bx - Math.cos(hy) * lat, gz = bz + Math.sin(hy) * lat;
   const e = cam.eye; if (e) { const lx = player.x - e[0], lz = player.z - e[2], L2 = lx * lx + lz * lz; if (L2 > .01) { const u = ((gx - e[0]) * lx + (gz - e[2]) * lz) / L2; if (u > -.1 && u < 1.1) { const qx = e[0] + lx * u, qz = e[2] + lz * u, dx = gx - qx, dz = gz - qz, dd = Math.hypot(dx, dz), L = Math.sqrt(L2);
     if (dd < 1.2) { const sx = dd > .05 ? dx / dd : (lat < 0 ? -lz : lz) / L, sz = dd > .05 ? dz / dd : (lat < 0 ? lx : -lx) / L; gx = qx + sx * 1.2; gz = qz + sz * 1.2; } } } }
@@ -1884,7 +1944,7 @@ function followPos(m, i, dt) { const back = i < 2 ? 2.7 : 3.5, lat = (i % 2 ? 1 
   let st = folSt[k]; if (!st || Math.hypot(st.x - gx, st.z - gz) > 9) st = folSt[k] = { x: gx, z: gz, yaw: hy };
   const ox = st.x, oz = st.z; st.x = lerp(st.x, gx, Math.min(1, dt * 5)); st.z = lerp(st.z, gz, Math.min(1, dt * 5));
   const mv = Math.hypot(st.x - ox, st.z - oz); let ty = mv > dt * .6 ? Math.atan2(st.x - ox, st.z - oz) : hy; let yd = ty - st.yaw; yd = Math.atan2(Math.sin(yd), Math.cos(yd)); st.yaw += yd * Math.min(1, dt * 7);
-  const y = Math.max(surfaceAt(st.x, st.z, by + .5), -1); let hide = false;
+  const y = Math.max(surfaceAt(st.x, st.z, by + .5), -1); let hide = !!G.build || (cam.cd != null && cam.cd < 3);
   if (e) { const cx = st.x - e[0], cy = y + .8 - e[1], cz = st.z - e[2]; if (Math.hypot(cx, cy, cz) < 1.5) hide = true;
     else { const hx = player.x - e[0], hy2 = player.y + 1.4 - e[1], hz = player.z - e[2], H2 = hx * hx + hy2 * hy2 + hz * hz, u = (cx * hx + cy * hy2 + cz * hz) / H2; if (u > 0 && u < .85 && Math.hypot(cx - hx * u, cy - hy2 * u, cz - hz * u) < .55) hide = true; } }
   return { x: st.x, z: st.z, y, yaw: st.yaw, hide }; }
@@ -1911,13 +1971,21 @@ function camSolve(tgt, dt, md) {
   // 動いている間、手で さわって 1.2秒 たてば、ゆっくり 背中側へ
   const hs = Math.hypot(player.vx, player.vz);
   if (md === 'field' && !G.build && look.id === null && hs > 1.5 && performance.now() - (cam.inAt || 0) > 1200) { let d = player.yaw - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
-    if (Math.abs(d) < 2.1) cam.yaw += d * Math.min(1, dt * .9 * Math.min(1, hs / 5.4)) * (1 - Math.abs(d) / 2.6); }
-  const MIN = 2.2, want = cam.dist; let pa = 0, reach = camReach(tgt, cam.pitch, want);
-  if (reach < MIN) { let best = reach; for (const add of [.25, .5, .75, 1]) { const p = Math.min(1.35, cam.pitch + add); const r = camReach(tgt, p, want); if (r > best + .05) { best = r; pa = p - cam.pitch; } if (r >= MIN) break; } }
+    if (Math.abs(d) < 2.1) { if (Math.abs(d) > .35) cam.rcN = (cam.rcN || 0) + dt; } if (Math.abs(d) < 2.1) cam.yaw += d * Math.min(1, dt * .9 * Math.min(1, hs / 5.4)) * (1 - Math.abs(d) / 2.6); }
+  // つくるモード：見下ろし（ピッチ .62 以上）・6m 以上 引いて、主人公と 置く ブロックを 両方 見せる
+  const bld = !!G.build && md === 'field'; cam.bp = lerp(cam.bp ?? cam.pitch, bld ? Math.max(cam.pitch, .62) : cam.pitch, Math.min(1, dt * 5));
+  const bp = cam.bp, MIN = bld ? 3 : 2.2, want = bld ? Math.max(cam.dist, 6) : cam.dist; let pa = 0, reach = camReach(tgt, bp, want);
+  if (reach < MIN) { let best = reach; for (const add of [.25, .5, .75, 1]) { const p = Math.min(1.35, bp + add); const r = camReach(tgt, p, want); if (r > best + .05) { best = r; pa = p - bp; } if (r >= MIN) break; } }
   cam.pa = cam.pa == null ? pa : lerp(cam.pa, pa, Math.min(1, dt * (pa > cam.pa ? 7 : 1.6)));
-  const pitch = cam.pitch + cam.pa, dT = Math.min(want, camReach(tgt, pitch, want));
-  if (cam.cd == null || dT < cam.cd) cam.cd = dT; else cam.cd = lerp(cam.cd, dT, Math.min(1, dt * 1.7));
+  const pitch = bp + cam.pa, dT = Math.min(want, camReach(tgt, pitch, want));
+  if (cam.cd == null || dT < cam.cd) cam.cd = dT; else cam.cd = lerp(cam.cd, dT, Math.min(1, dt * (bld ? 4 : 1.7))); if (bld) cam.cd = Math.max(cam.cd, 3);
   return camEyeAt(tgt, pitch, cam.cd); }
+// 出発・移動直後の 向き：16方向を しらべ、うしろ 8m が ひらけて 前が 長く 見通せる 向きへ
+function camFrame(pref) { const head = [player.x, player.y + 1.6, player.z]; let best = null; const p0 = pref ?? cam.yaw;
+  for (let k = 0; k < 16; k++) { const yaw = p0 + k / 16 * 6.2832; let back = 8; for (const o of [0, -.3, .3, -.55, .55]) { cam.yaw = yaw + o; back = Math.min(back, camReach(head, .3, 8) + (o ? Math.abs(o) * 2 : 0)); } let fwd = 0;
+    for (let s = 1; s <= 30; s++) { const x = head[0] + Math.sin(yaw) * s, z = head[2] + Math.cos(yaw) * s, yy = head[1] + .2; if (Blocks.has(Math.floor(x), Math.floor(yy), Math.floor(z)) || hAt(x, z) > yy) break; fwd = s; }
+    const sc = back * 3 + (back >= 7.9 ? 6 : 0) + fwd * .5 + Math.cos(yaw - p0) * 3; if (!best || sc > best.sc) best = { sc, yaw }; }
+  cam.yaw = Math.atan2(Math.sin(best.yaw), Math.cos(best.yaw)); cam.tp = null; cam.cd = null; cam.pa = 0; cam.inAt = 0; return cam.yaw; }
 
 let last = performance.now(), T = 0, saveT = 0, shinyFx = [];
 function frame(now) { if (DEBUG && window.__norender) setTimeout(() => frame(performance.now()), 16); else requestAnimationFrame(frame); try { frameBody(now); } catch (e) { if (DEBUG) window.__ferr = String(e && e.stack || e).slice(0, 400); if ((frame.err = (frame.err || 0) + 1) < 4) console.error(e); try { dlgUpdate(.016); Music.tick(); } catch (_) {} } }
@@ -2065,7 +2133,7 @@ function frameBody(now) {
     shinyFx = [];
     for (const e of enemies) { const d = Math.hypot(player.x - e.x, player.z - e.z);
       if (md === 'field') {
-        if (d < 12 && cool <= 0 && !player.glide) moveEntity(e, player.x, player.z, (night > .5 ? 5.2 : 4.3) * (e.legend ? .6 : 1), dt);
+        if (d < (e.tut ? 5 : 12) && cool <= 0 && !player.glide) moveEntity(e, player.x, player.z, (night > .5 ? 5.2 : 4.3) * (e.legend ? .6 : 1), dt);
         else { e.wt -= dt; if (e.wt <= 0) { e.tx = e.hx + (R() - .5) * 16; e.tz = e.hz + (R() - .5) * 16; e.wt = 3 + R() * 4; } moveEntity(e, e.tx, e.tz, 1.4, dt); }
         if (G.region === 2 && !e.fixedY && hAt(e.x, e.z) < 4) { e.x = e.px ?? e.hx; e.z = e.pz ?? e.hz; e.wt = 0; } e.px = e.x; e.pz = e.z;
         if (d < 1.5 && cool <= 0 && Math.abs(player.y - e.y) < 2.5) { const ee = e; cool = .5; run(async () => { const res = await runBattle(ee.group);
@@ -2114,7 +2182,10 @@ function frameBody(now) {
   if (G.region === 2 && phase === 'field') {
     for (const u of r.updrafts) { const d = Math.hypot(u.x - player.x, u.z - player.z); if (d > 170) continue; const bot = u.spire ? hAt(u.x, u.z) : Math.max(hAt(u.x, u.z), -24), span = u.top - bot;
       fx.push({ type: 2, p: [u.x, bot + span / 2, u.z], size: [u.r * .9, span / 2 + 2], grow: 4, cyl: true, tint: [.6, 1, .9] });
-      if (d < 90) for (let k = 0; k < 4; k++) { const y = bot + ((T * 7 + k * span / 4) % span); fx.push({ type: 3, p: [u.x, y, u.z], size: [u.r * .6, u.r * .6], grow: .38 * (1 - Math.abs(y - bot - span / 2) / span), tint: [.7, 1, .95], seed: k + u.x }); } }
+      // 上昇気流の リング：カメラに 近いほど うすく、画面上の 大きさは 視野の 一部に おさえる（近くで 白い 大円に ならない）
+      if (d < 90) for (let k = 0; k < 4; k++) { const y = bot + ((T * 7 + k * span / 4) % span); const cd = Math.hypot(u.x - eye[0], y - eye[1], u.z - eye[2]);
+        const near = Math.max(0, Math.min(1, (cd - 7) / 14)); if (near <= 0) continue; const sz = Math.min(u.r * .6, cd * .28);
+        fx.push({ type: 3, p: [u.x, y, u.z], size: [sz, sz], grow: .38 * near * (1 - Math.abs(y - bot - span / 2) / span), tint: [.7, 1, .95], seed: k + u.x }); } }
     r.shrines.forEach(sh => { if (G.wind[sh.i]) fx.push({ type: 2, p: [sh.x, sh.y + 45, sh.z], size: [1.4, 45], grow: 3, cyl: true, tint: [.5, 1, .9] }); });
     if (!G.flags.c3bridge) for (let k = 0; k < 14; k++) { const a = k / 14 * 6.283 + T * .02; fx.push({ type: 2, p: [r.tower.x + Math.cos(a) * 88, 40, r.tower.z + Math.sin(a) * 88], size: [7, 60], grow: 3, cyl: true, tint: [.6, .45, 1] }); }
     if (!G.flags.c3done) fx.push({ type: 2, p: [r.altar.x, r.altar.y + 60, r.altar.z], size: [2.5, 60], grow: 3, cyl: true, tint: [.7, .55, 1] });
@@ -2192,9 +2263,9 @@ async function opening() {
   for (const l of L) { if (skipAll) break; el.innerHTML = `<p>${l}</p><button class="cut-skip" type="button" style="position:absolute;right:calc(16px + env(safe-area-inset-right,0px));bottom:14px;background:none;border:1px solid rgba(255,255,255,.35);color:#ddd;border-radius:6px;padding:6px 12px;font-size:12px">スキップ ▶▶</button><small style="position:absolute;left:0;right:0;bottom:18px;color:#999;font-size:11px;text-align:center;pointer-events:none">タップで すすむ</small>`;
     await new Promise(res => { const t = setTimeout(res, 2800); poke = () => { clearTimeout(t); poke = null; setTimeout(res, 120); }; }); }
   el.removeEventListener('pointerdown', on); removeEventListener('keydown', on, true);
-  el.hidden = true; startField(); await wait(400); run(talkYui);
+  el.hidden = true; await titleCard('第1章', 'ともしびの継ぎ手'); startField(); await wait(400); run(talkYui);
 }
-function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() => run(async () => { await reunion(); save(); }), 600); phase = 'field'; $('hud').hidden = false; document.body.classList.add('infield'); cam.yaw = Math.atan2(REGr().town.x - player.x, REGr().town.z - player.z); hud(); Music.play(fieldSong(), { restart: true });
+function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() => run(async () => { await reunion(); save(); }), 600); phase = 'field'; $('hud').hidden = false; document.body.classList.add('infield'); cam.yaw = Math.atan2(REGr().town.x - player.x, REGr().town.z - player.z); camFrame(cam.yaw); player.yaw = cam.yaw; hud(); Music.play(fieldSong(), { restart: true });
   if (G.region === 0 && G.flags.shrineOpen && !G.flags.cleared) { darkTarget = 1; darkness = 1; } if (!G.blk[G.mat]) cycleMat(true); }
 window.KZ = { HOOK, get G() { return G; }, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
   say, who, nm, menu, panel, confirm, run, toast, tip, gain, save, load, hud, fade, wait, R, esc, $, floatText, runBattle, titleCard, cinematic, mkMon, mkHuman, calc, fixTeam, battleParty, allMembers, member, nameOf, inParty,

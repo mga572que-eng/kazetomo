@@ -27,6 +27,7 @@
       who('kaito', 'grin', '今度は いっしょに 行こう。 灯台守の 意地、見せてやる。'),
       { t: '「あわの鈴」を 手に入れた！　カイトが 仲間に くわわった！', fx: () => { K.G.inv.awanosuzu = 1; joinKaito(); Music.sfx('friend'); } },
       '（村の 南の 岬で「あわの鈴」を 鳴らすと 海の底へ）']);
+    if (K.titleCard) await K.titleCard('第4章', '海の底');
     F().c4start = 1; K.save(); K.hud(); }
   function joinKaito() { const G = K.G; if (G.party.some(m => m.id === 'kaito')) return; const lv = Math.max(...G.party.map(m => m.lv));
     G.eq.kaito = G.eq.kaito || { w: 0, a: G.eq.sora ? G.eq.sora.a : 0 }; G.board.kaito = G.board.kaito || []; G.sp.kaito = G.sp.kaito || 0;

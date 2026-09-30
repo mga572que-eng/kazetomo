@@ -52,7 +52,7 @@
   DATA.reqs = [
     // ---- 第1章：灯台の 鍵 ----
     { id: 'k0', key: 0, r: 0, giver: 'gen', town: '風見の村', title: '灯台の 鍵', steps: [{ t: 'shards', n: 3, text: '灯台の まわりの 野原で「灯の欠片」を 3つ 集める' }],
-      offer: [who('gen', 'neutral', '灯台の 扉は、灯の欠片を はめないと ひらかねえ。'), who('gen', 'neutral', '欠片は 北の 灯台の まわりの 野原に 散らばってる。 光ってるから すぐ わかるさ。 3つ 集めて 持ってこい。')],
+      offer: [who('gen', 'neutral', '灯台の 扉は、灯の欠片を はめないと ひらかねえ。'), who('gen', 'neutral', '欠片は 北の 灯台の まわりの 野原に 散らばってる。 光ってるから すぐ わかるさ。 3つ そろったら、そのまま 灯台の 扉に はめこめ。 それが 鍵だ。')],
       done: [who('gen', 'grin', '……よし。 これで 鍵が 打てる。'), '「灯台の 鍵」を 手に入れた！ 灯台で 番人が まっている。'], reward: { gold: 100 } },
     { id: 'k1a', key: 1, r: 0, giver: 'nami', town: 'シオミ', title: 'こわれた 井戸', steps: [{ t: 'collect', item: 'ishi', n: 5, text: '石を 5こ 集めて 町長ナミへ（岩を 掘る）' }],
       offer: [nm('町長ナミ', 'ようこそ、潮見の町シオミへ……と 言いたいけれど、見ての とおりよ。 半年前、かげものに 町の 半分を 焼かれたの。'), nm('町長ナミ', '井戸も こわされて、水が くめない。 石を 5つ あつめて もらえないかしら。')],
@@ -196,11 +196,14 @@
 
   // ---- 灯台の 門番（鍵が ないと ひらかない）と 目的 ----
   DATA.trials.forEach((T, i) => { T.text = '灯台の 奥で、闇に のまれた 番人が 灯を ふさいでいる。'; T.name = ['野原の灯台', '双塔の灯台', '岩山の灯台', '月夜の灯台', '崖の灯台'][i] || T.name; });
-  H.beaconGate = b => { const k = G().order; if (keyDone(k)) return null; const Q = DATA.reqs.find(x => x.key === k && !done(x.id));
+  // 第1灯台：欠片が 3つ そろっていれば ゲンへ 報告に もどらず、扉で そのまま 鍵に なる
+  const autoKey0 = () => { const Q = DATA.reqs.find(x => x.key === 0); if (!Q || done(Q.id) || G().order !== 0 || (G().trial[0].shards || 0) < 3) return false; const st = q(Q.id); st.s = 'd'; st.step = Q.steps.length; G().gold += (Q.reward || {}).gold || 0; Music.sfx('friend'); K.toast(`灯の欠片を 扉に はめこんだ！ 扉が ひらいた<br><span style="font-size:.6em">【依頼 達成】${Q.title}（+${(Q.reward || {}).gold || 0}G）</span>`, 2600); K.save(); K.hud(); return true; };
+  H.beaconGate = b => { const k = G().order; if (keyDone(k)) return null; if (k === 0 && b && b.i === 0 && autoKey0()) return null; const Q = DATA.reqs.find(x => x.key === k && !done(x.id));
     return ['灯台の 扉は かたく 閉ざされている……。', Q ? `（${Q.town}の ${giverName(Q)}が 鍵の ことを 知っているようだ）` : '（まだ 鍵が ない）']; };
   H.beaconObj = () => { const k = G().order; if (keyDone(k)) return null; const Q = DATA.reqs.find(x => x.key === k && !done(x.id)); if (!Q) return null; const st = q(Q.id); const lv = DATA.guardLv[k];
     if (!st.s) { const n = giverNpc(Q); return { t: `【灯台 ${k}/5・推奨Lv${lv}】${Q.town}の ${giverName(Q)}に 話を 聞こう`, p: n ? { x: n.x, z: n.z } : null }; }
     const fin = isReady(Q); const s = Q.steps[st.step || 0];
+    if (fin && k === 0) return { t: `【灯台 0/5・推奨Lv${lv}】灯台の 扉に 欠片を はめこもう`, p: R0.beacons[0] };
     if (fin) { const n = giverNpc(Q); return { t: `【灯台 ${k}/5】${Q.town}の ${giverName(Q)}に 報告しよう`, p: n ? { x: n.x, z: n.z } : null }; }
     const p = s && (s.t === 'visit' || s.t === 'waves') ? spotOf(s) : s && s.t === 'shards' ? (() => { const b0 = R0.beacons[0]; const got = G().trial[0].got || []; const sh = b0.shards.find((_, i) => !got.includes(i)); return sh; })() : null;
     return { t: `【灯台 ${k}/5・${Q.title}】${stepTxt(Q, st)}`, p }; };
