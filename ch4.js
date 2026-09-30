@@ -19,14 +19,13 @@
   { const kn = K.NPCS.find(n => n.id === 'kaito' && n.r === 0); if (kn) { const s0 = kn.show; kn.show = () => (!s0 || s0()) && !K.G.party.some(m => m.id === 'kaito'); } }
   // ---------- 章の はじまり：カイトの 話 ----------
   async function ch4Intro() {
-    await K.say([who('kaito', 'neutral', '{name}。 ……おまえに 話して おかなきゃ ならないことが ある。'),
-      who('kaito', 'sad', '三年前、おれが 夜の海へ 出たのは、海の 底から 灯が 消えていくのを 見たからだ。'),
+    await K.say([who('kaito', 'neutral', '{name}。 ……おまえに、まだ 言ってない ことが ある。'),
+      who('kaito', 'sad', '三年前の 夜。 おれが 見たのは 師匠の 闇だけじゃない。 海の 底で、灯が ひとつずつ 消えていくのも 見たんだ。'),
       who('sora', 'surprised', '海の 底にも 灯台が あるの？'),
-      who('kaito', 'determined', 'ああ。 沈んだ 三つの 灯台が、海の いきものたちの 帰り道を 照らしていた。 ……それが いま、ひとつずつ 消えている。'),
-      who('kaito', 'neutral', 'これは「あわの鈴」。 岬の 先で 鳴らせば、泡の 道が ひらく。'),
-      who('kaito', 'grin', '今度は いっしょに 行こう。 灯台守の 意地、見せてやる。'),
-      { t: '「あわの鈴」を 手に入れた！　カイトが 仲間に くわわった！', fx: () => { K.G.inv.awanosuzu = 1; joinKaito(); Music.sfx('friend'); } },
-      '（村の 南の 岬で「あわの鈴」を 鳴らすと 海の底へ）']);
+      who('kaito', 'determined', 'ああ。 沈んだ 三つの 灯台が、海の いきものたちの 帰り道を 照らしていた。'),
+      who('sora', 'angry', '……また ひとりで 行く 気でしょ。 だまって。'),
+      who('kaito', 'sad', '…………。 そのつもり だった。'), who('kaito', 'grin', '……だが やめだ。 今度は いっしょに 行こう。 村の 南の 岬で、この「あわの鈴」を 鳴らすんだ。'),
+      { t: '「あわの鈴」を 手に入れた！　カイトが 仲間に くわわった！', fx: () => { K.G.inv.awanosuzu = 1; joinKaito(); Music.sfx('friend'); } }]);
     if (K.titleCard) await K.titleCard('第4章', '海の底');
     F().c4start = 1; K.save(); K.hud(); }
   function joinKaito() { const G = K.G; if (G.party.some(m => m.id === 'kaito')) return; const lv = Math.max(...G.party.map(m => m.lv));
@@ -51,16 +50,16 @@
 
   async function arrive() {
     await K.say(['——泡の 道を ぬけると、そこは 光の ゆれる 海の底だった。',
-      who('sora', 'surprised', '息が できる……！ 水の中なのに！'), who('kaito', 'smile', 'あわの鈴の 加護さ。 ここでは からだが 軽いぞ。 ジャンプで ふわっと 泳げる。'),
-      nm('アワの子 カイ', 'わあっ、地上の 人だ！ 長老さまー！ 長老さまー！'),
-      '（海の底では 風布は つかえない。 かわりに からだが 軽く、高く とべる）']);
+      who('sora', 'surprised', '息が できる……！ 水の中なのに！'), who('kaito', 'smile', 'あわの鈴の 加護さ。 風布は ここじゃ ひらかないが、からだが 軽い。 ジャンプで ふわっと 泳げるぞ。'),
+      nm('アワの子 カイ', 'わあっ、地上の 人だ！ 長老さまー！ 長老さまー！')]);
     F().c4arrive = 1; K.save(); }
 
   // ---------- 会話 ----------
   H.talks.ushio = async () => { const G = K.G;
     if (!F().c4elder) { await K.say([nm('長老ウシオ', 'ようこそ、アワの里へ。 地上の 灯台守の 子よ。'),
         nm('長老ウシオ', '海の 底には 三つの 灯台が ある。 西の「藻の灯台」、東の「甲羅の灯台」、そして 北の「雷の灯台」。'),
-        nm('長老ウシオ', '深みの王が 灯を 飲みこみ、番人たちは 闇に のまれてしまった。 灯が 消えれば、いきものたちは 帰る 道を うしなう。'),
+        nm('長老ウシオ', '深みの王が 灯を 飲みこみ、番人たちは 闇に のまれてしまった。 ……わしらには、どうにも できなんだ。'),
+        nm('アワの子 カイ', '……長老さま、ほんとは——'), nm('長老ウシオ', 'カイ。 おとなの 話じゃ。'),
         who('kaito', 'determined', '三つの 灯を ともせば、深淵の宮の 扉が ひらく……だったな。'),
         nm('長老ウシオ', 'さよう。 ……たのんだぞ、灯の 継ぎ手たちよ。')]); F().c4elder = 1; K.save(); return; }
     if (F().c4done) { await K.say([nm('長老ウシオ', '海の 灯は ふたたび ともった。 ……深淵の 底には まだ 古き 主が ねむっておる。 力を つけてから のぞくが よい。')]); return; }
@@ -73,7 +72,7 @@
   // ---------- 灯台の 番人 ----------
   H.acts.lh = async L => { const i = L.i, id = LH_BOSS[i];
     if (!F().c4elder) { await K.say(['灯台の 奥から、つめたい 気配が する……。（まずは アワの里の 長老に 会おう）']); return; }
-    await K.say([`${LH_NAME[i]}。 灯室の 火は 消え、闇の 番人が うずくまっている。`]);
+    await K.say([`${LH_NAME[i]}。 灯室の 火は 消え、闇の 番人が うずくまっている。`, who('kaito', 'neutral', '……灯を 守るはずの やつが、灯を いちばん こわがってる 顔だ。')]);
     if (!(await K.confirm(`${DATA.enemies[id].name}と たたかう？（推奨Lv${lvOf(id)}）`))) return;
     const res = await K.runBattle([{ boss: id }], { boss: true, noFlee: true, song: 'seaboss' }); if (res !== 'win') return K.defeated();
     K.G.lh = K.G.lh || [0, 0, 0]; K.G.lh[i] = 1; Music.jingle('light', K.fieldSong());
@@ -84,8 +83,9 @@
   H.acts.palace = async () => {
     await K.say(['深淵の宮。 三つの 灯に 照らされ、とびらが ゆっくりと ひらく……']);
     if (!(await K.confirm(`深みの王と 決着を つける？（推奨Lv${lvOf('fukami')}）`))) return;
-    await K.say([nm('深みの王', '……灯など、また 飲みこんで やろう。 光は いつか 消える。 暗い 海の 底では、なにも かも。'),
-      who('kaito', 'angry', '消えるさ。 だから 灯台守は 毎晩 ともすんだ！'), who('sora', 'determined', '帰る 場所は、ぼくらが 照らす！')]);
+    await K.say([nm('深みの王', '……また 灯か。 灯は いつも 上から 照らすだけだ。 いちばん 深い ところまでは、とどかない。'),
+      nm('深みの王', '迷って 沈んだ 小さな ものたちを、だれが 見つけた？ ……だれも。 だから 灯など、ぜんぶ 飲みこんでやる。'),
+      who('kaito', 'determined', '……とどかなかったなら、とどくまで ともす。 それが 灯台守だ！'), who('sora', 'determined', '帰る 場所は、ぼくらが 照らす！ きみの ぶんも！')]);
     let res = await K.runBattle([{ boss: 'fukami' }], { boss: true, noFlee: true, song: 'seaboss' }); if (res !== 'win') return K.defeated();
     K.allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; });
     await K.say([nm('深みの王', 'ぐ……まだだ。 深みは、底なしだ……！'), '深みの王が 泡を まとい、巨大な 姿に なった！']);
@@ -95,9 +95,10 @@
       who('kaito', 'sad', '……おまえも、帰る 道が わからなかったんだな。'), who('sora', 'smile', 'もう だいじょうぶ。 灯台が、ちゃんと 照らしてるから。'),
       '泡は 灯台の 光を たどって、ゆっくりと 海の 上へ のぼっていった——',
       who('kaito', 'joy', '{name}。 ……おまえは もう 立派な 灯台守だ。 父さんの ほうが 教わったよ。'),
+      who('sora', 'smile', '灯は、帰る場所の しるし。 ……それと、「いってらっしゃい」の しるしでも あるんだね。'),
       who('sora', 'joy', 'いっしょに 帰ろう、父さん。 母さんが 待ってる。')]);
     F().c4done = 1; K.G.lh = [1, 1, 1]; K.save(); await K.credits(4);
-    await K.say(['（クリア おめでとう！ 海の底の 深淵には、まだ 古き 主が ねむっている……。 図鑑を すべて うめると ごほうびが ある）']); };
+    await K.say(['——クリア おめでとう！ 海の底の 深淵には、まだ 古き 主が ねむっている……。', '（図鑑を すべて うめると ごほうびが ある。 長老ウシオも、なにか 言いたげだ）']); };
 
   // ---------- 裏ボス：深淵の主 ----------
   H.acts.abyss = async () => {

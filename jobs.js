@@ -53,6 +53,17 @@
     j_tenkuu: { type: 'light', name: '天空の灯剣', mp: 14, tg: 'enemies', power: 1.9, verb: 'ふりおろした', fx: 'light', desc: '敵全体に 天の ひかりの 剣' },
     j_gokui: { type: 'light', name: '灯火の極み', mp: 16, tg: 'enemy', power: 4.0, verb: 'はなった', fx: 'light', desc: '敵1体に 灯の すべてを こめた 一撃' },
   });
+  // v9：名前の 系統（data.js の 文法）に そろえる（キーは そのまま）
+  Object.assign(DATA.skillNames = DATA.skillNames || {}, {
+    j_hibana: 'ホムラ打ち', j_hotaru: 'ヌクミ', j_akari: 'アカリの舞', j_tomoshiuchi: '大アカリ打ち', j_otakebi: 'フルイビ', j_teppeki: 'マモリビ',
+    j_hinotama: 'ホムラ', j_mizutsubute: 'ミナモの輪', j_raiun: 'カザネの輪・マヒ', j_gouka: '大ホムラの輪', j_hoshikuzu: '極アカリの輪',
+    j_iyashite: '大ヌクミ', j_kiyokaze: 'キヨメ', j_megumi: '大ヌクミの輪・キヨメ', j_seika: '大アカリの輪',
+    j_kagenui: 'シガラミ斬り', j_hayabusa: '大カザネ斬り', j_yamiuchi: '極カゲリ斬り',
+    j_renkyaku: '大イワネ蹴り', j_kikou: '大ヌクミ', j_senpuu: 'カザネの舞', j_touken: '極ホムラ拳',
+    j_komori: '大マドロミ', j_nagiuta: 'ヌクミの輪・キヨメ', j_gassou: '大アカリの輪・フルイビ',
+    j_yuuki: 'ヌクミの輪・フルイビ', j_raikou: '大カザネ斬り・マヒ', j_hikaritate: 'マモリビ・キヨメ', j_tenkuu: '大アカリの舞', j_gokui: '極アカリ斬り' });
+  delete DATA.skills.j_kiyokaze.heal;
+  for (const k of Object.keys(DATA.skills)) if (k.startsWith('j_')) { const s = DATA.skills[k]; if (DATA.skillNames[k]) s.name = DATA.skillNames[k]; if (DATA.skillDesc) s.desc = DATA.skillDesc(s); }
 
   // ---------- 職業 ----------
   // mul：その職業の あいだ だけ 効く 能力補正 ／ pas：その職業の あいだ だけ 効く とくせい
@@ -75,7 +86,38 @@
     { id: 'yuutou', name: '勇灯', icon: '☀', desc: '二つの 職業を きわめた 者だけが 就ける、灯の 勇者。 すべてが たかい。', adv: 2,
       mul: { hp: .15, mp: .1, atk: .15, def: .1, spd: .1 }, pas: { crit: .04, regen: .02 }, mb: { hp: .05, atk: .05 }, sk: [[2, 'j_yuuki'], [4, 'j_raikou'], [6, 'j_hikaritate'], [8, 'j_tenkuu'], [10, 'j_gokui']] },
   ];
+  DATA.jobs.find(j => j.id === 'souryo').sk = [[2, 'j_iyashite'], [4, 'j_kiyokaze'], [6, 'i_kaeribi'], [8, 'j_megumi'], [10, 'j_seika']];
+  // ---------- v9：職業ツリー（SPで 覚える・転職で 返金）と そうびの 種類 ----------
+  // 技マス：職業Lv 2/4/6/8/10 で ひらき、1/2/2/3/4 SP。 能力マス：職業Lv3（1SP）・Lv7（2SP）
+  const PASS = {
+    minarai: [['灯守の体', '最大HP +6%', { hp: .06 }], ['灯守の技', 'こうげき・ぼうぎょ +4%', { atk: .04, def: .04 }]],
+    senshi: [['頑丈', '最大HP +8%', { hp: .08 }], ['豪腕', '会心の 確率 アップ', { crit: .04 }]],
+    mahou: [['魔力', '最大MP +10%', { mp: .1 }], ['詠唱短縮', '消費MP −10%', { mpSave: .1 }]],
+    souryo: [['祈り', '回復量 +10%', { healUp: .1 }], ['加護', '毎ターン HP 2% 回復', { regen: .02 }]],
+    touzoku: [['身軽', 'すばやさ +6%', { spd: .06 }], ['急所', '会心の 確率 アップ', { crit: .04 }]],
+    butouka: [['鍛錬', 'こうげき +5%', { atk: .05 }], ['見切り', '会心の 確率 アップ', { crit: .04 }]],
+    ginyuu: [['肺活量', '最大MP +8%', { mp: .08 }], ['伴奏', '味方全員 毎ターン HP 1% 回復', { aura: .01 }]],
+    yuutou: [['勇者の体', '最大HP +5%', { hp: .05 }], ['勇者の技', 'こうげき +5%', { atk: .05 }]],
+  };
+  const SKC = { 2: 1, 4: 2, 6: 2, 8: 3, 10: 4 };
+  // eqW / eqA：その 職業の あいだ 装備できる 種類（キャラ固有の 種類に 足される）
+  const EQ = {
+    minarai: [['sword', 'dagger', 'staff'], ['cloth', 'light', 'shield']], senshi: [['sword', 'spear', 'axe', 'mace'], ['light', 'heavy', 'shield']],
+    mahou: [['staff'], ['cloth', 'robe']], souryo: [['staff', 'mace'], ['cloth', 'robe', 'shield']], touzoku: [['dagger', 'bow'], ['cloth', 'light']],
+    butouka: [['fist'], ['cloth', 'light']], ginyuu: [['harp', 'fan', 'bow'], ['cloth', 'light', 'robe']], yuutou: [['sword', 'spear', 'axe', 'mace', 'staff', 'dagger'], ['light', 'heavy', 'robe', 'shield']] };
+  const WPN = { minarai: 'sword', senshi: 'sword', mahou: 'staff', souryo: 'staff', touzoku: 'dagger', butouka: 'fist', ginyuu: 'harp', yuutou: 'sword' };
+  for (const j of DATA.jobs) { const P = PASS[j.id] || [];
+    j.tree = [...j.sk.map(([l, s], i) => ({ id: `${j.id}_${i}`, jl: l, cost: SKC[l] || 2, skill: s })), ...P.map(([name, desc, eff], i) => ({ id: `${j.id}_p${i}`, jl: i ? 7 : 3, cost: i ? 2 : 1, name, desc, eff }))].sort((a, b) => a.jl - b.jl);
+    j.eqW = (EQ[j.id] || [[], []])[0]; j.eqA = (EQ[j.id] || [[], []])[1]; j.wpn = WPN[j.id]; }
   const JOB = Object.fromEntries(DATA.jobs.map(j => [j.id, j]));
+  const nodeName = n => n.skill ? DATA.skills[n.skill].name : n.name, nodeDesc = n => n.skill ? DATA.skills[n.skill].desc : n.desc;
+  const treeCost = (r, jid) => ((r.tree && r.tree[jid]) || []).reduce((a, id) => { const n = JOB[jid] && JOB[jid].tree.find(x => x.id === id); return a + (n ? n.cost : 0); }, 0);
+  const SP_MASTER = 2; // マスター時の ボーナスSP
+  const jobSp = r => DATA.jobs.reduce((a, j) => a + Math.max(0, (r.lv[j.id] || 1) - 1) + ((r.lv[j.id] || 1) >= MAXLV ? SP_MASTER : 0), 0);
+  // 転職の 手数料（章ごと）
+  const chap = () => { const F = G().flags; return F.c3done ? 4 : F.c2done ? 3 : F.cleared ? 2 : 1; };
+  const FEE = [0, 0, 150, 500, 1200];
+  const feeOf = (r, id) => id === 'minarai' ? Math.round(FEE[chap()] / 3) : FEE[chap()];
   const LOOT = [['mi', 30], ['shizuku', 18], ['pan', 12], ['kinoko', 12], ['dokukeshi', 8], ['nakayoshi', 4], ['hoshikake', 2]];
 
   // ---------- 状態 ----------
@@ -84,36 +126,65 @@
   function rec(id, lv0) { const g = G(); if (!g.job || typeof g.job !== 'object') g.job = {};
     let r = g.job[id]; if (!r || typeof r !== 'object') { const m = (g.party || []).find(x => x.id === id); const jp0 = Math.min(NEED[MAXLV], Math.floor((lv0 || (m && m.lv) || 1) * 1.5));
       r = g.job[id] = { cur: 'minarai', lv: { minarai: lvFromJp(jp0) }, jp: { minarai: jp0 } }; }
-    if (!r.lv) r.lv = {}; if (!r.jp) r.jp = {}; if (!JOB[r.cur]) r.cur = 'minarai'; return r; }
+    if (!r.lv) r.lv = {}; if (!r.jp) r.jp = {}; if (!r.tree || typeof r.tree !== 'object') r.tree = {}; if (!JOB[r.cur]) r.cur = 'minarai'; return r; }
   const jlv = (r, j) => r.lv[j] || 1;
   const mastered = r => DATA.jobs.filter(j => !j.adv && jlv(r, j.id) >= MAXLV).length;
   const unlocked = (r, j) => !j.adv || mastered(r) >= j.adv;
-  const learnedOf = r => { const out = []; for (const j of DATA.jobs) for (const [l, s] of j.sk) if (jlv(r, j.id) >= l && DATA.skills[s] && !out.includes(s)) out.push(s); return out; };
+  // いまの 職業ツリーで SPを 払って 覚えた マス（転職すると 返金されて 消える）
+  const ownNodes = r => ((r.tree && r.tree[r.cur]) || []).map(id => JOB[r.cur].tree.find(n => n.id === id)).filter(Boolean);
+  const learnedOf = r => ownNodes(r).filter(n => n.skill && DATA.skills[n.skill]).map(n => n.skill);
   const open = () => !!G().flags.cleared;
+  const innateOf = m => (DATA.party[m.id].skills || []).filter(([, l]) => l <= m.lv).map(([s]) => s);
+  // マスを 覚えられるか（理由つき）
+  function canBuy(m, n) { const r = rec(m.id), own = (r.tree[r.cur] || []);
+    if (!open()) return [false, '第1章クリアで 解放'];
+    if (own.includes(n.id)) return [false, '習得ずみ'];
+    if (n.skill && innateOf(m).includes(n.skill)) return [false, 'キャラ固有わざで 習得ずみ'];
+    if (jlv(r, r.cur) < n.jl) return [false, `職業Lv${n.jl}で ひらく`];
+    if ((G().sp[m.id] || 0) < n.cost) return [false, `SPが たりない（${n.cost}SP）`];
+    return [true, `${n.cost}SPで 覚える`]; }
+  function buyNode(m, n) { const [ok] = canBuy(m, n); if (!ok) return false; const r = rec(m.id), g = G();
+    g.sp[m.id] -= n.cost; (r.tree[r.cur] = r.tree[r.cur] || []).push(n.id);
+    const hr = m.st.hp ? m.hp / m.st.hp : 1; K.calc(m); m.hp = Math.max(1, Math.round(m.st.hp * hr)); m.mp = Math.min(m.mp, m.st.mp); return true; }
 
   // ---------- 能力計算（スキルボードの あとに 加算） ----------
   H.calc.push((m, st, mul, pas, extra) => { if (!HUMANS.includes(m.id)) return; const r = rec(m.id, m.lv), j = JOB[r.cur];
     for (const [k, v] of Object.entries(j.mul)) mul[k] = (mul[k] || 0) + v;
     for (const [k, v] of Object.entries(j.pas)) pas[k] = (pas[k] || 0) + v;
     for (const jj of DATA.jobs) if (jlv(r, jj.id) >= MAXLV) for (const [k, v] of Object.entries(jj.mb)) { if (k in mul) mul[k] += v; else pas[k] = (pas[k] || 0) + v; }
-    const base = (DATA.party[m.id].skills || []).filter(([, l]) => l <= m.lv).map(([s]) => s);
+    for (const n of ownNodes(r)) for (const [k, v] of Object.entries(n.eff || {})) { if (k in mul) mul[k] += v; else pas[k] = (pas[k] || 0) + v; }
+    const base = innateOf(m);
     for (const s of learnedOf(r)) if (!extra.includes(s) && !base.includes(s)) extra.push(s); });
 
   // ---------- セーブ移行 ----------
-  const fixAll = g => { if (!g.job || typeof g.job !== 'object') g.job = {};
+  // v9：職業Lvで もらえる SP を さかのぼって 付与（spGot で 二重付与を ふせぐ）。 旧版で 自動習得していた 職業技は、いまの 職業の ツリーを その SPで 自動で 覚えなおす
+  const grantJobSp = (g, id, r) => { const want = jobSp(r), got = r.spGot || 0; if (want > got) { g.sp[id] = (g.sp[id] || 0) + (want - got); r.spGot = want; return want - got; } return 0; };
+  const fixAll = g => { if (!g.job || typeof g.job !== 'object') g.job = {}; if (!g.sp) g.sp = {};
     for (const m of g.party || []) { if (!HUMANS.includes(m.id)) continue; const r = rec(m.id);
       for (const k of Object.keys(r.jp)) { if (!JOB[k]) { delete r.jp[k]; delete r.lv[k]; continue; } r.jp[k] = Math.max(0, Math.min(NEED[MAXLV], +r.jp[k] || 0)); r.lv[k] = lvFromJp(r.jp[k]); }
       if (!unlocked(r, JOB[r.cur])) r.cur = 'minarai';
+      for (const k of Object.keys(r.tree)) { if (!JOB[k] || k !== r.cur) { const c = treeCost(r, k); if (c) g.sp[m.id] = (g.sp[m.id] || 0) + c; delete r.tree[k]; continue; } r.tree[k] = [...new Set(r.tree[k])].filter(id => JOB[k].tree.some(n => n.id === id)); }
+      grantJobSp(g, m.id, r);
+      if (!r.treeV) { r.treeV = 1; if (m.st) K.calc(m); for (const n of JOB[r.cur].tree) { if (!n.skill) continue; if (canBuy(m, n)[0]) buyNode(m, n); } }
       if (m.st) { const hr = m.st.hp ? m.hp / m.st.hp : 1, mr = m.st.mp ? m.mp / m.st.mp : 1; K.calc(m); m.hp = Math.max(m.hp > 0 ? 1 : 0, Math.min(m.st.hp, Math.round(m.st.hp * hr))); m.mp = Math.min(m.st.mp, Math.round(m.st.mp * mr)); } } };
   H.load.push(fixAll);
   H.init.push(g => { g.job = {}; });
 
-  // ---------- 転職 ----------
-  function changeJob(m, id) { const r = rec(m.id); if (r.cur === id || !JOB[id] || !unlocked(r, JOB[id])) return false;
+  // ---------- 転職（ツリーの SPは 全額 返金／もとの 能力値は そのまま） ----------
+  // plan：転職の 前に 見せる 内容（返金SP・手数料・わすれる技・そうびの 変化）
+  function planChange(m, id) { const r = rec(m.id), was = r.cur; const refund = treeCost(r, was);
+    const lost = learnedOf(r).filter(s => !innateOf(m).includes(s)).map(s => DATA.skills[s].name);
+    const eq = K.bal && K.bal.refitPlan ? K.bal.refitPlan(m, id) : [];
+    return { refund, fee: feeOf(r, id), lost, eq }; }
+  function changeJob(m, id, o = {}) { const r = rec(m.id); if (r.cur === id || !JOB[id] || !unlocked(r, JOB[id])) return false;
+    const p = planChange(m, id); if (!o.free && (G().gold || 0) < p.fee) return false;
     const hr = m.st.hp ? m.hp / m.st.hp : 1, mr = m.st.mp ? m.mp / m.st.mp : 1;
+    if (!o.free) G().gold -= p.fee;
+    if (p.refund) G().sp[m.id] = (G().sp[m.id] || 0) + p.refund; r.tree[r.cur] = []; delete r.tree[r.cur];
     r.cur = id; if (r.jp[id] == null) { r.jp[id] = 0; r.lv[id] = 1; }
-    K.calc(m); m.hp = Math.max(1, Math.min(m.st.hp, Math.round(m.st.hp * hr))); m.mp = Math.min(m.st.mp, Math.round(m.st.mp * mr)); return true; }
-  const preview = (m, id) => { const r = rec(m.id), was = r.cur; r.cur = id; const c = { ...m }; K.calc(c); r.cur = was; return c; };
+    const msgs = K.bal && K.bal.refit ? K.bal.refit(m) : [];
+    K.calc(m); m.hp = Math.max(1, Math.min(m.st.hp, Math.round(m.st.hp * hr))); m.mp = Math.min(m.st.mp, Math.round(m.st.mp * mr)); return { ...p, msgs }; }
+  const preview = (m, id) => { const r = rec(m.id), was = r.cur, t = r.tree[was]; r.cur = id; r.tree[was] = []; const c = { ...m, __eq: K.bal && K.bal.refitEq ? K.bal.refitEq(m, id) : null }; K.calc(c); r.cur = was; r.tree[was] = t; return c; };
 
   // ---------- JP：たたかいの あと ----------
   H.battleEnd.push(async (result, specs, opts, P) => { if (result !== 'win' || !open()) return;
@@ -122,15 +193,15 @@
     const lines = []; let up = false, loot = false;
     for (const m of P || []) { if (m.kind !== 'human' || !HUMANS.includes(m.id)) continue; const r = rec(m.id), id = r.cur, j = JOB[id];
       const l0 = jlv(r, id); r.jp[id] = Math.min(NEED[MAXLV], (r.jp[id] || 0) + gain); const l1 = lvFromJp(r.jp[id]); r.lv[id] = l1;
-      if (l1 > l0) { up = true; const was = m.skills.slice(), hr = m.hp / m.st.hp, mr = m.st.mp ? m.mp / m.st.mp : 1; K.calc(m); m.hp = Math.max(1, Math.round(m.st.hp * hr)); m.mp = Math.round(m.st.mp * mr);
-        const neu = m.skills.filter(s => !was.includes(s)).map(s => DATA.skills[s].name);
-        lines.push(`${K.esc(K.nameOf(m))}：${j.name} Lv${l1}${l1 >= MAXLV ? '（マスター！）' : ''}${neu.length ? `　<b>新しい技：${neu.join('・')}</b>` : ''}`);
+      if (l1 > l0) { up = true; const hr = m.hp / m.st.hp, mr = m.st.mp ? m.mp / m.st.mp : 1; const spg = grantJobSp(G(), m.id, r); K.calc(m); m.hp = Math.max(1, Math.round(m.st.hp * hr)); m.mp = Math.round(m.st.mp * mr);
+        const opened = j.tree.filter(n => n.jl > l0 && n.jl <= l1).map(nodeName);
+        lines.push(`${K.esc(K.nameOf(m))}：${j.name} Lv${l1}${l1 >= MAXLV ? '（マスター！）' : ''}　<b>SP +${spg}</b>${opened.length ? `　ツリーで ひらいた：${opened.join('・')}` : ''}`);
         if (l1 >= MAXLV && JOB.yuutou && mastered(r) === JOB.yuutou.adv && jlv(r, 'yuutou') < 2) lines.push(`${K.esc(K.nameOf(m))}は「勇灯」に 転職 できるように なった！`); }
       if (j.loot && !loot && R() < j.loot) { loot = true; let t = R() * LOOT.reduce((a, x) => a + x[1], 0); let it = 'mi'; for (const [k, w] of LOOT) if ((t -= w) < 0) { it = k; break; }
         if (DATA.items[it]) { K.gain(it); lines.push(`${K.esc(K.nameOf(m))}は ${DATA.items[it].name}を 見つけた！（盗賊）`); } } }
     if (up) { try { Music.sfx('friend'); } catch (e) {} }
     if (lines.length) K.tip(`<b>${up ? '職業レベルが あがった！' : 'たたかいの 戦利品'}</b><span>${lines.join('<br>')}</span>`);
-    if (up) K.tip('<b>職業（ジョブ）</b><span>メニューの「しょくぎょう」で 職業レベルと 技を 見られる。 転職は 町の 石像の そばで。 覚えた 技は 転職しても のこる。</span>', 'jobHelp'); });
+    if (up) K.tip('<b>職業ツリー</b><span>職業Lvが あがると SPが もらえ、ツリーの マスが ひらく。 メニューの「スキル」か「しょくぎょう」で SPを ふって 技を 覚えよう。 転職すると その 職業に ふった SPは ぜんぶ もどる。</span>', 'jobHelp2'); });
 
   // ---------- 見た目（スタイル） ----------
   const css = document.createElement('style');
@@ -146,6 +217,11 @@
   .jsk{list-style:none;margin:0;padding:0;display:grid;gap:1px;font-size:12px}.jsk li{display:grid;grid-template-columns:40px 1fr;gap:6px}.jsk .l{color:var(--muted)}.jsk .have{color:#8fe06a}.jsk .nx{color:#ffe9b8}.jsk small{color:var(--muted)}
   .jeff{font-size:12px;color:#ffe9b8}.jlock{font-size:12px;color:#f08a6a}
   .jcols{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
+  .jtree li{grid-template-columns:34px 1fr auto;align-items:center;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.06)}.jtree li.own{background:rgba(143,224,106,.07)}
+  .jtree .ns{display:flex;gap:6px;align-items:center;white-space:nowrap}.jtree .nc{color:var(--gold)}
+  .nbuy{background:var(--gold);color:#241a08;border:0;border-radius:6px;padding:2px 10px;font-size:12px;font-family:var(--ui);cursor:pointer}
+  .jplan{font-size:12px;background:rgba(243,193,90,.1);border:1px solid var(--gold-line);border-radius:8px;padding:4px 8px;line-height:1.5}.jplan em{font-style:normal}.jplan .up{color:#8fe06a}.jplan .dn{color:#f08a6a}.jplan small{color:var(--muted)}
+  .skp .sdet{gap:4px}.skp .sec{font-size:13px;color:var(--gold);margin:6px 0 2px}.skp .srow small{display:block}
   @media (max-height:430px){.jobp{padding:6px 10px}.jobp h3{font-size:15px;margin:0}.jobp .tabs{margin:2px 0 4px}.jobp .tab{padding:2px 10px;font-size:12px}.jobp .slist,.jobp .sdet{max-height:calc(var(--app-h,100vh) - 120px)}.jrow{padding:2px 6px}.jobp .sdet h4 .buy{padding:3px 12px;font-size:13px}.jobp .sdet{gap:3px}.jobp .buy{padding:5px 14px;font-size:14px}}
   @media (max-width:520px){.jobp .shop-body{grid-template-columns:1fr}.jcols{grid-template-columns:1fr}}`;
   document.head.appendChild(css);
@@ -156,6 +232,12 @@
   const pct = v => `${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)}%`;
   const effTxt = j => [...Object.entries(j.mul).map(([k, v]) => `${SN[k]}${pct(v)}`), ...Object.entries(j.pas).map(([k, v]) => k === 'mpSave' ? `${PN[k]}${pct(-v)}` : `${PN[k]}${pct(v)}`)].join('　') || '補正なし（バランス型）';
   const mbTxt = j => Object.entries(j.mb).map(([k, v]) => `${SN[k] || PN[k]}${pct(v)}`).join('・');
+  // 職業ツリーの 一覧（いまの 職業なら 覚える ボタンつき）
+  function treeHtml(m, j, isCur, ownIds) { const r = rec(m.id), lvj = jlv(r, j.id);
+    return j.tree.map(n => { const have = isCur && ownIds.includes(n.id), inn = n.skill && innateOf(m).includes(n.skill); const S = n.skill && DATA.skills[n.skill];
+      const [ok, why] = isCur ? canBuy(m, n) : [false, lvj >= n.jl ? '転職で ひらく' : `職業Lv${n.jl}`];
+      const lbl = `${n.cost}SP`; const st = have ? '<b class="have">✓ 習得</b>' : inn ? '<small>固有わざで 習得ずみ</small>' : ok ? `<button class="nbuy" data-node="${n.id}" data-lbl="${lbl}">${lbl}</button>` : `<small class="${lvj >= n.jl ? '' : 'jlock'}">${why}</small>`;
+      return `<li class="${have ? 'own' : ''}"><span class="l">Lv${n.jl}</span><span><span class="${have ? 'have' : ok ? 'nx' : ''}">${n.skill ? '⚔' : '◆'} ${nodeName(n)}</span>${S ? `<small>　MP${S.mp}</small>` : ''}<small>　${nodeDesc(n)}</small></span><span class="ns">${st}${have || inn ? '' : `<small class="nc">${n.cost}SP</small>`}</span></li>`; }).join(''); }
   const nearStatue = () => { const s = K.REG[G().region] && K.REG[G().region].statue; return !!s && Math.hypot(K.player.x - s.x, K.player.z - s.z) < 9; };
 
   function jobUI(o = {}) { return new Promise(res => {
@@ -171,30 +253,35 @@
       const after = isCur || !ok ? null : preview(m, j.id);
       const stRows = ['hp', 'mp', 'atk', 'def', 'spd'].map(k => { const a = m.st[k], b = after ? after.st[k] : a, d = b - a;
         return `<tr><td>${SN[k]}</td><td>${a}</td>${after ? `<td>→</td><td class="${d > 0 ? 'up' : d < 0 ? 'dn' : 'eq'}">${b}　${d > 0 ? '▲' + d : d < 0 ? '▼' + (-d) : '±0'}</td>` : '<td></td><td></td>'}</tr>`; }).join('');
-      const own = learnedOf(r);
-      const skl = j.sk.map(([l, s]) => { const S = DATA.skills[s], have = lvj >= l, nx = !have && j.sk.find(([ll]) => lvj < ll)[0] === l;
-        return `<li><span class="l">Lv${l}</span><span class="${have ? 'have' : nx ? 'nx' : 'eq'}">${have ? '✓ ' : nx ? '▶ ' : ''}${S.name}<small>　MP${S.mp}　${S.desc || ''}</small></span></li>`; }).join('');
-      const others = own.filter(s => !j.sk.some(([, x]) => x === s)).map(s => DATA.skills[s].name);
+      const ownIds = (r.tree[r.cur] || []);
+      const skl = treeHtml(m, j, isCur, ownIds);
+      const plan = !isCur && ok ? planChange(m, j.id) : null;
       const lockTxt = !ok ? `🔒 ほかの 職業を ${j.adv}つ マスター（Lv${MAXLV}）すると 就ける（いま ${mastered(r)}/${j.adv}）` : '';
+      const poor = plan && (g.gold || 0) < plan.fee;
       const btn = isCur ? '<span class="eq">いまの 職業</span>' : !ok ? `<span class="jlock">🔒 ${j.adv}職 マスターで 解放（${mastered(r)}/${j.adv}）</span>`
         : !open() ? '<span class="jlock">第1章クリアで 転職 できる</span>'
         : !canChange() ? '<span class="eq">転職は 町の 石像の そばで</span>'
-        : `<button class="buy" data-go="1">${armed ? `本当に ${j.name}に 転職する？` : `${j.name}に 転職する`}</button>`;
+        : `<button class="buy" data-go="1" ${poor ? 'disabled' : ''}>${armed ? `本当に ${j.name}に 転職する？` : `${j.name}に 転職（${plan.fee}G）`}</button>`;
+      const planHtml = plan ? `<div class="jplan"><b>転職すると</b>：SP <em class="up">+${plan.refund} もどる</em>（${JOB[r.cur].name}ツリー）　手数料 <em class="${poor ? 'dn' : ''}">${plan.fee}G</em>${plan.lost.length ? `<br>わすれる 技：${plan.lost.join('・')}` : ''}${plan.eq.length ? `<br>そうび：${plan.eq.join('／')}` : ''}<br><small>もとの 能力値・固有わざ・個性ボードは そのまま。 ${j.name}の ツリーは SPで 覚えなおす。</small></div>` : '';
+      const eqCats = `<div class="st-eq" style="margin-top:0">そうび：${(K.bal ? K.bal.catNames(j.eqW) : j.eqW.join('・'))}／${(K.bal ? K.bal.catNames(j.eqA) : j.eqA.join('・'))}（＋キャラ固有）</div>`;
       el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button>
         <h3>しょくぎょう <small>${line || (canChange() ? '転職の 石像：職業を えらんで 転職できる（覚えた 技は のこる）' : '職業レベルは たたかいに 勝つと あがる')}</small></h3>
         <div class="tabs">${party.map((p, i) => `<button class="tab${i === mi ? ' on' : ''}" data-m="${i}">${face(p)}${K.esc(K.nameOf(p))}</button>`).join('')}</div>
         <div class="shop-body"><div class="slist">${DATA.jobs.map((jj, i) => { const l = jlv(r, jj.id), u = unlocked(r, jj), c = r.cur === jj.id;
           return `<button class="srow jrow${i === sel ? ' on' : ''}${u ? '' : ' dis'}" data-i="${i}"><span class="ji">${u ? jj.icon : '🔒'}</span><span>${jj.name}${c ? '<i class="now">いま</i>' : ''}<small>${u ? (l >= MAXLV ? '★マスター' : `JP ${r.jp[jj.id] || 0}/${NEED[l + 1]}`) : `${jj.adv}職 マスターで 解放`}</small><div class="xp"><i style="width:${bar(jj)}%"></i></div></span><span class="pr">Lv${l}</span></button>`; }).join('')}</div>
         <div class="sdet"><h4>${j.icon} ${j.name}　<small class="xpn">Lv${lvj}${lvj >= MAXLV ? '（マスター）' : `　つぎまで ${NEED[lvj + 1] - jp}JP`}</small>${btn}</h4>
-          <div>${j.desc}</div>${!ok ? `<div class="jlock">${lockTxt}</div>` : ''}<div class="jeff">職業の 効果：${effTxt(j)}</div><div class="st-eq" style="margin-top:0">マスター特典（ずっと）：${mbTxt(j)}${lvj >= MAXLV ? ' ✓' : ''}</div>
-          <div class="jcols"><div><div class="cmp-row">${face(m)}<span>${K.esc(K.nameOf(m))}　Lv${m.lv}<br><small class="xpn">いま：${JOB[r.cur].name} Lv${jlv(r, r.cur)}</small></span><span></span></div><table class="jst">${stRows}</table></div>
-          <div><ul class="jsk">${skl}</ul>${others.length ? `<div class="st-eq" style="margin-top:4px">ほかの 職業で 覚えた 技：${others.join('・')}</div>` : ''}</div></div>
+          <div>${j.desc}</div>${!ok ? `<div class="jlock">${lockTxt}</div>` : ''}<div class="jeff">職業の 効果：${effTxt(j)}</div><div class="st-eq" style="margin-top:0">マスター特典（ずっと）：${mbTxt(j)}${lvj >= MAXLV ? ' ✓' : ''}</div>${eqCats}${planHtml}
+          <div class="jcols"><div><div class="cmp-row">${face(m)}<span>${K.esc(K.nameOf(m))}　Lv${m.lv}<br><small class="xpn">いま：${JOB[r.cur].name} Lv${jlv(r, r.cur)}　SP ${g.sp[m.id] || 0}</small></span><span></span></div><table class="jst">${stRows}</table></div>
+          <div><div class="st-eq" style="margin:0 0 2px">${isCur ? `職業ツリー（SPで 覚える・のこり <b>${g.sp[m.id] || 0}</b>SP）` : '職業ツリー（転職すると SPで 覚えられる）'}</div><ul class="jsk jtree">${skl}</ul></div></div>
           </div></div>`;
       el.querySelector('.m-x').onclick = () => { Music.sfx('cancel'); close(); };
+      el.querySelectorAll('[data-node]').forEach(b => b.onclick = () => { const n = j.tree.find(x => x.id === b.dataset.node); if (!n) return;
+        if (b.dataset.arm !== '1') { el.querySelectorAll('[data-node]').forEach(x => { x.dataset.arm = ''; x.textContent = x.dataset.lbl; }); b.dataset.arm = '1'; b.textContent = `${n.cost}SPで 覚える？`; Music.sfx('cursor'); return; }
+        if (buyNode(m, n)) { Music.sfx('friend'); line = `${K.esc(K.nameOf(m))}は ${nodeName(n)}を 覚えた！`; K.save(); } paint(); K.hud(); });
       el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mi = +b.dataset.m; sel = -1; armed = false; line = ''; Music.sfx('cursor'); paint(); });
       el.querySelectorAll('.jrow').forEach(b => b.onclick = () => { const i = +b.dataset.i; if (i === sel && !armed) { const go = el.querySelector('[data-go]'); if (go) { go.click(); return; } } sel = i; armed = false; Music.sfx('cursor'); paint(); });
       const go = el.querySelector('[data-go]'); if (go) go.onclick = () => { if (!armed) { armed = true; Music.sfx('cursor'); paint(); return; } armed = false;
-        if (changeJob(m, j.id)) { Music.sfx('friend'); line = `${K.esc(K.nameOf(m))}は ${j.name}に 転職した！`; K.toast(`${K.esc(K.nameOf(m))}は ${j.name}に なった！`, 1500); K.save(); } paint(); K.hud(); };
+        const rs = changeJob(m, j.id); if (rs) { Music.sfx('friend'); line = `${K.esc(K.nameOf(m))}は ${j.name}に 転職した！${rs.refund ? `（SP +${rs.refund} もどった）` : ''}${rs.msgs && rs.msgs.length ? '　' + rs.msgs.join('／') : ''}`; K.toast(`${K.esc(K.nameOf(m))}は ${j.name}に なった！${rs.refund ? `<br><span style="font-size:.6em">SP +${rs.refund} もどった</span>` : ''}`, 1600); K.save(); } paint(); K.hud(); };
       const on = el.querySelector('.jrow.on'); on && on.scrollIntoView && on.scrollIntoView({ block: 'nearest' }); };
     M.key = e => { if (e.repeat) return; const k = e.code, n = DATA.jobs.length;
       if (['Escape', 'Backspace', 'KeyX'].includes(k)) { e.preventDefault(); if (armed) { armed = false; paint(); return; } Music.sfx('cancel'); close(); return; }
@@ -205,6 +292,41 @@
       else if (['Enter', 'Space', 'KeyE', 'NumpadEnter'].includes(k)) { e.preventDefault(); const b = el.querySelector('[data-go]'); if (b) b.click(); } };
     paint(); K.$('ui').appendChild(el); K.MENUS.push(M); }); }
   K.jobUI = jobUI; K.changeJob = changeJob; K.jobOf = id => rec(id);
+  K.jobTree = { canBuy, buyNode, planChange, treeCost, feeOf, ownNodes: id => ownNodes(rec(id)) };
+
+  // ---------- スキル画面（固有わざ・個性ボード・職業ツリー を ひとつに） ----------
+  function skillUI(o = {}) { return new Promise(res => {
+    const g = G(); const party = g.party.filter(m => HUMANS.includes(m.id)); if (!party.length) { res(-1); return; }
+    let mi = Math.max(0, party.findIndex(m => m.id === o.member)), line = '';
+    const el = document.createElement('div'); el.className = 'win panel shop jobp skp';
+    const M = { el, panel: true, items: [], res }; const close = () => { K.closeMenu(M, -1); K.hud(); };
+    const face = m => `<span class="fc">${Art.portrait(m.id, 'smile')}</span>`;
+    const paint = () => { const m = party[mi], r = rec(m.id), sp = g.sp[m.id] || 0, j = JOB[r.cur];
+      const inn = (DATA.innate[m.id] || DATA.party[m.id].skills || []).map(([s, l]) => { const S = DATA.skills[s], have = m.lv >= l;
+        return `<li class="${have ? 'own' : ''}"><span class="l">Lv${l}</span><span><span class="${have ? 'have' : ''}">${have ? '✓ ' : ''}${S.name}</span><small>　MP${S.mp}　${S.desc}</small></span><span class="ns">${have ? '' : '<small>🔒</small>'}</span></li>`; }).join('');
+      const B = DATA.boards[m.id] || [], own = g.board[m.id] = g.board[m.id] || [];
+      const brd = B.map(n => { const have = own.includes(n.id), lock = n.req && !own.includes(n.req), ok = !have && !lock && sp >= n.cost;
+        return `<li class="${have ? 'own' : ''}"><span class="l">${n.cost}SP</span><span><span class="${have ? 'have' : ok ? 'nx' : ''}">◆ ${n.name}</span><small>　${n.desc}</small></span><span class="ns">${have ? '<b class="have">✓</b>' : lock ? `<small>🔒「${B.find(x => x.id === n.req).name}」の あと</small>` : ok ? `<button class="nbuy" data-bd="${n.id}" data-lbl="${n.cost}SP">${n.cost}SP</button>` : '<small class="jlock">SP不足</small>'}</span></li>`; }).join('');
+      const tr = open() ? treeHtml(m, j, true, r.tree[r.cur] || []) : '<li><span></span><span class="st-eq">第1章クリアで 職業ツリーが ひらく</span></li>';
+      el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button>
+        <h3>スキル <small>${line || 'SPは レベル・職業レベルで ふえる。 個性ボードは ずっと のこり、職業ツリーは 転職で 返金される'}</small></h3>
+        <div class="tabs">${party.map((p, i) => `<button class="tab${i === mi ? ' on' : ''}" data-m="${i}">${face(p)}${K.esc(K.nameOf(p))}${(g.sp[p.id] || 0) ? ` <b style="color:var(--gold)">${g.sp[p.id]}</b>` : ''}</button>`).join('')}</div>
+        <div class="shop-body"><div class="slist"><div class="sec">固有わざ（レベルで 覚える）</div><ul class="jsk jtree">${inn}</ul></div>
+        <div class="sdet"><h4>${face(m)} ${K.esc(K.nameOf(m))}　<small class="xpn">Lv${m.lv}　のこり <b>${sp}</b>SP</small></h4>
+          <div class="sec">個性ボード（${own.length}/${B.length}・返金なし）</div><ul class="jsk jtree">${brd}</ul>
+          <div class="sec">職業ツリー：${j.icon} ${j.name} Lv${jlv(r, r.cur)}（転職で 全額 返金）</div><ul class="jsk jtree">${tr}</ul></div></div>`;
+      el.querySelector('.m-x').onclick = () => { Music.sfx('cancel'); close(); };
+      el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mi = +b.dataset.m; line = ''; Music.sfx('cursor'); paint(); });
+      const arm = b => { if (b.dataset.arm === '1') return true; el.querySelectorAll('.nbuy').forEach(x => { x.dataset.arm = ''; x.textContent = x.dataset.lbl; }); b.dataset.arm = '1'; b.textContent = '覚える？'; Music.sfx('cursor'); return false; };
+      el.querySelectorAll('[data-bd]').forEach(b => b.onclick = () => { if (!arm(b)) return; const n = B.find(x => x.id === b.dataset.bd); if (!n || own.includes(n.id) || (g.sp[m.id] || 0) < n.cost) return;
+        g.sp[m.id] -= n.cost; own.push(n.id); const hr = m.hp / m.st.hp; K.calc(m); m.hp = Math.max(1, Math.round(m.st.hp * hr)); m.mp = Math.min(m.mp, m.st.mp); Music.sfx('friend'); line = `${K.esc(K.nameOf(m))}は ${n.name}を 覚えた！`; K.save(); paint(); K.hud(); });
+      el.querySelectorAll('[data-node]').forEach(b => b.onclick = () => { if (!arm(b)) return; const n = j.tree.find(x => x.id === b.dataset.node); if (n && buyNode(m, n)) { Music.sfx('friend'); line = `${K.esc(K.nameOf(m))}は ${nodeName(n)}を 覚えた！`; K.save(); } paint(); K.hud(); }); };
+    M.key = e => { if (e.repeat) return; const k = e.code;
+      if (['Escape', 'Backspace', 'KeyX'].includes(k)) { e.preventDefault(); Music.sfx('cancel'); close(); return; }
+      if (k === 'ArrowRight' || k === 'KeyD' || k === 'Tab') { e.preventDefault(); mi = (mi + 1) % party.length; line = ''; Music.sfx('cursor'); paint(); }
+      else if (k === 'ArrowLeft' || k === 'KeyA') { e.preventDefault(); mi = (mi + party.length - 1) % party.length; line = ''; Music.sfx('cursor'); paint(); } };
+    paint(); K.$('ui').appendChild(el); K.MENUS.push(M); }); }
+  K.skillUI = skillUI; H.skillUI = skillUI;
 
   // ---------- メニュー ----------
   H.menu.push(() => { const s = G().party.find(m => m.id === 'sora'); const r = s ? rec('sora') : null;

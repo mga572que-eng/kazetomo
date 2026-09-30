@@ -320,7 +320,7 @@ function calc(m) {
     for (const n of DATA.boards[m.id] || []) if (owned.includes(n.id)) { if (n.skill) extra.push(n.skill); for (const [k, v] of Object.entries(n.eff || {})) { if (k in mul) mul[k] += v; else pas[k] += v; } }
     for (const f of HOOK.calc) f(m, st, mul, pas, extra);
     for (const k in mul) st[k] = st[k] * (1 + mul[k]);
-    const e = G.eq[m.id] || { w: 0, a: 0 }; st.atk += (DATA.gear[m.id][e.w] || { atk: 0 }).atk; st.def += DATA.armor[e.a].def; st.hp += G.hpBonus;
+    const e = G.eq[m.id] || { w: 0, a: 0 }; if (HOOK.gearFlat) HOOK.gearFlat(m, st, e); else { st.atk += (DATA.gear[m.id][e.w] || { atk: 0 }).atk; st.def += DATA.armor[e.a].def; } st.hp += G.hpBonus;
     for (const k in st) st[k] = Math.round(st[k]);
     m.skills = [...d.skills.filter(([, l]) => l <= m.lv).map(([s]) => s), ...extra]; m.type = null; m.pas = pas; }
   else { const S = SPC[m.id]; const iv = m.iv || {}; ['hp', 'mp', 'atk', 'def', 'spd'].forEach((k, i) => st[k] = Math.round((S.base[i] + S.grow[i] * (m.lv - 1)) * (1 + (iv[k] ?? 8) / 100)));
@@ -349,7 +349,7 @@ let SLOT = 1; const OLD_KEY = 'kazetomo-rpg-1'; const keyOf = n => n === 1 ? 'ka
 function slotInfo(n) { try { const raw = localStorage.getItem(keyOf(n)) || (n === 1 && localStorage.getItem(OLD_KEY)); if (!raw) return null; const d = JSON.parse(raw), g = d.G || {}; const F = g.flags || {};
   const ch = F.c4done ? '第4章クリア' : F.c3done ? (F.c4start ? '第4章' : '第3章クリア') : F.c2done ? '第3章' : F.cleared ? '第2章' : '第1章';
   const lv = Math.max(1, ...((g.party || d.party || []).map(m => m.lv || 1))); const t = Math.floor((g.play || 0) / 60); return { name: g.name || d.name || 'ソラ', ch, lv, time: `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}` }; } catch (e) { return null; } }
-function save() { try { G.pos = { x: player.x, z: player.z, y: player.y }; G.placed = [Blocks.placed(0), Blocks.placed(1), Blocks.placed(2), Blocks.placed(3)]; G.lit = REG[0].beacons.map(b => b.lit ? 1 : 0); G.guard = REG[0].beacons.map(b => b.guard ? 1 : 0);
+function save() { try { const gp = player.ground && !player.swim && !player.glide && !blocked(player.x, player.z, player.y) ? player : (player.good && player.good.r === G.region ? player.good : player); G.pos = { x: gp.x, z: gp.z, y: gp.y }; // 空中・水中・めりこみ中は 直前の 安全な 足場を 記録 G.placed = [Blocks.placed(0), Blocks.placed(1), Blocks.placed(2), Blocks.placed(3)]; G.lit = REG[0].beacons.map(b => b.lit ? 1 : 0); G.guard = REG[0].beacons.map(b => b.guard ? 1 : 0);
   localStorage.setItem(keyOf(SLOT), JSON.stringify({ G, uidN })); for (const f of HOOK.saved) try { f(); } catch (e) {} return true; } catch (e) { return false; } }
 function hasSave() { return [1, 2, 3].some(n => slotInfo(n)); }
 function load() { try {
@@ -385,7 +385,7 @@ const NPCS = [
   if (n.at === 'pier') { n.x = R0.pier.x + 1.8; n.z = R0.pier.z - 3; n.yaw = Math.PI; } n.yaw = n.yaw || 0; n.baseYaw = n.yaw; return n; });
 const npcNow = () => NPCS.filter(n => n.r === G.region && (!n.show || n.show()) && !(n.id === 'mio' && G.flags.mio));
 const gh0 = () => surfaceAt(player.x, player.z, player.y);
-let enemies = [], spawnT = 0, cool = 0, barrierT = 0, hudT = 0, dustT = 0, glideT = 0; const puffs = [], streaks = []; const hsp0 = () => Math.hypot(player.vx, player.vz);
+let goodT = 0; let enemies = [], spawnT = 0, cool = 0, barrierT = 0, hudT = 0, dustT = 0, glideT = 0; const puffs = [], streaks = []; const hsp0 = () => Math.hypot(player.vx, player.vz);
 
 // ================= input =================
 const keys = new Set();
@@ -439,7 +439,7 @@ $('btnMute').addEventListener('click', () => { const m = Music.toggleMute(); $('
 // ================= modes =================
 let phase = 'splash', busy = false;
 function mode() { if (phase !== 'field') return phase; if (B.active) return 'battle'; if (D.active || MENUS.length || busy) return 'busy'; return 'field'; }
-async function run(fn) { if (busy) return; busy = true; releaseInputs(); try { await fn(); } catch (e) { console.error(e); } finally { busy = false; } }
+async function run(fn) { if (busy || (DEBUG && window.__noEvents)) return; busy = true; releaseInputs(); try { await fn(); } catch (e) { console.error(e); } finally { busy = false; } }
 
 // ================= dialogue =================
 const D = { active: false, q: [], full: '', shown: 0, res: null };
@@ -645,7 +645,8 @@ async function openChest(c) {
   G.chests[c.id] = 1; Music.sfx('friend'); const L = c.loot; const lines = ['宝箱を あけた！'];
   if (L.gold) { G.gold += L.gold; lines.push(`${L.gold}ゴールドを 手に入れた！`); }
   if (L.give) for (const [k, v] of Object.entries(L.give)) { gain(k, v); lines.push(`${DATA.items[k].name}を ${v}こ 手に入れた！`); }
-  if (L.gear) { const [id, i] = L.gear; const g = DATA.gear[id][i]; lines.push(`${g.name}を 手に入れた！`);
+  if (L.gear && HOOK.giveGear) lines.push(...HOOK.giveGear(L.gear));
+  else if (L.gear) { const [id, i] = L.gear; const g = DATA.gear[id][i]; lines.push(`${g.name}を 手に入れた！`);
     if ((G.eq[id].w || 0) < i) { G.eq[id].w = i; allMembers().forEach(calc); lines.push(`（${id === 'sora' ? G.name : DATA.cast[id].name}の ぶきに なった）`); } }
   await say(lines); hud(); save(); }
 
@@ -717,10 +718,10 @@ async function rest(cost) {
 async function talkYui() {
   const F = G.flags;
   if (!F.metYui) {
-    await say([who('yui', 'smile', 'おはよう、{name}。 ……また 岬で 灯台を 見ていたの？'), who('sora', 'worried', 'うん。 今日も、どこも ついてなかった。'),
-      who('yui', 'sad', 'あの人が 夜の海へ 出て、もう 三年ね。'), who('yui', 'determined', '{name}。 父さんは 灯台に、なにか 残していったと 言っていたわ。'),
-      who('yui', 'smile', 'おじの ゲンさんの ところへ 行ってごらん。 旅の じゅんびを 手伝ってくれるはずよ。'),
-      '（ユイの 家では 休んで 回復・記録が できる。 旅先では 宿屋が 同じ 役目だ）']); F.metYui = true; save(); return; }
+    await say([who('yui', 'smile', 'おはよう、{name}。 ……また 岬で 夜あかし？ 髪が 潮で ごわごわよ。'), who('sora', 'worried', '……今日も、ひとつも ついてなかった。'),
+      who('sora', 'determined', 'でも 北の 灯台の てっぺんで、なにか 光ったんだ。 ほんとだよ！ ぼく、見てくる。'),
+      who('yui', 'sad', '……止めても 行く 顔ね。 あの人と おんなじ。'), who('yui', 'determined', 'あの人、「灯台に 置いてきた ものが ある」って 言っていたわ。 ゲン兄さんの 工房で したくを しておいで。'),
+      who('yui', 'smile', 'つかれたら いつでも 帰っておいで。 ごはんと おふとんは、ここに ある。')]); F.metYui = true; save(); return; }
   const c = await menu({ title: 'ユイ', items: [{ label: 'やすむ', sub: '全回復＋記録' }, { label: 'はなす' }] });
   if (c === 0) await rest(0);
   else if (c === 1) await say([G.order < 5 ? who('yui', 'smile', 'むちゃだけは しないでね。 帰る場所は ここよ。') : !F.cleared ? who('yui', 'worried', 'この 空……。 {name}、 あなたの 帰る場所は ここよ。')
@@ -729,12 +730,13 @@ async function talkYui() {
 async function talkGen(n) {
   const F = G.flags;
   if (!F.metGen) {
-    await say([who('gen', 'neutral', '……来たか、{name}。'), who('gen', 'neutral', '灯台には かげものが 巣くってる。 準備は しっかり しとけ。'),
-      '（ゲンの 工房では、石や 薪で 武器・防具を 作ってもらえる）', who('gen', 'neutral', '木は 切れば 薪、岩を 砕けば 石。 メニューの「クラフト」で ブロックにして 積めるぞ。'),
-      '（「つくる」ボタン（B）で ブロックを 置ける。 崖も 壁も、がんばりが あれば よじ登れる）']); F.metGen = true;
+    await say([who('gen', 'neutral', '……来たか、{name}。 ユイから 聞いた。'), who('sora', 'worried', '……止めないの？'),
+      who('gen', 'sad', '止めて 聞く 血すじじゃねえ。 ……カイトも そうだった。'),
+      who('gen', 'neutral', '灯台には かげものが 巣くってる。 木を 切りゃ 薪、岩を 割りゃ 石だ。 材料さえ ありゃ、武器でも 防具でも 打ってやる。')]); F.metGen = true;
     // 灯台の 鍵（k0）の 依頼を その場で 受ける（おつかいの 往復を 1回 へらす）
     if (HOOK.talks.gen && n) await HOOK.talks.gen(n);
     await say([who('gen', 'neutral', '……それと、広場の ミオが おまえを 探してたぞ。')]); save(); return; }
+  if (HOOK.genTalk) return HOOK.genTalk(n); // v9：店・鍛冶は balance.js（K.bal）が あつかう
   const w = DATA.gear.sora[G.eq.sora.w + 1], ha = G.eq.sora.a;
   const aNext = ha < 2 ? DATA.armor[ha + 1] : null; const aCost = [null, { maki: 5, ishi: 2 }, { ishi: 12, maki: 4 }][ha + 1];
   const costTxt = c => Object.entries(c).map(([k, v]) => `${DATA.items[k].name}${v}`).join(' '); const can = c => c && Object.entries(c).every(([k, v]) => (G.inv[k] || 0) >= v);
@@ -744,32 +746,37 @@ async function talkGen(n) {
   const pay = cst => Object.entries(cst).forEach(([k, v]) => G.inv[k] -= v);
   if (c === 0) { pay(w.cost); G.eq.sora.w++; allMembers().forEach(calc); Music.sfx('place'); await say([who('gen', 'grin', `……よし。 ${w.name}だ。`), `${G.name}は ${w.name}を そうびした！`]); }
   else if (c === 1) { pay(aCost); HUMAN_IDS.forEach(k => { if (G.eq[k].a < ha + 1) G.eq[k].a = ha + 1; }); G.party.forEach(m => { const r = m.hp / m.st.hp; calc(m); m.hp = Math.round(m.st.hp * r); }); Music.sfx('place'); await say([who('gen', 'neutral', `${aNext.name}だ。 仲間の ぶんも ある。`)]); }
-  else if (c === 2) await say([!F.cleared ? who('gen', 'sad', '……カイトを 止められなかったのは、おれだ。 だから おまえの 武器は、おれが 打つ。') : who('gen', 'smile', '大陸の 港町には、もっと いい 武器屋が あるらしいぞ。 金を ためな。')]);
+  else if (c === 2) await say([!F.cleared ? who('gen', 'sad', '……あの夜、カイトに「行くなら 二度と 帰ってくるな」と 言っちまった。 だから おまえの 武器は、おれが 打つ。') : who('gen', 'smile', '大陸の 港町には、もっと いい 武器屋が あるらしいぞ。 金を ためな。')]);
 }
 async function talkNagi() {
   const F = G.flags;
   if (!F.metNagi) { F.metNagi = true; G.inv.pan += 2;
-    await say([who('nagi', 'grin', 'あら {name}！ 旅に 出るんだって？'), who('nagi', 'smile', 'ほら、焼きたての 実のパン。 腹が へっては 冒険は できないよ！'), '実のパンを 2つ もらった！',
-      who('nagi', 'smile', 'たき火で 料理も できるからね。 キノコと 木の実を 組みあわせてごらん。')]); return; }
+    await say([who('nagi', 'grin', 'あら {name}！ 旅に 出るんだって？ 村じゅう その 話で もちきりだよ。'),
+      who('nagi', 'sad', '……「カイトの 子まで 海に とられる」なんて 言う 人も いるけどさ。 あたしは 言わせとく。'),
+      who('nagi', 'smile', 'ほら、焼きたての 実のパン。 腹が へっては 冒険は できないよ！'), '実のパンを 2つ もらった！',
+      who('sora', 'joy', 'まだ あったかい……！ ナギおばさん、ありがと！')]); return; }
   const c = await menu({ title: 'かざみ亭', items: [{ label: 'パンを やいてもらう', sub: '木の実3 → 実のパン1', disabled: G.inv.mi < 3 }, { label: 'はなす' }] });
   if (c === 0) { G.inv.mi -= 3; G.inv.pan++; Music.sfx('pick'); await say([who('nagi', 'grin', 'はい、おまちどう！'), '実のパンを 1つ もらった！']); }
-  else if (c === 1) await say([!F.cleared ? who('nagi', 'grin', 'ねえ、リクって 子を 見たかい？ 本土から 来た 槍使いだって、うわさだよ！') : who('nagi', 'grin', '大陸の 料理も 気になるねえ。 おいしいもの 見つけたら 教えておくれ！')]);
+  else if (c === 1) await say([!F.cleared ? who('nagi', 'sad', 'シオミの 町にね、「疫病神」って 呼ばれてる 槍使いの 子が いるんだって。 リクとか いったね。 ……ひどい 話さ。') : who('nagi', 'grin', '大陸の 料理も 気になるねえ。 おいしいもの 見つけたら 教えておくれ！')]);
 }
 async function talkMio() {
   const F = G.flags;
   if (!F.metYui) { await say([who('mio', 'smile', '{name}、 おはよう！ 先に ユイさんに 顔を 見せてきなよ。')]); return; }
-  await say([who('mio', 'grin', '{name}！ 旅に 出るって ほんと？'), who('mio', 'worried', '……あのね。 最近、夜に なると きこえるの。 灯台の ほうから、だれかが 泣いてる こえ。'),
-    who('mio', 'determined', 'わたしも 行く。 カイトさんには 命を 助けてもらったもの。'),
+  await say([who('mio', 'grin', '{name}！ 旅に 出るって ほんと？ わたしも 行く！'), who('sora', 'surprised', 'ええっ？ まだ なにも 言ってないよ！'),
+    who('mio', 'worried', '……あのね。 夜に なると きこえるの。 灯台の ほうから、だれかが 泣いてる こえ。'),
+    who('mio', 'determined', 'カイトさんには 海で 命を 助けてもらった。 こんどは わたしの 番。'),
     { t: 'ミオが なかまに くわわった！', fx: () => { F.mio = true; G.party.push(mkHuman('mio', G.party[0].lv)); fixTeam(); Music.sfx('friend'); } },
-    who('mio', 'smile', 'かげものも、たおせば かげが はれて もとに もどるの。 なかよく なれるかも！')]); save();
+    who('mio', 'smile', 'かげものって、ほんとは こわがってる だけ なの。 しずめて あげれば、もとの いきものに もどるんだよ。'),
+    who('sora', 'smile', 'じゃあ これは、やっつける 旅じゃなくて……いやす 旅だね。')]); save();
 }
 async function talkKurou() {
   if (!G.flags.c2start) {
-    await say([who('kurou', 'neutral', '{name}。 ……話して おかねば ならないことが ある。'),
-      who('kurou', 'sad', 'わたしが 闇に 堕ちた 夜。 北の 海に、星が ひとつ 落ちるのを 見た。 あの 光に ふれてから、悲しみが 止まらなく なった。'),
-      who('kurou', 'determined', '霧の大陸では いまも 星が 落ちつづけている。 星を 喰らう なにかが いる。 ……わたしの 闇は、その かけらに すぎなかった。'),
+    await say([who('kurou', 'neutral', '{name}。 ……少し、いいか。 宴は にがてでな。'),
+      who('kurou', 'sad', 'わたしが 闇に 堕ちた 夜、北の 海に 星が ひとつ 落ちた。 あの 光に ふれてから、悲しみが 止まらなく なった。'),
+      who('kurou', 'determined', '霧の大陸では、いまも 星が 落ちつづけている。 ……わたしの 闇は、なにか 大きな ものの「かけら」に すぎなかった。'),
       inParty('riku') ? who('riku', 'surprised', '霧の大陸……？ サナが……妹が 最後に 見えたのも、その 方角だ。') : null,
-      who('kurou', 'smile', '桟橋に 古い 友の 船が 来ている。 バルドという 男だ。 ……頼む。'),
+      who('sora', 'determined', 'じゃあ、その「なにか」に 会いに 行こう。 リクの 妹さんも さがして！'),
+      who('kurou', 'smile', '……カイトに 似てきたな。 桟橋に 古い 友の 船が 来ている。 バルドという 男だ。'),
 ]); G.flags.c2start = true; await titleCard('第2章', '星くずの大陸'); save(); return; }
   await say([G.flags.c3done ? who('kurou', 'joy', 'ハルが 帰ってきた。 ……灯を ともしつづけて、よかった。 ありがとう、{name}。') : who('kurou', 'smile', 'ハルが 好きだった 歌を、ミオが 歌ってくれた。 ……ありがとう。')]);
 }
@@ -781,8 +788,8 @@ async function talkBaldo() {
       who('baldo', 'determined', 'だからよ。 今度は 間に合わせる。 さあ、乗りな！')]);
     if (!(await confirm('かもめ丸に 乗りますか？'))) return;
     await sail(1); G.flags.c2arrive = true;
-    await say([who('baldo', 'grin', '着いたぞ！ ここが 霧の大陸の 玄関口、港町ミナトだ！'), who('baldo', 'neutral', 'ここの 研究所に、いきものに くわしい ちびっこが いる。 まずは 会ってみな。'),
-      '（大陸の いきものは 島より 強い。 町の 武器屋で 装備を ととのえよう）']); save(); return; }
+    await say([who('baldo', 'grin', '着いたぞ！ ここが 霧の大陸の 玄関口、港町ミナトだ！'), who('sora', 'surprised', 'ひ、人が いっぱい……！ 島の 何倍 いるんだろう。'),
+      who('baldo', 'neutral', '大陸の いきものは 島より 手ごわい。 まずは 武器屋で 装備を ととのえな。 研究所の ちびっこにも 会ってみるといい。')]); save(); return; }
   const dest = G.region === 0 ? 1 : 0;
   if (await confirm(`${dest ? '霧の大陸' : '風灯の島'}へ 船を 出すか？`)) await sail(dest);
 }
@@ -818,7 +825,9 @@ const ICON = (() => { const w = (b) => `<svg viewBox="0 0 32 32" class="ic" aria
   const wep = { sora: 'sword', mio: 'harp', riku: 'spear', sana: 'staff', haru: 'fan', kaito: 'spear' };
   return { item: k => { const [f, c] = map[k] || (HOOK.icons || {})[k] || ['star', '#ccc']; return I[f](c); }, gear: (id, tier) => I[wep[id] || 'sword'](['#c9ced6', '#d8b884', '#f3c15a', '#9fd0ff', '#ffe38a', '#c9b8ff'][Math.min(tier, 5)]), armor: tier => I.armor(['#8a7a60', '#a07a50', '#9a968e', '#b8c0d0', '#c9b8ff', '#ffffff'][Math.min(tier, 5)]) }; })();
 const KEEPER = { weapon: ['weapon', '武器と防具の店', 'いらっしゃい！ いい品が そろってるよ。'], item: ['item', '道具屋', 'まいど！ 旅の 備えは 万全かい？'] };
-function shopUI(kind) {
+// v9：店は balance.js の HOOK.shopUI(kind, { town }) へ（町ごとの 品ぞろえ・そうび袋・売買・鍛冶）。 下は 旧版の フォールバック
+function shopUI(kind, o) { return HOOK.shopUI ? HOOK.shopUI(kind, o || {}) : shopUI0(kind); }
+function shopUI0(kind) {
   return new Promise(res => {
     const sky = G.region === 2, sea = G.region === 3; const shopName = kind === 'armor' ? (sea ? '海の防具屋' : sky ? '空の防具屋' : '防具屋') : kind === 'weapon' ? (sea ? '海の武器屋' : sky ? '空の武器屋' : '武器屋') : (sea ? '海の道具屋' : sky ? '空の道具屋' : '道具屋');
     const tabs = kind === 'weapon' ? [['w', 'ぶき'], ['s', 'うる']] : kind === 'armor' ? [['a', 'ぼうぐ'], ['s', 'うる']] : [['i', 'かう'], ['s', 'うる']];
@@ -880,15 +889,15 @@ async function talkTsumugi() {
   if (!F.dex) {
     await say([who('tsumugi', 'surprised', 'わっ！ お、お客さん……？ ……あっ！！ その子！！'),
       G.mons[0] ? who('tsumugi', 'grin', `${SPC[G.mons[0].id].name}だ！ 島の いきものだよね！？ 本物 はじめて 見た！`) : who('tsumugi', 'grin', '島から 来たの！？ 島の いきもの、見たこと ある？'),
-      who('tsumugi', 'smile', 'わたし、ツムギ。 いきもの研究家の……見習い。 おばあちゃんの 未完成の 図鑑を 完成させるのが 夢なの。'),
-      who('tsumugi', 'determined', 'ねえ、手伝って くれない？ 島と 大陸には 28種の いきものが いるって、おばあちゃんの ノートに 書いてあるの。'),
+      who('tsumugi', 'smile', 'わたし、ツムギ。 いきもの研究家の……見習い。 おばあちゃんの 図鑑、とちゅうで 止まったままなの。'),
+      who('tsumugi', 'worried', '町の 大人は「かげものの 図鑑なんて、だれが 買うんだ」って 笑うけど……。'),
+      who('sora', 'smile', 'ぼくは 読みたいな。 かげものが もとに もどった あとの 顔、ぜんぶ 見てみたい。'),
+      who('tsumugi', 'joy', '……！ じゃあ、手伝って！ 島と 大陸には 28種の いきものが いるって、おばあちゃんの ノートに あるの。'),
       { t: '「いきもの図鑑」を もらった！', fx: () => { F.dex = true; Music.sfx('friend'); } },
-      who('tsumugi', 'smile', 'いきものは 住む 場所や 時間帯で ちがうの。 夜にしか 出ない子、雪原にしか いない子……。 育てると すがたが 変わる子も いるよ。'),
-      who('tsumugi', 'grin', 'それと、ごくたまに 色が ちがう 子が いるんだって。 見つけたら ぜったい 教えてね！'),
+      who('tsumugi', 'grin', '夜にしか 出ない子、育つと すがたが 変わる子、ごくたまに 色が ちがう子も いるんだって。 見つけたら ぜったい 教えてね！'),
       F.glider ? who('tsumugi', 'surprised', 'あっ、その 風布……！ おばあちゃんが 作ってた ものと 同じ 織りかただ。 大事に してね！')
-        : who('tsumugi', 'smile', 'あと、これ。 おばあちゃんの 形見の「風布」。 高い ところから 飛びおりて ひろげれば、風に のって 空を すべれるよ。'),
-      F.glider ? null : { t: '「風布」を 手に入れた！（空中で もう一度 ジャンプすると 滑空）', fx: () => { F.glider = true; Music.sfx('friend'); } },
-      who('tsumugi', 'smile', '図鑑が うまったら、ここに 報告に きてね。 おばあちゃんの 宝物を わけてあげる！')]); save(); return; }
+        : who('tsumugi', 'smile', 'あと、これ。 おばあちゃんの 形見の「風布」。 とびあがって、空中で もう一回 ジャンプ！ 風に のって すべれるよ。'),
+      F.glider ? null : { t: '「風布」を 手に入れた！', fx: () => { F.glider = true; Music.sfx('friend'); } }]); save(); return; }
   if (F.c2done && !F.c3start) {
     await say([who('tsumugi', 'surprised', 'あっ、{name}！ たいへん たいへん！ おばあちゃんの ノートの 最後の ページ、やっと 読めたの！'),
       who('tsumugi', 'determined', '「星の遺跡の 祭壇で 星笛を ふけば、星の くじらが 空の 島へ はこんでくれる」……だって！'),
@@ -923,10 +932,10 @@ async function talkGuild() {
   const F = G.flags;
   if (!F.c2rumor) {
     await say([nm('ギルドの 受付', 'ようこそ、冒険者ギルドへ！ 依頼は 掲示板で 受けてね。 かげものを しずめたり、素材を とどけたりで お金に なるわ。'),
-      nm('ギルドの 受付', '……え、星の 話？ ええ、最近 東の 砂漠の「星の遺跡」に 星が 落ちつづけてるの。 それに——'),
+      nm('ギルドの 受付', '……え、星の 話？ ええ、東の 砂漠の「星の遺跡」に 星が 落ちつづけてるの。 おかげで 港は 星のかけら 売りで 大もうけ。 ……ここだけの 話、ちょっと 品が ないわよね。'),
       nm('ギルドの 受付', '紺色の 髪の 女の子が、ひとりで 遺跡へ 入っていくのを 見たって 人が いたわ。 星の 髪飾りを つけた子。'),
       inParty('riku') ? who('riku', 'surprised', '……星の 髪飾り。 サナだ。 まちがいねえ。') : null,
-      inParty('riku') ? who('riku', 'determined', '{name}、 悪いが 急ぐぞ。') : who('sora', 'determined', '東の 砂漠……行ってみよう。'), { t: '（遺跡は 町から 東の 砂漠。 空に 立ちのぼる 光が 目印だ）', fx: () => { F.c2rumor = true; } }]); save(); return; }
+      inParty('riku') ? who('riku', 'determined', '{name}、 悪いが 急ぐぞ。') : who('sora', 'determined', '東の 砂漠……行ってみよう。'), { t: '町の 東、砂漠の 空に、細い 光の 柱が 立ちのぼっている。 あれが 星の遺跡だ。', fx: () => { F.c2rumor = true; } }]); save(); return; }
   await bountyBoard();
 }
 
@@ -956,17 +965,18 @@ async function beaconEvent(b, atTop) {
     if (c !== 0) return; await fade(true); G.tod = .82; await wait(300); await fade(false); await say(['……夜に なった。 火皿が ゆっくりと ひらいていく。']); }
   if (!b.guard) {
     const gi = G.order, gid = DATA.guards[gi]; const pre = [`（推奨Lv${DATA.guardLv[gi]}）`];
-    if (gi === 0) pre.push('とつぜん、灯台の 足もとから 黒い つるが のびてきた！', inParty('mio') ? who('mio', 'worried', 'この子……灯を こわがってる。 でも、とめなきゃ！') : who('sora', 'determined', 'くるぞ……！'));
-    if (gi === 1) pre.push(who('riku', 'angry', '待て。 その灯台に 火を つけるな。'), who('sora', 'surprised', 'だ、だれ？'), who('riku', 'smirk', '灯を ともせば、あいつが 気づく。 ……おれの 町は、それで 喰われた。'), who('riku', 'determined', 'どうしても やるってんなら、おれを 倒してからに しな、甘ちゃん。'));
-    if (gi === 2) pre.push('大地が ゆれる。 岩の かたまりが 立ち上がった！');
-    if (gi === 3) pre.push('海が 黒く ふくらみ、なにかが 顔を 出した！', inParty('mio') ? who('mio', 'sad', 'この子の こえ……さみしい、って。') : null);
+    if (gi === 0) pre.push('とつぜん、灯台の 足もとから 黒い つるが のびてきた！', inParty('mio') ? who('mio', 'worried', 'この子……灯を こわがってる。 でも、とめなきゃ！') : null, who('sora', 'determined', 'だいじょうぶ、こわくないよ。 ……ぼくも ちょっと こわいけど！'));
+    if (gi === 1) pre.push(who('riku', 'angry', '待て。 その灯台に 火を つけるな。'), who('sora', 'surprised', 'き、きみが リク？ シオミの ナミさんが 心配してたよ。'), who('riku', 'smirk', '……あの町が？ おれに 石を 投げた 町が、心配ねえ。'),
+      who('riku', 'angry', '灯を ともせば、あいつが 気づく。 おれの 故郷は、それで 一晩で 喰われた。'), who('sora', 'determined', 'でも 灯が なかったら、だれも 帰ってこられない！'), who('riku', 'determined', '……口じゃ わからねえか。 かかってこい、甘ちゃん。'));
+    if (gi === 2) pre.push('地ひびきと ともに、岩の かたまりが 立ちあがった！', inParty('riku') ? who('riku', 'smirk', 'でけえな。 ……おい 甘ちゃん、足 ふるえてるぞ。') : null, who('sora', 'determined', 'む、武者ぶるいだよ！'));
+    if (gi === 3) pre.push('海が 黒く ふくらみ、なにかが 顔を 出した！', inParty('mio') ? who('mio', 'sad', 'この子の こえ……さみしい、って。') : null, who('sora', 'determined', 'さみしいなら、なおさら 灯が いるよ。'));
     if (gi === 4) pre.push('空が 裂け、夜の とばりが 鳥の かたちに なった！', who('sora', 'determined', 'これが 最後の 灯台だ。 みんな、いくよ！'));
     await say(pre);
     const res = await runBattle([{ boss: gid }], { boss: true, noFlee: true });
     if (res !== 'win') return defeated();
     b.guard = true;
-    if (gi === 1) await say([who('riku', 'sad', '……ちっ。 まっすぐな 剣だ。'), who('sora', 'smile', 'きみの 町の 灯も、きっと また ともせる。 いっしょに 行こう。'),
-      who('riku', 'smirk', '……リクだ。 勘違いすんなよ。 あいつを 追うのに 都合が いいだけだ。'), { t: 'リクが なかまに くわわった！', fx: () => { G.party.push(mkHuman('riku', Math.max(G.party[0].lv, 6))); fixTeam(); Music.sfx('friend'); } }]);
+    if (gi === 1) await say([who('riku', 'sad', '……ちっ。 まっすぐな 剣だ。 ばかみたいに。'), who('sora', 'smile', 'よく 言われる。 ……いっしょに 行こうよ。 きみの 故郷の 灯も、きっと また ともせる。'),
+      who('riku', 'smirk', '……リクだ。 勘違いすんなよ。 闇の王を 追うのに 都合が いいだけだ。'), { t: 'リクが なかまに くわわった！', fx: () => { G.party.push(mkHuman('riku', Math.max(G.party[0].lv, 6))); fixTeam(); Music.sfx('friend'); } }]);
     else await say([`${DATA.enemies[gid].name}の かげが はれて、光の 粒に なって 消えていった。`]);
     save();
   }
@@ -992,12 +1002,12 @@ async function beaconEvent(b, atTop) {
 let darkness = 0, darkTarget = 0;
 async function finalOpen() {
   await say(['五つの 灯が ともった、その とき——', { t: '島じゅうの 空が、墨を 流したように 黒く 染まった。', fx: () => { darkTarget = 1; } },
-    who('yomi', 'angry', '……よくも 灯を ともしてくれたな、カイトの 子よ。'), who('yomi', 'neutral', '島の いちばん 高い 場所、宵の祠で 待つ。'), who('sora', 'determined', '行こう。 父さんも、きっと そこに いる。')]);
+    who('yomi', 'angry', '……よくも 灯を ともしてくれたな、カイトの 子よ。 あいつと 同じ 目を して。'), who('yomi', 'neutral', '島の いちばん 高い 場所、宵の祠で 待つ。'), who('sora', 'determined', '行こう。 父さんも、きっと そこに いる。')]);
   G.flags.shrineOpen = true; save();
 }
 async function shrineEvent() {
-  await say([`（推奨Lv${DATA.bossCfg.yomikage[0]}　連戦に なる。 準備は いいか？）`, who('yomi', 'neutral', '来たか。'), who('yomi', 'angry', '灯を ともして 何になる。 灯が あるから、人は 海へ 出て 帰ってこない。'),
-    who('sora', 'determined', 'それでも 灯は、帰る場所の しるしだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
+  await say([`（推奨Lv${DATA.bossCfg.yomikage[0]}　連戦に なる。 準備は いいか？）`, who('yomi', 'neutral', '来たか。'), who('yomi', 'angry', '灯が あるから、人は 海へ 出る。 そして 帰ってこない。 ……だから 消した。 もう だれも、見送らなくて すむように。'),
+    who('sora', 'determined', 'ちがう！ ぼくは 三年、消えた 灯台を 見てた。 灯が ないほうが、待つ 夜は ずっと 長いんだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
   let res = await runBattle([{ boss: 'yomikage' }], { boss: true, noFlee: true });
   if (res !== 'win') return defeated();
   await say([who('yomi', 'angry', 'まだだ……！ この 悲しみごと、永遠の 夜に しずめてやる！'), { t: '闇が ふくれあがり、空いっぱいの 王の すがたに なった！', fx: () => battleParty().forEach(m => { m.hp = Math.max(m.hp, Math.round(m.st.hp * .8)); m.mp = Math.max(m.mp, Math.round(m.st.mp * .6)); }) }]);
@@ -1005,11 +1015,13 @@ async function shrineEvent() {
   if (res !== 'win') return defeated();
   await say(['宵闇の 王の からだから、黒い 霧が ほどけていく。', who('kurou', 'sad', '……あたたかい。 ああ、ハル……おまえも、この灯を 見ていたのか。'), '霧の むこうから、ひとりの 男が 歩いてきた。',
     who('kaito', 'smile', '師匠。 帰りましょう。 灯は ともっています。'), who('sora', 'surprised', '……父さん！'), who('kaito', 'joy', '大きく なったな、{name}。 ……よく ここまで 来た。'),
+    who('sora', 'angry', '……おそいよ。 三年も。'), who('kaito', 'sad', 'ああ。 ……すまなかった。'),
     { t: '……夜が 明けていく。', fx: () => { darkTarget = 0; G.tod = .255; } }]);
   G.flags.cleared = true; await fade(true); player.x = 2; player.z = 4; player.y = surfaceAt(2, 4, 99); trail.length = 0; await fade(false);
-  await say([who('yui', 'sad', '……おかえりなさい、あなた。'), who('kaito', 'smile', 'ただいま。 ……灯が 見えたから、帰ってこられた。'), who('nagi', 'grin', 'さあさあ！ 今夜は かざみ亭で 宴会だよ！'), who('sora', 'joy', '父さん、母さん。 ……ただいま！')]);
+  await say([who('yui', 'sad', '……おかえりなさい、あなた。'), who('kaito', 'smile', 'ただいま。 ……灯が 見えたから、帰ってこられた。'), who('gen', 'sad', '……帰ってきやがった。 ばかやろうが。'),
+    who('nagi', 'grin', 'さあさあ！ 今夜は かざみ亭で 宴会だよ！'), who('sora', 'joy', '父さん、母さん。 ……ただいま！')]);
   save(); await credits(1);
-  await say(['（第1章 クリア！ 広場の クロウが なにか 話したそうに している……）']);
+  await say(['——第1章 クリア。 宴の 夜、広場の すみで クロウが ひとり、海を 見ている……。']);
 }
 // ---- chapter 2 ----
 async function midbossEvent() {
@@ -1030,14 +1042,15 @@ async function altarEvent() {
     who('sora', 'determined', 'これが……星喰い！')]);
   res = await runBattle([{ boss: 'hoshikui' }], { boss: true, noFlee: true, keepMusic: true });
   if (res !== 'win') return defeated();
-  await say(['星喰いは 悲鳴を あげ、無数の 光の 粒に なって 空へ 還っていった。', who('sana', 'sad', '兄さん……ずっと、星に 祈っていました。 いつか 迎えに きてくれるって。'),
-    inParty('riku') ? who('riku', 'sad', '……遅くなって、わりい。') : null, inParty('riku') ? who('riku', 'smile', '……よく がんばったな、サナ。') : null,
-    who('sana', 'smile', '{name}さん。 みなさん。 ありがとう ございます。 わたしも、いっしょに 行かせてください。'),
+  await say(['星喰いは 悲鳴を あげ、無数の 光の 粒に なって 空へ 還っていった。', who('sana', 'sad', '兄さん……ごめんなさい。 わたし、あの こえに 自分で「はい」って 言ったんです。'),
+    who('sana', 'sad', '「故郷の 灯を 返してあげる」って……。 ほしかった。 ぜんぶ、わたしの ものに したかった。'),
+    inParty('riku') ? who('riku', 'sad', '……ばかやろう。 おれだって、あの夜 逃げたんだ。 おまえを 置いて。') : null, inParty('riku') ? who('riku', 'smile', '……おあいこだ。 よく 生きてたな、サナ。') : null,
+    who('sana', 'smile', '{name}さん。 みなさん。 ありがとう ございます。 こんどは 自分の 足で、いっしょに 行かせてください。'),
     { t: 'サナが なかまに くわわった！', fx: () => { G.party.push(mkHuman('sana', Math.max(...G.party.map(m => m.lv)))); fixTeam(); Music.sfx('friend'); } },
     who('sana', 'worried', '……でも、星喰いは「かけら」でした。 空の 向こうに、もっと 大きな なにかが います。 星の こえが、そう 言っています。'),
-    who('sora', 'determined', 'だったら、そこへも 行こう。 みんなで。')]);
+    who('sora', 'determined', 'だったら、そこへも 行こう。 みんなで。 ……ひとりで 行くのは、もう なしだよ。')]);
   G.flags.c2done = true; save(); await credits(2);
-  await say(['（第2章 クリア！ 図鑑うめ・依頼・建築・ひかりの種あつめ など、旅は つづく……）']);
+  await say(['——第2章 クリア。 サラムの ウララさんも、きっと サナの 顔を 見たがっている……。']);
 }
 // ---- chapter 3 ----
 const nightNow = () => World.skyInfo(G.tod).night > .5;
@@ -1073,7 +1086,7 @@ async function fluteEvent() {
     who('haru', 'worried', 'クロウ……？ ……知らない。 わたし、四十年より 前の ことは なにも 覚えていないの。'),
     inParty('riku') ? who('riku', 'surprised', '四十年……？ どう見ても おれらと 同じくらいだろ。') : null,
     who('haru', 'smile', '空の 上では、時間が ゆっくり ながれるの。 ……長老さまに 会って。 里は この 先よ。'),
-    '（天空の浮島：雲海に 落ちると 近くの 島に もどされる。 空の いきものは 強いが、経験値も 多い）']);
+    who('sora', 'grin', '……ねえ、ここ 落ちたら どうなるの？'), who('haru', 'neutral', '雲が 近くの 島まで はこんでくれる。 ちょっと 痛いけど。')]);
   tip('<b>天空の浮島</b><span>光る 風の 柱＝上昇気流。 ジャンプ→もう一度 ジャンプで 滑空すると 空高く 舞いあがる。</span>', 'updraft'); save(); }
 async function whaleEvent() { if (!(await confirm('ホシクジラに 乗って、霧の大陸（星の遺跡）へ おりますか？'))) return;
   await say(['ホシクジラは ゆっくりと 雲の 下へ おりていく——']); await skyTravel(1); }
@@ -1082,19 +1095,19 @@ async function talkSoyogi() {
   const F = G.flags;
   if (!F.c3elder) {
     await say([who('soyogi', 'smile', 'ほっほ。 地上の 客人とは、何十年ぶりかのう。 わしは ソヨギ。 この 里の 長老じゃ。'),
-      who('soyogi', 'neutral', '星が 消えておる わけを 知りたいそうじゃな。 ……よかろう。'),
-      who('soyogi', 'neutral', 'この 空の 北に「星巣の塔」が ある。 空の 星を 守る 星守（ほしもり）さまの すみかじゃった。'),
-      who('soyogi', 'sad', 'じゃが 四十年前、星守さまは 変わってしまわれた。 燃えつきて 消えていく 星を 見て——'),
-      who('soyogi', 'sad', '「消えるくらいなら、喰らって わが身に しまっておこう」と……。 いまは「天喰み（あまはみ）」と 呼ばれておる。'),
+      who('soyogi', 'neutral', '北の「星巣の塔」には、空の 星を 守る 星守（ほしもり）さまが おられた。'),
+      who('soyogi', 'sad', 'じゃが 四十年前、燃えつきて 消えていく 星を 見て、星守さまは 変わってしまわれた。 「消えるくらいなら、喰らって しまっておこう」と……。'),
+      who('soyogi', 'sad', 'いまは「天喰み（あまはみ）」と 呼ばれておる。'),
+      who('sora', 'worried', '……たいせつだから、しまっておきたい。 その 気持ちは、ちょっと わかるかも。'),
       inParty('sana') ? who('sana', 'worried', '天喰み……。 わたしを 操っていた 星喰いは、その かけら だったんですね。') : null,
       who('soyogi', 'determined', '塔は 風の 結界に 守られておる。 東・南西・西の 三つの「風の祠」で 試練を こえ、祠に 風を 通せば、虹の 橋が かかるじゃろう。'),
-      who('soyogi', 'smile', 'ハルや。 この 子らを 案内して おあげ。 おまえには 風の 道が 見えるじゃろう。'),
+      who('soyogi', 'smile', 'ハルや。 この 子らを 案内して おあげ。 ……おまえは 風が 運んできた 子じゃ。 風の 道が 見えるじゃろう。'),
       who('haru', 'surprised', 'え……わたし？'), who('haru', 'determined', '……わかった。 星が 消えるのは、わたしも いや。'),
       { t: 'ハルが なかまに くわわった！', fx: () => { F.c3elder = true; const lv = Math.max(...G.party.map(m => m.lv)); G.eq.haru = { w: (G.eq.haru && G.eq.haru.w) || 0, a: Math.max((G.eq.haru && G.eq.haru.a) || 0, ...G.party.map(m => G.eq[m.id].a)) };
         G.party.push(mkHuman('haru', lv)); if (G.team.length >= 4) G.team[3] = 'haru'; else G.team.push('haru'); fixTeam(); Music.sfx('friend'); } },
       who('haru', 'smile', '……それと、ミオ。 くじらの 上で 口ずさんでた 歌。 わたし、どこかで 聞いた 気が するの。'),
       inParty('mio') ? who('mio', 'surprised', 'え……あれは、風灯の島に 古くから ある 子守歌だよ？') : null,
-      '（ハルは 4人めとして たいれつに 入った。 メニューの「なかま」で 入れかえ できる）']);
+      who('soyogi', 'sad', '…………。')]);
     tip('<b>風の祠は どこからでも</b><span>東・南西・西、好きな 順に 挑める。 推奨Lvは 東30・南西32・西34。</span>', 'wind1'); save(); return; }
   const c = await menu({ title: 'ソヨギ', items: [{ label: 'はなす' }, { label: '空の 話を きく' }] });
   if (c === 0) { const left = DATA.windTrials.filter((_, i) => !G.wind[i]).map(t => `${t.where}の ${t.name}`);
@@ -1143,7 +1156,7 @@ async function finalEvent3() {
   await say([`（推奨Lv${DATA.bossCfg.amahami[0]}　連戦に なる。 準備は いいか？）`, '塔の 頂。 星空を 丸ごと 閉じこめたような 巨大な 影が、とぐろを 巻いていた。',
     nm('天喰み', '……また 来たか。 地上の 小さな 灯よ。'), nm('天喰み', '星は 燃えつき、消えていく。 だから わたしが 喰らい、しまっておくのだ。 永遠に。'),
     inParty('sana') ? who('sana', 'determined', 'ちがいます……！ 星は 消えても、その 光は 旅を つづけるんです。') : null,
-    who('sora', 'determined', '灯も 星も、だれかが 帰る 場所の しるしだ。 閉じこめたら、だれも 帰れない！'),
+    who('sora', 'determined', 'なくすのが こわいのは、ぼくも いっしょだ。 でも 灯も 星も、しまいこんだら だれの 帰り道も 照らせない！'),
     inParty('haru') ? who('haru', 'determined', '星守さま。 わたしは……あなたを 止めに きました。') : null, nm('天喰み', '……ならば その 灯ごと、喰らってやろう！')]);
   let res = await runBattle([{ boss: 'amahami' }], { boss: true, noFlee: true, song: 'lastboss' }); if (res !== 'win') return defeated();
   await say(['天喰みの からだが 裂け、喰らわれた 星々が あふれだす！', { t: 'その 中心に、ひび割れた 光の 鳥が いた。 ——ハルの 扇から、あたたかい 風が 吹いた。', fx: () => { battleParty().forEach(m => { m.hp = m.st.hp; m.mp = Math.max(m.mp, Math.round(m.st.mp * .8)); }); Music.sfx('heal'); } }, nm('星守', 'なぜ……なぜ 消えるものを 追う……！ しまっておけば、二度と 失わないのに……！')]);
@@ -1156,7 +1169,7 @@ async function finalEvent3() {
     { t: '夜空いっぱいに、星が よみがえった——', fx: () => { G.flags.c3done = true; G.tod = .86; Music.jingle('light'); } },
     who('haru', 'determined', '{name}。 わたし、思い出したの。 ぜんぶ。'), who('haru', 'sad', '……会いたい 人が いる。 地上の、小さな 灯台の 島に。')]);
   save(); await reunion(); save(); await credits(3);
-  await say(['（第3章 クリア！ ハルは これからも いっしょに 旅を する。 天空の浮島へは 星の遺跡の 祭壇から 行ける）', '（うわさ：星が もどった 夜、星巣の塔の 頂に なにかが 舞いおりるらしい……）']); }
+  await say(['——第3章 クリア。 ハルは これからも いっしょに 旅を する。 空へは 星の遺跡の 祭壇から 行ける。', '……ソヨギさまは、ハルに まだ 言っていない ことが ありそうだ。', 'うわさでは、星が もどった 夜、星巣の塔の 頂に なにかが 舞いおりるらしい……。']); }
 async function reunion() {
   await fade(true); G.region = 0; World.setRegion(0); enemies = []; player.x = 1; player.z = 8; player.y = surfaceAt(1, 8, 99); cam.yaw = Math.PI; trail.length = 0; G.tod = .7; Music.play('village', { restart: true }); await wait(400); await fade(false);
   await say(['——風灯の島。 夕暮れの 広場。', who('kurou', 'surprised', '……{name}？ 空から くじらが おりてきたと 聞いたが——'), who('haru', 'worried', '……あの。'), who('kurou', 'surprised', '…………。'),
@@ -1186,7 +1199,7 @@ async function credits(ch) {
 // ================= battle =================
 const B = { active: false }; let bSkip = false;
 $('bMsg').addEventListener('pointerdown', () => { bSkip = true; });
-$('bSpd').addEventListener('click', () => { G.speed = G.speed === 1 ? 2 : G.speed === 2 ? 3 : 1; $('bSpd').textContent = `はやさ ×${G.speed}`; $('battle').style.setProperty('--bs', G.speed); });
+$('bSpd').addEventListener('click', () => { G.speed = G.speed === 1 ? 2 : G.speed === 2 ? 3 : 1; $('bSpd').textContent = `はやさ ×${G.speed}`; $('battle').style.setProperty('--bs', G.speed); $('bfx').style.setProperty('--bs', G.speed); });
 // バトル画面の どこを タップしても 演出を とばせる（コマンド・ボタン類は のぞく）／ 右クリックで もどる
 $('battle').addEventListener('pointerdown', e => { if (!e.target.closest('.menu,.bctl,.bnav')) bSkip = true; });
 $('battle').addEventListener('contextmenu', e => { e.preventDefault(); const M = MENUS[MENUS.length - 1]; if (M && M.cancel && M.el.classList.contains('m-battle')) { Music.sfx('cancel'); closeMenu(M, -1); } });
@@ -1222,28 +1235,31 @@ async function bmsg(t, hold = 520) {
 function faceOf(m) { return m.kind === 'human' ? Art.portrait(m.id, m.hp <= 0 ? 'closed' : m.hp < m.st.hp * .3 ? 'worried' : 'determined') : Art.species(m.id, { shiny: m.shiny }); }
 const typeTag = t => t ? `<span class="tt" style="background:${DATA.typeCol[t]}">${DATA.types[t]}</span>` : '';
 // 再描画は その場で 更新（要素を 作りなおさない → HPバーが なめらかに へり、演出クラスや ダメージ数字が 消えない）
-const B_TRANS = ['hurt', 'shake', 'hitw', 'lunge', 'enter', 'love', 'pop'];
+const B_TRANS = ['hurt', 'shake', 'hitw', 'lunge', 'enter', 'love', 'pop', 'actor', 'tgt', 'mpglow', 'lunge2', 'casting', 'strike', 'dodge', 'healg'];
 function keepCls(el, base) { const keep = B_TRANS.filter(c => el.classList.contains(c)); const cn = [base, ...keep].join(' '); if (el.className !== cn) el.className = cn; }
 function setBar(bar, pct) { pct = Math.max(0, Math.min(100, pct)).toFixed(1) + '%'; const i = bar.querySelector('i'), g = bar.querySelector('b'); if (i.style.width !== pct) i.style.width = pct; if (g && g.style.width !== pct) g.style.width = pct; }
 const barH = cls => `<div class="bar ${cls}"><b></b><i></i></div>`;
 function drawParty(P, ai = -1) {
   const host = $('bParty');
   if (host.children.length !== P.length || [...host.children].some((e, i) => e.id !== 'pc' + i))
-    host.innerHTML = P.map((m, i) => `<div class="pc" id="pc${i}"><div class="pc-face"></div><div class="pc-info"><div class="pc-name"></div>${barH('hp')}${barH('mp')}<div class="pc-num"></div></div></div>`).join('');
+    host.innerHTML = P.map((m, i) => `<div class="pc" id="pc${i}"><div class="pc-face"></div><div class="pc-st"></div>${wpnOf(m) ? `<div class="pc-wpn w-${wpnOf(m)}" title="${WPN_NAME[wpnOf(m)]}">${wsvg(wpnOf(m))}</div>` : `<div class="pc-wpn mon t-${m.type || 'normal'}"></div>`}<div class="pc-info"><div class="pc-name"></div>${barH('hp')}${barH('mp')}<div class="pc-num"></div></div></div>`).join('');
   P.forEach((m, i) => { const el = host.children[i]; keepCls(el, `pc${i === ai ? ' act' : ''}${m.hp <= 0 ? ' down' : ''}${m.hp > 0 && m.hp < m.st.hp * .25 ? ' low' : ''}`);
     const face = el.querySelector('.pc-face'), fk = m.id + ':' + (m.kind === 'human' ? (m.hp <= 0 ? 'c' : m.hp < m.st.hp * .3 ? 'w' : 'd') : m.shiny ? 's' : '');
     if (face.dataset.k !== fk) { face.dataset.k = fk; face.innerHTML = faceOf(m); }
-    const nmH = `${esc(nameOf(m))}<small>Lv${m.lv}</small>${m.sleep > 0 ? ' 💤' : ''}${m.ail ? ' ' + DATA.ailIcon[m.ail] : ''}${m.defUp > 0 ? ' 🛡' : ''}${m.atkUp > 0 ? ' ⚔' : ''}${m.spdUp > 0 ? ' 💨' : ''}`;
+    const nmH = `${esc(nameOf(m))}<small>Lv${m.lv}</small>`; const stH = stBadges(m); const stEl = el.querySelector('.pc-st'); if (stEl.dataset.k !== stH) { stEl.dataset.k = stH; stEl.innerHTML = stH; }
     const nmEl = el.querySelector('.pc-name'); if (nmEl.innerHTML !== nmH) nmEl.innerHTML = nmH;
     const [hb, mb] = el.querySelectorAll('.bar'); setBar(hb, m.hp / m.st.hp * 100); setBar(mb, m.st.mp ? m.mp / m.st.mp * 100 : 0);
     el.querySelector('.pc-num').innerHTML = `HP <b>${m.hp}</b>/${m.st.hp}　MP <b>${m.mp}</b>/${m.st.mp}`; }); }
 function drawFoes(F) {
   const host = $('bFoes');
   if (host.children.length !== F.length || [...host.children].some((e, i) => e.id !== 'foe' + i))
-    host.innerHTML = F.map((f, i) => `<div class="foe" id="foe${i}"><div class="foe-art">${f.art}</div><div class="foe-shadow"></div><div class="foe-name"></div>${barH('hp' + (f.boss ? ' boss' : ''))}<div class="foe-weak">${weakTxt(f.type)}</div></div>`).join('');
-  F.forEach((f, i) => { const el = host.children[i]; keepCls(el, `foe${f.hp <= 0 ? ' gone' : ''}${f.boss ? ' boss' : ''}`);
-    const nH = `${typeTag(f.type)}${f.name}${f.lv ? ` <small>Lv${f.lv}</small>` : ''}${f.sleep > 0 ? ' 💤' : ''}${f.ail ? ' ' + DATA.ailIcon[f.ail] : ''}${f.charging ? ' <b class="chg">⚠ため</b>' : ''}`;
+    host.innerHTML = F.map((f, i) => `<div class="foe" id="foe${i}"><div class="foe-st"></div><div class="foe-art">${f.art}</div><div class="foe-shadow"></div><div class="foe-name"></div>${barH('hp' + (f.boss ? ' boss' : ''))}<div class="foe-weak">${weakTxt(f.type)}</div></div>`).join('');
+  F.forEach((f, i) => { const el = host.children[i]; keepCls(el, `foe${f.hp <= 0 ? ' gone' : ''}${f.boss ? ' boss' : ''}${f.charging ? ' charging' : ''}`); { const stH = stBadges(f), stEl = el.querySelector('.foe-st'); if (stEl.dataset.k !== stH) { stEl.dataset.k = stH; stEl.innerHTML = stH; } }
+    const nH = `${typeTag(f.type)}${f.name}${f.lv ? ` <small>Lv${f.lv}</small>` : ''}${f.charging ? ' <b class="chg">⚠ため</b>' : ''}`;
     const ne = el.querySelector('.foe-name'); if (ne.innerHTML !== nH) ne.innerHTML = nH; setBar(el.querySelector('.bar'), f.hp / f.max * 100); }); }
+// 状態バッジ（アニメつき）：どく・やけど・まひ・ねむり・強化・鈍足
+function stBadges(m) { let h = ''; if (m.ail) h += `<i class="sb s-${m.ail}" title="${DATA.ailName[m.ail] || ''}">${DATA.ailIcon[m.ail] || '!'}</i>`; if (m.sleep > 0) h += '<i class="sb s-sleep" title="ねむり">Z<b>z</b></i>';
+  if (m.atkUp > 0) h += '<i class="sb s-atk" title="こうげき↑">⚔</i>'; if (m.defUp > 0) h += '<i class="sb s-def" title="ぼうぎょ↑">🛡</i>'; if (m.spdUp > 0) h += '<i class="sb s-spd" title="すばやさ↑">»</i>'; if (m.slow > 0) h += '<i class="sb s-slow" title="鈍足">«</i>'; return h; }
 function weakTxt(t) { if (!t || t === 'normal') return ''; const w = Object.keys(DATA.strong).filter(a => DATA.typeMul(a, t) > 1); return w.length ? `<div class="weak">弱点 ${w.map(a => typeTag(a)).join('')}</div>` : ''; }
 const effMark = (type, f) => { const m = DATA.typeMul(type, f.type); return m > 1 ? ' <b class="eff good">◎ばつぐん</b>' : m < 1 ? ' <b class="eff bad">△いまひとつ</b>' : ''; };
 const costOf = (m, s) => Math.ceil(DATA.skills[s].mp * (1 - ((m.pas && m.pas.mpSave) || 0)));
@@ -1261,23 +1277,186 @@ function kick(k) { if (calmOn() || k <= 0) return; const b = $('battle'); b.styl
 const FXC = { fire: ['#ffb347', '#ff6a2a', '#ffe070'], water: ['#9fe6ff', '#4fb0e0', '#ffffff'], rock: ['#b89a6a', '#8a7a60', '#d8c09a'], light: ['#fff6c9', '#ffe38a', '#ffffff'], dark: ['#b58cff', '#6b3fb0', '#ff6fb0'],
   heal: ['#c9ffd9', '#6fd08a', '#ffffff'], song: ['#ffd6f0', '#b98cff', '#ffffff'], wind: ['#c8fff0', '#9fe0d0', '#ffffff'], leaf: ['#9fe07a', '#5aa83a', '#e8ffb0'], slash: ['#ffffff', '#e0e8ff', '#fff6c9'] };
 const TYPE_FX = { fire: 'fire', water: 'water', earth: 'rock', light: 'light', dark: 'dark', wind: 'wind', grass: 'leaf' };
-function fxAt(el, kind, opt = {}) { if (!el) return; const r = el.getBoundingClientRect(); if (!r.width) return; const L = $('bfx'); const box = document.createElement('div'); box.className = 'fxl';
-  box.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`; L.appendChild(box); const C = FXC[kind] || FXC.slash; const add = h => box.insertAdjacentHTML('beforeend', h);
-  const parts = (n, spread, up, sz, dur) => { for (let i = 0; i < n; i++) { const a = R() * 6.283, d = spread * (.4 + R() * .6); add(`<span class="fx-p" style="--x:${Math.cos(a) * d}px;--y:${Math.sin(a) * d - up * (.5 + R())}px;--c:${C[i % C.length]};--s:${sz * (.6 + R() * .8)}px;--d:${dur * (.7 + R() * .6)}s"></span>`); } };
-  if (kind === 'slash') { add('<span class="fx-slash" style="--r:-28deg"></span><span class="fx-slash b" style="--r:24deg"></span>'); parts(8, 60, 0, 6, .5); }
-  else if (kind === 'fire') { add(`<span class="fx-ring" style="--c:${C[0]}"></span>`); parts(18, 50, 70, 12, .8); }
-  else if (kind === 'water') { add(`<span class="fx-ring" style="--c:${C[0]}"></span><span class="fx-ring" style="--c:${C[2]};animation-delay:.12s"></span>`); parts(14, 80, -10, 9, .7); }
-  else if (kind === 'rock') { for (let i = 0; i < 10; i++) { const a = -2.6 + R() * 2.2, d = 50 + R() * 50; add(`<span class="fx-p" style="border-radius:2px;--x:${Math.cos(a) * d}px;--y:${Math.sin(a) * d + 60}px;--c:${C[i % 3]};--s:${8 + R() * 10}px;--d:.7s"></span>`); } add(`<span class="fx-ring" style="--c:${C[0]}"></span>`); }
-  else if (kind === 'light') { add('<span class="fx-pillar"></span>'); parts(12, 60, 40, 7, .8); }
-  else if (kind === 'dark') { add(`<span class="fx-ring" style="--c:${C[0]}"></span>`); parts(14, 70, 10, 10, .7); }
-  else if (kind === 'wind') { add(`<span class="fx-spiral" style="--c:${C[1]}"></span><span class="fx-spiral" style="--c:${C[0]};animation-delay:.1s"></span>`); parts(10, 90, 20, 6, .7); }
-  else if (kind === 'leaf') { add('<span class="fx-slash" style="--r:-20deg;background:linear-gradient(90deg,transparent,#9fe07a,transparent)"></span>'); parts(14, 70, 20, 9, .8); }
-  else if (kind === 'heal') parts(12, 30, 80, 8, 1);
-  else if (kind === 'song') { for (let i = 0; i < 7; i++) add(`<span class="fx-p" style="background:none;box-shadow:none;color:${C[i % 3]};font-size:20px;--x:${(R() - .5) * 90}px;--y:${-40 - R() * 60}px;--d:1s">${i % 2 ? '♪' : '♫'}</span>`); }
+function fxAt(el, kind, opt = {}) { if (!el) return; const r = el.getBoundingClientRect(); if (!r.width) return; const L = $('bfx'); while (L.childElementCount > 70) L.firstChild.remove();
+  const box = document.createElement('div'); box.className = 'fxl';
+  box.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`; L.appendChild(box); const C = FXC[kind] || FXC[opt.el ? EL2FX[opt.el] : ''] || FXC.slash; const add = h => box.insertAdjacentHTML('beforeend', h);
+  const q = fxQ(), N = n => Math.max(2, Math.round(n * q));
+  const parts = (n, spread, up, sz, dur, cls = '', cc = C) => { for (let i = 0, m = N(n); i < m; i++) { const a = R() * 6.283, d = spread * (.4 + R() * .6); add(`<span class="fx-p${cls}" style="--x:${(Math.cos(a) * d).toFixed(0)}px;--y:${(Math.sin(a) * d - up * (.5 + R())).toFixed(0)}px;--c:${cc[i % cc.length]};--s:${(sz * (.6 + R() * .8)).toFixed(1)}px;--d:${(dur * (.7 + R() * .6)).toFixed(2)}s;--r:${Math.round(R() * 720 - 360)}deg"></span>`); } };
+  const core = (c, s = 1) => add(`<span class="fx-core" style="--c:${c};--k:${s}"></span>`);
+  const ring = (c, dl = 0, w = 4) => add(`<span class="fx-ring" style="--c:${c};border-width:${w}px;animation-delay:${dl}s"></span>`);
+  const glyphs = (n, chs, cc, spread, up, fs, dur) => { for (let i = 0, m = N(n); i < m; i++) add(`<span class="fx-g" style="color:${cc[i % cc.length]};font-size:${fs * (.7 + R() * .6)}px;--x:${((R() - .5) * spread).toFixed(0)}px;--y:${(-up * (.4 + R() * .8)).toFixed(0)}px;--d:${dur}s;--r:${Math.round(R() * 60 - 30)}deg">${chs[i % chs.length]}</span>`); };
+  switch (kind) {
+    // ---- 属性（技・魔法の 着弾） ----
+    case 'slash': add('<span class="fx-slash" style="--r:-28deg"></span><span class="fx-slash b" style="--r:24deg"></span>'); parts(8, 60, 0, 6, .5); break;
+    case 'fire': core('#ffb347', 1.2); ring(C[0]); ring(C[1], .1, 6); parts(16, 50, 80, 12, .8, ' flame'); parts(8, 90, 10, 4, .5); add('<span class="fx-smoke"></span>'); break;
+    case 'water': core('#bff0ff'); ring(C[0]); ring(C[2], .12); ring(C[1], .22, 3); parts(14, 90, -20, 8, .8, ' drop'); add('<span class="fx-splash"></span>'); break;
+    case 'rock': core('#e8d0a0', .9); for (let i = 0, m = N(12); i < m; i++) { const a = -2.8 + R() * 2.6, d = 50 + R() * 60; add(`<span class="fx-p rock" style="--x:${(Math.cos(a) * d).toFixed(0)}px;--y:${(Math.sin(a) * d + 70).toFixed(0)}px;--c:${C[i % 3]};--s:${(8 + R() * 12).toFixed(0)}px;--d:.8s;--r:${Math.round(R() * 400)}deg"></span>`); } ring(C[0], 0, 7); add('<span class="fx-dust"></span><span class="fx-crack"></span>'); break;
+    case 'light': add('<span class="fx-pillar"></span>'); core('#fffbe8', 1.3); ring('#ffe38a', .05); glyphs(8, ['✦', '✧'], C, 140, 60, 18, .9); parts(10, 60, 40, 6, .8); break;
+    case 'dark': core('#6b3fb0', 1.1); add('<span class="fx-vortex"></span>'); ring(C[0]); ring(C[2], .15, 3); parts(16, 80, 10, 10, .8, ' wisp'); break;
+    case 'wind': add(`<span class="fx-spiral" style="--c:${C[1]}"></span><span class="fx-spiral" style="--c:${C[0]};animation-delay:.1s"></span><span class="fx-streaks"></span>`); parts(10, 100, 20, 6, .7); break;
+    case 'leaf': add('<span class="fx-slash" style="--r:-20deg;background:linear-gradient(90deg,transparent,#9fe07a,transparent)"></span>'); parts(14, 80, 20, 10, .9, ' leaf'); ring(C[0], .05, 3); break;
+    case 'heal': add('<span class="fx-hcol"></span>'); glyphs(7, ['✚', '✦', '✚'], C, 80, 90, 16, 1.1); parts(10, 30, 90, 7, 1.1); break;
+    case 'song': ring(C[1], 0, 3); ring(C[0], .12, 3); ring(C[2], .24, 3); glyphs(7, ['♪', '♫'], C, 110, 70, 22, 1); break;
+    // ---- 武器の 着弾 ----
+    case 'w_sword': add('<span class="fx-arc" style="--r:-30deg"></span><span class="fx-arc b" style="--r:150deg"></span><span class="fx-clang"></span>'); parts(12, 70, 0, 5, .45, ' spark', ['#ffffff', '#fff6c9', '#ffd36a']); break;
+    case 'w_spear': add(`<span class="fx-pierce" style="--r:${(opt.ang || -40).toFixed(0)}deg"></span><span class="fx-pierce b" style="--r:${(opt.ang || -40).toFixed(0)}deg"></span>`); ring('#ffffff', .05, 3); parts(10, 50, 0, 4, .4, ' spark', ['#ffffff', '#dfe8ff']); break;
+    case 'w_harp': ring('#ff8ac0', 0, 3); ring('#ffd6f0', .1, 3); ring('#b98cff', .2, 3); glyphs(8, ['♪', '♫', '♬'], ['#ffd6f0', '#ff8ac0', '#fff'], 150, 80, 22, 1); break;
+    case 'w_staff': core('#fff6c9', 1.1); glyphs(8, ['✦', '✧', '★'], ['#ffe38a', '#fff', '#b8d8ff'], 150, 70, 20, .9); ring('#ffe38a', .05, 3); break;
+    case 'w_fan': add(`<span class="fx-spiral" style="--c:#6fd8c0"></span><span class="fx-spiral" style="--c:#ffffff;animation-delay:.08s"></span><span class="fx-streaks"></span>`); parts(12, 100, 30, 9, .9, ' leaf', ['#bff0e2', '#ffb8d0', '#ffffff']); break;
+    case 'w_anchor': core('#dfe8ff', 1.4); ring('#9fb0d0', 0, 8); ring('#ffffff', .1, 4); add('<span class="fx-dust"></span><span class="fx-crack"></span>'); for (let i = 0, m = N(10); i < m; i++) { const a = -2.9 + R() * 2.8, d = 60 + R() * 60; add(`<span class="fx-p rock" style="--x:${(Math.cos(a) * d).toFixed(0)}px;--y:${(Math.sin(a) * d + 60).toFixed(0)}px;--c:${['#8a7a60', '#b89a6a', '#5a6078'][i % 3]};--s:${(6 + R() * 10).toFixed(0)}px;--d:.8s;--r:${Math.round(R() * 400)}deg"></span>`); } break;
+    case 'w_bow': add(`<span class="fx-pierce" style="--r:${(opt.ang || -20).toFixed(0)}deg"></span>`); add('<span class="fx-arrow"></span>'); ring('#fff6dc', 0, 3); parts(8, 50, 0, 4, .4, ' spark', ['#ffffff', '#fff6c9']); break;
+    case 'w_dagger': for (let i = 0; i < 3; i++) add(`<span class="fx-slash" style="--r:${-40 + i * 38}deg;animation-delay:${i * .06}s;height:5px;left:25%;width:50%"></span>`); parts(10, 50, 0, 4, .35, ' spark', ['#ffffff', '#e8d8ff', '#b98cff']); break;
+    case 'w_axe': add('<span class="fx-arc heavy" style="--r:-60deg"></span><span class="fx-crack"></span><span class="fx-dust"></span>'); core('#fff0d8', 1.2); ring('#ffd6a0', 0, 7); parts(12, 80, -20, 8, .7, ' rock', ['#b89a6a', '#8a7a60', '#ffffff']); break;
+    case 'w_fist': add('<span class="fx-burst"></span>'); ring('#ffffff', 0, 5); parts(8, 60, 0, 5, .4, ' spark'); break;
+    // ---- いきものの こうげき ----
+    case 'm_bite': add('<span class="fx-jaw u"></span><span class="fx-jaw l"></span>'); parts(8, 60, 0, 5, .45, ' spark', ['#ffffff', '#ffe0e0']); break;
+    case 'm_peck': for (let i = 0; i < 3; i++) add(`<span class="fx-burst sm" style="left:${30 + R() * 40}%;top:${30 + R() * 40}%;animation-delay:${i * .09}s"></span>`); break;
+    case 'm_bump': core('#ffffff', .9); ring('#ffffff', 0, 6); add('<span class="fx-dust"></span>'); add('<span class="fx-burst"></span>'); break;
+    case 'm_slam': core('#e0d8ff', 1.3); ring('#b8a0ff', 0, 8); ring('#ffffff', .1, 4); add('<span class="fx-dust"></span><span class="fx-crack"></span>'); parts(10, 80, -30, 9, .8, ' rock', ['#8a7a60', '#6a5a80', '#b89a6a']); break;
+    case 'm_splash': ring('#9fe6ff', 0, 4); ring('#ffffff', .1, 3); parts(16, 90, 40, 8, .8, ' drop', FXC.water); add('<span class="fx-splash"></span>'); break;
+    case 'm_crackle': add('<span class="fx-bolt"></span><span class="fx-bolt b"></span>'); parts(12, 80, 0, 4, .4, ' spark', ['#fff6a0', '#ffffff', '#9fe0ff']); break;
+    case 'm_whip': add('<span class="fx-lash"></span>'); parts(8, 60, 0, 5, .45, ' spark', ['#e8ffb0', '#ffffff']); break;
+  }
+  // 武器・いきもの 攻撃に 属性が のっていれば その色の 粒を かさねる
+  if (opt.el && opt.el !== 'normal' && EL[opt.el] && /^[wm]_/.test(kind)) { parts(10, 70, 30, 8, .7, opt.el === 'fire' ? ' flame' : opt.el === 'water' ? ' drop' : '', EL[opt.el].c); ring(EL[opt.el].c[0], .06, 3); }
   if (opt.stamp) add(`<span class="stamp${opt.stamp === 'bad' ? ' bad' : ''}">${opt.stamp === 'bad' ? '△ いまひとつ' : '◎ ばつぐん！'}</span>`);
-  if (opt.crit) { add(`<span class="fx-ring" style="--c:#ffe36a;border-width:6px"></span>`); parts(16, 110, 0, 8, .6); }
-  setTimeout(() => box.remove(), 1200); }
+  if (opt.crit) { add(`<span class="fx-ring" style="--c:#ffe36a;border-width:6px"></span><span class="fx-burst crit"></span>`); parts(16, 120, 0, 8, .6); }
+  setTimeout(() => box.remove(), 1300); }
 function screenFx(kind) { const f = $('bFlash'); f.className = 'bflash ' + kind; void f.offsetWidth; f.classList.add('go'); }
+// ===== battle v8：だれが 動いているか／武器の 個性／属性エフェクト（#bfx の 軽い DOM レイヤー・--bs で 倍速・calm で ひかえめ） =====
+const WPN_DEF = { sora: 'sword', mio: 'harp', riku: 'spear', sana: 'staff', haru: 'fan', kaito: 'anchor' };
+const WPN_ALIAS = { sword: 'sword', blade: 'sword', katana: 'sword', '剣': 'sword', '刀': 'sword', dagger: 'dagger', knife: 'dagger', '短剣': 'dagger', 'ナイフ': 'dagger', spear: 'spear', lance: 'spear', trident: 'spear', '槍': 'spear', bow: 'bow', '弓': 'bow', crossbow: 'bow', sling: 'bow',
+  axe: 'axe', hammer: 'axe', '斧': 'axe', 'おの': 'axe', '槌': 'axe', 'ハンマー': 'axe', harp: 'harp', lyre: 'harp', instrument: 'harp', bell: 'harp', flute: 'harp', '竪琴': 'harp',
+  staff: 'staff', rod: 'staff', wand: 'staff', cane: 'staff', '杖': 'staff', fan: 'fan', '扇': 'fan', anchor: 'anchor', club: 'anchor', mace: 'anchor', 'いかり': 'anchor', '錨': 'anchor', '鈍器': 'anchor', blunt: 'anchor', fist: 'fist', claw: 'fist', knuckle: 'fist', glove: 'fist' };
+const WPN_NAME = { sword: '剣', harp: '竪琴', spear: '槍', staff: '杖', fan: '扇', anchor: 'いかり', fist: 'こぶし', bow: '弓', dagger: '短剣', axe: '斧' };
+// 武器の 種類：装備（DATA.gear の cat/category/wtype）→ 職業（wpn/weapon）→ キャラの 既定
+function wpnOf(m) { if (!m || m.foe || m.kind !== 'human') return null;
+  try { const e = (G.eq && G.eq[m.id]) || {}; const g = ((DATA.gear || {})[m.id] || [])[e.w | 0] || {}; const c = g.cat || g.category || g.wtype || g.weapon; if (c && WPN_ALIAS[c]) return WPN_ALIAS[c];
+    const jr = G.job && G.job[m.id]; const j = jr && (DATA.jobs || []).find(x => x.id === jr.cur); const jc = j && (j.wpn || j.weapon || j.cat); if (jc && WPN_ALIAS[jc]) return WPN_ALIAS[jc]; } catch (_) {}
+  return WPN_DEF[m.id] || 'sword'; }
+// いきものの こうげき：体の つくり（arch）ごと
+const MON_ATK = { quad: 'bite', fish: 'splash', bird: 'peck', blob: 'bump', fluff: 'bump', golem: 'slam', plant: 'whip', sprite: 'crackle' };
+function archOf(x) { try { if (x.sp || (!x.foe && x.kind === 'mon')) return SPC[x.sp || x.id].arch; if (x.boss) { const d = x.d || {}; if (d.spArt && SPC[d.spArt]) return SPC[d.spArt].arch; return 'boss'; } } catch (_) {} return 'quad'; }
+const monAtk = x => archOf(x) === 'boss' ? 'slam' : MON_ATK[archOf(x)] || 'bump';
+const WSVG = {
+  sword: '<path d="M41 4 L45 3 L44 7 L20 31 L16 28 Z" fill="#eef3ff" stroke="#8a9ab8" stroke-width="1.2"/><path d="M40 8 L21 27" stroke="#fff" stroke-width="1" opacity=".8"/><path d="M12 24 L24 36" stroke="#f3c15a" stroke-width="4.5" stroke-linecap="round"/><path d="M17 31 L8 40" stroke="#7a4a2a" stroke-width="4.5" stroke-linecap="round"/><circle cx="7" cy="41" r="3" fill="#f3c15a"/>',
+  spear: '<path d="M5 43 L34 14" stroke="#8a5a32" stroke-width="3.5" stroke-linecap="round"/><path d="M33 9 L45 3 L39 15 L35 17 L31 13 Z" fill="#dfe8f6" stroke="#7a8aa8" stroke-width="1.2"/><path d="M30 18 Q26 24 24 20 M30 18 Q34 26 29 24" stroke="#e8584a" stroke-width="2.4" fill="none"/>',
+  harp: '<path d="M13 43 Q6 14 28 6 Q41 4 39 15 Q31 19 35 43 Z" fill="none" stroke="#f3c15a" stroke-width="3.4" stroke-linejoin="round"/><path d="M17 40 L19 12 M22 40 L24 9 M27 40 L28 8 M31 41 L32 15" stroke="#fff6dc" stroke-width="1.1"/><circle cx="36" cy="10" r="2.6" fill="#ff8ac0"/>',
+  staff: '<path d="M9 45 L29 16" stroke="#8a5a32" stroke-width="3.6" stroke-linecap="round"/><circle cx="33" cy="11" r="9" fill="#fff6c9" opacity=".35"/><path d="M33 2 L35.5 8.5 L42 11 L35.5 13.5 L33 20 L30.5 13.5 L24 11 L30.5 8.5 Z" fill="#ffe38a" stroke="#fff" stroke-width="1"/>',
+  fan: '<path d="M10 42 L3 13 A31 31 0 0 1 39 15 Z" fill="#bff0e2" stroke="#4a9a8a" stroke-width="1.6"/><path d="M10 42 L9 11 M10 42 L16 8 M10 42 L24 8 M10 42 L31 10 M10 42 L37 13" stroke="#4a9a8a" stroke-width="1"/><path d="M5 17 A28 28 0 0 1 36 17" stroke="#e8584a" stroke-width="2.4" fill="none"/><circle cx="10" cy="42" r="2.4" fill="#f3c15a"/>',
+  anchor: '<circle cx="24" cy="7" r="4" fill="none" stroke="#4a5a7a" stroke-width="3"/><path d="M24 11 L24 42 M14 16 L34 16" stroke="#4a5a7a" stroke-width="4" stroke-linecap="round"/><path d="M7 29 Q10 43 24 43 Q38 43 41 29" fill="none" stroke="#4a5a7a" stroke-width="4" stroke-linecap="round"/><path d="M4 31 L7 25 L11 32 Z M44 31 L41 25 L37 32 Z" fill="#4a5a7a"/><path d="M24 14 L24 40" stroke="#9fb0d0" stroke-width="1.2"/>',
+  bow: '<path d="M12 4 Q40 24 12 44" fill="none" stroke="#8a5a32" stroke-width="3.6" stroke-linecap="round"/><path d="M12 4 L12 44" stroke="#fff6dc" stroke-width="1"/><path d="M8 24 L44 24" stroke="#c8a070" stroke-width="2"/><path d="M44 24 L37 20 L39 24 L37 28 Z" fill="#dfe8f6" stroke="#7a8aa8" stroke-width="1"/><path d="M10 24 L6 20 M10 24 L6 28" stroke="#e8584a" stroke-width="2"/>',
+  dagger: '<path d="M38 6 L42 5 L41 9 L24 26 L20 23 Z" fill="#eef3ff" stroke="#8a9ab8" stroke-width="1.2"/><path d="M16 21 L25 30" stroke="#f3c15a" stroke-width="4" stroke-linecap="round"/><path d="M20 27 L12 35" stroke="#5a3a6a" stroke-width="4.5" stroke-linecap="round"/><circle cx="11" cy="36" r="2.6" fill="#b98cff"/>',
+  axe: '<path d="M10 44 L32 10" stroke="#8a5a32" stroke-width="4" stroke-linecap="round"/><path d="M26 6 Q44 4 46 20 Q40 16 33 18 Z" fill="#dfe8f6" stroke="#6a7a98" stroke-width="1.4"/><path d="M27 7 Q20 14 24 22 L31 17 Z" fill="#c8d4e8" stroke="#6a7a98" stroke-width="1.2"/>',
+  fist: '<rect x="11" y="14" width="26" height="22" rx="8" fill="#f0b890" stroke="#8a5a3a" stroke-width="1.6"/><path d="M17 14 L17 24 M23 14 L23 24 M29 14 L29 24" stroke="#8a5a3a" stroke-width="1.2"/><rect x="13" y="34" width="22" height="8" rx="2" fill="#e8584a"/>',
+};
+const wsvg = w => `<svg viewBox="0 0 48 48" aria-hidden="true">${WSVG[w] || WSVG.sword}</svg>`;
+// 属性：色・画面の いろみ
+const EL = { fire: { c: ['#ffb347', '#ff5a1f', '#ffe070'], tint: 'rgba(255,96,24,.30)' }, water: { c: ['#9fe6ff', '#3f9fe0', '#ffffff'], tint: 'rgba(40,130,230,.30)' },
+  wind: { c: ['#c8fff0', '#6fd8c0', '#ffffff'], tint: 'rgba(80,220,190,.24)' }, earth: { c: ['#c9a064', '#8a6a40', '#e8d0a0'], tint: 'rgba(140,96,40,.32)' },
+  light: { c: ['#fff6c9', '#ffe38a', '#ffffff'], tint: 'rgba(255,236,150,.32)' }, dark: { c: ['#b58cff', '#6b3fb0', '#ff6fb0'], tint: 'rgba(40,10,70,.45)' },
+  grass: { c: ['#9fe07a', '#4fa83a', '#e8ffb0'], tint: 'rgba(80,190,70,.24)' }, heal: { c: ['#c9ffd9', '#5fe08a', '#ffffff'], tint: 'rgba(90,230,140,.22)' },
+  buff: { c: ['#ffe38a', '#ffb347', '#ffffff'], tint: 'rgba(255,200,80,.22)' }, debuff: { c: ['#8a9aff', '#5a4ab8', '#d0d8ff'], tint: 'rgba(60,50,150,.30)' },
+  song: { c: ['#ffd6f0', '#ff8ac0', '#b98cff'], tint: 'rgba(255,130,200,.22)' }, normal: { c: ['#ffffff', '#e0e8ff', '#fff6c9'], tint: 'rgba(255,255,255,.12)' } };
+const FX2EL = { fire: 'fire', water: 'water', rock: 'earth', light: 'light', dark: 'dark', heal: 'heal', song: 'song', wind: 'wind', leaf: 'grass', slash: 'normal' };
+const EL2FX = { fire: 'fire', water: 'water', earth: 'rock', light: 'light', dark: 'dark', wind: 'wind', grass: 'leaf', heal: 'heal', song: 'song', normal: 'slash', buff: 'light', debuff: 'dark' };
+function elemOf(s, a) { let e = 'normal';
+  if (s.heal || s.cure) e = 'heal'; else if (s.buff) e = 'buff'; else if (!s.power && (s.sleep || s.slow)) e = s.fx === 'song' ? 'song' : 'debuff'; else if (s.drain && !s.power) e = 'dark';
+  else if (s.type && s.type !== 'normal' && EL[s.type]) e = s.type; else if (s.fx && FX2EL[s.fx]) e = FX2EL[s.fx];
+  if (e === 'normal' && a && a.foe) e = (a.type && EL[a.type] && a.type !== 'normal') ? a.type : a.boss ? 'dark' : 'normal'; return e; }
+// ---- 位置 ----
+const bElOf = x => x && (x.foe ? $('foe' + B.F.indexOf(x)) : $('pc' + B.P.indexOf(x)));
+// 仲間の ステージ上の すがた（#bAllies の コマ）。 なければ 上の カード
+const bSprOf = x => x && !x.foe && B.P ? $('al' + B.P.indexOf(x)) : null;
+const bArtOf = x => { if (x && !x.foe) { const s = bSprOf(x); if (s && s.offsetWidth) return s.querySelector('.al-art') || s; } const e = bElOf(x); return e && (e.querySelector('.foe-art') || e.querySelector('.pc-face') || e); };
+const ctrOf = el => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, r }; };
+// ---- fx ノード（上限つき・寿命で 自動で 消える） ----
+function fxNode(cls, x, y, html = '', life = 900, vars = '') { const L = $('bfx'); while (L.childElementCount > 70) L.firstChild.remove();
+  const n = document.createElement('div'); n.className = 'bx ' + cls; n.style.cssText = `left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;${vars}`; if (html) n.innerHTML = html; L.appendChild(n);
+  setTimeout(() => n.remove(), life / bspd()); return n; }
+const fxQ = () => calmOn() ? .5 : 1;
+// 腕の みせどころは 待ちも スキップ可能（タップで その行動の 演出を まとめて とばす）
+async function fxw(ms) { if (B.fxSkip) return; if (await bwait(ms)) B.fxSkip = true; }
+// ---- カメラ：ステージ・敵・味方を 同じ 点を 中心に すこし ズーム＆パン ----
+function camTo(el, s = 1.06) { if (!el || calmOn() || !B.active) return camReset(); const c = ctrOf(el), W = innerWidth, H = innerHeight;
+  const px = Math.max(-40, Math.min(40, (W / 2 - c.x) * .1)), py = Math.max(-18, Math.min(18, (H * .42 - c.y) * .1));
+  for (const id of ['bStage', 'bFoes', 'bAllies']) { const e = $(id); if (!e) continue; e.style.transformOrigin = `${(c.x - e.offsetLeft).toFixed(0)}px ${(c.y - e.offsetTop).toFixed(0)}px`; e.style.scale = s; e.style.translate = `${px.toFixed(1)}px ${py.toFixed(1)}px`; } }
+function camReset() { for (const id of ['bStage', 'bFoes', 'bAllies']) { const e = $(id); if (e) { e.style.scale = ''; e.style.translate = ''; } } }
+// ---- 行動者の リボン「ソラの こうげき！」 ----
+function ribbon(x, text, cls = '') { const el = bElOf(x); if (!el) return; const r = (x.foe ? (el.querySelector('.foe-art') || el) : (bSprOf(x) || el)).getBoundingClientRect(); if (!r.width) return;
+  const W = innerWidth, cx = Math.max(90, Math.min(W - 90, r.left + r.width / 2)); const y = Math.max(16, r.top + (x.foe ? 2 : -2));
+  fxNode('b-rib' + (x.foe ? ' foe' : ' ally') + (cls ? ' ' + cls : ''), cx, y, `<span>${esc(text)}</span>`, 1250); }
+function setCls(x, c, on) { const e = bElOf(x); if (e) e.classList.toggle(c, on); const s = bSprOf(x); if (s) s.classList.toggle(c, on); }
+// ねらいの 目印（照準）
+function markTgt(t, on = true) { const e = bElOf(t); if (!e) return; setCls(t, 'tgt', on); if (on) { clearTimeout(t._tg); t._tg = setTimeout(() => setCls(t, 'tgt', false), 1400 / bspd()); } if (!on) return; const a = bArtOf(t); if (!a) return; const c = ctrOf(a);
+  fxNode('reticle' + (t.foe ? '' : ' ally'), c.x, c.y, '<i></i><i></i>', 700); }
+// ---- 画面の いろみ（ステージだけ 染める：キャラは くっきり） ----
+function tint(el, ms = 700) { const t = $('bTint'); if (!t || !EL[el]) return; t.style.setProperty('--tc', EL[el].tint); t.className = 'on' + (calmOn() ? ' calm' : ''); clearTimeout(tint.t); tint.t = setTimeout(() => { t.className = ''; }, ms / bspd()); }
+// ---- 武器：ふりかぶり → 飛ぶ／走る → （hit() で 武器ごとの 着弾） ----
+function wpnWind(a, w, el = 'normal') { const fa = bArtOf(a); if (!fa) return; const A = ctrOf(fa); const ec = EL[el] || EL.normal;
+  const dir = a.foe ? (A.x > innerWidth / 2 ? -1 : 1) : (B.P.indexOf(a) % 2 ? -1 : 1);
+  Music.sfx('w_' + w); fxNode('wg w-' + w + (el !== 'normal' ? ' el' : ''), A.x + dir * 14, A.y - 26, wsvg(w), 700, `--ec:${ec.c[0]};--ec2:${ec.c[1]};--dir:${dir}`); }
+async function wpnFly(a, t, w, el = 'normal') { const fa = bArtOf(a), ta = bArtOf(t); if (!fa || !ta) return 0; const A = ctrOf(fa), T = ctrOf(ta);
+  const dx = T.x - A.x, dy = T.y - A.y, dist = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI; const ec = EL[el] || EL.normal;
+  const vars = `--dx:${dx.toFixed(0)}px;--dy:${dy.toFixed(0)}px;--len:${dist.toFixed(0)}px;--ang:${ang.toFixed(1)}deg;--ec:${ec.c[0]};--ec2:${ec.c[1]}`;
+  camTo(ta, 1.09); markTgt(t); Music.sfx('v_' + w);
+  if (w === 'sword' || w === 'fist') fxNode('tr tr-dash' + (el !== 'normal' ? ' el' : ''), A.x, A.y, '', 420, vars);
+  else if (w === 'spear') { fxNode('tr tr-line', A.x, A.y, '', 420, vars); fxNode('tr tr-tip', A.x, A.y, wsvg('spear'), 300, vars); }
+  else if (w === 'harp') { for (let i = 0; i < 3; i++) fxNode('tr tr-note', A.x, A.y, i % 2 ? '♫' : '♪', 520, vars + `;--i:${i}`); fxNode('tr tr-wave', A.x, A.y, '', 520, vars); }
+  else if (w === 'staff') { fxNode('tr tr-star', A.x, A.y, '✦', 420, vars); fxNode('tr tr-star s2', A.x, A.y, '✦', 480, vars); }
+  else if (w === 'fan') { fxNode('tr tr-gust', A.x, A.y, '', 460, vars); fxNode('tr tr-gust s2', A.x, A.y, '', 520, vars); }
+  else if (w === 'anchor') { fxNode('tr tr-chain', A.x, A.y, '', 560, vars); fxNode('tr tr-anchor', A.x, A.y, wsvg('anchor'), 440, vars); }
+  else if (w === 'bow') { fxNode('tr tr-line thin', A.x, A.y, '', 300, vars); fxNode('tr tr-arrow', A.x, A.y, '', 260, vars); }
+  else if (w === 'dagger') { fxNode('tr tr-dash quick', A.x, A.y, '', 300, vars); }
+  else if (w === 'axe') { fxNode('tr tr-axe', A.x, A.y, wsvg('axe'), 440, vars); }
+  if (el !== 'normal' && w !== 'sword') fxNode('tr tr-trail', A.x, A.y, '', 460, vars);
+  await fxw({ sword: 130, fist: 120, spear: 150, harp: 280, staff: 240, fan: 260, anchor: 300, bow: 200, dagger: 90, axe: 300 }[w] || 160); return ang; }
+// ---- 敵の とびかかり（ねらった 仲間の ほうへ） ----
+async function foeLunge(f, t) { const fe = bElOf(f), fa = bArtOf(f), ta = bArtOf(t); if (!fe || !fa) return; let lx = 0, ly = 26; if (t) markTgt(t);
+  if (ta) { const A = ctrOf(fa), T = ctrOf(ta); const dx = T.x - A.x, dy = T.y - A.y, d = Math.hypot(dx, dy) || 1, k = Math.min(.42, 130 / d); lx = dx * k; ly = dy * k; }
+  fe.style.setProperty('--lx', lx.toFixed(0) + 'px'); fe.style.setProperty('--ly', ly.toFixed(0) + 'px'); fe.classList.remove('lunge', 'lunge2'); void fe.offsetWidth; fe.classList.add('lunge2');
+  setTimeout(() => fe.classList.remove('lunge2'), 520 / bspd()); }
+// ---- 魔法：詠唱の 輪 → 属性ごとの 弾／落下／光柱 ----
+function castStart(a, el, big) { const fa = bArtOf(a); if (!fa) return; const A = ctrOf(fa); const ec = EL[el] || EL.normal; tint(el, big ? 2200 : 1500);
+  fxNode('cast-ring' + (a.foe ? ' foe' : '') + (big ? ' big' : ''), A.x, A.y, '<i></i><b></b>', 900, `--ec:${ec.c[0]};--ec2:${ec.c[1]}`); Music.sfx('e_' + (EL[el] ? el : 'normal')); }
+async function castFly(a, el, T) { const fa = bArtOf(a); if (!fa || !T.length || el === 'heal' || el === 'buff') return; const A = ctrOf(fa); const ec = EL[el] || EL.normal;
+  const first = bArtOf(T[0]); if (T.length === 1 && first) camTo(first, 1.08); else camTo(T[0].foe ? $('bFoes') : $('bParty'), 1.03);
+  T.forEach((t, i) => { const ta = bArtOf(t); if (!ta) return; const C = ctrOf(ta); const dx = C.x - A.x, dy = C.y - A.y, ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    const vars = `--dx:${dx.toFixed(0)}px;--dy:${dy.toFixed(0)}px;--ang:${ang.toFixed(1)}deg;--ec:${ec.c[0]};--ec2:${ec.c[1]};--ec3:${ec.c[2]};animation-delay:${(i * 60 / bspd()).toFixed(0)}ms`;
+    if (el === 'earth') fxNode('pj pj-rock', C.x, C.y - 150, '<i></i><i></i><i></i>', 520, vars.replace(/--dx:[^;]+;--dy:[^;]+/, '--dx:0px;--dy:150px'));
+    else if (el === 'light') fxNode('pj pj-beam', C.x, C.y, '', 620, vars);
+    else if (el === 'debuff' || el === 'song') fxNode('pj pj-wave', A.x, A.y, el === 'song' ? '♪' : '', 520, vars);
+    else fxNode('pj pj-' + (EL[el] ? el : 'normal'), A.x, A.y, '<i></i>', 520, vars); });
+  await fxw(el === 'light' ? 280 : 300); }
+// ---- 状態・強化の 演出 ----
+const AIL_EL = { poison: 'dark', burn: 'fire', para: 'light' };
+function ailFx(t, ail) { const a = bArtOf(t); if (!a) return; const C = ctrOf(a); const g = { poison: '☠', burn: '🔥', para: '⚡', sleep: 'Z', slow: '«' }[ail] || '!';
+  fxNode('ailfx a-' + ail, C.x, C.y, `<b>${g}</b><i></i><i></i><i></i><i></i>`, 1000); Music.sfx('ail_' + ail); }
+function buffFx(T, kind) { T.forEach((t, i) => { const a = bArtOf(t); if (!a) return; const C = ctrOf(a); const g = { atk: '⚔', def: '🛡', spd: '»' }[kind] || '↑';
+  fxNode('bufffx b-' + kind, C.x, C.y, `<b>${g}<small>↑</small></b><i></i><i></i><i></i><i></i><i></i>`, 1100, `animation-delay:${i * 70}ms`); }); Music.sfx('buff'); }
+function mpFx(a, cost) { const e = bElOf(a); if (!e || !cost) return; e.classList.remove('mpglow'); void e.offsetWidth; e.classList.add('mpglow'); setTimeout(() => e.classList.remove('mpglow'), 700 / bspd());
+  const mb = e.querySelectorAll('.bar')[1]; if (mb) { const C = ctrOf(mb); fxNode('mpnum', C.x, C.y - 6, `MP −${cost}`, 900); } Music.sfx('mp'); }
+// ---- 仲間の コマ：ステージの 左右に 立つ ミニフィギュア（カードは 上で ステータス表示） ----
+function acol(m) { try { if (m.kind === 'human') { const p = Art.P && Art.P[m.id]; if (p && p.bg) return p.bg; return { sora: '#f0a040', mio: '#2f9a8a', riku: '#c23a35', sana: '#4a5fb0', haru: '#6fc0e0', kaito: '#2f6f73' }[m.id] || '#f3c15a'; }
+  return DATA.typeCol[SPC[m.id].type] || '#8fe06a'; } catch (_) { return '#f3c15a'; } }
+function drawAllies(P, ai = -1) { let host = $('bAllies'); if (!host) { host = document.createElement('div'); host.id = 'bAllies'; host.setAttribute('aria-hidden', 'true'); $('bFoes').after(host); }
+  const base = (m, i) => `al ${i % 2 ? 'r' : 'l'} s${i >> 1} ${m.kind === 'human' ? 'hu' : 'mo'}`;
+  if (host.children.length !== P.length || [...host.children].some((e, i) => e.id !== 'al' + i || e.dataset.id !== P[i].id))
+    host.innerHTML = P.map((m, i) => { const w = wpnOf(m); return `<div class="${base(m, i)}" id="al${i}" data-id="${m.id}" style="--ac:${acol(m)}"><div class="al-body"><div class="al-shadow"></div><div class="al-art"></div>${w ? `<div class="al-wpn w-${w}">${wsvg(w)}</div>` : ''}<div class="al-n"></div></div></div>`; }).join('');
+  P.forEach((m, i) => { const el = host.children[i]; keepCls(el, `${base(m, i)}${i === ai ? ' act' : ''}${m.hp <= 0 ? ' down' : ''}${m.hp > 0 && m.hp < m.st.hp * .25 ? ' low' : ''}${m.guard ? ' guard' : ''}`);
+    const a = el.querySelector('.al-art'), fk = m.id + ':' + (m.kind === 'human' ? (m.hp <= 0 ? 'c' : m.hp < m.st.hp * .3 ? 'w' : 'd') : m.shiny ? 's' : ''); if (a.dataset.k !== fk) { a.dataset.k = fk; a.innerHTML = faceOf(m); }
+    const n = el.querySelector('.al-n'), nt = nameOf(m); if (n.textContent !== nt) n.textContent = nt; }); }
+// 行動者：一歩 前へ（カードも ステージの コマも）＋ 名前リボン＋ 軽い カメラ寄り
+function actorOn(a, label) { B.fxSkip = false; setCls(a, 'actor', true); if (label) ribbon(a, label); const s = a.foe ? bArtOf(a) : bSprOf(a); if (s) camTo(s, 1.04); }
+function actorOff(...A) { for (const a of A) if (a) { setCls(a, 'actor', false); setCls(a, 'strike', false); } camReset(); }
+function strike(a) { const s = a.foe ? bElOf(a) : bSprOf(a); if (!s) return; s.classList.remove('strike'); void s.offsetWidth; s.classList.add('strike'); }
+// 数字は ステージの コマに（なければ カード）
+function numAt(x, v, heal, cls = '') { const el = x.foe ? bElOf(x) : (bSprOf(x) || bElOf(x)); hitFx(el, v, heal, cls); }
+// ふつうの こうげき：武器（ふりかぶり → 軌跡 → 着弾）／ いきもの（体あたり等）
+async function strikeFx(a, t) { const w = wpnOf(a); if (!t) return {};
+  if (w) { strike(a); wpnWind(a, w); await fxw(150); const ang = await wpnFly(a, t, w); return { fx: 'w_' + w, wpn: w, ang }; }
+  const k = monAtk(a); if (a.foe) await foeLunge(a, t); else { strike(a); markTgt(t); const ta = bArtOf(t); if (ta) camTo(ta, 1.07); }
+  await fxw(a.foe ? 190 : 170); return { fx: 'm_' + k, msfx: k }; }
 // ---- バトル背景：地域・バイオームごとの 描き割りステージ（表示中は フィールドの 3D描画を 止める → 軽い） ----
 const STAGES = {
   meadow: { sky: ['#4f9be0', '#98cdf0', '#f6e8c4'], far: '#86aeb8', near: '#4d8a58', g: ['#79b85e', '#3d7a3a'], sil: 'hills', fg: 'grass', pt: 'leaf', sun: 1 },
@@ -1377,7 +1556,7 @@ function buildStage(opts) {
   const fg = S.fg ? `<div class="bst-fg l">${fgSVG(S.fg, seed + 3)}</div><div class="bst-fg r">${fgSVG(S.fg, seed + 9)}</div>` : '';
   st.innerHTML = `<div class="bst-sky"></div>${night || S.pt === 'star' ? '<div class="bst-stars"></div>' : ''}${night ? '<div class="bst-moon"></div>' : S.sun ? '<div class="bst-sun"></div>' : ''}${S.sea ? '<div class="bst-shafts"><i></i><i></i><i></i><i></i></div>' : ''}`
     + `<div class="bst-par far">${silSVG(S.sil, 'far', seed, { snow: S.snowcap })}</div><div class="bst-ground"></div><div class="bst-par near">${silSVG(S.sil, 'near', seed + 17)}</div>`
-    + `${boss ? '<div class="bst-aura"></div><div class="bst-bolt"></div>' : ''}<div class="bst-pt p-${S.pt}">${pts}</div>${fg}<div class="bst-vig"></div>`;
+    + `${boss ? '<div class="bst-aura"></div><div class="bst-bolt"></div>' : ''}<div class="bst-pt p-${S.pt}">${pts}</div>${fg}<div class="bst-vig"></div><div id="bTint"></div>`;
   B.stage = true; }
 if (DEBUG) window.__bstage = buildStage;
 // ---- 地域移動の シネマ（3〜4秒・タップで スキップ）と 章タイトルカード ----
@@ -1422,7 +1601,7 @@ async function runBattle(specs, opts = {}) {
   const enc = bAdd('b-enc' + (opts.boss ? ' boss' : ''), '<i></i>', document.body); enc.style.setProperty('--bs', sp0);
   setTimeout(() => Music.sfx('swoosh'), 180 / sp0); await wait((opts.boss ? 860 : 660) / sp0);
   const bsong = opts.song || (opts.boss ? 'boss' : 'battle'); if (!opts.keepMusic || Music.current !== bsong) Music.play(bsong, { restart: true, cut: true });
-  const P = battleParty(); const F = specs.map(mkFoe);
+  const P = battleParty(); const F = specs.map(mkFoe); B.P = P; B.F = F; B.fxSkip = false; $('bfx').style.setProperty('--bs', sp0); $('bfx').innerHTML = '';
   const cnt = {}; F.forEach(f => cnt[f.name] = (cnt[f.name] || 0) + 1); const seen = {}; F.forEach(f => { if (cnt[f.name] > 1) { seen[f.name] = (seen[f.name] || 0) + 1; f.name += 'ABCD'[seen[f.name] - 1]; } });
   F.forEach(f => { if (f.sp) G.dex.seen[f.sp] = 1; });
   P.forEach(m => { m.defUp = 0; m.atkUp = 0; m.spdUp = 0; m.sleep = 0; m.guard = false; m.slow = 0; m.ail = null; });
@@ -1430,7 +1609,7 @@ async function runBattle(specs, opts = {}) {
   $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF'; $('bSpd').textContent = `はやさ ×${G.speed || 1}`;
   if (!G.tips.battle1) tip('<b>バトルの コツ</b><span>敵の 下の「弱点」タイプの 技は 1.5倍。「おまかせ」で 自動、「はやさ」で 倍速に できる。</span>', 'battle1');
   $('bMsg').innerHTML = ''; buildStage(opts); $('battle').hidden = false; $('battle').classList.toggle('isboss', !!opts.boss);
-  const redraw = (ai = -1) => { drawParty(P, ai); drawFoes(F); };
+  const redraw = (ai = -1) => { drawParty(P, ai); drawAllies(P, ai); drawFoes(F); };
   redraw(); $('swipe').classList.remove('go');
   // 登場演出：うずまきが ひらき、敵が はずんで 着地 → なきごえ
   F.forEach((f, i) => { const el = $('foe' + i); if (el) { el.style.setProperty('--i', i); el.classList.add('enter'); }
@@ -1456,7 +1635,7 @@ async function runBattle(specs, opts = {}) {
   const pickFoe = async (type, who = '') => { const A = aliveF(); if (A.length === 1) return A[0]; const i = await bmenu(A.map(f => ({ label: f.name + effMark(type, f), sub: `HP ${Math.ceil(f.hp / f.max * 100)}%` })), `${who} ▸ <b>どの 敵に？</b>`); return i === 'auto' ? 'auto' : i < 0 ? null : A[i]; };
   const pickAlly = async (who = '') => { const A = P.filter(m => m.hp > 0); const i = await bmenu(A.map(m => ({ label: nameOf(m), sub: `HP ${m.hp}/${m.st.hp}` })), `${who} ▸ <b>だれに？</b>`); return i === 'auto' ? 'auto' : i < 0 ? null : A[i]; };
   const battleItems = () => Object.keys(DATA.items).filter(k => (G.inv[k] || 0) > 0 && (DATA.items[k].heal || DATA.items[k].mp || DATA.items[k].healAll || DATA.items[k].battle || DATA.items[k].cure));
-  const setAil = async (t, ail, ch) => { if (!ail || !t || t.hp <= 0 || t.ail || R() >= ch * (t.boss ? .45 : 1)) return; t.ail = ail; redraw(); Music.sfx('hurt'); await bmsg(`${nameOr(t)}は ${DATA.ailName[ail]}に なった！`, 300);
+  const setAil = async (t, ail, ch) => { if (!ail || !t || t.hp <= 0 || t.ail || R() >= ch * (t.boss ? .45 : 1)) return; t.ail = ail; redraw(); ailFx(t, ail); await bmsg(`${nameOr(t)}は ${DATA.ailName[ail]}に なった！`, 300);
     if (!G.tips.ail) tip('<b>状態異常</b><span>☠どく・🔥やけど（毎ターン ダメージ）、⚡まひ（ときどき 動けない）。どくけし草や 回復の歌で なおる。</span>', 'ail'); };
   const cureAll = T => { let any = false; for (const t of T) { if (t.ail || t.sleep > 0) { t.ail = null; t.sleep = 0; any = true; } } return any; };
   const combosFor = m => (DATA.combos || []).filter(c => (c.a === m.id || c.b === m.id)).map(c => ({ c, partner: P.find(x => x.id === (c.a === m.id ? c.b : c.a)) })).filter(o => o.partner && o.partner.hp > 0 && !(o.partner.sleep > 0) && m.mp >= o.c.mp && o.partner.mp >= o.c.mp);
@@ -1504,18 +1683,19 @@ async function runBattle(specs, opts = {}) {
     let dmg = o.magic ? (aAtk * power * .95 - tDef * .25) : (aAtk * power - tDef * .5);
     const tm = DATA.typeMul(o.type, t.type);
     dmg = Math.max(1, Math.round(dmg * tm * (.86 + R() * .28)));
-    if (!o.magic && !o.noMiss && R() < 1 / 32) { Music.sfx('miss'); await bmsg(`${nameOr(t)}は ひらりと かわした！`); return; }
+    if (!o.magic && !o.noMiss && R() < 1 / 32) { Music.sfx('miss'); { const se = t.foe ? bElOf(t) : bSprOf(t); if (se) { se.classList.remove('dodge'); void se.offsetWidth; se.classList.add('dodge'); setTimeout(() => se.classList.remove('dodge'), 500 / bspd()); } } await bmsg(`${nameOr(t)}は ひらりと かわした！`); return; }
     const crit = !a.foe && !o.noCrit && R() < 1 / 18 + ((a.pas && a.pas.crit) || 0); if (crit) dmg = Math.round(dmg * 1.7 + 2);
     if (t.guard) dmg = Math.ceil(dmg / 2);
-    if (crit) { Music.sfx('crit'); screenFx('white'); await bmsg('するどい いちげき！', 200); } else Music.sfx(t.foe ? 'hit' : 'hurt');
+    if (crit) { Music.sfx('crit'); screenFx('white'); await bmsg('するどい いちげき！', 200); }
+    if (o.wpn) Music.sfx('i_' + o.wpn); else if (o.msfx) Music.sfx('m_' + o.msfx); if (!o.wpn) Music.sfx(t.foe ? 'hit' : 'hurt');
     t.hp = Math.max(0, t.hp - dmg); let endured = false; if (!t.foe && t.kind === 'mon' && t.hp <= 0 && (t.bond || 0) >= 30 && !t.endured && R() < (t.bond || 0) / 400) { t.hp = 1; t.endured = endured = true; } redraw();
-    const el = t.foe ? $('foe' + F.indexOf(t)) : $('pc' + P.indexOf(t)); const artEl = el && (el.querySelector('.foe-art') || el);
+    const el = t.foe ? $('foe' + F.indexOf(t)) : $('pc' + P.indexOf(t)); const artEl = bArtOf(t) || (el && (el.querySelector('.foe-art') || el)); const spr = t.foe ? el : (bSprOf(t) || el);
     const ratio = Math.min(1, dmg / Math.max(1, t.foe ? t.max : t.st.hp));
-    fxAt(artEl, o.fx || TYPE_FX[o.type] || 'slash', { stamp: t.foe && tm > 1 ? 'good' : t.foe && tm < 1 ? 'bad' : null, crit });
+    fxAt(artEl, o.fx || TYPE_FX[o.type] || 'slash', { stamp: t.foe && tm > 1 ? 'good' : t.foe && tm < 1 ? 'bad' : null, crit, el: o.type && o.type !== 'normal' ? o.type : o.el, ang: o.ang });
     // ヒットストップ：白く光った 瞬間で 60〜90ms 止める（ダメージ量・会心で のびる）→ はじけて 数字と キック
-    if (el) { el.classList.remove('hitw', 'hurt'); void el.offsetWidth; el.classList.add('hitw'); if (!t.foe) el.classList.add('hurt'); }
-    await hitStop(crit ? 90 : Math.round(60 + 30 * Math.min(1, ratio * 2.5))); if (el) el.classList.remove('hitw');
-    hitFx(el, dmg, false, (crit ? 'crit' : tm > 1 ? 'good' : tm < 1 ? 'bad' : '') + (t.foe ? '' : ' ouch'));
+    for (const e of new Set([el, spr])) if (e) { e.classList.remove('hitw', 'hurt'); void e.offsetWidth; e.classList.add('hitw'); if (!t.foe) e.classList.add('hurt'); }
+    await hitStop(crit ? 90 : Math.round(60 + 30 * Math.min(1, ratio * 2.5))); for (const e of new Set([el, spr])) if (e) e.classList.remove('hitw');
+    hitFx(spr, dmg, false, (crit ? 'crit' : tm > 1 ? 'good' : tm < 1 ? 'bad' : '') + (t.foe ? '' : ' ouch'));
     kick(crit ? 1 + ratio * 1.5 : t.foe ? ratio * 1.4 + (tm > 1 ? .3 : 0) : .4 + ratio * 1.6);
     if (crit) buzz([35, 30, 55]); else if (!t.foe) buzz(ratio > .3 ? 70 : 30);
     if (tm > 1) await bmsg('こうかが ばつぐんに でた！', 200); else if (tm < 1) await bmsg('あまり きいていない ようだ……', 200);
@@ -1526,64 +1706,72 @@ async function runBattle(specs, opts = {}) {
   }
   async function useSkill(a, id, tgt, isFoe) {
     const s = DATA.skills[id];
-    if (!isFoe) { const cst = costOf(a, id); if (a.mp < cst) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし MPが たりない！`); return; } a.mp -= cst; }
-    redraw(); Music.sfx(s.heal ? 'heal' : 'magic'); screenFx(s.fx || 'light');
+    if (!isFoe) { const cst = costOf(a, id); if (a.mp < cst) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし MPが たりない！`); return; } a.mp -= cst; redraw(); mpFx(a, cst); }
+    const el = elemOf(s, a), big = s.tg === 'enemies' || s.tg === 'all' || s.tg === 'party' || !!a.boss;
+    redraw(); actorOn(a, `${nameOr(a)}の ${s.name}！`); castStart(a, el, big); if (isFoe) cryOf(a, { vol: .8 }); if (big) screenFx(s.fx || (el === 'heal' ? 'heal' : 'light'));
+    try {
     if (!isFoe && a.kind === 'human') { const ci = bAdd('cutin', `<div class="ci-face">${Art.portrait(a.id, 'determined')}</div><b>${esc(s.name)}</b>`); ci.style.setProperty('--bs', bspd()); setTimeout(() => ci.remove(), 950 / bspd()); }
     await bmsg(`${nameOr(a)}は ${s.name}を ${s.verb || 'はなった'}！`, 250);
     const foesOf = () => isFoe ? aliveP() : aliveF(), alliesOf = () => isFoe ? aliveF() : aliveP();
     if (s.power) { const T = (s.tg === 'enemies' || s.tg === 'all') ? foesOf() : [tgt && tgt.hp > 0 && tgt.foe !== !!isFoe ? tgt : foesOf()[Math.floor(R() * foesOf().length)]];
-      for (const t of T) { if (t && t.hp > 0) { await hit(a, t, s.power, { magic: s.magic, noCrit: true, noMiss: true, type: s.type, fx: s.type === 'wind' ? 'wind' : s.type === 'grass' ? 'leaf' : s.fx === 'song' ? 'song' : (TYPE_FX[s.type] || s.fx) }); if (s.ail) await setAil(t, s.ail[0], s.ail[1]); if (s.slow && t.hp > 0) { t.slow = 2; await bmsg(`${nameOr(t)}の うごきが にぶった！`, 250); } } } }
+      T.forEach(t => t && markTgt(t)); await castFly(a, el, T.filter(Boolean));
+      for (const t of T) { if (t && t.hp > 0) { await hit(a, t, s.power, { magic: s.magic, noCrit: true, noMiss: true, type: s.type, el, fx: s.type === 'wind' ? 'wind' : s.type === 'grass' ? 'leaf' : s.fx === 'song' ? 'song' : (TYPE_FX[s.type] || s.fx) }); if (s.ail) await setAil(t, s.ail[0], s.ail[1]); if (s.slow && t.hp > 0) { t.slow = 2; redraw(); ailFx(t, 'slow'); await bmsg(`${nameOr(t)}の うごきが にぶった！`, 250); } } } }
     if (s.heal) { const T = s.tg === 'party' ? alliesOf() : [tgt && tgt.hp > 0 ? tgt : a]; for (const t of T) { if (t.hp <= 0) continue; const mx = t.foe ? t.max : t.st.hp; const v = Math.min(Math.round((s.heal + (s.healPct || 0) * mx) * (1 + ((!isFoe && a.pas && a.pas.healUp) || 0))), mx - t.hp); t.hp += v; redraw();
-      if (!t.foe) { hitFx($('pc' + P.indexOf(t)), '+' + v, true); fxAt($('pc' + P.indexOf(t)), 'heal'); } await bmsg(`${nameOr(t)}の HPが ${v} かいふくした！`, 300); } }
-    if (s.cure && cureAll(alliesOf())) { redraw(); await bmsg('みんなの 状態異常が なおった！', 300); }
-    if (s.buff === 'def') { alliesOf().forEach(m => m.defUp = 3); redraw(); await bmsg('みんなの まもりが 灯に つつまれた！'); }
-    if (s.buff === 'atk') { alliesOf().forEach(m => m.atkUp = 3); redraw(); await bmsg('みんなの こうげきりょくが あがった！'); }
-    if (s.buff === 'spd') { alliesOf().forEach(m => m.spdUp = 3); redraw(); await bmsg('おいかぜが ふいた！ みんなの すばやさが あがった！'); }
-    if (s.sleep && s.tg === 'enemy') { const t = tgt && tgt.hp > 0 ? tgt : aliveF()[0]; if (!t.boss && R() < s.sleep) { t.sleep = 2 + Math.floor(R() * 2); redraw(); await bmsg(`${t.name}は ねむってしまった！`); } else await bmsg(`${t.name}には きかなかった！`); }
+      numAt(t, '+' + v, true); fxAt(bArtOf(t), 'heal'); if (!t.foe) { const ce = bElOf(t); if (ce) { ce.classList.remove('healg'); void ce.offsetWidth; ce.classList.add('healg'); } } await bmsg(`${nameOr(t)}の HPが ${v} かいふくした！`, 300); } }
+    if (s.cure) { const T = alliesOf(); if (cureAll(T)) { redraw(); T.forEach(t => fxAt(bArtOf(t), 'heal')); Music.sfx('heal'); await bmsg('みんなの 状態異常が なおった！', 300); } }
+    if (s.revive && !isFoe && HOOK.revive) { const up = HOOK.revive(P, s); if (up.length) { redraw(); up.forEach(t => fxAt(bArtOf(t), 'heal')); Music.sfx('heal'); await bmsg(`${up.map(nameOf).join('と ')}が 灯に みちびかれて 立ちあがった！`, 400); } } // v9：復活（balance.js）
+    if (s.buff === 'def') { alliesOf().forEach(m => m.defUp = 3); redraw(); buffFx(alliesOf(), 'def'); await bmsg('みんなの まもりが 灯に つつまれた！'); }
+    if (s.buff === 'atk') { alliesOf().forEach(m => m.atkUp = 3); redraw(); buffFx(alliesOf(), 'atk'); await bmsg('みんなの こうげきりょくが あがった！'); }
+    if (s.buff === 'spd') { alliesOf().forEach(m => m.spdUp = 3); redraw(); buffFx(alliesOf(), 'spd'); await bmsg('おいかぜが ふいた！ みんなの すばやさが あがった！'); }
+    if (s.sleep && s.tg === 'enemy') { const t = tgt && tgt.hp > 0 ? tgt : aliveF()[0]; if (!t) return; markTgt(t); if (!s.power) await castFly(a, el, [t]); if (!t.boss && R() < s.sleep) { t.sleep = 2 + Math.floor(R() * 2); redraw(); ailFx(t, 'sleep'); await bmsg(`${t.name}は ねむってしまった！`); } else { Music.sfx('miss'); await bmsg(`${t.name}には きかなかった！`); } }
+    } finally { actorOff(a); }
   }
   async function doParty(a, p) {
     if (p.type === 'skip') return;
     { const pe = $('pc' + P.indexOf(a)); if (pe && p.type !== 'guard') { pe.classList.remove('lunge'); void pe.offsetWidth; pe.classList.add('lunge'); } }
-    if (a.ail === 'para' && R() < .25) { await bmsg(`${nameOf(a)}は しびれて うごけない！`, 300); return; }
+    if (a.ail === 'para' && R() < .25) { ailFx(a, 'para'); await bmsg(`${nameOf(a)}は しびれて うごけない！`, 300); return; }
     if (p.type === 'combo') { const pt = p.partner; if (pt.hp <= 0 || a.mp < p.c.mp || pt.mp < p.c.mp) { await bmsg(`${nameOf(a)}は れんけいを しようとしたが うまく いかなかった！`); return; }
-      a.mp -= p.c.mp; pt.mp -= p.c.mp; screenFx('white'); Music.sfx('crit'); await bmsg(`${nameOf(a)}と ${nameOf(pt)}の れんけい！`, 300);
-      const el1 = $('pc' + P.indexOf(a)), el2 = $('pc' + P.indexOf(pt)); [el1, el2].forEach(e => e && e.classList.add('act')); await useSkill(a, p.c.id, p.t, false); return; }
-    if (p.type === 'guard') { a.guard = true; await bmsg(`${nameOf(a)}は みを まもっている。`, 300); return; }
-    if (p.type === 'atk') { const t = p.t.hp > 0 ? p.t : aliveF()[0]; await bmsg(`${nameOf(a)}の こうげき！`, 150); await hit(a, t, 1); return; }
-    if (p.type === 'item') { const it = DATA.items[p.it]; G.inv[p.it]--; const t = p.t; await bmsg(`${nameOf(a)}は ${it.name}を つかった！`, 200);
+      a.mp -= p.c.mp; pt.mp -= p.c.mp; redraw(); mpFx(a, p.c.mp); mpFx(pt, p.c.mp); screenFx('white'); Music.sfx('crit'); setCls(pt, 'actor', true); ribbon(pt, `${nameOf(pt)}も あわせる！`, 'combo'); await bmsg(`${nameOf(a)}と ${nameOf(pt)}の れんけい！`, 300);
+      const el1 = $('pc' + P.indexOf(a)), el2 = $('pc' + P.indexOf(pt)); [el1, el2].forEach(e => e && e.classList.add('act')); try { await useSkill(a, p.c.id, p.t, false); } finally { actorOff(pt); } return; }
+    if (p.type === 'guard') { a.guard = true; redraw(); setCls(a, 'actor', true); ribbon(a, `${nameOf(a)}は ぼうぎょ！`, 'guard'); Music.sfx('guard'); await bmsg(`${nameOf(a)}は みを まもっている。`, 300); actorOff(a); return; }
+    if (p.type === 'atk') { const t = p.t.hp > 0 ? p.t : aliveF()[0]; if (!t) return; actorOn(a, `${nameOf(a)}の こうげき！`);
+      try { const bm = bmsg(`${nameOf(a)}の こうげき！`, 150); const o = await strikeFx(a, t); await bm; await hit(a, t, 1, o); } finally { actorOff(a); } return; }
+    if (p.type === 'item') { const it = DATA.items[p.it]; G.inv[p.it]--; const t = p.t; actorOn(a, `${nameOf(a)}の ${it.name}！`); Music.sfx('item'); try { await bmsg(`${nameOf(a)}は ${it.name}を つかった！`, 200); } finally { actorOff(a); }
       if (it.battle === 'friend') { friendBoost = 2.2; screenFx('heal'); await bmsg('あまい かおりが ただよった……（なかまに なりやすく なった）'); return; }
-      if (it.healAll) { aliveP().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); Music.sfx('heal'); redraw(); await bmsg('みんなの HPと MPが ぜんかいふくした！'); return; }
-      if (it.cure) { if (cureAll([t])) { Music.sfx('heal'); redraw(); await bmsg(`${nameOf(t)}の 状態異常が なおった！`); } else await bmsg('しかし なにも おこらなかった。'); return; }
+      if (it.healAll) { aliveP().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; fxAt(bArtOf(m), 'heal'); }); Music.sfx('heal'); tint('heal', 900); redraw(); await bmsg('みんなの HPと MPが ぜんかいふくした！'); return; }
+      if (it.cure) { if (cureAll([t])) { Music.sfx('heal'); fxAt(bArtOf(t), 'heal'); redraw(); await bmsg(`${nameOf(t)}の 状態異常が なおった！`); } else await bmsg('しかし なにも おこらなかった。'); return; }
       if (it.stam) { G.stam = G.stamMax; await bmsg('がんばりが 満タンに なった！'); return; }
       if (t.hp <= 0) { await bmsg('しかし なにも おこらなかった。'); return; }
-      if (it.heal) { const v = Math.min(it.heal, t.st.hp - t.hp); t.hp += v; Music.sfx('heal'); redraw(); hitFx($('pc' + P.indexOf(t)), '+' + v, true); await bmsg(`${nameOf(t)}の HPが ${v} かいふくした！`); }
-      if (it.mp) { const v = Math.min(it.mp, t.st.mp - t.mp); t.mp += v; Music.sfx('heal'); redraw(); await bmsg(`${nameOf(t)}の MPが ${v} かいふくした！`); } return; }
+      if (it.heal) { const v = Math.min(it.heal, t.st.hp - t.hp); t.hp += v; Music.sfx('heal'); redraw(); numAt(t, '+' + v, true); fxAt(bArtOf(t), 'heal'); await bmsg(`${nameOf(t)}の HPが ${v} かいふくした！`); }
+      if (it.mp) { const v = Math.min(it.mp, t.st.mp - t.mp); t.mp += v; Music.sfx('mp'); redraw(); numAt(t, '+' + v, true, 'mpn'); { const ce = bElOf(t); if (ce) { ce.classList.remove('mpglow'); void ce.offsetWidth; ce.classList.add('mpglow'); } } await bmsg(`${nameOf(t)}の MPが ${v} かいふくした！`); } return; }
     if (p.type === 'skill') await useSkill(a, p.s, p.t, false);
   }
   async function doFoe(f) {
     const T1 = () => { const A = aliveP(); return A[Math.floor(R() * A.length)]; };
-    if (f.ail === 'para' && R() < (f.boss ? .12 : .25)) { await bmsg(`${f.name}は しびれて うごけない！`, 300); return; }
-    if (f.charging) { f.charging = false; const s = DATA.skills[f.d.charge]; redraw(); screenFx('dark'); Music.sfx('crit'); $('battle').classList.remove('quake'); void $('battle').offsetWidth; $('battle').classList.add('quake');
-      await bmsg(`${f.name}の ${s.name}！！`, 400); for (const t of aliveP()) await hit(f, t, s.power, { noMiss: true, type: s.type });
-      if (s.drain) { aliveP().forEach(m => m.mp = Math.max(0, m.mp - s.drain)); redraw(); await bmsg('みんなの MPが すいとられた！'); } if (s.ail) for (const t of aliveP()) await setAil(t, s.ail[0], s.ail[1]); return; }
+    if (f.ail === 'para' && R() < (f.boss ? .12 : .25)) { ailFx(f, 'para'); await bmsg(`${f.name}は しびれて うごけない！`, 300); return; }
+    if (f.charging) { f.charging = false; const s = DATA.skills[f.d.charge]; const el = elemOf(s, f); redraw(); screenFx('dark'); Music.sfx('crit'); cryOf(f, { vol: 1.1 }); $('battle').classList.remove('quake'); void $('battle').offsetWidth; $('battle').classList.add('quake');
+      actorOn(f, `${f.name}の ${s.name}！！`); castStart(f, el, true); try { await bmsg(`${f.name}の ${s.name}！！`, 400); aliveP().forEach(t => markTgt(t)); await castFly(f, el, aliveP()); for (const t of aliveP()) await hit(f, t, s.power, { noMiss: true, type: s.type, el }); } finally { actorOff(f); }
+      if (s.drain) { aliveP().forEach(m => { m.mp = Math.max(0, m.mp - s.drain); mpFx(m, s.drain); }); redraw(); await bmsg('みんなの MPが すいとられた！'); } if (s.ail) for (const t of aliveP()) await setAil(t, s.ail[0], s.ail[1]); return; }
     if (f.boss) { const acts = f.d.acts || [['atk', 1]]; let r = R(), pick = acts[0][0]; for (const [k, pr] of acts) { if ((r -= pr) <= 0) { pick = k; break; } }
-      const fe = $('foe' + F.indexOf(f)); if (fe) { fe.classList.remove('lunge'); void fe.offsetWidth; fe.classList.add('lunge'); }
-      if (pick === 'charge' && f.d.charge && !f.chargedLast) { f.charging = true; f.chargedLast = true; redraw(); Music.sfx('magic'); await bmsg(`${f.name}は ちからを ためている……！`, 500);
+      const fe = $('foe' + F.indexOf(f)); if (fe && !(pick === 'atk' || (pick === 'charge' && f.chargedLast))) { fe.classList.remove('lunge'); void fe.offsetWidth; fe.classList.add('lunge'); }
+      if (pick === 'charge' && f.d.charge && !f.chargedLast) { f.charging = true; f.chargedLast = true; redraw(); Music.sfx('charge'); cryOf(f, { vol: .9 }); castStart(f, elemOf(DATA.skills[f.d.charge] || {}, f), true); ribbon(f, `${f.name}は ちからを ためている！`, 'warn'); await bmsg(`${f.name}は ちからを ためている……！`, 500);
         if (!G.tips.charge) tip('<b>⚠ ため攻撃が くる！</b><span>次の ターンに 全体へ 大ダメージ。「ぼうぎょ」で 半分に できる。回復も 先に。</span>', 'charge'); return; }
       f.chargedLast = false; if (pick === 'charge') pick = 'atk';
-      if (pick === 'atk') { await bmsg(`${f.name}の こうげき！`, 150); await hit(f, T1(), 1, { type: f.type }); return; }
-      const s = DATA.skills[pick]; screenFx('dark'); Music.sfx('magic'); await bmsg(`${f.name}の ${s.name}！`, 250);
-      if (s.tg === 'one' && s.power) { const t = T1(); await hit(f, t, s.power, { noMiss: true, type: s.type }); if (s.slow && t.hp > 0) { t.slow = 2; await bmsg(`${nameOf(t)}の うごきが にぶった！`); } }
-      else if (s.power) { for (const t of aliveP()) await hit(f, t, s.power, { noMiss: true, type: s.type }); }
-      if (s.drain) { aliveP().forEach(m => m.mp = Math.max(0, m.mp - s.drain)); redraw(); await bmsg('みんなの MPが すいとられた！'); }
-      if (s.sleep) { let any = false; for (const m of aliveP()) if (R() < s.sleep) { m.sleep = 2; any = true; await bmsg(`${nameOf(m)}は ねむってしまった！`, 300); } if (!any) await bmsg('しかし みんな もちこたえた！'); redraw(); }
+      if (pick === 'atk') { const t = T1(); actorOn(f, `${f.name}の こうげき！`); try { const bm = bmsg(`${f.name}の こうげき！`, 150); const o = await strikeFx(f, t); await bm; await hit(f, t, 1, { type: f.type, ...o }); } finally { actorOff(f); } return; }
+      const s = DATA.skills[pick]; const el = elemOf(s, f); cryOf(f, { vol: .9 }); actorOn(f, `${f.name}の ${s.name}！`); castStart(f, el, s.tg !== 'one'); screenFx('dark'); Music.sfx('magic'); await bmsg(`${f.name}の ${s.name}！`, 250);
+      try {
+      if (s.tg === 'one' && s.power) { const t = T1(); markTgt(t); await castFly(f, el, [t]); await hit(f, t, s.power, { noMiss: true, type: s.type, el }); if (s.slow && t.hp > 0) { t.slow = 2; redraw(); ailFx(t, 'slow'); await bmsg(`${nameOf(t)}の うごきが にぶった！`); } }
+      else if (s.power) { aliveP().forEach(t => markTgt(t)); await castFly(f, el, aliveP()); for (const t of aliveP()) await hit(f, t, s.power, { noMiss: true, type: s.type, el }); }
+      else if (el === 'debuff' || el === 'song' || el === 'dark') await castFly(f, el, aliveP());
+      } finally { actorOff(f); }
+      if (s.drain) { aliveP().forEach(m => { m.mp = Math.max(0, m.mp - s.drain); mpFx(m, s.drain); }); redraw(); await bmsg('みんなの MPが すいとられた！'); }
+      if (s.sleep) { let any = false; for (const m of aliveP()) if (R() < s.sleep) { m.sleep = 2; any = true; redraw(); ailFx(m, 'sleep'); await bmsg(`${nameOf(m)}は ねむってしまった！`, 300); } if (!any) await bmsg('しかし みんな もちこたえた！'); redraw(); }
       if (s.ail) { for (const t of (s.tg === 'all' ? aliveP() : [aliveP()[Math.floor(R() * aliveP().length)]])) await setAil(t, s.ail[0], s.ail[1]); }
       return; }
     if (f.skills && f.skills.length && R() < .35) { const id = f.skills[Math.floor(R() * f.skills.length)]; const s = DATA.skills[id];
       if (s.heal) { if (f.hp < f.max * .6) return useSkill(f, id, f, true); }
       else return useSkill(f, id, T1(), true); }
-    { const fe = $('foe' + F.indexOf(f)); if (fe) { fe.classList.remove('lunge'); void fe.offsetWidth; fe.classList.add('lunge'); } }
-    await bmsg(`${f.name}の こうげき！`, 150); await hit(f, T1(), 1);
+    { const t = T1(); actorOn(f, `${f.name}の こうげき！`); try { const bm = bmsg(`${f.name}の こうげき！`, 150); const o = await strikeFx(f, t); await bm; await hit(f, t, 1, o); } finally { actorOff(f); } }
   }
   while (!result) { turnN++;
     P.forEach(m => m.guard = false);
@@ -1613,10 +1801,10 @@ async function runBattle(specs, opts = {}) {
       if (!aliveF().length) { result = 'win'; break; } if (!aliveP().length) { result = 'lose'; break; }
     }
     if (!result) for (const t of [...aliveP(), ...aliveF()]) { if (t.ail !== 'poison' && t.ail !== 'burn') continue; const mx = t.foe ? t.max : t.st.hp; const v = Math.max(1, Math.round(mx * (t.ail === 'poison' ? (t.boss ? .03 : .08) : (t.boss ? .025 : .06))));
-      t.hp = Math.max(t.foe ? 0 : 1, t.hp - v); redraw(); hitFx(t.foe ? $('foe' + F.indexOf(t)) : $('pc' + P.indexOf(t)), v); await bmsg(`${nameOr(t)}は ${t.ail === 'poison' ? 'どく' : 'やけど'}で ${v}の ダメージ！`, 200);
+      t.hp = Math.max(t.foe ? 0 : 1, t.hp - v); redraw(); numAt(t, v, false, 'dot ' + t.ail); ailFx(t, t.ail); await bmsg(`${nameOr(t)}は ${t.ail === 'poison' ? 'どく' : 'やけど'}で ${v}の ダメージ！`, 200);
       if (t.foe && t.hp <= 0) await bmsg(`${t.name}を しずめた！`); if (!aliveF().length) { result = 'win'; break; } }
     if (!result) { let healed = false; const aura = P.filter(m => m.hp > 0).reduce((a, m) => a + ((m.pas && m.pas.aura) || 0), 0);
-      for (const m of P) if (m.hp > 0) { const pct = ((m.pas && m.pas.regen) || 0) + aura; if (pct > 0 && m.hp < m.st.hp) { const v = Math.min(m.st.hp - m.hp, Math.max(1, Math.round(m.st.hp * pct))); m.hp += v; hitFx($('pc' + P.indexOf(m)), '+' + v, true); healed = true; } }
+      for (const m of P) if (m.hp > 0) { const pct = ((m.pas && m.pas.regen) || 0) + aura; if (pct > 0 && m.hp < m.st.hp) { const v = Math.min(m.st.hp - m.hp, Math.max(1, Math.round(m.st.hp * pct))); m.hp += v; numAt(m, '+' + v, true); healed = true; } }
       if (healed) redraw(); }
     [...P, ...F].forEach(m => { if (m.defUp > 0) m.defUp--; if (m.atkUp > 0) m.atkUp--; if (m.spdUp > 0) m.spdUp--; if (m.slow > 0) m.slow--; });
   }
@@ -1682,7 +1870,7 @@ async function runBattle(specs, opts = {}) {
     $('bFoes').innerHTML = `<div class="foe evo"><div class="foe-art">${Art.species(m.id, { shiny: m.shiny })}</div></div>`; await bmsg(`${from.name}の からだが 光に つつまれていく……！`, 700);
     screenFx('white'); Music.jingle('light', opts.boss ? null : fieldSong()); m.id = from.evo.to; const r = m.hp / m.st.hp; calc(m); m.hp = Math.max(1, Math.round(m.st.hp * r)); G.dex.seen[m.id] = 1; G.dex.got[m.id] = 1;
     $('bFoes').innerHTML = `<div class="foe evo"><div class="foe-art">${Art.species(m.id, { shiny: m.shiny })}</div></div>`; await bmsg(`${from.name}は ${to.name}に すがたを かえた！`, 1200); }
-  $('battle').querySelectorAll('.b-win,.b-banner,.b-res,.b-lv').forEach(e => e.remove()); $('battle').classList.remove('res-on', 'won', 'lose');
+  $('battle').querySelectorAll('.b-win,.b-banner,.b-res,.b-lv').forEach(e => e.remove()); $('battle').classList.remove('res-on', 'won', 'lose'); camReset(); $('bfx').innerHTML = ''; { const tn = $('bTint'); if (tn) tn.className = ''; }
   $('battle').hidden = true; B.active = false; B.stage = false;
   for (const f of HOOK.battleEnd) try { await f(result, specs, opts, P); } catch (e) { console.error(e); }
   if (result === 'flee') Music.play(fieldSong());
@@ -1751,6 +1939,7 @@ async function statusPanel() {
     <div class="st-sk">${m.skills.map(s => DATA.skills[s].name).join('・') || '—'}</div>${hu ? `<p class="st-eq"><span>ぶき　<b>${W.name}</b>（こうげき+${W.atk}）</span><span>ぼうぐ　<b>${A.name}</b>（ぼうぎょ+${A.def}）</span></p>` : ''}</div>`; }).join('')}</div>
     <p class="st-foot"><span>がんばり <b>${Math.round(G.stamMax)}</b></span><span>ひかりの種 <b>${G.seeds}</b>こ（見つけた ${Object.keys(G.seedGot).length}/${SEED_N()}）</span><span>依頼達成 <b>${G.bountyDone}</b></span>${G.flags.glider ? '<span>風布あり</span>' : ''}</p>`, 'wide'); }
 async function skillMenu() {
+  if (HOOK.skillUI) { if (!G.tips.skillHelp2) { G.tips.skillHelp2 = 1; await say(['【スキル】 レベルと 職業レベルが 上がると スキルポイント（SP）が もらえる。', '固有わざ は レベルで 自動で 覚える。 SPは「個性ボード」（ずっと のこる）と「職業ツリー」（転職で 全額 もどる）に ふれる。']); } return HOOK.skillUI(); }
   if (!G.tips.skillHelp) { G.tips.skillHelp = 1; await say(['【スキル】 レベルが 上がると スキルポイント（SP）が もらえる。', 'SPを つかって、技を 覚えたり 能力を 伸ばしたり できる。 🔒は 前の マスを 覚えると ひらく。']); }
   while (true) {
     const i = await menu({ title: 'スキル（キャラを えらぶ）', items: G.party.map(m => ({ label: nameOf(m), sub: `SP ${G.sp[m.id] || 0}　${(G.board[m.id] || []).length}/8` })), where: 'side' });
@@ -1913,7 +2102,7 @@ function spawnEnemies(dt, night) {
   const cap = (COARSE ? 9 : 12) + (night > .5 ? 4 : 0); if (enemies.length >= cap) return;
   const r = REGr();
   for (let k = 0; k < 6; k++) { const a = R() * 6.28, rr = 40 + R() * 45, x = player.x + Math.cos(a) * rr, z = player.z + Math.sin(a) * rr, h = hAt(x, z);
-    if (h < (G.region === 2 ? 4 : .3) || Math.hypot(x - r.town.x, z - r.town.z) < 36 || (r.tower && Math.hypot(x - r.tower.x, z - r.tower.z) < 16) || Math.max(Math.abs(x), Math.abs(z)) > 250 || (r.beacons || []).some(b => Math.hypot(b.x - x, b.z - z) < 10)) continue;
+    if (h < (G.region === 2 ? 4 : .3) || Math.hypot(x - r.town.x, z - r.town.z) < 36 || (r.tower && Math.hypot(x - r.tower.x, z - r.tower.z) < 16) || Math.max(Math.abs(x), Math.abs(z)) > 250 || (r.beacons || []).some(b => Math.hypot(b.x - x, b.z - z) < 10) || surfaceAt(x, z, h + 30) > h + .5 || blocked(x, z, h)) continue; // 建物の 中・上には わかない
     const b = World.biomeAt(x, z); const tod = night > .5 ? 'night' : 'day';
     const pool = []; for (const k2 of DATA.speciesOrder) { const S = SPC[k2]; if (!S.hab) continue; const hb = S.hab; if (hb.r !== -1 && hb.r !== G.region) continue; if (!hb.b.includes(b)) continue; if (hb.t !== 'any' && hb.t !== tod) continue; pool.push([k2, hb.w]); }
     if (!pool.length) continue;
@@ -1930,6 +2119,26 @@ function moveEntity(e, tx, tz, spd, dt) { const dx = tx - e.x, dz = tz - e.z, d 
   let yd = Math.atan2(dx, dz) - e.yaw; yd = Math.atan2(Math.sin(yd), Math.cos(yd)); e.yaw += yd * Math.min(1, dt * 8); return st; }
 function blocked(x, z, y) { for (const [ox, oz] of [[-.3, -.3], [.3, -.3], [-.3, .3], [.3, .3]]) { const cx = Math.floor(x + ox), cz = Math.floor(z + oz);
   for (let iy = Math.floor(y + .65); iy <= Math.floor(y + 1.7); iy++) if (Blocks.has(cx, iy, cz)) return true; } return false; }
+// ---- 物理（QA）：足の 四すみで 支える・めりこみ 押し出し・落下の 記録 ----
+const FOOT = [[-.3, -.3], [.3, -.3], [-.3, .3], [.3, .3]];
+// 足もとの 支え：中心の 地形 ＋ 足の 四すみ いずれかの 下の ブロック上面（ふちに 立てる／角に 食いこまない）
+function footAt(x, z, yRef) { let g = surfaceAt(x, z, yRef); const top = Math.floor(yRef + .6);
+  for (const [ox, oz] of FOOT) { const cx = Math.floor(x + ox), cz = Math.floor(z + oz); for (let iy = top; iy + 1 > g; iy--) if (Blocks.has(cx, iy, cz)) { g = iy + 1; break; } }
+  return g; }
+// めりこみ 押し出し：近い 横の 空き → 1段 上 → 遠い 横の 空き（最大 .9）
+function depen(p) { if (!blocked(p.x, p.z, p.y)) return false;
+  const side = (d0, d1) => { for (let d = d0; d <= d1; d += .05) for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, x = p.x + Math.sin(a) * d, z = p.z + Math.cos(a) * d; if (!blocked(x, z, p.y)) { p.x = x; p.z = z; return true; } } return false; };
+  if (side(.05, .35)) return true;
+  const up = footAt(p.x, p.z, p.y + 1.1); if (up - p.y <= 1.1 && !blocked(p.x, p.z, up)) { p.y = up; return true; }
+  return side(.4, .9); }
+// 落下ダメージ：7.5m を こえる 落下で、高さに 応じて へる（ぜったいに たおれない＝HP1のこる）。 滑空・水・上昇気流・海の底は なし
+const FALL_SAFE = 7.5;
+function fallHurt(drop) { const f = clamp((drop - FALL_SAFE) * .04 + .05, .05, .6); let hit = 0;
+  for (const m of battleParty()) { if (!(m.hp > 1)) continue; const d = Math.max(1, Math.round(m.st.hp * f)); m.hp = Math.max(1, m.hp - d); hit = Math.max(hit, d); }
+  player.stag = .3 + Math.min(.45, (drop - FALL_SAFE) * .03); player.vx *= .2; player.vz *= .2; player.sq = .9;
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; puffs.push({ x: player.x + Math.cos(a) * .7, y: player.y + .1, z: player.z + Math.sin(a) * .7, t: 0, big: 1 }); }
+  Music.sfx('hurt'); if (hit) try { floatText([player.x, player.y + 2.2, player.z], `ドスン！ -${hit}`); } catch (_) {}
+  hud(); tip('高い ところから 落ちると ダメージ（HPは 1 のこる）。<br>滑空・水・上昇気流で 着地すれば だいじょうぶ', 'fall', 3600); }
 
 // ================= followers（V字で 2.5〜3.5 うしろ・カメラの 視線を よける） =================
 const folSt = {};
@@ -2005,8 +2214,10 @@ function frameBody(now) {
       if (keys.has('KeyW') || keys.has('ArrowUp')) iz += 1; if (keys.has('KeyS') || keys.has('ArrowDown')) iz -= 1;
       if (keys.has('KeyD') || keys.has('ArrowRight')) ix += 1; if (keys.has('KeyA') || keys.has('ArrowLeft')) ix -= 1;
       ix += stick.x; iz -= stick.y;
+      if (DEBUG && window.__inp) { ix = window.__inp.x; iz = window.__inp.z; }
     }
     let im = Math.hypot(ix, iz); if (im > 1) { ix /= im; iz /= im; im = 1; }
+    if (player.stag > 0) { player.stag -= dt; ix = iz = 0; im = 0; } // 着地の よろけ
     const wantSprint = keys.has('ShiftLeft') || keys.has('ShiftRight') || (stick.id !== null && Math.hypot(stick.x, stick.y) > .92);
     const fw = [Math.sin(cam.yaw), Math.cos(cam.yaw)], rt = [-Math.cos(cam.yaw), Math.sin(cam.yaw)];
     let wx = fw[0] * iz + rt[0] * ix, wz = fw[1] * iz + rt[1] * ix;
@@ -2019,7 +2230,7 @@ function frameBody(now) {
       if (gn[1] < .62 && upH > .35) { climbing = true; speed = 2.6; } else speed *= clamp(1 - Math.max(upH, 0) * .9, .45, 1); }
     if (player.swim) speed = 3.2; else if (terr < -.3) speed *= .6;
     if (player.glide) { speed = G.flags.glider2 ? 10.5 : 8; if (im < .05) { wx = Math.sin(player.yaw); wz = Math.cos(player.yaw); im = 1; } }
-    const acc = player.ground || player.glide || player.swim ? 12 : 3;
+    const acc = player.swim ? (im > .05 ? 5 : 2.5) : player.ground ? (im > .05 ? 12 : 9) : player.glide ? 12 : 3; // 止まる ときは すこし すべる・水中は ゆっくり 加速
     player.vx = lerp(player.vx, wx * speed, Math.min(1, acc * dt)); player.vz = lerp(player.vz, wz * speed, Math.min(1, acc * dt));
     if (player.glide) { // 風布：慣性・旋回率の 上限・バンク・対気速度
       const trim = G.flags.glider2 ? 10.5 : 8; if (player.gHead == null) player.gHead = hsp0() > 1 ? Math.atan2(player.vx, player.vz) : player.yaw;
@@ -2031,19 +2242,29 @@ function frameBody(now) {
     let nx = player.x + player.vx * dt, nz = player.z + player.vz * dt;
     if (Math.max(Math.abs(nx), Math.abs(nz)) > 268) { nx = player.x; nz = player.z; }
     let wallClimb = false;
+    if (!isFinite(player.x + player.y + player.z)) { const s = player.safe || r.pier || r.town; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99); player.vx = player.vz = player.vy = 0; nx = player.x; nz = player.z; }
+    depen(player); // めりこみ（ふた・押しブロック・NPC押し・保存位置など）を まず 解消
+    if (player.swim && G.region !== 3) { const gx = gn[0], gz = gn[2], gl = Math.hypot(gx, gz); if (gl > .015) { const s = (G.region % 2 ? -1 : 1) * .45 / gl; nx += -gz * s * dt; nz += gx * s * dt; } } // 海流：岸に そって ゆるく 流される
     for (const f of HOOK.push) f(nx, nz, player.y, wx, wz, dt);
-    if (blocked(nx, nz, player.y) && player.ground && !player.swim && !(HOOK.noStep && HOOK.noStep(nx, nz, player.y)) && !blocked(nx, nz, player.y + 1.05) && !blocked(player.x, player.z, player.y + 1.05)) { const up = surfaceAt(nx, nz, player.y + 1.1); if (up - player.y <= 1.06) player.y = up; }
+    if (blocked(nx, nz, player.y) && player.ground && !player.swim && !(HOOK.noStep && HOOK.noStep(nx, nz, player.y)) && !blocked(nx, nz, player.y + 1.05) && !blocked(player.x, player.z, player.y + 1.05)) { const up = footAt(nx, nz, player.y + 1.1); if (up - player.y <= 1.06) player.y = up; }
     if (blocked(nx, nz, player.y)) {
-      if (im > .3 && !player.tired && md === 'field' && !player.swim && !(HOOK.noClimb && HOOK.noClimb())) { wallClimb = true; player.y += 2.6 * dt; player.vy = 0; const px = nx, pz2 = nz; nx = player.x; nz = player.z; if (!blocked(px, pz2, player.y)) { nx = px; nz = pz2; } }
-      else if (!blocked(nx, player.z, player.y)) nz = player.z; else if (!blocked(player.x, nz, player.y)) nx = player.x; else { nx = player.x; nz = player.z; } }
-    if (climbing && player.tired) { nx = player.x + gn[0] * 2.5 * dt; nz = player.z + gn[2] * 2.5 * dt; }
-    for (const t of r.trees) if (t.state === 'ok' && Math.abs(t.x - nx) < 2 && Math.abs(t.z - nz) < 2) { const dx = nx - t.x, dz = nz - t.z, rr = .45 * t.s + .3, d = Math.hypot(dx, dz); if (d < rr && d > 1e-4 && player.y < t.y + 3) { nx = t.x + dx / d * rr; nz = t.z + dz / d * rr; } }
-    for (const k of r.rocks) if (k.state === 'ok' && Math.abs(k.x - nx) < 2.5 && Math.abs(k.z - nz) < 2.5) { const dx = nx - k.x, dz = nz - k.z, rr = .8 * k.s + .3, d = Math.hypot(dx, dz); if (d < rr && d > 1e-4 && player.y < k.y + 1) { nx = k.x + dx / d * rr; nz = k.z + dz / d * rr; } }
-    for (const b of r.beacons || []) { const dx = nx - b.x, dz = nz - b.z, rr = 1.9, d = Math.hypot(dx, dz); if (d < rr && d > 1e-4) { nx = b.x + dx / d * rr; nz = b.z + dz / d * rr; } }
-    for (const n of npcNow()) { const dx = nx - n.x, dz = nz - n.z, d = Math.hypot(dx, dz); if (d < .7 && d > 1e-4) { nx = n.x + dx / d * .7; nz = n.z + dz / d * .7; } }
+      // かべ：押しこむ 向きが つよい ときだけ のぼる（ななめ入力は かべぞいに すべる・頭上に すきまが 必要）
+      const bx = blocked(nx, player.z, player.y), bz = blocked(player.x, nz, player.y), il = Math.max(Math.hypot(wx, wz), 1e-3);
+      const into = bx && !bz ? Math.abs(wx) / il : !bx && bz ? Math.abs(wz) / il : bx ? 1 : 0;
+      const canClimb = im > .3 && !player.tired && md === 'field' && !player.swim && !(HOOK.noClimb && HOOK.noClimb()) && into > .55 && !blocked(player.x, player.z, player.y + 2.6 * dt + .02);
+      if (canClimb) { wallClimb = true; player.y += 2.6 * dt; player.vy = 0; if (blocked(nx, nz, player.y)) { nx = player.x; nz = player.z; } }
+      else if (!bx) nz = player.z; else if (!bz) nx = player.x; else { nx = player.x; nz = player.z; } }
+    if (climbing && player.tired) { const tx = player.x + gn[0] * 2.5 * dt, tz = player.z + gn[2] * 2.5 * dt; if (!blocked(tx, tz, player.y)) { nx = tx; nz = tz; } }
+    else if (!climbing && player.ground && !player.swim && gn[1] < .56 && footAt(player.x, player.z, player.y) - terr < .05) { const k = (.62 - gn[1]) * 9 * dt, tx = nx + gn[0] * k, tz = nz + gn[2] * k; if (!blocked(tx, tz, player.y)) { nx = tx; nz = tz; } } // 急な 斜面は ずり落ちる
+    const pre = [nx, nz], okP = (x, z) => !blocked(x, z, player.y); // 木・岩・NPCの 押し出しで ブロックに めりこませない
+    for (const t of r.trees) if (t.state === 'ok' && Math.abs(t.x - nx) < 2 && Math.abs(t.z - nz) < 2) { const dx = nx - t.x, dz = nz - t.z, rr = .45 * t.s + .3, d = Math.hypot(dx, dz); if (d < rr && d > 1e-4 && player.y < t.y + 3) { const qx = t.x + dx / d * rr, qz = t.z + dz / d * rr; if (okP(qx, qz)) { nx = qx; nz = qz; } else { nx = player.x; nz = player.z; } } }
+    for (const k of r.rocks) if (k.state === 'ok' && Math.abs(k.x - nx) < 2.5 && Math.abs(k.z - nz) < 2.5) { const dx = nx - k.x, dz = nz - k.z, rr = .8 * k.s + .3, d = Math.hypot(dx, dz); if (d < rr && d > 1e-4 && player.y < k.y + 1) { const qx = k.x + dx / d * rr, qz = k.z + dz / d * rr; if (okP(qx, qz)) { nx = qx; nz = qz; } else { nx = player.x; nz = player.z; } } }
+    for (const b of r.beacons || []) { const dx = nx - b.x, dz = nz - b.z, rr = 1.9, d = Math.hypot(dx, dz); if (d < rr && d > 1e-4) { const qx = b.x + dx / d * rr, qz = b.z + dz / d * rr; if (okP(qx, qz)) { nx = qx; nz = qz; } else { nx = player.x; nz = player.z; } } }
+    for (const n of npcNow()) { const dx = nx - n.x, dz = nz - n.z, d = Math.hypot(dx, dz); if (d < .7 && d > 1e-4) { const qx = n.x + dx / d * .7, qz = n.z + dz / d * .7; if (okP(qx, qz)) { nx = qx; nz = qz; } else { nx = player.x; nz = player.z; } } }
     if (G.region === 2 && !G.flags.c3bridge) { const dx = nx - r.tower.x, dz = nz - r.tower.z, d = Math.hypot(dx, dz); if (d < 88) { nx = r.tower.x + dx / d * 88; nz = r.tower.z + dz / d * 88; if (barrierT <= 0) { toast('風の 結界に はばまれた……<br><span style="font-size:.6em">三つの 風の祠を ひらこう</span>', 1800); barrierT = 3; } } }
+    if ((nx !== pre[0] || nz !== pre[1]) && blocked(nx, nz, player.y) && !blocked(player.x, player.z, player.y)) { nx = player.x; nz = player.z; }
     const moved = Math.hypot(nx - player.x, nz - player.z); player.x = nx; player.z = nz;
-    let gh = surfaceAt(player.x, player.z, player.y); if (gh < -1.0 && G.region !== 2) gh = -1.0;
+    let gh = footAt(player.x, player.z, player.y); if (gh < -1.0 && G.region !== 2) gh = -1.0;
     let inUD = null; if (G.region === 2) for (const u of r.updrafts) if (Math.abs(player.x - u.x) < u.r && Math.abs(player.z - u.z) < u.r && Math.hypot(player.x - u.x, player.z - u.z) < u.r && player.y < u.top) { inUD = u; break; }
     if (jumpReq && md === 'field') {
       if (player.ground && !player.swim) { player.vy = 8.4; player.ground = false; }
@@ -2058,14 +2279,23 @@ function frameBody(now) {
       if (inUD) player.vy = Math.min(player.vy + 30 * dt * player.deploy, 9.5); else player.vy = lerp(player.vy, sink, Math.min(1, dt * (player.vy < sink ? 2.6 + 3 * player.deploy : 1.4)));
       player.y += player.vy * dt; }
     else { player.vy -= (G.region === 3 ? 11 : 22) * dt; if (G.region === 3) player.vy = Math.max(player.vy, -7); player.y += player.vy * dt; }
-    if (player.y <= gh) { if (!player.ground && player.vy < -6.5) { for (let k = 0; k < 3; k++) puffs.push({ x: player.x + (R() - .5) * .8, y: gh + .1, z: player.z + (R() - .5) * .8, t: 0, big: 1 }); Music.sfx('step'); } player.y = gh; player.vy = 0; player.ground = true; player.glide = false; } else if (player.y > gh + .15) player.ground = false;
+    if ((player.vy > 0 || wallClimb) && blocked(player.x, player.z, player.y)) { const y0 = player.y - Math.max(player.vy, 2.6) * dt; if (!blocked(player.x, player.z, y0)) { player.y = y0; player.vy = Math.min(player.vy, 0); } } // 天井に 頭を ぶつける
+    const water = G.region !== 2 && G.region !== 3 && hAt(player.x, player.z) < -1.2;
+    if (player.ground || player.glide || wallClimb || player.swim || inUD || G.region === 3) player.fallTop = player.y; else player.fallTop = Math.max(player.fallTop ?? player.y, player.y);
+    if (player.y <= gh) { const drop = (player.fallTop ?? gh) - gh, wasAir = !player.ground, vIn = player.vy;
+      if (wasAir && vIn < -6.5) { for (let k = 0; k < 3; k++) puffs.push({ x: player.x + (R() - .5) * .8, y: gh + .1, z: player.z + (R() - .5) * .8, t: 0, big: 1 }); Music.sfx('step'); player.sq = clamp(-vIn / 22, .2, .7); }
+      player.y = gh; player.vy = 0; player.ground = true; player.glide = false; player.fallTop = gh;
+      if (wasAir && !water && drop > FALL_SAFE && md === 'field') fallHurt(drop); }
+    else if (player.y > gh + .15) player.ground = false;
+    if (player.sq > 0) player.sq = Math.max(0, player.sq - dt * 4);
     dustT -= dt; if (sprint && player.ground && hsp0() > 6 && dustT <= 0) { dustT = .2; puffs.push({ x: player.x - Math.sin(player.yaw) * .4, y: player.y + .05, z: player.z - Math.cos(player.yaw) * .4, t: 0 }); }
     if (player.glide) { glideT -= dt; if (glideT <= 0) { glideT = .06; const rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw); for (const sx of [-1, 1]) streaks.push({ x: player.x + rx * sx * 1.3, y: player.y + 2.5, z: player.z + rz * sx * 1.3, t: 0 }); } }
     const using = (sprint ? 14 : 0) + ((climbing && im > .1) || wallClimb ? 12 : 0) + (player.glide && !G.flags.glider3 ? (G.flags.glider2 ? 2.2 : 4.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
     if (using > 0) G.stam = Math.max(0, G.stam - using * dt); else if (player.ground && !player.swim) G.stam = Math.min(G.stamMax, G.stam + (moved < .01 ? 40 : 26) * dt);
     if (G.stam <= 0) { player.tired = true; player.glide = false; } if (player.tired && G.stam > G.stamMax * .35) player.tired = false;
     if (player.swim && G.stam <= 0) { toast('おぼれかけて、岸に もどった……', 1600); const s = player.safe || r.pier; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99); G.stam = G.stamMax * .5; player.tired = false; }
-    if (player.ground && !player.swim && terr > (G.region === 2 ? 3 : .2)) player.safe = { x: player.x, z: player.z };
+    if (player.ground && !player.swim && terr > (G.region === 2 ? 3 : .2) && !blocked(player.x, player.z, player.y)) player.safe = { x: player.x, z: player.z };
+    goodT -= dt; if (goodT <= 0 && player.ground && !player.swim && !wallClimb) { goodT = .4; if (!blocked(player.x, player.z, player.y) && [[.5, 0], [-.5, 0], [0, .5], [0, -.5]].filter(([a, b]) => !blocked(player.x + a, player.z + b, player.y)).length >= 2) player.good = { x: player.x, y: player.y, z: player.z, r: G.region }; }
     if (G.region === 2 && player.y < -22) { const s = player.safe || r.pier; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99) + .5; player.vx = player.vz = player.vy = 0; player.glide = false; trail.length = 0;
       battleParty().forEach(m => { m.hp = Math.max(1, m.hp - Math.round(m.st.hp * .1)); }); G.stam = Math.max(G.stam, G.stamMax * .5); player.tired = false; toast('雲海に 落ちた……<br><span style="font-size:.6em">みんなの HPが 少し へった</span>', 1800); }
     barrierT -= dt;
@@ -2109,7 +2339,7 @@ function frameBody(now) {
     for (const f of HOOK.frame) f(dt, T, r, md, night);
     // ---- characters ----
     const walkBob = player.ground ? Math.abs(Math.sin(player.phase)) * .07 : 0;
-    mH.sora.set(0, player.x, player.swim ? player.y - .1 : player.y + walkBob, player.z, 1, player.yaw); mH.sora.n = 1;
+    const sq = player.sq || 0; mH.sora.set(0, player.x, player.swim ? player.y - .1 + Math.sin(T * 2.2) * .06 : player.y + walkBob, player.z, 1 - sq * .09, player.yaw); mH.sora.n = 1; // 着地で ぐっと しずむ・水面で ゆれる
     if (player.glide) { player.fold = 1; const d = player.deploy || 0, e = d < 1 ? 1 + 2.2 * Math.pow(d - 1, 3) + 1.2 * Math.pow(d - 1, 2) : 1; const sw = Math.sin(T * 1.7) * .03 + Math.sin(T * 3.1) * .015;
       mGlider.set(0, player.x, player.y - (1 - d) * .6, player.z, Math.max(.15, e), player.yaw, (player.bank || 0) + sw); }
     else if (player.fold > 0) { player.fold = Math.max(0, player.fold - dt * 2.6); const f = player.fold; mGlider.set(0, player.x - Math.sin(player.yaw) * (1 - f) * 1.2, player.y - (1 - f) * 1.4, player.z - Math.cos(player.yaw) * (1 - f) * 1.2, .3 + f * .7, player.yaw, (player.bank || 0) * f); if (!f) mGlider.n = 0; }
@@ -2132,14 +2362,17 @@ function frameBody(now) {
     cool = Math.max(0, cool - dt);
     shinyFx = [];
     for (const e of enemies) { const d = Math.hypot(player.x - e.x, player.z - e.z);
-      if (md === 'field') {
+      if (md === 'field') { const ox = e.x, oz = e.z;
         if (d < (e.tut ? 5 : 12) && cool <= 0 && !player.glide) moveEntity(e, player.x, player.z, (night > .5 ? 5.2 : 4.3) * (e.legend ? .6 : 1), dt);
         else { e.wt -= dt; if (e.wt <= 0) { e.tx = e.hx + (R() - .5) * 16; e.tz = e.hz + (R() - .5) * 16; e.wt = 3 + R() * 4; } moveEntity(e, e.tx, e.tz, 1.4, dt); }
-        if (G.region === 2 && !e.fixedY && hAt(e.x, e.z) < 4) { e.x = e.px ?? e.hx; e.z = e.pz ?? e.hz; e.wt = 0; } e.px = e.x; e.pz = e.z;
+        if (G.region === 2 && !e.fixedY && hAt(e.x, e.z) < 4) { e.x = e.px ?? e.hx; e.z = e.pz ?? e.hz; e.wt = 0; }
+        if (!e.fixedY && blocked(e.x, e.z, e.y) && !blocked(ox, oz, e.y)) { e.x = ox; e.z = oz; e.wt = 0; } // 魔物も かべを すりぬけない
+        e.px = e.x; e.pz = e.z;
+        if (d < 1.3 && cool > 0 && Math.abs(player.y - e.y) < 2.5 && !player.glide) { const u = Math.max(d, .05); player.vx += (player.x - e.x) / u * 30 * dt; player.vz += (player.z - e.z) / u * 30 * dt; } // にげた あと ふれたら 軽く おしかえす
         if (d < 1.5 && cool <= 0 && Math.abs(player.y - e.y) < 2.5) { const ee = e; cool = .5; run(async () => { const res = await runBattle(ee.group);
           if (res === 'win') enemies = enemies.filter(x => x !== ee); else if (res === 'flee') cool = 3; else await defeated(); if (res !== 'lose') Music.play(fieldSong()); }); }
       }
-      e.y = e.fixedY ?? Math.max(hAt(e.x, e.z), -.5); const lead = e.group[0]; const S = SPC[lead.sp]; const ms = mSp[lead.sp];
+      e.y = e.fixedY ?? Math.max(surfaceAt(e.x, e.z, (e.y ?? hAt(e.x, e.z)) + .5), -.5); const lead = e.group[0]; const S = SPC[lead.sp]; const ms = mSp[lead.sp];
       if (ms.n < 14) ms.set(ms.n++, e.x, e.y + (S.arch === 'sprite' || S.arch === 'bird' || S.arch === 'fish' ? .6 + Math.sin(T * 2 + e.hx) * .2 : Math.abs(Math.sin(T * 3 + e.hx)) * .15), e.z, (e.legend ? 1 : -1) * (S.size || 1) * (1.05 + e.group.length * .08), e.yaw);
       if (e.group.some(g => g.shiny) && d < 40) shinyFx.push([e.x, e.y + 1.6, e.z]); }
     let gi = 0; if (G.region === 0) for (const b of r.beacons) if (!b.guard) { const a = Math.atan2(-b.x, -b.z); mGuard.set(gi++, b.x + Math.sin(a) * 3.2, b.y + .3 + Math.sin(T * 1.5 + b.i) * .15, b.z + Math.cos(a) * 3.2, .8 + G.order * .12, a); }
@@ -2226,7 +2459,8 @@ function showSlots(mode, ch) { const box = $('slotMenu'); $('titleMenu').hidden 
     if (mode === 'new' && inf && !b.dataset.arm) { b.dataset.arm = 1; b.classList.add('warn'); b.querySelector('small').textContent = '上書き されます。もう一度 タップ'; Music.sfx('cancel'); return; }
     Music.sfx('ok'); SLOT = n; box.hidden = true;
     if (mode === 'load') { if (!load()) { toast('きろくが 読みこめなかった'); $('titleMenu').hidden = false; return; } $('title').hidden = true; World.setRegion(G.region);
-      if (G.pos) { player.x = G.pos.x; player.z = G.pos.z; player.y = surfaceAt(player.x, player.z, G.pos.y != null ? G.pos.y + .5 : 99); } player.safe = { x: REGr().town.x + 2, z: REGr().town.z + 4 };
+      if (G.pos && isFinite(G.pos.x + G.pos.z)) { player.x = G.pos.x; player.z = G.pos.z; player.y = footAt(player.x, player.z, G.pos.y != null && isFinite(G.pos.y) ? G.pos.y + .5 : 99); } player.safe = { x: REGr().town.x + 2, z: REGr().town.z + 4 };
+      if (blocked(player.x, player.z, player.y) && !depen(player)) { player.x = player.safe.x; player.z = player.safe.z; player.y = footAt(player.x, player.z, 99); } // 古い セーブで めりこんで いても 出す
       if (G.region === 2 && hAt(player.x, player.z) < 3) { player.x = player.safe.x; player.z = player.safe.z; player.y = surfaceAt(player.x, player.z, 99); } startField(); toast(`きろく ${n} から つづき`); }
     else { G.startCh = ch; $('nameForm').hidden = false; $('nameIn').focus(); } }); }
 $('btnCont').addEventListener('click', () => { Music.sfx('ok'); showSlots('load'); });
@@ -2255,7 +2489,7 @@ function setupCh3() {
   const t = npcAt('tsumugi', 1); player.x = t.x; player.z = t.z + 3; player.y = surfaceAt(player.x, player.z, 99); }
 async function opening() {
   const el = $('cut'); el.hidden = false; phase = 'cut'; Music.play('night');
-  const L = ['むかし、この島には 五つの 灯台が あった。', '灯は 海を ゆく 船と、島に すむ いきものたちの 道しるべだった。', 'けれど ある夜、灯は ひとつ残らず 消えた。', 'そして 灯台守の カイトも、夜の 海へ 消えた。', 'それから 三年——'];
+  const L = ['「いってきます。 灯が 見えたら、それが 父さんだ」', 'そう 言って、灯台守の 父さんは 小舟で 夜の 海へ 出ていった。', 'その夜、島の 五つの 灯台は ひとつ残らず 消えた。', '……あれから 三年。 灯は まだ、どこにも 見えない。'];
   // タップ／Enter で 次の 行へ。 右下の「スキップ」か Esc で 全部 とばす
   let skipAll = false, poke = null; const on = e => { if (e.type === 'keydown' && !['Enter', 'Space', 'NumpadEnter', 'Escape', 'KeyE'].includes(e.code)) return; if (e.type === 'keydown') e.preventDefault();
     if (e.code === 'Escape' || (e.target && e.target.closest && e.target.closest('.cut-skip'))) skipAll = true; poke && poke(); };
@@ -2270,7 +2504,8 @@ function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() 
 window.KZ = { HOOK, get G() { return G; }, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
   say, who, nm, menu, panel, confirm, run, toast, tip, gain, save, load, hud, fade, wait, R, esc, $, floatText, runBattle, titleCard, cinematic, mkMon, mkHuman, calc, fixTeam, battleParty, allMembers, member, nameOf, inParty,
   defeated, fieldSong, warpTo, credits, rest, objective, need, regionName: r => REGION_NAME[r], townName: r => TOWN_NAME[r], get enemies() { return enemies; }, set enemies(v) { enemies = v; },
-  surfaceAt, hAt, Blocks, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, buildHouse, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
+  surfaceAt, hAt, Blocks, blocked, footAt, depen, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, buildHouse, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
 if (DEBUG) window.__dbg = { shrineEvent, cam, calc, skyTravel2: () => skyTravel(2), get busy() { return busy; }, get phase() { return phase; }, setupCh3, skyTravel, fluteEvent, windEvent, towerGateEvent, finalEvent3, talkSoyogi, buildBridge, objective, credits, questLog, mapPanel, skillMenu, statusPanel, G: () => G, player, REG, runBattle, say, run, mkHuman, mkMon, setupCh2, startField, sail, talk, NPCS, beaconEvent, midbossEvent, altarEvent, openMenu, dexMenu, fixTeam, craftMenu,
-  tp: (x, z) => { player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); } };
+  tp: (x, z) => { player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); },
+  sim: (n, dtMs = 33) => { for (let i = 0; i < n; i++) { last = performance.now() - dtMs; frameBody(last + dtMs); } }, blocked, get jumpReq() { return jumpReq; }, set jumpReq(v) { jumpReq = v; } };
 })();

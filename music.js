@@ -327,6 +327,7 @@ const Music = (() => {
   function sfx(kind) {
     if (!C) return; const t = C.currentTime + .01, d = sfxBus;
     const bl = (f, dt, len, type = 'square', v = .035) => { const g = C.createGain(); g.connect(d); g.gain.setValueAtTime(v, t + dt); g.gain.exponentialRampToValueAtTime(.0001, t + dt + len); osc(type, f, t + dt, t + dt + len, g); };
+    if (bsfx(kind, t, d, bl)) return;
     switch (kind) {
       case 'blip': bl(1250, 0, .035, 'square', .018); break;
       case 'cursor': bl(1800, 0, .04, 'square', .03); break;
@@ -356,6 +357,86 @@ const Music = (() => {
       case 'lose': [67, 63, 60, 55].forEach((m, i) => bl(mtof(m), i * .22, .45, 'triangle', .07)); noise(t, 1.2, 'lowpass', 400, .15, d); break;
       case 'buy': [79, 84, 88].forEach((m, i) => bl(mtof(m), i * .05, .18, 'triangle', .08)); noise(t + .1, .08, 'highpass', 5000, .15, d); break;
     }
+  }
+  // ---------- battle sfx：武器ごとの ふりかぶり（w_）・軌跡（v_）・着弾（i_）／ いきもの（m_）／ 属性の 詠唱（e_）／ 状態（ail_） ----------
+  let bsLast = {};
+  function bsfx(kind, t, d, bl) {
+    if (!/^(w_|v_|i_|m_|e_|ail_)|^(buff|mp|guard|item|charge)$/.test(kind)) return false;
+    const now = C.currentTime; if (bsLast[kind] && now - bsLast[kind] < .045) return true; bsLast[kind] = now;
+    // 周波数スイープ音
+    const sw = (f0, f1, dt, len, type = 'sine', v = .1, at = .005) => { const g = C.createGain(); g.connect(d); g.gain.setValueAtTime(.0001, t + dt); g.gain.linearRampToValueAtTime(v, t + dt + at); g.gain.exponentialRampToValueAtTime(.0001, t + dt + len);
+      const o = C.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t + dt); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dt + len); o.connect(g); o.start(t + dt); o.stop(t + dt + len + .05); };
+    // フィルタが 動く ノイズ（かぜ・スイング）
+    const nz = (dt, len, type, f0, f1, v, q = 1, at = .02) => { const s = C.createBufferSource(); s.buffer = noiseBuf; const f = C.createBiquadFilter(); f.type = type; f.Q.value = q;
+      f.frequency.setValueAtTime(f0, t + dt); f.frequency.exponentialRampToValueAtTime(f1, t + dt + len); const g = C.createGain(); g.gain.setValueAtTime(.0001, t + dt); g.gain.linearRampToValueAtTime(v, t + dt + at); g.gain.exponentialRampToValueAtTime(.0001, t + dt + len);
+      s.connect(f); f.connect(g); g.connect(d); s.start(t + dt, Math.random()); s.stop(t + dt + len + .05); };
+    const clk = (dt, f = 5000, v = .25, len = .025) => noise(t + dt, len, 'highpass', f, v, d, 1.5);
+    const bell = (f, dt, len, v = .07) => { bl(f, dt, len, 'sine', v); bl(f * 2.76, dt, len * .5, 'sine', v * .35); bl(f * 5.4, dt, len * .25, 'sine', v * .15); };
+    const metal = (dt, v = .06) => { [1480, 2210, 3130, 4270].forEach((f, i) => bl(f, dt, .28 - i * .04, i % 2 ? 'square' : 'triangle', v * (1 - i * .18))); clk(dt, 4500, .3, .05); };
+    const gl = (ms, dt, step, len, type = 'triangle', v = .06) => ms.forEach((m, i) => bl(mtof(m), dt + i * step, len, type, v));
+    switch (kind) {
+      // ---- 武器 ----
+      case 'w_sword': nz(0, .2, 'bandpass', 700, 4200, .38, 1.4, .07); break;
+      case 'i_sword': metal(0, .07); sw(160, 70, 0, .14, 'triangle', .28); noise(t, .1, 'lowpass', 1800, .35, d); break;
+      case 'w_spear': nz(0, .16, 'bandpass', 400, 1400, .3, 2, .1); break;
+      case 'v_spear': nz(0, .12, 'bandpass', 1800, 3800, .3, 3, .02); break;
+      case 'i_spear': sw(2600, 600, 0, .09, 'sawtooth', .07); clk(0, 3000, .45, .05); sw(200, 90, .02, .12, 'triangle', .3); break;
+      case 'w_harp': gl([60, 64, 67, 71, 72, 76, 79, 83, 84], 0, .028, .55, 'triangle', .055); gl([72, 76, 79, 83, 84, 88, 91, 95, 96], .01, .028, .4, 'sine', .03); break;
+      case 'v_harp': gl([84, 88], 0, .09, .3, 'sine', .04); break;
+      case 'i_harp': gl([72, 76, 79, 84], 0, 0, .7, 'triangle', .06); gl([96, 100], .04, .05, .5, 'sine', .035); nz(0, .3, 'bandpass', 900, 2600, .16, 3, .01); break;
+      case 'w_staff': bell(mtof(88), 0, .8, .07); bell(mtof(95), .08, .7, .05); break;
+      case 'v_staff': gl([96, 100, 103], 0, .04, .2, 'sine', .035); break;
+      case 'i_staff': gl([91, 95, 98, 103, 107], 0, .035, .35, 'sine', .055); noise(t, .35, 'highpass', 6500, .12, d); sw(300, 120, 0, .15, 'sine', .2); break;
+      case 'w_fan': nz(0, .38, 'bandpass', 900, 2600, .26, .7, .14); nz(.05, .3, 'highpass', 3000, 6000, .08, .7, .1); break;
+      case 'v_fan': nz(0, .28, 'bandpass', 1600, 700, .2, 1.2, .05); break;
+      case 'i_fan': nz(0, .34, 'lowpass', 3200, 500, .38, .8, .01); for (let i = 0; i < 5; i++) clk(.03 + i * .045, 5500, .08, .03); break;
+      case 'w_anchor': for (let i = 0; i < 6; i++) { clk(i * .038, 4200 + (i % 3) * 700, .22, .03); bl(2600 + (i % 2) * 500, i * .038, .04, 'square', .012); } nz(.1, .25, 'bandpass', 250, 700, .35, 1.2, .1); break;
+      case 'v_anchor': for (let i = 0; i < 5; i++) clk(i * .045, 5000, .18, .025); break;
+      case 'i_anchor': sw(130, 38, 0, .45, 'sine', .6); noise(t, .45, 'lowpass', 320, .8, d); metal(.01, .035); for (let i = 0; i < 6; i++) clk(.12 + i * .04, 4800, .16, .025); break;
+      case 'w_bow': sw(160, 190, 0, .12, 'sawtooth', .025, .08); break;
+      case 'v_bow': sw(330, 150, 0, .22, 'triangle', .22); bl(660, 0, .12, 'sawtooth', .03); sw(2600, 1500, .03, .2, 'sine', .035, .02); break;
+      case 'i_bow': sw(240, 90, 0, .1, 'triangle', .35); noise(t, .06, 'lowpass', 1400, .4, d); clk(0, 3500, .2, .03); break;
+      case 'w_dagger': nz(0, .09, 'bandpass', 2400, 5200, .3, 2, .02); break;
+      case 'v_dagger': nz(0, .07, 'bandpass', 3000, 6000, .25, 2, .01); break;
+      case 'i_dagger': clk(0, 3500, .4, .04); clk(.07, 3800, .35, .04); bl(900, 0, .04, 'square', .03); bl(1100, .07, .04, 'square', .025); break;
+      case 'w_axe': nz(0, .28, 'bandpass', 260, 900, .45, 1.3, .12); break;
+      case 'i_axe': noise(t, .16, 'bandpass', 900, .7, d, 1.2); sw(170, 55, 0, .3, 'triangle', .45); metal(.005, .03); break;
+      case 'w_fist': nz(0, .1, 'bandpass', 600, 1800, .3, 1.5, .03); break;
+      case 'i_fist': sw(170, 55, 0, .14, 'sine', .5); noise(t, .08, 'lowpass', 1600, .5, d); break;
+      // ---- いきもの ----
+      case 'm_bite': noise(t, .05, 'bandpass', 2600, .55, d, 2); noise(t + .08, .05, 'bandpass', 2200, .5, d, 2); bl(320, 0, .04, 'square', .05); bl(260, .08, .05, 'square', .05); break;
+      case 'm_bump': sw(190, 80, 0, .2, 'sine', .45); noise(t, .12, 'lowpass', 700, .45, d); break;
+      case 'm_peck': for (let i = 0; i < 3; i++) { bl(1900 - i * 150, i * .07, .03, 'square', .045); clk(i * .07, 3200, .22, .025); } break;
+      case 'm_splash': nz(0, .4, 'bandpass', 1800, 450, .4, 1, .01); for (let i = 0; i < 4; i++) sw(420 + i * 90, 1300 + i * 200, .05 + i * .06, .06, 'sine', .08); break;
+      case 'm_crackle': for (let i = 0; i < 11; i++) clk(Math.random() * .3, 2500 + Math.random() * 5000, .12 + Math.random() * .2, .018); sw(1400, 180, 0, .14, 'sawtooth', .04); break;
+      case 'm_slam': sw(95, 32, 0, .6, 'sawtooth', .12); sw(70, 30, 0, .6, 'sine', .5); noise(t, .6, 'lowpass', 220, .8, d); break;
+      case 'm_whip': nz(0, .12, 'highpass', 1800, 6500, .35, 1, .09); clk(.11, 3500, .55, .04); break;
+      // ---- 属性の 詠唱 ----
+      case 'e_fire': nz(0, .55, 'lowpass', 350, 2800, .4, .8, .16); for (let i = 0; i < 8; i++) clk(.1 + Math.random() * .45, 3000 + Math.random() * 3000, .12, .02); break;
+      case 'e_water': for (let i = 0; i < 5; i++) sw(380 + i * 70, 1200 + i * 150, i * .07, .07, 'sine', .08); nz(0, .5, 'bandpass', 700, 1600, .18, 1.5, .15); break;
+      case 'e_wind': nz(0, .65, 'bandpass', 380, 1900, .32, 1.1, .25); nz(.2, .4, 'bandpass', 1900, 600, .18, 1.1, .05); break;
+      case 'e_earth': sw(72, 44, 0, .7, 'sawtooth', .12, .1); noise(t, .7, 'lowpass', 180, .55, d); for (let i = 0; i < 4; i++) clk(.2 + i * .1, 1200, .15, .05); break;
+      case 'e_light': gl([84, 88, 91, 96, 100, 103], 0, .05, .7, 'sine', .05); noise(t, .6, 'highpass', 7000, .08, d); break;
+      case 'e_dark': sw(420, 110, 0, .7, 'sawtooth', .05, .1); sw(426, 106, 0, .7, 'sawtooth', .05, .1); noise(t, .7, 'lowpass', 480, .3, d); break;
+      case 'e_grass': for (let i = 0; i < 6; i++) clk(i * .05, 4500, .1, .06); gl([76, 79, 83], 0, .07, .4, 'triangle', .05); break;
+      case 'e_heal': gl([72, 76, 79, 84, 88], 0, .06, .6, 'sine', .06); noise(t, .5, 'highpass', 6000, .06, d); break;
+      case 'e_buff': case 'buff': gl([67, 71, 74, 79, 83], 0, .05, .25, 'square', .025); gl([79, 83, 86, 91], .2, .04, .4, 'sine', .05); break;
+      case 'e_debuff': gl([79, 75, 72, 67, 63], 0, .07, .35, 'triangle', .055); sw(300, 150, .1, .5, 'sine', .08); break;
+      case 'e_song': gl([72, 76, 79, 83, 84, 88], 0, .05, .6, 'triangle', .05); gl([84, 88, 91], .25, .08, .6, 'sine', .04); break;
+      case 'e_normal': gl([74, 79, 83, 86, 91], 0, .04, .3, 'sine', .07); break;
+      // ---- 状態 ----
+      case 'ail_poison': for (let i = 0; i < 4; i++) sw(260 + i * 40, 560 + i * 60, i * .08, .08, 'sine', .1); sw(220, 140, 0, .4, 'triangle', .06); break;
+      case 'ail_burn': nz(0, .35, 'lowpass', 500, 2400, .35, .8, .05); for (let i = 0; i < 6; i++) clk(Math.random() * .3, 4000, .15, .02); break;
+      case 'ail_para': for (let i = 0; i < 7; i++) bl(i % 2 ? 900 : 1900, i * .028, .026, 'square', .04); clk(0, 5000, .25, .12); break;
+      case 'ail_sleep': sw(620, 300, 0, .55, 'sine', .08, .08); bell(mtof(84), .3, .5, .035); break;
+      case 'ail_slow': sw(520, 140, 0, .5, 'triangle', .09, .03); break;
+      case 'mp': sw(900, 1700, 0, .16, 'sine', .06); bl(1760, .1, .15, 'sine', .03); break;
+      case 'guard': bl(1250, 0, .18, 'triangle', .09); bl(1870, .03, .22, 'sine', .05); clk(0, 3000, .2, .04); break;
+      case 'item': sw(600, 1300, 0, .1, 'sine', .1); bl(1500, .08, .12, 'sine', .05); break;
+      case 'charge': sw(70, 260, 0, 1.0, 'sawtooth', .07, .4); nz(0, 1.0, 'lowpass', 180, 1400, .3, 1, .6); break;
+      default: return false;
+    }
+    return true;
   }
   // ---------- monster cries（種ごとに決まる 合成の なきごえ） ----------
   let distCurve = null, cryLast = 0;

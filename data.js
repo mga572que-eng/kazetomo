@@ -586,3 +586,77 @@ DATA.boards.kaito = [
   { id: 'k8', name: '灯台の誇り', desc: 'こうげき・HP +12%', cost: 4, eff: { atk: .12, hp: .12 }, req: 'k6' } ];
 DATA.combos.push({ id: 'cb_oyako', a: 'kaito', b: 'sora', name: '親子の灯', mp: 12, tg: 'enemies', power: 2.3, type: 'light', magic: true, buff: 'def', fx: 'light', desc: 'カイト＋ソラ：敵全体に 光の 大ダメージ＋みんなの ぼうぎょ アップ' });
 DATA.skills.cb_oyako = { ...DATA.combos[DATA.combos.length - 1], mp: 0, verb: 'くりだした' };
+
+// ================= v9 バランス：固有わざ（レベルで 覚える）・技の 名前の 系統 =================
+// 系統の 文法（docs/balance.md）：
+//   属性の 根語  ホムラ=ほのお／ミナモ=みず／カザネ=かぜ／イワネ=だいち／アカリ=ひかり／カゲリ=やみ／コノハ=くさ
+//   補助の 根語  ヌクミ=回復／キヨメ=状態異常なおし／カエリビ=復活／〜ビ=強化（マモリビ・フルイビ・ハヤビ）／マドロミ=ねむり／シガラミ=うごきを にぶらせる
+//   規模と 強さ  〈根語〉=1体・ふつう → 大〈根語〉=1体・強い → 〈根語〉の輪=全体 → 大〈根語〉の輪=全体・強い → 極〈根語〉=奥義
+//   武器わざ     〈根語〉斬り／突き／打ち=1体、〈根語〉の舞=全体（物理）。「・」の うしろは おまけの 効果（・キヨメ／・マヒ／・ドク…）
+Object.assign(DATA.skills, {
+  i_nukumi: { name: 'ヌクミ', mp: 3, tg: 'ally', heal: 30, healPct: .12, verb: 'となえた', fx: 'heal' },
+  i_kiyome: { name: 'キヨメ', mp: 3, tg: 'party', cure: true, verb: 'となえた', fx: 'heal' },
+  i_kaeribi: { name: 'カエリビ', mp: 12, tg: 'party', heal: 12, revive: .3, verb: 'ともした', fx: 'heal' },
+  i_daikaeribi: { name: '大カエリビ', mp: 24, tg: 'party', heal: 40, healPct: .25, revive: .6, cure: true, verb: 'ともした', fx: 'heal' },
+  i_shigarami: { name: 'シガラミ突き', mp: 4, tg: 'enemy', power: 1.5, slow: true, verb: 'はなった', fx: 'slash' },
+  i_soraUlt: { type: 'fire', name: '極ホムラ斬り', mp: 16, tg: 'enemy', power: 3.5, ail: ['burn', .25], verb: 'はなった', fx: 'fire' },
+  i_rikuUlt: { type: 'wind', name: '極カザネ突き', mp: 16, tg: 'enemy', power: 3.6, verb: 'はなった', fx: 'slash' },
+  i_sanaUlt: { type: 'light', name: '極アカリの輪', mp: 20, tg: 'enemies', power: 2.0, magic: true, verb: 'となえた', fx: 'light' },
+  i_haruUlt: { type: 'wind', name: '極カザネの輪', mp: 20, tg: 'enemies', power: 2.0, magic: true, verb: 'よびおこした', fx: 'slash' },
+  i_kaitoUlt: { type: 'water', name: '極ミナモ打ち', mp: 16, tg: 'enemy', power: 3.6, verb: 'たたきこんだ', fx: 'water' },
+});
+// 固有わざ：職業や SPと 関係なく、キャラの レベルで 覚える（どの 職業の 組み合わせでも 回復・状態異常なおしが できる）
+DATA.innate = {
+  sora: [['tomoshi', 1], ['mamori', 5], ['issen', 10], ['i_kiyome', 15], ['kenbu', 20], ['i_kaeribi', 30], ['i_soraUlt', 40]],
+  mio: [['iyashi', 1], ['i_kiyome', 5], ['kiyome', 10], ['nemuri', 15], ['hagemashi', 20], ['i_kaeribi', 25], ['hoshiuta', 30], ['i_daikaeribi', 40]],
+  riku: [['tsuranuki', 1], ['kazaguruma', 5], ['i_shigarami', 10], ['i_kiyome', 15], ['ranbu', 20], ['i_nukumi', 30], ['i_rikuUlt', 40]],
+  sana: [['hoshiyomi', 1], ['inori', 1], ['i_nukumi', 5], ['hoshifuri', 10], ['nemuri', 15], ['i_kaeribi', 20], ['seiun', 30], ['i_sanaUlt', 40]],
+  haru: [['kazeyomi', 1], ['oikaze', 1], ['i_nukumi', 5], ['tatsumaki', 10], ['soyokaze', 15], ['i_shigarami', 20], ['amatsukaze', 30], ['i_haruUlt', 40]],
+  kaito: [['toudai', 1], ['ikari', 1], ['shiosai', 1], ['i_nukumi', 5], ['oonamigiri', 10], ['i_kiyome', 15], ['i_kaeribi', 20], ['tomoshibi', 30], ['i_kaitoUlt', 40]],
+};
+for (const [id, L] of Object.entries(DATA.innate)) if (DATA.party[id]) DATA.party[id].skills = L;
+// 個性ボード（キャラ固有・返金なし）：技は 固有わざへ 移したので、技マスは 能力マスに 置きかえ（id は そのまま＝古いセーブも そのまま）
+{ const RB = (id, nid, o) => { const n = (DATA.boards[id] || []).find(x => x.id === nid); if (n) { delete n.skill; Object.assign(n, o); } };
+  RB('sora', 'a3', { name: '灯の心得', desc: '最大MP +12%', eff: { mp: .12 } }); RB('sora', 'a5', { name: '見切り・改', desc: '会心の 確率 アップ', eff: { crit: .04 } }); RB('sora', 'a8', { name: '灯の剣士', desc: 'こうげき +8%', eff: { atk: .08 } });
+  RB('mio', 'b2', { name: '歌の加護', desc: 'ぼうぎょ +10%', eff: { def: .1 } }); RB('mio', 'b4', { name: '澄んだ声', desc: '最大MP +10%', eff: { mp: .1 } }); RB('mio', 'b5', { name: '軽やかな足', desc: 'すばやさ +10%', eff: { spd: .1 } }); RB('mio', 'b7', { name: '星の響き', desc: '回復量 +15%', eff: { healUp: .15 } });
+  RB('riku', 'c3', { name: '風の構え', desc: 'すばやさ +10%', eff: { spd: .1 } }); RB('riku', 'c7', { name: '嵐の心得', desc: '会心の 確率 アップ', eff: { crit: .04 } });
+  RB('sana', 'd3', { name: '星の導き', desc: '最大MP +10%', eff: { mp: .1 } }); RB('sana', 'd7', { name: '星雲の加護', desc: '回復量 +15%', eff: { healUp: .15 } });
+  RB('haru', 'e3', { name: '風読み', desc: 'こうげき +6%', eff: { atk: .06 } }); RB('haru', 'e4', { name: '風の癒し', desc: '毎ターン HP 3% 回復', eff: { regen: .03 } }); RB('haru', 'e7', { name: '天風', desc: 'こうげき +8%', eff: { atk: .08 } });
+  RB('kaito', 'k3', { name: '潮の力', desc: 'こうげき +6%', eff: { atk: .06 } }); RB('kaito', 'k7', { name: '灯台の目', desc: '最大MP +12%', eff: { mp: .12 } }); }
+// 技の 名前（キーは そのまま・表示名だけ 系統に そろえる）
+DATA.skillNames = {
+  // ほのお
+  tomoshi: 'ホムラ斬り', kenbu: 'ホムラの舞', hinoko: 'ホムラ', honoo: 'ホムラの輪',
+  // みず
+  mizu: 'ミナモ', mizudeppou: 'ミナモ', awadama: 'ミナモ', e_mizu: 'ミナモ', nami: 'ミナモの輪', uzushio: 'ミナモの輪', ikari: 'ミナモ打ち', oonamigiri: 'ミナモの舞',
+  // かぜ
+  kaze: 'カザネ', kazeyomi: 'カザネ', arashi: 'カザネの輪', tatsumaki: 'カザネの輪', amatsukaze: '大カザネの輪', inazuma: 'カザネの輪・マヒ', kazaguruma: 'カザネの舞', ranbu: '大カザネ突き', arashi_e: 'カザネの輪',
+  // だいち
+  iwa: 'イワネ', iwaotoshi: 'イワネ', sango: 'イワネ', jishin: 'イワネの輪', jishin_e: 'イワネの輪',
+  // ひかり
+  kiyome: 'アカリ', hoshiyomi: 'アカリ', toudai: 'アカリ', matataki: 'アカリの輪', ginga: 'アカリの輪', hoshifuri: 'アカリの輪', hoshiuta: 'アカリの輪', chouchin: 'アカリの輪', e_hoshi: 'アカリの輪', hoshi_e: 'アカリの輪',
+  issen: 'アカリの舞', tomoshibi: '大アカリの輪',
+  // やみ・くさ
+  yami: 'カゲリ', sumi: 'カゲリ・シガラミ', yami_e: 'カゲリの輪', dokugiri: 'カゲリの輪・ドク', happa: 'コノハ', tsuta: 'コノハ・シガラミ', dokubari: 'コノハ・ドク',
+  // 回復・なおし・強化・弱体
+  fuwafuwa: 'ヌクミ', iyashi: 'ヌクミの輪', iyashikaze: 'ヌクミの輪・キヨメ', inori: 'ヌクミの輪・キヨメ', soyokaze: 'ヌクミの輪・キヨメ', seiun: '大ヌクミの輪・キヨメ',
+  mamori: 'マモリビ', shiosai: 'マモリビ', hagemashi: 'フルイビ', oikaze: 'ハヤビ', nemuri: 'マドロミ', nemurigumo: 'マドロミの輪',
+};
+for (const [k, n] of Object.entries(DATA.skillNames)) if (DATA.skills[k]) DATA.skills[k].name = n;
+// 同じ 名前は 同じ 強さの 帯に（名前から 強さが わかるように）
+Object.assign(DATA.skills.kiyome, { power: 1.8 }); Object.assign(DATA.skills.iwa, { power: 1.7 }); Object.assign(DATA.skills.sango, { power: 1.75 });
+// 説明文を 名前の 系統と 同じ ルールで 自動生成（威力は ★で 表示）
+DATA.stars = s => { const p = s.power || 0, all = s.tg === 'enemies' || s.tg === 'all'; const n = all ? (p <= 1.2 ? 1 : p <= 1.5 ? 2 : p <= 1.85 ? 3 : 4) : (p <= 1.6 ? 1 : p <= 2.1 ? 2 : p <= 3 ? 3 : 4); return '★'.repeat(n) + '☆'.repeat(4 - n); };
+DATA.skillDesc = s => { const T = DATA.types, sc = { enemy: '敵1体', enemies: '敵全体', ally: '味方1人', party: '味方全員', one: '1人', all: '全員' }[s.tg] || '';
+  const out = [];
+  if (s.power) out.push(`${sc}に ${s.type && s.type !== 'normal' ? T[s.type] + 'の ' : ''}${s.magic ? '魔法' : 'わざ'} ${DATA.stars(s)}`);
+  if (s.heal) out.push(`${sc}の HPを かいふく ${s.heal + (s.healPct || 0) * 100 >= 60 ? '★★★' : s.heal + (s.healPct || 0) * 100 >= 40 ? '★★☆' : '★☆☆'}`);
+  if (s.revive) out.push(`たおれた 仲間を HP${Math.round(s.revive * 100)}%で 復活`);
+  if (s.cure) out.push(s.heal || s.power || s.revive || s.buff ? '状態異常も なおす' : `${sc}の 状態異常（どく・やけど・まひ・ねむり）を なおす`);
+  if (s.buff) out.push(`3ターン 味方全員の ${{ def: 'ぼうぎょ ×1.5', atk: 'こうげき ×1.4', spd: 'すばやさ ×1.5' }[s.buff]}`);
+  if (s.sleep) out.push(`${s.tg === 'enemy' ? '敵1体' : sc}を ねむらせる（${Math.round(s.sleep * 100)}%・ボスには きかない）`);
+  if (s.slow) out.push('うごきを にぶらせる');
+  if (s.ail) out.push(`${DATA.ailName[s.ail[0]]} ${Math.round(s.ail[1] * 100)}%`);
+  if (s.drain) out.push(`MPを ${s.drain} うばう`);
+  return out.join('／'); };
+for (const [k, s] of Object.entries(DATA.skills)) if (!k.startsWith('cb_')) s.desc = DATA.skillDesc(s);

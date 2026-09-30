@@ -5,11 +5,13 @@
   const G = () => K.G, F = () => K.G.flags;
   const css = document.createElement('style');
   css.textContent = `
-  #areaBn{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:34;text-align:center;pointer-events:none;opacity:0;transition:opacity .7s, transform .7s}
+  #areaBn{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);z-index:34;text-align:center;pointer-events:none;opacity:0;transition:opacity .7s, transform .7s}
   #areaBn.on{opacity:1;transform:translate(-50%,-56%)}
   body.inbattle #areaBn,body.modal #areaBn{opacity:0!important;transition:none}
-  #areaBn b{display:block;font-family:"Mochiy Pop One",var(--display);font-size:clamp(26px,7vh,46px);font-weight:400;color:#fff6d8;letter-spacing:.14em;text-shadow:0 3px 0 rgba(40,20,10,.8),0 0 24px rgba(0,0,0,.6)}
-  #areaBn i{display:block;font-style:normal;font-family:var(--pixel);font-size:clamp(11px,2.6vh,15px);color:var(--gold);letter-spacing:.3em;margin-top:6px;text-shadow:0 2px 6px rgba(0,0,0,.8)}
+  #areaBn b{display:block;font-family:"Mochiy Pop One",var(--display);font-size:clamp(30px,9vh,58px);font-weight:400;color:#fff6d8;letter-spacing:.14em;text-shadow:0 3px 0 rgba(40,20,10,.8),0 0 24px rgba(0,0,0,.6)}
+  #areaBn i{display:block;font-style:normal;font-family:"Shippori Mincho B1",var(--display);font-weight:700;font-size:clamp(13px,3.4vh,19px);color:#ffe6a8;letter-spacing:.22em;margin-top:8px;text-shadow:0 2px 8px rgba(0,0,0,.85)}
+  #areaBn u{display:block;text-decoration:none;font-family:var(--pixel);font-size:clamp(10px,2.3vh,12px);color:rgba(244,240,230,.75);letter-spacing:.3em;margin-top:4px}
+  #areaBn.first b{animation:bnIn 1s ease-out}@keyframes bnIn{0%{letter-spacing:.6em;opacity:0;filter:blur(6px)}100%{letter-spacing:.14em;opacity:1;filter:none}}
   #areaBn:before,#areaBn:after{content:"";display:block;height:2px;width:min(60vw,420px);margin:8px auto;background:linear-gradient(90deg,transparent,rgba(243,193,90,.9),transparent)}
   #matHint{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);z-index:33;background:rgba(12,18,40,.9);border:1px solid rgba(243,193,90,.55);border-radius:10px;padding:6px 12px;font-size:13px;color:#f4f0e6;opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;max-width:min(560px,80vw);text-align:center;line-height:1.5}
   #matHint.on{opacity:1;transform:translate(-50%,0)} #matHint em{font-style:normal;color:var(--gold)} #matHint .ok{color:#8fe06a}
@@ -40,14 +42,20 @@
   // バトル中・メニュー／パネル表示中は 出さずに 待たせ、閉じたら 出す（8秒 以上 たったら 捨てる）
   const bnBlocked = () => document.body.classList.contains('inbattle') || document.body.classList.contains('modal') || K.MENUS.length > 0 || K.phase !== 'field';
   let bnPend = null;
-  function banner(n, s) { if (bnBlocked()) { bnPend = { n, s, t: performance.now() }; return; } bnPend = null; bn.innerHTML = `<b>${n}</b><i>${s || ''}</i>`; bn.classList.add('on'); clearTimeout(bnT); bnT = setTimeout(() => bn.classList.remove('on'), 2600); Music.sfx('swoosh'); }
+  const DESC = { t0: '〜 風と 灯が めぐる 岬の 村 〜', t1: '〜 霧に けむる 交易の 港 〜', t2: '〜 雲の 上に ただよう 里 〜', t3: '〜 泡に まもられた 海底の 里 〜', shiomi: '〜 焼け跡から 立ち上がる 潮の 町 〜', oasis: '〜 砂漠の オアシス 〜', hayate: '〜 風車が うたう 空の 小島 〜',
+    ru: '〜 星の 落ちる 砂の 遺跡 〜', tw: '〜 星を 抱く 天空の 塔 〜', pl: '〜 光の とどかぬ 宮殿 〜', tr: '〜 海の いちばん 深い 場所 〜', sh: '〜 宵闇の 祀られた 丘 〜', base: '〜 自分だけの 居場所 〜',
+    b0: '〜 野に 立つ 最初の 灯台 〜', b1: '〜 ふたつの 塔が そびえる 灯台 〜', b2: '〜 岩山に きざまれた 灯台 〜', b3: '〜 月夜にだけ ひらく 灯台 〜', b4: '〜 断崖の 先の 灯台 〜', l0: '〜 藻に しずんだ 灯台 〜', l1: '〜 甲羅に まもられた 灯台 〜', l2: '〜 雷の ねむる 灯台 〜' };
+  const descOf = a => DESC[a.id] || (a.id[0] === 's' && a.id.length > 1 ? '〜 試練の 祠 〜' : a.id[0] === 'w' ? '〜 風の 祠 〜' : '');
+  K.areaDesc = DESC;
+  function banner(n, s, d, first) { if (d !== undefined) { const reg = s; s = d; d = reg; } return banner0(n, s, d, first); }
+  function banner0(n, s, sub, first) { if (bnBlocked()) { bnPend = { n, s, sub, first, t: performance.now() }; return; } bnPend = null; bn.innerHTML = `<b>${n}</b>${s ? `<i>${s}</i>` : ''}${sub ? `<u>${sub}</u>` : ''}`; bn.classList.toggle('first', !!first); bn.classList.add('on'); clearTimeout(bnT); bnT = setTimeout(() => bn.classList.remove('on'), first ? 4200 : 2600); Music.sfx('swoosh'); }
   H.frame.push(() => { if (bnBlocked()) { if (bn.classList.contains('on')) { bn.classList.remove('on'); clearTimeout(bnT); } return; }
-    if (bnPend) { const p = bnPend; bnPend = null; if (performance.now() - p.t < 8000) banner(p.n, p.s); } });
+    if (bnPend) { const p = bnPend; bnPend = null; if (performance.now() - p.t < 8000) banner0(p.n, p.s, p.sub, p.first); } });
   H.frame.push(dt => { if (K.phase !== 'field') return; aT -= dt; if (aT > 0) return; aT = .25; const P = K.player;
-    if (G().region !== lastRg) { lastRg = G().region; cur = null; if (K.busy) { lastRg = -1; return; } banner(K.regionName(G().region), '—'); aT = 3; return; }
+    if (G().region !== lastRg) { lastRg = G().region; cur = null; if (K.busy) { lastRg = -1; return; } banner0(K.regionName(G().region), ['〜 灯を 継ぐ 風の 島 〜', '〜 星くずの 降る 大陸 〜', '〜 雲海に うかぶ 浮島 〜', '〜 光 ゆらめく 海の 底 〜'][G().region], '', true); aT = 3; return; }
     const A = areas(); const inA = A.find(a => Math.hypot(P.x - a.x, P.z - a.z) < a.r);
     if (cur && !inA) { const c = A.find(a => a.id === cur); if (!c || Math.hypot(P.x - c.x, P.z - c.z) > c.r * 1.3) cur = null; }
-    if (inA && inA.id !== cur && !K.busy) { cur = inA.id; banner(inA.n, inA.s); } });
+    if (inA && inA.id !== cur && !K.busy) { cur = inA.id; const g = G(); g.seenArea = g.seenArea || {}; const first = !g.seenArea[inA.id]; g.seenArea[inA.id] = 1; banner0(inA.n, descOf(inA) || inA.s, descOf(inA) ? inA.s : '', first); } });
 
   // ---------- 2. 素材の 使いみち ----------
   const FORGE_TIER = g => g.cost || (g.price ? (() => { const p = g.price, c = { ishi: Math.ceil(p / 350) + 2, maki: Math.ceil(p / 700) + 1 }; if (p >= 1500) c.shizuku = 2; if (p >= 3500) c.hoshikake = 1 + (p >= 7000 ? 1 : 0); if (g.sky) c.kumowata = 3; if (g.sea) c.shinju = 2; return c; })() : null);
