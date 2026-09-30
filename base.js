@@ -90,6 +90,6 @@
   H.mapMarks.push((r, pos) => r === 0 && site ? [`<span class="mk" style="${pos(site.x, site.z)}" title="わが家">🏠</span>`] : []);
   H.warps.push(r => r === 0 && site && (K.G.baseLv || 0) >= 1 ? [{ n: 'わが家', x: site.sign.x, z: site.sign.z + 1.5 }] : []);
   H.quest.push(() => `<li>わが家 レベル ${K.G.baseLv || 0}/5${K.G.baseLv >= 5 ? '（完成！）' : `（つぎ：${DATA.baseLevels[K.G.baseLv || 0].text}）`}</li>`);
-  H.fx.push(fx => { if (K.G.region !== 0 || !site) return; if (!K.G.baseLv && Math.hypot(K.player.x - site.x, K.player.z - site.z) < 120) fx.push({ type: 2, p: [site.x + .5, site.y + 12, site.z + .5], size: [.6, 12], grow: 1.4, cyl: true, tint: [1, .85, .5] }); });
+  // （建設予定地の 光は 撤去：立て札に 近づくと 説明が 出る）
   H.load.push(G => { G.baseLv = G.baseLv || 0; G.residents = G.residents || []; G.flowerT = G.flowerT || {}; });
 })();

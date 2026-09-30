@@ -287,10 +287,65 @@ const Music = (() => {
       case 'run': [0, 1, 2].forEach(i => bl(mtof(72 - i * 5), i * .06, .08, 'square', .04)); break;
       case 'step': noise(t, .14, 'lowpass', 500, .35, d); bl(70, 0, .12, 'sine', .18); break;
       case 'wind': noise(t, .6, 'bandpass', 700, .18, d, .8); break;
+      case 'swoosh': noise(t, .35, 'bandpass', 1800, .35, d, 1.2); [0, 1, 2, 3].forEach(i => bl(mtof(60 + i * 7), i * .05, .08, 'triangle', .05)); break;
+      case 'drop': bl(220, 0, .1, 'triangle', .18); noise(t, .08, 'lowpass', 600, .25, d); break;
+      case 'stamp': noise(t, .25, 'lowpass', 900, .55, d); bl(110, 0, .22, 'triangle', .3); [84, 88, 91, 96].forEach((m, i) => bl(mtof(m), .08 + i * .045, .25, 'sine', .07)); break;
+      case 'tally': bl(2100, 0, .025, 'square', .014); break;
+      case 'sparkle': [91, 95, 98, 103].forEach((m, i) => bl(mtof(m), i * .05, .22, 'sine', .06)); break;
+      case 'heart': [76, 81, 85, 88].forEach((m, i) => bl(mtof(m), i * .07, .3, 'sine', .08)); bl(mtof(64), 0, .4, 'triangle', .07); break;
+      case 'lose': [67, 63, 60, 55].forEach((m, i) => bl(mtof(m), i * .22, .45, 'triangle', .07)); noise(t, 1.2, 'lowpass', 400, .15, d); break;
       case 'buy': [79, 84, 88].forEach((m, i) => bl(mtof(m), i * .05, .18, 'triangle', .08)); noise(t + .1, .08, 'highpass', 5000, .15, d); break;
     }
   }
+  // ---------- monster cries（種ごとに決まる 合成の なきごえ） ----------
+  let distCurve = null, cryLast = 0;
+  function cry(id, opt = {}) {
+    if (!C || muted) return 0; const now = C.currentTime; if (now - cryLast < .04) return 0; cryLast = now;
+    const DT = window.DATA || {}; let S = DT.species && DT.species[id], boss = !!opt.boss;
+    if (!S && DT.enemies && DT.enemies[id]) { const e = DT.enemies[id]; S = (e.spArt && DT.species[e.spArt]) || { no: 0, type: e.type, arch: 'golem', size: 1.6, name: e.name }; boss = true; }
+    if (!S) S = { no: 0, type: 'normal', arch: 'quad', name: String(id) };
+    let seed = 0; const key = (S.no || 0) + ':' + (S.name || id); for (let i = 0; i < key.length; i++) seed = (seed * 31 + key.charCodeAt(i)) >>> 0;
+    const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const arch = S.arch || 'quad', type = S.type || 'normal', size = S.size || 1;
+    const shadow = !!opt.shadow || boss; const P0 = { fluff: 950, sprite: 1150, bird: 1250, blob: 520, plant: 760, quad: 640, fish: 600, golem: 150 }[arch] || 640;
+    let f0 = P0 / Math.pow(size, 1.3) * (.82 + rnd() * .4) * (shadow ? .78 : 1) * (boss ? .55 : 1);
+    let dur = ({ fluff: .16, sprite: .14, bird: .2, blob: .18, plant: .2, quad: .22, fish: .2, golem: .34 }[arch] || .2) * (.8 + rnd() * .5) * Math.min(1.5, size) * (boss ? 1.5 : 1);
+    dur = Math.min(.4, Math.max(.08, dur)); const syl = arch === 'golem' || boss ? 1 : 1 + Math.floor(rnd() * (arch === 'fluff' || arch === 'sprite' || arch === 'bird' ? 3 : 2));
+    const contour = Math.floor(rnd() * 4); // 0 rise 1 fall 2 rise-fall 3 trill
+    const VOW = [[800, 1200], [300, 2300], [350, 900], [500, 1900], [450, 800]]; const vw = VOW[Math.floor(rnd() * VOW.length)];
+    const out = C.createGain(); out.gain.value = (opt.vol || 1) * (boss ? .5 : .38); let tail = out;
+    if (shadow) { if (!distCurve) { distCurve = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; distCurve[i] = Math.tanh(x * 3.2); } }
+      const ws = C.createWaveShaper(); ws.curve = distCurve; const lp = C.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = boss ? 1800 : 3200; ws.connect(lp); lp.connect(out); tail = ws; }
+    out.connect(sfxBus);
+    const t0 = now + .02, sd = dur / syl, gap = sd * .18;
+    const wave = arch === 'golem' || type === 'earth' ? 'sawtooth' : type === 'wind' || arch === 'bird' ? 'sine' : type === 'grass' || arch === 'plant' ? 'triangle' : arch === 'fish' || type === 'water' ? 'triangle' : 'square';
+    const formant = arch !== 'bird' && type !== 'wind';
+    for (let k = 0; k < syl; k++) {
+      const t = t0 + k * sd, e = t + sd - gap, fk = f0 * (1 + (syl > 1 ? (k === syl - 1 ? -.08 : .06 * k) : 0));
+      const o = C.createOscillator(); o.type = wave; const fr = o.frequency;
+      if (contour === 0) { fr.setValueAtTime(fk * .8, t); fr.exponentialRampToValueAtTime(fk * 1.25, e); }
+      else if (contour === 1) { fr.setValueAtTime(fk * 1.3, t); fr.exponentialRampToValueAtTime(fk * .75, e); }
+      else if (contour === 2) { fr.setValueAtTime(fk * .85, t); fr.exponentialRampToValueAtTime(fk * 1.3, t + (e - t) * .4); fr.exponentialRampToValueAtTime(fk * .8, e); }
+      else { fr.setValueAtTime(fk, t); const n = 4; for (let j = 1; j <= n; j++) fr.setValueAtTime(fk * (j % 2 ? 1.18 : 1), t + (e - t) * j / (n + 1)); }
+      if (type === 'water' || arch === 'fish') { const l = C.createOscillator(); l.type = 'sine'; l.frequency.value = 22 + rnd() * 14; const lg = C.createGain(); lg.gain.value = fk * .22; l.connect(lg); lg.connect(fr); l.start(t); l.stop(e + .02); }
+      if (type === 'wind' || arch === 'bird' || type === 'light') { const l = C.createOscillator(); l.frequency.value = 9 + rnd() * 6; const lg = C.createGain(); lg.gain.value = fk * .04; l.connect(lg); lg.connect(fr); l.start(t); l.stop(e + .02); }
+      const g = C.createGain(); const pk = wave === 'square' || wave === 'sawtooth' ? .22 : .5;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(pk, t + Math.min(.025, sd * .2)); g.gain.setValueAtTime(pk * .8, e - sd * .3); g.gain.exponentialRampToValueAtTime(.0005, e);
+      if (arch === 'golem' || boss) { const am = C.createOscillator(); am.frequency.value = 26 + rnd() * 12; const ag = C.createGain(); ag.gain.value = pk * .5; am.connect(ag); ag.connect(g.gain); am.start(t); am.stop(e + .02); }
+      o.connect(g);
+      if (formant) { const f1 = C.createBiquadFilter(), f2 = C.createBiquadFilter(); f1.type = f2.type = 'bandpass'; f1.frequency.value = Math.max(fk * 1.1, vw[0] * (arch === 'golem' ? .6 : 1)); f2.frequency.value = vw[1] * (arch === 'golem' ? .6 : 1); f1.Q.value = 4; f2.Q.value = 6;
+        const mix = C.createGain(); mix.gain.value = 2.4; g.connect(f1); g.connect(f2); f1.connect(mix); f2.connect(mix); const dry = C.createGain(); dry.gain.value = .35; g.connect(dry); dry.connect(tail); mix.connect(tail); }
+      else g.connect(tail);
+      o.start(t); o.stop(e + .03);
+      if (shadow) { const sub = C.createOscillator(); sub.type = 'sine'; sub.frequency.setValueAtTime(fk * .5, t); sub.frequency.exponentialRampToValueAtTime(fk * .42, e); const sg = C.createGain(); sg.gain.setValueAtTime(0, t); sg.gain.linearRampToValueAtTime(boss ? .35 : .2, t + .03); sg.gain.exponentialRampToValueAtTime(.0005, e); sub.connect(sg); sg.connect(tail); sub.start(t); sub.stop(e + .03); }
+    }
+    if (type === 'fire') for (let i = 0; i < 5; i++) noise(t0 + rnd() * dur, .03, 'highpass', 3000 + rnd() * 3000, .22, out);
+    if (arch === 'golem' || boss || type === 'earth') noise(t0, dur, 'lowpass', 260, boss ? .5 : .3, out);
+    if (type === 'water') for (let i = 0; i < 3; i++) { const b = C.createOscillator(), bg = C.createGain(), tb = t0 + dur * (.2 + i * .28); b.type = 'sine'; b.frequency.setValueAtTime(500 + rnd() * 400, tb); b.frequency.exponentialRampToValueAtTime(1400 + rnd() * 600, tb + .05); bg.gain.setValueAtTime(.12, tb); bg.gain.exponentialRampToValueAtTime(.0005, tb + .06); b.connect(bg); bg.connect(out); b.start(tb); b.stop(tb + .08); }
+    setTimeout(() => { try { out.disconnect(); } catch (_) {} }, (dur + .6) * 1000);
+    return dur;
+  }
   function toggleMute() { muted = !muted; if (master) master.gain.value = muted ? 0 : .8; return muted; }
   function setVol(m, s) { volM = m; volS = s; if (musicBus) musicBus.gain.value = m; if (sfxBus) sfxBus.gain.value = s; }
-  return { init, play, jingle, tick, sfx, toggleMute, setVol, get current() { return cur && cur.name; }, get ready() { return !!C; }, get busy() { return !!(cur && !cur.song.loop && !cur.done); } };
+  return { init, play, jingle, tick, sfx, cry, toggleMute, setVol, get current() { return cur && cur.name; }, get ready() { return !!C; }, get busy() { return !!(cur && !cur.song.loop && !cur.done); } };
 })();
