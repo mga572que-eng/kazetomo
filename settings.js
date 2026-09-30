@@ -1,0 +1,54 @@
+// 風灯の島 — せってい（音量・文字速度・画質・操作）と 自動画質
+'use strict';
+(() => {
+  const K = window.KZ; if (!K) return;
+  const KEY = 'kazetomo-opt';
+  const DEF = { bgm: 75, se: 70, text: 1, quality: 'auto', lefty: false, look: 1, calm: false };
+  let O = { ...DEF }; try { Object.assign(O, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+  const store = () => { try { localStorage.setItem(KEY, JSON.stringify(O)); } catch (e) {} };
+  let autoMax = 2, autoQ = null;
+  function apply() {
+    Music.setVol(O.bgm / 100, O.se / 100);
+    K.HOOK.OPT.text = O.text; K.HOOK.OPT.look = O.look; K.HOOK.OPT.lefty = O.lefty; K.HOOK.OPT.calm = O.calm;
+    document.body.classList.toggle('lefty', !!O.lefty); document.body.classList.toggle('calm', !!O.calm);
+    if (O.quality === 'auto') { if (autoQ == null) autoQ = World.quality; World.setQuality(autoQ); } else World.setQuality({ low: 0, mid: 1, high: 2 }[O.quality]);
+  }
+  apply();
+  // ---- 自動画質（3秒ごとに平均FPSを見る） ----
+  let acc = 0, frames = 0, good = 0;
+  K.HOOK.frame.push(dt => {
+    if (O.quality !== 'auto') return; acc += dt; frames++;
+    if (acc < 3) return; const fps = frames / acc; acc = 0; frames = 0;
+    if (fps < 36 && World.quality > 0) { autoQ = World.quality - 1; World.setQuality(autoQ); good = 0; K.toast(`画質を 自動で 下げました（${['低', '中', '高'][autoQ]}）`, 1600); }
+    else if (fps > 57 && World.quality < autoMax) { if (++good >= 4) { autoQ = World.quality + 1; World.setQuality(autoQ); good = 0; } } else good = 0;
+  });
+  // ---- UI ----
+  function seg(name, key, opts) { return `<div class="opt-row"><span>${name}</span><div class="seg">${opts.map(([v, l]) => `<button type="button" data-k="${key}" data-v="${v}" class="${String(O[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div></div>`; }
+  function slider(name, key) { return `<div class="opt-row"><span>${name}</span><input type="range" min="0" max="100" step="5" value="${O[key]}" data-k="${key}"><b>${O[key]}</b></div>`; }
+  function openSettings() {
+    return new Promise(res => {
+      const el = document.createElement('div'); el.className = 'win panel wide opt';
+      const M = { el, panel: true, items: [], res };
+      const paint = () => {
+        el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button><h3>せってい</h3>
+          ${slider('BGM', 'bgm')}${slider('効果音', 'se')}
+          ${seg('文字の 速さ', 'text', [[.6, 'ゆっくり'], [1, 'ふつう'], [1.8, 'はやい'], [6, 'しゅんかん']])}
+          ${seg('画質', 'quality', [['auto', 'じどう'], ['low', '低'], ['mid', '中'], ['high', '高']])}
+          ${seg('カメラ感度', 'look', [[.6, '低'], [1, '中'], [1.5, '高']])}
+          ${seg('操作の 左右', 'lefty', [[false, 'スティック左'], [true, 'スティック右']])}
+          ${seg('画面の ゆれ', 'calm', [[false, 'あり'], [true, 'へらす']])}
+          <p class="st-eq">いまの 画質：${['低', '中', '高'][World.quality]}（${O.quality === 'auto' ? 'じどう調整中' : '固定'}）</p>`;
+        el.querySelector('.m-x').onclick = () => { Music.sfx('cancel'); K.closeMenu(M, -1); };
+        el.querySelectorAll('.seg button').forEach(b => b.onclick = () => { const k = b.dataset.k; let v = b.dataset.v; v = v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v; O[k] = v; if (k === 'quality') autoQ = null; apply(); store(); Music.sfx('cursor'); paint(); });
+        el.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => { O[r.dataset.k] = +r.value; r.nextElementSibling.textContent = r.value; apply(); store(); });
+        el.querySelectorAll('input[type=range]').forEach(r => r.onchange = () => Music.sfx('cursor'));
+      };
+      paint(); document.getElementById('ui').appendChild(el); K.MENUS.push(M);
+    });
+  }
+  K.openSettings = openSettings;
+  K.HOOK.menu.push(() => ({ label: 'せってい', sub: '音・画質・操作', fn: openSettings }));
+  // タイトルにも ⚙
+  const tm = document.getElementById('titleMenu');
+  if (tm) { const b = document.createElement('button'); b.className = 't-btn'; b.type = 'button'; b.id = 'btnOpt'; b.textContent = '⚙ せってい'; b.onclick = () => { Music.init(); Music.sfx('ok'); openSettings(); }; tm.appendChild(b); }
+})();
