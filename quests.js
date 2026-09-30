@@ -85,6 +85,51 @@
     { id: 's_wata', r: 2, giver: 'nami', town: '雲の里ククル', title: '雲わたの 布', steps: [{ t: 'collect', item: 'kumowata', n: 5, text: '雲わた 5こ（空の いきもの・雲の 茂み）' }],
       offer: [nm('雲の 織り手 ワタ', '里の みんなの 冬の 布団が 足りないの。 雲わたを 5つ あつめて くれない？')], done: [nm('雲の 織り手 ワタ', 'ふかふかの 布団が できるわ！ お礼に 雲の ブロックを どうぞ。')], reward: { gold: 1500, blocks: { 11: 20 } } },
   ];
+  // ================= 第2章：オアシスの村 サラム（霧の大陸・砂漠） =================
+  const mkTown = (r, center, list, styles) => { World.setRegion(r); const R = K.REG[r];
+    R.trees.forEach(t => { if (Math.hypot(t.x - center.x, t.z - center.z) < 20) { t.state = 'gone'; t.t = -1e9; } }); R.rocks.forEach(t => { if (Math.hypot(t.x - center.x, t.z - center.z) < 18) { t.state = 'gone'; t.t = -1e9; } }); R.bushes = R.bushes.filter(t => Math.hypot(t.x - center.x, t.z - center.z) >= 16);
+    list.forEach((h, i) => { h.face = [center.x, center.z]; const rb = B.set; K.buildHouse(h, styles[i]); }); World.setRegion(0); };
+  const oasis = (() => { World.setRegion(1); let best = null; for (let x = 50; x <= 200; x += 6) for (let z = -120; z <= 150; z += 6) { if (World.biomeAt(x, z) !== 'desert') continue; if (Math.hypot(x - World.RUINS1[0], z - World.RUINS1[1]) < 75 || Math.hypot(x - T1.x, z - T1.z) < 90) continue;
+      let mn = 1e9, mx = -1e9; for (let i = -12; i <= 12; i += 4) for (let j = -12; j <= 12; j += 4) { const hh = K.hAt(x + i, z + j); mn = Math.min(mn, hh); mx = Math.max(mx, hh); } if (mn < 3) continue; const sc = mx - mn; if (!best || sc < best.sc) best = { x, z, sc }; } World.setRegion(0); return best || { x: 120, z: 80 }; })();
+  const oh = [{ id: 'oelder', x: oasis.x, z: oasis.z - 10 }, { id: 'ourana', x: oasis.x - 11, z: oasis.z + 2 }, { id: 'oinn', x: oasis.x + 11, z: oasis.z + 3 }];
+  mkTown(1, oasis, oh, [{ wall: 4, roof: 9, corner: 5 }, { wall: 9, roof: 3 }, { wall: 4, roof: 9 }]);
+  { World.setRegion(1); const b = Math.floor(K.hAt(oasis.x + .5, oasis.z + 4.5)); for (let dx = -2; dx <= 2; dx++) for (let dz = 2; dz <= 6; dz++) { if (Math.abs(dx) === 2 || dz === 2 || dz === 6) B.set(oasis.x + dx, b, oasis.z + dz, 1, true, 1); } World.setRegion(0); }
+  addNpc({ id: 'ushio', r: 1, x: oh[0].npc.x, z: oh[0].npc.z, yaw: oh[0].yaw, nm: '村長ハッサン' });
+  addNpc({ id: 'nami', r: 1, x: oh[1].npc.x, z: oh[1].npc.z, yaw: oh[1].yaw, nm: '星占いの ウララ' });
+  addNpc({ id: 'oinn', r: 1, x: oh[2].npc.x, z: oh[2].npc.z, yaw: oh[2].yaw, nm: 'オアシスの 宿' }); H.talks.oinn = async () => K.talkInn();
+  spots.dune = { x: oasis.x + 26, z: oasis.z - 22 };
+  // ================= 第3章：風車の集落 ハヤテ（天空の浮島・西の小島） =================
+  const I8 = World.ISL2[8]; const hayate = { x: I8.x, z: I8.z };
+  const hh3 = [{ id: 'hmill', x: hayate.x + 4, z: hayate.z - 3 }, { id: 'hhome', x: hayate.x - 5, z: hayate.z + 3 }];
+  mkTown(2, hayate, hh3, [{ wall: 0, roof: 11, corner: 5 }, { wall: 4, roof: 11 }]);
+  { World.setRegion(2); const cx = Math.round(hayate.x + 4), cz = Math.round(hayate.z - 3); const top = Math.floor(K.hAt(cx + .5, cz + .5)) + 8; for (let y = top; y < top + 5; y++) B.set(cx, y, cz, 5, true, 2); for (let k = -3; k <= 3; k++) { B.set(cx + k, top + 4, cz + 3, 0, true, 2); B.set(cx, top + 4 + k, cz + 3, 0, true, 2); } spots.mill = { x: cx + .5, z: cz + .5 }; World.setRegion(0); }
+  addNpc({ id: 'ryou', r: 2, x: hh3[0].npc.x, z: hh3[0].npc.z, yaw: hh3[0].yaw, nm: '風車守り カザミ' });
+  addNpc({ id: 'chibi', r: 2, x: hayate.x - 2, z: hayate.z + 7, nm: 'ハヤテの 子 ソラネ' });
+  (K.extraAreas = K.extraAreas || []).push({ rg: 1, id: 'oasis', x: oasis.x, z: oasis.z, r: 24, n: 'オアシスの村 サラム', s: '霧の大陸' }, { rg: 2, id: 'hayate', x: hayate.x, z: hayate.z, r: 16, n: '風車の集落 ハヤテ', s: '天空の浮島' });
+  K.oasis = oasis; K.hayate = hayate;
+  const F = () => G().flags;
+  DATA.reqs.push(
+    { id: 'c2a', gate: 2, r: 1, giver: 'ushio', town: 'サラム', title: '埋まった 井戸', when: () => F().c2rumor, steps: [{ t: 'collect', item: 'ishi', n: 6, text: '石を 6こ（井戸の 石組みに）' }, { t: 'hunt', region: 1, n: 3, text: '村の まわりの かげものを 3回 しずめる' }],
+      offer: [nm('村長ハッサン', '旅の 方か。 すまんが 宿も 満足に 出せん。 砂嵐で 井戸が 埋まり、かげものが 水場を 荒らしておる。'), nm('村長ハッサン', '石を 6つ、それと 村の まわりの かげものを 3度 追いはらって くれんか。'),
+        who('sora', 'determined', 'まかせて！ ……ところで、紺色の 髪の 女の子を 見ませんでしたか？'), nm('村長ハッサン', '……星の 髪飾りの 子なら、占いの ウララの 家に 泊まっておった。 井戸が 直ったら、話して やろう。')],
+      done: [nm('村長ハッサン', '水が 出た！ 村の 恩人じゃ。'), nm('村長ハッサン', 'あの 子の ことは ウララに 聞きなされ。 ずっと 気に かけておったよ。')], reward: { gold: 500, give: { shizuku: 2 } } },
+    { id: 'c2b', gate: 2, r: 1, giver: 'nami', town: 'サラム', title: '星読みの 丘', req: 'c2a', steps: [{ t: 'visit', spot: 'dune', night: true, text: '夜に 村の 北東の 砂丘で 星を 読む', fight: ['sunawani', 'hibana', 'sunawani'] }],
+      offer: [nm('星占いの ウララ', 'サナちゃんは 毎晩 砂丘で 星を 読んでいたわ。 「星が 泣いてる」って。'), nm('星占いの ウララ', 'ある夜、遺跡から 星の 光が 呼んで……それきり。 あの 砂丘に 行けば、あの子が 見た ものが わかるかも しれない。'),],
+      visit: ['星空の 下、砂の 上に 星の 図形が 刻まれている……。 サナの 字だ。「遺跡の 扉は 星の 歌で ひらく」', '……砂の 中から かげものが 飛びだした！'],
+      visitDone: ['サナが 残した「星の 歌」を おぼえた！ ウララに 知らせよう。'],
+      done: [nm('星占いの ウララ', '星の 歌……！ これで 遺跡の 扉が ひらくはずよ。'), nm('星占いの ウララ', 'どうか あの子を 連れて 帰って きてね。'), '（遺跡の 扉を ひらく 手がかりを 得た！）'], reward: { gold: 600, give: { hoshikake: 1 } } },
+    { id: 'c3a', gate: 3, r: 2, giver: 'ryou', town: 'ハヤテ', title: '止まった 風車', when: () => F().c3elder, steps: [{ t: 'collect', item: 'kumowata', n: 3, text: '雲わた 3こ（帆の つくろいに）' }],
+      offer: [nm('風車守り カザミ', 'ソヨギさまの お使いか。 風の 祠を ひらくには、この 風車で 読んだ「風の 道」が いる。'), nm('風車守り カザミ', 'だが 風車の 帆が やぶれて 止まっちまった。 雲わたを 3つ たのむ。')],
+      done: [nm('風車守り カザミ', 'よし、帆が 直った！ あとは てっぺんの 羽根を 回して くれ。')], reward: { gold: 900 } },
+    { id: 'c3b', gate: 3, r: 2, giver: 'ryou', town: 'ハヤテ', title: '風車の 羽根', req: 'c3a', steps: [{ t: 'visit', spot: 'mill', text: '風車の 下で 羽根を 回す', fight: ['amatsubame', 'kumomo'] }],
+      offer: [nm('風車守り カザミ', '羽根の 軸に かげものが からみついてる。 追いはらって 回して くれ！')], visit: ['風車の 軸に かげものが からみついている！'], visitDone: ['羽根が 回りだした！ 空に 三つの 風の 道が 光った！'],
+      done: [nm('風車守り カザミ', '見えるか？ 東・南西・西……あれが 風の 祠への 道だ。'), who('haru', 'smile', 'これで 祠に 風を 通せる。 行こう！'), '（風の 祠に 挑めるように なった！）'], reward: { gold: 1200, give: { ganbari: 2 } } },
+    { id: 's_sorane', r: 2, giver: 'chibi', town: 'ハヤテ', title: '空の 花', steps: [{ t: 'hunt', region: 2, n: 5, text: '天空の浮島で かげものを 5回 しずめる' }],
+      offer: [nm('ハヤテの 子 ソラネ', 'かげものが こわくて、花を つみに 行けないの……。')], done: [nm('ハヤテの 子 ソラネ', 'ありがとう！ これ、お守り！')], reward: { give: { hoshikake: 1, nakayoshi: 2 } } },
+    { id: 's_kai', r: 3, giver: 'kai', town: 'アワの里', title: '光る ヒトデ', steps: [{ t: 'seen', sp: 'hitoden', text: '夜の さんご礁で ヒトデンを 見つける（図鑑に 登録）' }],
+      offer: [nm('アワの子 カイ', '夜に 光る ヒトデが いるんだって！ 見つけたら 教えて！')], done: [nm('アワの子 カイ', 'ほんとに いたんだ！ はい、しんじゅ！')], reward: { give: { shinju: 2 } } },
+  );
+
   const byId = id => DATA.reqs.find(x => x.id === id);
   const q = id => { const g = G(); g.req = g.req || {}; return g.req[id] = g.req[id] || {}; };
   const done = id => q(id).s === 'd';
@@ -92,10 +137,12 @@
   H.load.push(g => { g.req = g.req || {}; });
 
   // ---- ステップ 判定 ----
-  const stepOk = (Q, st) => { const s = Q.steps[st.step || 0]; if (!s) return true; const g = G();
+  const stepOk = (Q, st, i = st.step || 0) => { const s = Q.steps[i]; if (!s) return true; const g = G();
+    if (s.t !== 'collect' && (st.fin || [])[i]) return true;
     if (s.t === 'collect') return (g.inv[s.item] || 0) >= s.n;
     if (s.t === 'shards') return (g.trial[0].shards || 0) >= s.n;
     if (s.t === 'dex') return Object.keys(g.dex.got).length >= s.n;
+    if (s.t === 'seen') return !!(g.dex.seen[s.sp] || g.dex.got[s.sp]);
     if (s.t === 'hunt') return (st.c || 0) >= s.n;
     return !!st.v; };
   const stepTxt = (Q, st) => { const s = Q.steps[st.step || 0]; if (!s) return `${Q.town}の ${giverName(Q)}に 報告`; const g = G();
@@ -103,15 +150,18 @@
     return s.text + prog; };
   const giverNpc = Q => K.NPCS.find(n => n.id === Q.giver && n.r === Q.r);
   const giverName = Q => { const n = giverNpc(Q); return n ? (n.nm || (DATA.cast[n.id] || {}).name) : ''; };
-  const avail = Q => !q(Q.id).s && (!Q.req || done(Q.req)) && (Q.key == null || (G().order === Q.key && (Q.key > 0 || G().flags.mio)));
+  const avail = Q => !q(Q.id).s && (!Q.req || done(Q.req)) && (!Q.when || Q.when()) && (Q.key == null || (G().order === Q.key && (Q.key > 0 || G().flags.mio)));
   // 1ステップ 進める（達成なら 次へ。 全部 おわれば 報告待ち）
-  function advance(Q) { const st = q(Q.id); while (st.step < Q.steps.length && stepOk(Q, st) && Q.steps[st.step].t !== 'collect') { st.step++; st.v = 0; st.w = 0; st.c = 0; } }
+  function advance(Q) { const st = q(Q.id); st.step = st.step || 0; st.fin = st.fin || [];
+    for (let i = 0; i < Math.min(st.step, Q.steps.length); i++) if (!stepOk(Q, st, i)) { st.step = i; break; }
+    while (st.step < Q.steps.length && stepOk(Q, st)) { if (Q.steps[st.step].t !== 'collect') { st.fin[st.step] = 1; st.v = 0; st.w = 0; st.c = 0; } st.step++; } }
+  const isReady = Q => { advance(Q); return q(Q.id).step >= Q.steps.length; };
 
   // ---- 会話（依頼人） ----
   async function talkGiver(n) { const g = G(); const list = DATA.reqs.filter(Q => Q.giver === n.id && Q.r === g.region);
     // 報告
     for (const Q of list) { const st = q(Q.id); if (st.s !== 'a') continue; advance(Q);
-      if (st.step >= Q.steps.length - 1 && Q.steps[Q.steps.length - 1].t === 'collect' ? Q.steps.slice(st.step).every(s => (g.inv[s.item] || 0) >= s.n) : st.step >= Q.steps.length) {
+      if (isReady(Q)) {
         for (const s of Q.steps) if (s.t === 'collect') g.inv[s.item] -= s.n; st.s = 'd'; const w = Q.reward || {}; const lines = [...Q.done];
         if (w.gold) { g.gold += w.gold; lines.push(`${w.gold}ゴールドを もらった！`); } for (const [k, v] of Object.entries(w.give || {})) { K.gain(k, v); lines.push(`${DATA.items[k].name}を ${v}こ もらった！`); }
         for (const [k, v] of Object.entries(w.blocks || {})) { g.blk[k] = (g.blk[k] || 0) + v; lines.push(`${DATA.blocks[k]}ブロックを ${v}こ もらった！`); }
@@ -122,7 +172,7 @@
     return 'pass'; }
   for (const id of ['nami', 'ryou', 'chibi']) H.talks[id] = async n => { const r = await talkGiver(n); if (r === 'pass') await K.say([nm(n.nm, ({ nami: 'この町を もう一度 灯で いっぱいに したいの。', ryou: '海は きびしいが、正直だ。', chibi: 'リクにいちゃん、つよいんだよ！' })[n.id])]); };
   // 既存 NPC（ゲン・ナギ）は 依頼が あるときだけ 横取り
-  for (const id of ['gen', 'nagi']) { const prev = H.talks[id]; H.talks[id] = async n => { if (G().region === 0) { const list = DATA.reqs.filter(Q => Q.giver === id && Q.r === 0); if (list.some(Q => q(Q.id).s === 'a' || avail(Q))) { const r = await talkGiver(n); if (r !== 'pass') return; } } return prev ? prev(n) : 'pass'; }; }
+  for (const id of ['gen', 'nagi', 'ushio', 'kai']) { const prev = H.talks[id]; H.talks[id] = async n => { { const list = DATA.reqs.filter(Q => Q.giver === id && Q.r === G().region); if (list.some(Q => q(Q.id).s === 'a' || avail(Q))) { const r = await talkGiver(n); if (r !== 'pass') return; } } if (id === 'ushio' && G().region === 1) return K.say([nm('村長ハッサン', done('c2a') ? '井戸の 水が うまい。 旅の 方の おかげじゃ。' : 'この 村は 砂漠の 旅人の 休み場所じゃ。')]); return prev ? prev(n) : 'pass'; }; }
   H.talks.inn = (prev => async n => { if (G().region === 0) return K.talkInn(); return prev ? prev(n) : 'pass'; })(H.talks.inn);
   H.talks.item = (prev => async n => { if (G().region === 0) return K.shopUI('item'); return prev ? prev(n) : 'pass'; })(H.talks.item);
 
@@ -150,18 +200,29 @@
     return ['灯台の 扉は かたく 閉ざされている……。', Q ? `（${Q.town}の ${giverName(Q)}が 鍵の ことを 知っているようだ）` : '（まだ 鍵が ない）']; };
   H.beaconObj = () => { const k = G().order; if (keyDone(k)) return null; const Q = DATA.reqs.find(x => x.key === k && !done(x.id)); if (!Q) return null; const st = q(Q.id); const lv = DATA.guardLv[k];
     if (!st.s) { const n = giverNpc(Q); return { t: `【灯台 ${k}/5・推奨Lv${lv}】${Q.town}の ${giverName(Q)}に 話を 聞こう`, p: n ? { x: n.x, z: n.z } : null }; }
-    advance(Q); const s = Q.steps[st.step || 0]; const fin = !s || (s.t === 'collect' ? Q.steps.slice(st.step).every(x => (G().inv[x.item] || 0) >= x.n) : stepOk(Q, st) && st.step >= Q.steps.length - 1 && (s.t !== 'visit' && s.t !== 'waves' || st.v));
-    if (fin || (s && (s.t === 'visit' || s.t === 'waves') && st.v)) { const n = giverNpc(Q); return { t: `【灯台 ${k}/5】${Q.town}の ${giverName(Q)}に 報告しよう`, p: n ? { x: n.x, z: n.z } : null }; }
+    const fin = isReady(Q); const s = Q.steps[st.step || 0];
+    if (fin) { const n = giverNpc(Q); return { t: `【灯台 ${k}/5】${Q.town}の ${giverName(Q)}に 報告しよう`, p: n ? { x: n.x, z: n.z } : null }; }
     const p = s && (s.t === 'visit' || s.t === 'waves') ? spotOf(s) : s && s.t === 'shards' ? (() => { const b0 = R0.beacons[0]; const got = G().trial[0].got || []; const sh = b0.shards.find((_, i) => !got.includes(i)); return sh; })() : null;
     return { t: `【灯台 ${k}/5・${Q.title}】${stepTxt(Q, st)}`, p }; };
-  K.reqList = () => DATA.reqs.filter(Q => q(Q.id).s === 'a').map(Q => { const st = q(Q.id); advance(Q); const s = Q.steps[st.step || 0]; const n = giverNpc(Q);
-    const ready = !s || (s.t !== 'visit' && s.t !== 'waves' ? stepOk(Q, st) : st.v); const p = ready ? (n ? { x: n.x, z: n.z } : null) : s && (s.t === 'visit' || s.t === 'waves') ? spotOf(s) : null;
+  const gateDone = n => DATA.reqs.filter(x => x.gate === n).every(x => done(x.id));
+  H.gate2 = () => (F().c2mid || gateDone(2)) ? null : ['遺跡の 奥の 扉は 星の 紋様で 閉ざされている……。', '（東の 砂漠の オアシスの村「サラム」で 手がかりを さがそう）'];
+  H.gate3 = () => (G().wind.some(Boolean) || gateDone(3)) ? null : ['祠の 風は よどんでいて、道が 見えない……。', '（西の 小島「ハヤテ」の 風車守りが 風の 道を 読めるらしい。 上昇気流で わたろう）'];
+  const gateObj = (n, lead) => { const Q = DATA.reqs.find(x => x.gate === n && !done(x.id)); if (!Q) return null; const st = q(Q.id);
+    if (!st.s) { const nn = giverNpc(Q); return { t: `${lead}${Q.town}の ${giverName(Q)}に 会おう`, p: nn ? { x: nn.x, z: nn.z } : null }; }
+    const ready = isReady(Q); const s = Q.steps[st.step || 0];
+    if (ready) { const nn = giverNpc(Q); return { t: `${lead}${Q.town}の ${giverName(Q)}に 報告`, p: nn ? { x: nn.x, z: nn.z } : null }; }
+    return { t: `${lead}${Q.title}：${stepTxt(Q, st)}`, p: s && (s.t === 'visit' || s.t === 'waves') ? spotOf(s) : null }; };
+  H.obj2 = () => (F().c2mid || gateDone(2)) ? null : gateObj(2, '【第2章】');
+  H.obj3 = () => (G().wind.some(Boolean) || gateDone(3)) ? null : gateObj(3, '【第3章】');
+  H.mapMarks.push((r, pos) => r === 1 ? [`<span class="mk town" style="${pos(oasis.x, oasis.z)}">サラム</span>`] : r === 2 ? [`<span class="mk town" style="${pos(hayate.x, hayate.z)}">ハヤテ</span>`] : []);
+  H.warps.push(r => r === 1 && done('c2a') ? [{ n: 'サラム', x: oasis.x + 1.5, z: oasis.z + 8 }] : r === 2 && done('c3a') ? [{ n: 'ハヤテ', x: hayate.x, z: hayate.z + 6 }] : []);
+  K.reqList = () => DATA.reqs.filter(Q => q(Q.id).s === 'a').map(Q => { const st = q(Q.id); const ready = isReady(Q); const s = Q.steps[st.step || 0]; const n = giverNpc(Q); const p = ready ? (n ? { x: n.x, z: n.z } : null) : s && (s.t === 'visit' || s.t === 'waves') ? spotOf(s) : null;
     return { id: 'r' + Q.id, n: `${Q.key != null ? '【鍵】' : '【依頼】'}${Q.title}（${Q.town}）`, d: ready ? `${giverName(Q)}に 報告しよう` : stepTxt(Q, st), p, r: Q.r }; });
   // ---- 地図・ワープ・地名 ----
   H.mapMarks.push((r, pos) => { const out = []; if (r === 0) out.push(`<span class="mk town" style="${pos(SX, SZ)}">シオミ</span>`);
     for (const Q of DATA.reqs) { if (Q.r !== r) continue; const st = q(Q.id); const n = giverNpc(Q); if (n && (avail(Q) || st.s === 'a')) out.push(`<span class="mk" style="${pos(n.x, n.z)};color:#ffd24a" title="${Q.title}">${st.s === 'a' ? '？' : '！'}</span>`); } return out; });
   H.warps.push(r => r === 0 && (G().warp || G().order >= 2) ? [{ n: 'シオミ', x: SX + 1.5, z: SZ + 5 }] : []);
-  K.extraAreas = [{ rg: 0, id: 'shiomi', x: SX, z: SZ, r: 26, n: '潮見の町 シオミ', s: '風灯の島' }];
+  (K.extraAreas = K.extraAreas || []).push({ rg: 0, id: 'shiomi', x: SX, z: SZ, r: 26, n: '潮見の町 シオミ', s: '風灯の島' });
   // 頭上の「！」（依頼あり）
   H.fx.push((fx, dt, T) => { const g = G(); for (const Q of DATA.reqs) { if (Q.r !== g.region || !avail(Q)) continue; const n = giverNpc(Q); if (!n || (n.show && !n.show())) continue; if (Math.hypot(n.x - K.player.x, n.z - K.player.z) > 60) continue;
     fx.push({ type: 1, p: [n.x, K.surfaceAt(n.x, n.z, 99) + 2.6 + Math.sin(T * 3) * .1, n.z], size: [.9, .9], grow: 1.2, tint: [1, .85, .2] }); } });

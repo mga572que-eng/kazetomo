@@ -284,6 +284,7 @@ const HUMANS = {
   kurou: { skin: '#e8dccb', hair: '#eeeaf2', hairStyle: 'long', lock: '#1e1b2a', eye: [.45, .5, .7], top: '#3e4256', robe: true, mantle: true, lantern: true, lanternCol: [.72, .5, 1], tall: 1.12, wide: .88, beard: 'big' },
   tsumugi: { skin: '#fadfca', hair: '#8fbf6a', hairStyle: 'buns', eye: [.5, .35, .2], top: '#fbfbf6', bottom: '#6aa84f', robe: true, kid: true, glasses: true, satchel: true, notebook: true },
   baldo: { skin: '#d99a6c', hair: '#eeeae2', hairStyle: 'short', eye: [.25, .38, .5], top: '#23324a', bottom: '#1b2638', belly: true, wide: 1.25, beard: 'big', hat: 'bicorne', accent: '#1b2638', epaulet: true, trim: '#d8b24a' },
+  oinn: { skin: '#b8845c', hair: '#1a1a22', hairStyle: 'bob', top: '#e8d8b0', bottom: '#8a5a3a', skirt: '#c8784a', shawl: '#3a8a8a' },
   nami: { skin: '#e2b894', hair: '#5a3a2a', hairStyle: 'bob', eye: [.35, .25, .15], top: '#c8584a', bottom: '#4a3a3a', skirt: '#8a4a3a', shawl: '#f0e0c0', accent: '#f3c15a' },
   ryou: { skin: '#c48a64', hair: '#2a2a30', hairStyle: 'short', eye: [.2, .2, .2], top: '#3a6a8a', bottom: '#2a3a4a', sleeve: 'rolled', beard: 'stubble', wide: 1.15 },
   chibi: { skin: '#f0cfa8', hair: '#d8783a', hairStyle: 'twin', eye: [.3, .5, .3], top: '#f0c040', bottom: '#4a6aa8', kid: true, scale: .8 },
@@ -538,6 +539,7 @@ function objective() {
   if (!F.c2done && (!F.c2arrive || G.region !== 1)) { if (G.region === 0) return { t: '桟橋の バルド船長の 船で 霧の大陸へ', p: npcAt('baldo', 0) }; }
   if (G.region === 1 && !F.dex) return { t: '港町ミナトの 研究所で ツムギに 会おう', p: npcAt('tsumugi', 1) };
   if (G.region === 1 && !F.c2rumor) return { t: 'ギルドで 情報を 集めよう', p: npcAt('guild', 1) };
+  if (G.region === 1 && F.c2rumor && !F.c2mid && HOOK.obj2) { const o = HOOK.obj2(); if (o) return o; }
   if (!F.c2done) { if (G.region !== 1) return { t: '霧の大陸へ もどろう', p: npcAt('baldo', 0) }; return { t: F.c2mid ? `【推奨Lv${DATA.bossCfg.sanaShadow[0]}】遺跡の 奥の 祭壇へ` : `【推奨Lv${DATA.bossCfg.ishigakiG[0]}】東の 砂漠の「星の遺跡」の 奥へ`, p: F.c2mid ? r1.altar : r1.midboss }; }
   const r2 = REG[2];
   if (!F.c3start) return G.region === 1 ? { t: '【第3章】港町ミナトの 研究所で ツムギに 会おう', p: npcAt('tsumugi', 1) } : { t: '【第3章】霧の大陸の ツムギが 呼んでいる（バルド船長の 船へ）', p: npcAt('baldo', 0) };
@@ -545,6 +547,7 @@ function objective() {
     if (G.region === 1) return { t: F.c3arrive ? '星の遺跡の 祭壇で 星笛を ふいて 空へ もどろう' : '星の遺跡の 祭壇で 星笛を ふこう（夜に ひびく）', p: r1.altar }; }
   if (!F.c3done) {
     if (!F.c3elder) return { t: '雲の里ククルの 長老ソヨギに 会おう', p: npcAt('soyogi', 2) };
+    if (!F.c3bridge && HOOK.obj3) { const o = HOOK.obj3(); if (o) return o; }
     if (!F.c3bridge) { const nd = G.wind.filter(Boolean).length; let best = null, bd = 1e9; for (const sh of r2.shrines) if (!G.wind[sh.i]) { const d = Math.hypot(sh.x - player.x, sh.z - player.z); if (d < bd) { bd = d; best = sh; } }
       if (!best) { G.flags.c3bridge = true; buildBridge(); return { t: '虹の橋を わたり、北の「星巣の塔」へ', p: r2.midboss }; }
       const i = best.i, T = DATA.windTrials[i], st = G.wtrial[i], lv = DATA.bossCfg[WIND_BOSS[i]][0]; let step, p = best;
@@ -989,6 +992,7 @@ async function shrineEvent() {
 }
 // ---- chapter 2 ----
 async function midbossEvent() {
+  if (HOOK.gate2) { const g = HOOK.gate2(); if (g) { await say(g); return; } }
   await say([`（推奨Lv${DATA.bossCfg.ishigakiG[0]}）`, '遺跡の 奥から、重たい 足音が 近づいてくる。', '苔むした 石の 巨人が 立ちはだかった！']);
   const res = await runBattle([{ boss: 'ishigakiG' }], { boss: true, noFlee: true });
   if (res !== 'win') return defeated();
@@ -1076,6 +1080,7 @@ async function talkSoyogi() {
   else if (c === 1) await say([who('soyogi', 'smile', '雲の 上では 風が 道じゃ。 光る 風の 柱に 乗れば、どこまでも 高く 行ける。'), who('soyogi', 'neutral', '雲わたは 空の いきものが 落とす。 雲ブロックに すれば、空に 足場も 作れるぞい。')]);
 }
 async function windEvent(sh) {
+  if (HOOK.gate3) { const g = HOOK.gate3(); if (g) { await say(g); return; } }
   const i = sh.i, T = DATA.windTrials[i], st = G.wtrial[i], F = G.flags;
   if (!F.c3elder) { await say(['祠は 静まりかえっている。', who('sora', 'neutral', '……まずは 里の 長老に 話を きこう。')]); return; }
   if (!st.seen) { st.seen = 1; await say([`【風の祠の試練　${T.name}】`, T.text]); }
