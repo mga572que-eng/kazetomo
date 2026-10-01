@@ -35,11 +35,11 @@
     { id: 'mob_gem_s01', r: 0, t: 'man', x: -116, z: 52, yaw: 0.4, nm: 'さかばかよいのサブ',
       rumor: true, lines: ['へへっ…… さかばの おくの あんがりで、 サイコロころがしてる れんちゅうが いるのさ。', 'かてば めずらしい「ふねの かぎ」が てにいるって はなしだが…… イカサマかもな。'] },
     { id: 'mob_gem_s02', r: 0, t: 'woman', x: -126, z: 68, yaw: -1.8, nm: 'やけだされのサト',
-      rumor: true, lines: ['かじで やけのこった まちはずれの あのいえね…… すんでた じいさんは どこかへ きえちまったよ。', 'でもね、 えんとつの なかに きんいろの なにかを なげこむのを みた にんが いるんだってさ。'] },
+      rumor: true, lines: ['かじで やけのこった まちはずれの あのいえね…… すんでた じいさんは どこかへ きえちまったよ。', 'でもね、 えんとつの なかに きんいろの なにかを なげこむのを みた ひとが いるんだってさ。'] },
     { id: 'mob_gem_s03', r: 0, t: 'oldm', x: -112, z: 72, yaw: 2.2, nm: 'ふねだいくのゲンゾウ',
       rumor: true, lines: ['リョウの ふなつききばの いたのしたにな、 むかしの みつぼうえきの ぬけあなが うまってるんじゃ。', 'まんちょうの ときだけ、 あなの おくから しおが ふきだすんじゃよ。'] },
     { id: 'mob_gem_s04', r: 0, t: 'man', x: -124, z: 58, yaw: -0.9, nm: 'さかなやのウオキチ',
-      lines: ['へい いらっしゃい！ カゼヒラメの しおやきき、 たべてくかい？ うまいよ！'] },
+      lines: ['へい いらっしゃい！ カゼヒラメの しおやき、 たべてくかい？ うまいよ！'] },
     { id: 'mob_gem_s05', r: 0, t: 'boy', x: -118, z: 64, yaw: 1.6, nm: 'こぞうのタツ',
       lines: ['リクのにいちゃんは カッコいいんだ！ まちの おとなは わるく いうけど、 オイラは しんじてる！'] },
     { id: 'mob_gem_s06', r: 0, t: 'girl', x: -122, z: 48, yaw: 3.0, nm: 'かいひろいのアヤ',
@@ -53,7 +53,7 @@
     { id: 'mob_gem_s10', r: 0, t: 'boy', x: -126, z: 62, yaw: 2.1, nm: 'わんぱくショータ',
       lines: ['オイラも はやく おおきくなって、 やりを びゅんびゅん ふりまわしたいな！'] },
     { id: 'mob_gem_s11', r: 0, t: 'woman', x: -118, z: 74, yaw: -0.3, nm: 'やどのしたばたらきハルミ',
-      lines: ['しおかぜていの おふとんは しおかぜで ちょっぴり しめってるけど、 たびの にんは ぐっすり ねむってくれるわ。'] },
+      lines: ['しおかぜていの おふとんは しおかぜで ちょっぴり しめってるけど、 たびの ひとは ぐっすり ねむってくれるわ。'] },
     { id: 'mob_gem_s12', r: 0, t: 'oldm', x: -108, z: 56, yaw: 1.9, nm: '灯台みのロクロウ',
       lines: ['あそこの がけの 灯台…… ひざらが おきに ういてるじゃろ？ むかしの ともしびしゅの いじじゃよ。'] },
 
@@ -133,7 +133,7 @@
     { id: 'mob_gem_c07', r: 2, t: 'woman', x: -6, z: 86, yaw: 1.7, nm: 'さぼうのユキナ',
       lines: ['くもちゃの おかわりは どう？ くもの すいてきで えんれた、 すっきりした おちゃよ。'] },
     { id: 'mob_gem_c08', r: 2, t: 'oldw', x: 6, z: 84, yaw: -1.1, nm: 'あみもののチヨ',
-      lines: ['くもの いとは あたたかいよ。 ちじょうの にんは さむがりじゃから、 たくさん もっていきな。'] },
+      lines: ['くもの いとは あたたかいよ。 ちじょうの ひとは さむがりじゃから、 たくさん もっていきな。'] },
     { id: 'mob_gem_c09', r: 2, t: 'boy', x: -14, z: 68, yaw: 0.5, nm: 'とりつかいのポポ',
       lines: ['アマツバメに ごはん あげてたら、 てのひらに のってくれたんだ！'] },
     { id: 'mob_gem_c10', r: 2, t: 'girl', x: 14, z: 68, yaw: 2.9, nm: 'ふうしゃのルリ',
@@ -234,7 +234,7 @@ for(const r of RESIDENTS){r.name=r.nm; const a=r.id.startsWith('mob_gem_s')?K.sh
         if (npc && safe(npc.x, npc.z, r, row.id)) { npc.mobVisible = true; continue; }
         const pos = findSpot(row);
         if (!pos) { if (npc) npc.mobVisible = false; continue; }
-        if (!npc) { npc = { id: row.id, r, nm: row.name, yaw: 0, baseYaw: 0, mobVisible: true }; npc.show = () => npc.mobVisible; K.NPCS.push(npc); }
+        if (!npc) { npc = { id: row.id, r, nm: row.name, yaw: 0, baseYaw: 0, mobVisible: true }; npc.show = () => npc.mobVisible && !npc.indoor; K.NPCS.push(npc); }
         Object.assign(npc, pos, { mobVisible: true });
         if (row.rumor) row.houseId = K.REG[r].houses[row.houseIndex]?.id || null;
       }
@@ -253,6 +253,7 @@ for(const r of RESIDENTS){r.name=r.nm; const a=r.id.startsWith('mob_gem_s')?K.sh
     for (const mesh of meshes) mesh.n = 0;
     if (K.phase !== 'field' || (K.B && K.B.active)) return; // 立体バトル中は 描かない
     if (lastRegion !== K.G.region) { registerRegion(K.G.region); lastRegion = K.G.region; }
+    if (K.townLife && K.townLife.on) return; // 動きと 描画は townlife.js（町の くらし）が 受けもつ
     if (npcLen !== K.NPCS.length) { npcLen = K.NPCS.length; npcMap = new Map(); for (const x of K.NPCS) if (!npcMap.has(x.id)) npcMap.set(x.id, x); } // 毎フレームの 線形検索を やめる
     RESIDENTS.forEach((row, i) => {
       const n = npcMap.get(row.id);

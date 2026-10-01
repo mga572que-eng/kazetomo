@@ -75,7 +75,7 @@ const entries = [
   { id: 'tk_riku_add_13', c: 'riku', cond: (G, r) => G.bountyDone >= 10,
     t: [who('riku', 'grin', 'ギルドの いらいも いたに ついてきたな。 しょうきんかせぎでも やってけそうだぜ、 おれたち。')] },
   { id: 'tk_riku_add_14', c: 'riku', cond: (G, r) => G.inv.sakana >= 5,
-    t: [who('riku', 'smile', 'さかなが あんじゃねえか。 しおやききに して くれよ。 かんぶつも いいな……。')] },
+    t: [who('riku', 'smile', 'さかなが あんじゃねえか。 しおやきに して くれよ。 かんぶつも いいな……。')] },
   { id: 'tk_riku_add_15', c: 'riku', cond: (G, r) => G.eq.riku && G.eq.riku.w >= 3,
     t: [who('riku', 'determined', 'いい やりだ。 ふるたびに てのひらに なじむ。 ゲンさんの うでは ほんものだな。')] },
 

@@ -804,7 +804,7 @@ async function sail(dest) {
   player.x = r.pier.x; player.z = r.pier.z - 8; player.y = surfaceAt(player.x, player.z, 99); player.vx = player.vz = player.vy = 0; trail.length = 0; cam.yaw = Math.PI; player.yaw = Math.PI;
   await cinematic('sail', REGION_NAME[dest], dest ? '— かもめ丸の 船旅 —' : '— 帰りの 船旅 —');
   Music.play(fieldSong(), { restart: true }); await wait(250); await fade(false); save(); }
-async function talkInn() { const sky = G.region === 2, sea = G.region === 3, cost = sea ? 60 : sky ? 40 : 20; const c = await menu({ title: sea ? '泡の宿「あぶく亭」' : sky ? '雲の宿「ふわり亭」' : '宿屋「うみねこ亭」', items: [{ label: 'とまる', sub: `${cost}G・全回復＋記録`, disabled: G.gold < cost }, { label: 'はなす' }] });
+async function talkInn() { const sky = G.region === 2, sea = G.region === 3, cost = Math.round((sea ? 60 : sky ? 40 : 20) * (HOOK.priceK ? HOOK.priceK() : 1)); const c = await menu({ title: sea ? '泡の宿「あぶく亭」' : sky ? '雲の宿「ふわり亭」' : '宿屋「うみねこ亭」', items: [{ label: 'とまる', sub: `${cost}G・全回復＋記録`, disabled: G.gold < cost }, { label: 'はなす' }] });
   if (c === 0) await rest(cost); else if (c === 1) await say([sky ? nm('雲の宿の 主人', '雲わたの 布団は ふかふかだよ。 ……星が 減ってから、夜が さびしくてねえ。') : nm('宿屋の おかみ', '最近は 夜に なると 空が ざわつくのよ。 星が 東の 砂漠へ 落ちていくの。')]); }
 // ================= ショップ UI（v5） =================
 const ICON = (() => { const w = (b) => `<svg viewBox="0 0 32 32" class="ic" aria-hidden="true">${b}</svg>`;
@@ -843,7 +843,7 @@ function shopUI0(kind) {
     const rows = () => {
       if (tab === 'w') { const out = []; for (const m of G.party) DATA.gear[m.id].forEach((g, i) => { if (g.price && !!g.sky === sky && !!g.sea === sea) out.push({ t: 'w', m, i, g, name: g.name, price: g.price, sub: nameOf(m), icon: ICON.gear(m.id, i), dis: G.eq[m.id].w >= i }); }); return out; }
       if (tab === 'a') return DATA.armor.map((a, i) => ({ t: 'a', i, a, name: a.name, price: a.price, sub: `ぼうぎょ ${a.def}`, icon: ICON.armor(i), dis: G.party.every(m => G.eq[m.id].a >= i) })).filter(o => o.price && !!o.a.sky === sky && !!o.a.sea === sea);
-      if (tab === 'i') { const ids = (sea ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : sky ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : ['mi', 'pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi']).concat(HOOK.shopExtra ? HOOK.shopExtra(G.region) : []); return ids.map(k => ({ t: 'i', k, name: DATA.items[k].name, price: DATA.items[k].price, sub: `もち ${G.inv[k] || 0}`, icon: ICON.item(k) })); }
+      if (tab === 'i') { const ids = (sea ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : sky ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : ['mi', 'pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi']).concat(HOOK.shopExtra ? HOOK.shopExtra(G.region) : []); return ids.map(k => ({ t: 'i', k, name: DATA.items[k].name, price: Math.max(1, Math.round(DATA.items[k].price * (HOOK.priceK ? HOOK.priceK() : 1))), sub: `もち ${G.inv[k] || 0}`, icon: ICON.item(k) })); }
       return Object.keys(DATA.items).filter(k => (G.inv[k] || 0) > 0 && DATA.items[k].sell).map(k => ({ t: 's', k, name: DATA.items[k].name, price: DATA.items[k].sell, sub: `もち ${G.inv[k]}${DATA.items[k].mat ? '・素材' : ''}`, icon: ICON.item(k) })); };
     const detail = o => {
       if (!o) return `<div class="sdet"><p class="st-eq">${tab === 's' ? 'うれる ものが ない。' : '品物が ない。'}</p></div>`;

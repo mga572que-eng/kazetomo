@@ -1,28 +1,33 @@
 # 作業の再開
 
-更新: 2026-10-01T22:24:21.822Z
-ブランチ: work/lighthouse-dungeon
-直前コミット: 1e49c48f0b255e921f894ef7e7668e3a379d1a63
+更新: 2026-10-01T22:55:31.865Z
+ブランチ: work/town-life
+直前コミット: b3f365f0ae51305215458da6559059af0d45bf07
 
 ## 目的
-灯台ダンジョンの試作（任意の寄り道）
+町のくらし 第1段
 
 ## 完了・途中の内容
-lighthouses.js：第1灯台の内部回廊（飛び石・おもし・欠片→火皿）。本編の進行は不変、セーブは G.lhDun のみ。版 20261002072245
+townlife.js：住人が時刻で仕事・学校・買いもの・食事・帰宅。関節つき歩き。町ごとの追加住人・街灯・物干し・家畜・屋台・学び舎。人口/にぎわい/物価の表示、宿と道具屋に物価。にん→ひと等の読み修正。版 20261002075154
 
 ## 次の一手
-iPhone で試作を遊んで、残り7基へ広げるか判断
+第2段：家の中（台所・かまど・洗濯おけ・寝床・家畜小屋）。第3段の新しい町は場所の決定待ち
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- lighthouses.js
+- townlife.js
+- world.js
+- mobs.js
+- game.js
+- talk.js
+- gemini-talk.js
 - index.html
 - sw.js
 - pwa.js
 - version.json
-- docs/design/lighthouses.md
+- docs/design/town-life.md
 
 このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
