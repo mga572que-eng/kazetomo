@@ -869,8 +869,11 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
     for (const b of bkts) { if (!boxIn(Pl, b.x0, b.y0, b.z0, b.x1, b.y1, b.z1)) continue; if (b.s === e) e += b.n; else { flush(); s = b.s; e = b.s + b.n; } }
     flush(); gl.vertexAttribPointer(3, 4, gl.FLOAT, false, 16, 0); }
   // 草：プレイヤー中心の グリッドを 10×10 セルの タイルに 分け、視錐台・半径・水面下の タイルを 除いて インスタンス列を つくる
+  const grsLast = new Float64Array(28);
   function grassCells(Pl, player) { const G = GRID, bx = Math.floor(player[0] / GSP) * GSP, bz = Math.floor(player[2] / GSP) * GSP;
-    const key = G + ',' + bx + ',' + bz + ',' + REGION + ',' + Array.from(Pl, v => Math.round(v * 60)).join(','); if (key === grsKey) return; grsKey = key;
+    // 毎フレーム 文字列を 作らない：前回の 値と 数値で 比べる
+    let same = grsKey === 'ok' && grsLast[24] === G && grsLast[25] === bx && grsLast[26] === bz && grsLast[27] === REGION;
+    for (let i = 0; i < 24; i++) { const v = Math.round(Pl[i] * 60); if (grsLast[i] !== v) { grsLast[i] = v; same = false; } } if (same) return; grsLast[24] = G; grsLast[25] = bx; grsLast[26] = bz; grsLast[27] = REGION; grsKey = 'ok';
     const R = G * GSP * .5 * .95 + GSP, TS = 10; let k = 0;
     for (let tj = 0; tj < G; tj += TS) for (let ti = 0; ti < G; ti += TS) { const i1 = Math.min(G, ti + TS), j1 = Math.min(G, tj + TS);
       const x0 = bx + (ti - G / 2 - .5) * GSP, x1 = bx + (i1 - G / 2 + .5) * GSP, z0 = bz + (tj - G / 2 - .5) * GSP, z1 = bz + (j1 - G / 2 + .5) * GSP;

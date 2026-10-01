@@ -17,7 +17,7 @@
 ビルド不要のHTMLと通常スクリプト。index.htmlの順序：pwa → music → art → data → art_mon → art_face → world → game → settings → life → shrines → base → ch4 → jobs → quests → deco → ux → onboard → unstuck。
 world.jsが描画・地形、game.jsが進行・戦闘・セーブとwindow.KZ/HOOK。後続モジュールはKZ/HOOKへ追加する。data.jsが共通データ、ch4.jsが第4章、jobs/quests/base/life/shrinesが拡張、ux/onboard/unstuck/settingsが操作・救出・設定。
 セーブ：kazetomo-rpg-3、追加スロットkazetomo-rpg-3-sN、旧kazetomo-rpg-1。設定：kazetomo-opt。IDと進行フラグを勝手に変更しない。
-PWA版番号はindex/pwa/sw/versionで同期。現状ch4.jsだけ?vなし。既知の構造として記録し、今回変更しない。
+PWA版番号はindex/pwa/sw/versionで同期（ch4.jsの?v欠落はwork/qa-audit-fixesで修正）。
 
 ## 未確認と次の一手
 - Claude「JRPG 作成」の本文・未保存変更はアクセス拒否のため未確認。GitHub版と同一と断定しない。未公開ファイルがあれば別フォルダーへ保存し、基準と比較する。
