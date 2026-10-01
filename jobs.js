@@ -273,7 +273,7 @@
         : !canChange() ? '<span class="eq">転職は 町の 石像の そばで</span>'
         : `<button class="buy" data-go="1" ${poor ? 'disabled' : ''}>${armed ? `本当に ${j.name}に 転職する？` : `${j.name}に 転職（${plan.fee}G）`}</button>`;
       const planHtml = plan ? `<div class="jplan"><b>転職すると</b>：SP <em class="up">+${plan.refund} もどる</em>（${JOB[r.cur].name}ツリー）　手数料 <em class="${poor ? 'dn' : ''}">${plan.fee}G</em>${plan.lost.length ? `<br>わすれる 技：${plan.lost.join('・')}` : ''}${plan.eq.length ? `<br>そうび：${plan.eq.join('／')}` : ''}<br><small>もとの 能力値・固有わざ・個性ボードは そのまま。 ${j.name}の ツリーは SPで 覚えなおす。</small></div>` : '';
-      const eqCats = `<div class="st-eq" style="margin-top:0">そうび：${(K.bal ? K.bal.catNames(j.eqW) : j.eqW.join('・'))}／${(K.bal ? K.bal.catNames(j.eqA) : j.eqA.join('・'))}（＋キャラ固有）</div>`;
+      const eqCats = `<div class="st-eq" style="margin-top:0">着られる 防具：${K.bal ? K.bal.catNames(j.eqA) : j.eqA.join('・')}（武器は キャラ専用で、どの 職業でも そうびできる）</div>`;
       el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button>
         <h3>しょくぎょう <small>${line || (canChange() ? '転職の 石像：職業を えらんで 転職できる（覚えた 技は のこる）' : '職業レベルは たたかいに 勝つと あがる')}</small></h3>
         <div class="tabs">${party.map((p, i) => `<button class="tab${i === mi ? ' on' : ''}" data-m="${i}">${face(p)}${K.esc(K.nameOf(p))}</button>`).join('')}</div>
