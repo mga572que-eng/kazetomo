@@ -39,3 +39,8 @@ AGENTS.md、AI_HANDOFF.md、WORK_STATE.md、OPERATIONS.md、GEMINI.md、ROADMAP.
 - `npm run check` が PASS し、`git diff --check` が空であること。
 - 実際に遊んで確認する：新規データと既存セーブの両方で、4つの地域を回る。仲間会話を同じ場所で10回連続しても同じセリフが出ないこと。iPhone横画面（844x390）で会話ボタンと✕に指が届くこと。
 - WORK_STATE.md を更新し、checkpoint で保存し、作業ブランチへ push すること。Gitを操作できない場合は「未保存」と明記し、変更ファイル一式を返すこと。
+
+## 更新（2026-10-01・Claude）
+- 仲間会話の仕組みは `talk.js` として実装済み（メニュー「はなす」、既読は `G.talkSeen`、場面判定は `ctx()`）。
+- Gemini の担当は 2つ：(1) `talk.js` の配列 `L` に足すセリフ（同じ書式。`id` は重複させない。各キャラ合計40本・仲間モンスターは `MV` に種族ごとの口調を足す）、(2) `mobs.js`（町の住人）。
+- 返すもの：`L` に追加する要素だけを並べた JavaScript の断片（`talk.js` 全体は返さない）と、`mobs.js` の全文。
