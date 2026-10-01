@@ -1,15 +1,25 @@
 # 作業の再開
 
-更新: 2026-10-01
-対象PR: https://github.com/mga572que-eng/kazetomo/pull/2
+更新: 2026-10-01T03:44:31.488Z
+ブランチ: work/roadmap-handoff
+直前コミット: f889309529e48cb5a73bcf8b09b3eef8e82abc9a
 
-## 完了した作業
-AI共通運用、resume、個別ファイルのcheckpoint、安全な停止を実装。8ファイルはGitHubへ保存済みで、検証済みローカル版と改行以外一致。ゲーム本体は変更していない。
+## 目的
+引き継ぎ整備：部署・方針・優先順位とGemini指示をGitへ移す
+
+## 完了・途中の内容
+ROADMAP.md、docs/briefs/gemini-01-talk-and-mobs.md を追加し、AI_HANDOFF.mdのClaude未確認項目を解消。ゲーム本体は変更なし
+
+## 次の一手
+ユーザー確認後にPRでmainへ統合。Geminiは brief 01 を work/talk-and-mobs で実装する。Claudeは戦闘演出＋バランス骨格（ROADMAP優先1）を別ブランチで進める
 
 ## 検証
-構文・参照・PWA検査と途中保存の独立試験が成功。アップロードコミット25bf781のGitHubチェック成功。実プレイ、Codespaces初回起動、各AIアカウント接続は未確認。
+構文・参照・PWA検査: PASS
+実プレイ: 未確認（担当AIが結果を別途記録）
 
-## 再開するAIへ
-PR #2がMergedなら環境整備は完了。新しい依頼は最新mainからwork/内容を作って開始する。Openなら最新チェックの成功を確認して統合を完了する。過去のアップロード待ちの記録は解消済み。普段の手順はOPERATIONS.mdを読む。
+## 保存対象
+- ROADMAP.md
+- docs/briefs/gemini-01-talk-and-mobs.md
+- AI_HANDOFF.md
 
-コードはGitHubで共有できる。各AIへの接続は別途必要で、自動切替は行わない。ブラウザーのゲームセーブはGitの保存・バックアップには含まれない。
+このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
