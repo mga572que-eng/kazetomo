@@ -127,7 +127,7 @@
     const ms = (g.team || []).map(u => (g.mons || []).find(m => m.uid === u)).filter(Boolean);
     const items = [{ label: 'みんなで はなす', sub: left(c) ? `新しい 話 ${left(c)}` : 'いつもの 話', v: '' }, ...hs.map(m => ({ label: K.nameOf(m), sub: left(c, m.id) ? '新しい 話が ある' : '', v: m.id })), ...ms.map(m => ({ label: K.nameOf(m), sub: 'なかまの いきもの', v: m.uid }))];
     const i = await K.menu({ title: 'はなす', items }); if (i < 0) return; await talkWith(items[i].v || null); }
-  H.menu.push(() => ({ label: 'はなす', sub: (() => { try { const n = left(ctx()); return n ? `仲間と 会話（新しい 話 ${n}）` : '仲間と 会話'; } catch (_) { return '仲間と 会話'; } })(), fn: () => K.partyTalk.open() }));
+  H.menu.push(() => ({ label: 'はなす', sub: (() => { try { const n = K.partyTalk && K.partyTalk.unreadTotal ? K.partyTalk.unreadTotal() : left(ctx()); return n ? `仲間と 会話（新しい 話 ${n}）` : '仲間と 会話'; } catch (_) { return '仲間と 会話'; } })(), fn: () => K.partyTalk.open() }));
   H.load.push(g => { if (!g.talkSeen || typeof g.talkSeen !== 'object') g.talkSeen = {}; });
   K.partyTalk = { L, talkWith, ctx, MV, TYPEV, SHORT };
 })();
@@ -174,6 +174,8 @@
   // [id, condFn, who, ex, text, partnerWho, partnerEx, partnerText, soloText]
   const TALKS = [];
   const previous = K.partyTalk;
+  // 元の 会話（第1段の L）。この 時点の L には 元の 50件だけが 入っている。ID・進行条件（when）・既読（G.talkSeen）は そのまま 使う
+  const ORIG_IDS = new Set((previous && previous.L || []).map(e => e.id));
   const addT = (id, cond, who, ex, text, pwho, pex, ptext, soloText) => {
     TALKS.push({ id: 'pt_' + id, cond, who, ex, text, pwho, pex, ptext, soloText });
   };
@@ -1259,8 +1261,21 @@
     }
     return lines;
   }
+  // 元の 会話の 候補：話す人（w）が m か、同席（need）に m が いる。w と need の 全員が 隊列に いること・when を みたすこと
+  const origCtx = () => { try { return previous.ctx(); } catch (_) { return null; } };
+  const origOk = (e, c) => (!e.w || inTeam(e.w)) && (e.need || []).every(inTeam) && (() => { try { return !!e.when(c); } catch (_) { return false; } })();
+  const origFor = (m, c) => (!m || m.kind === 'mon' || !c) ? [] : previous.L.filter(e => ORIG_IDS.has(e.id) && (e.w === m.id || (e.need || []).includes(m.id)) && origOk(e, c));
+  // 未読の 候補（メニューの 表示と 実際に 話す 候補を 同じ 関数で 数える）
+  const unreadOf = (m, c = origCtx()) => { const S = ensureSeen(K.G); const ids = new Set(); for (const e of origFor(m, c)) if (!S[e.id]) ids.add(e.id); for (const t of eligible(m)) if (!S[t.id]) ids.add(t.id); return ids; };
+  const unreadTotal = () => { const c = origCtx(), all = new Set(); for (const m of teammates()) for (const id of unreadOf(m, c)) all.add(id); return all.size; };
+  function chooseOrig(m, c) { const S = ensureSeen(K.G), U = origFor(m, c).filter(e => !S[e.id]); if (!U.length) return null;
+    const top = Math.max(...U.map(e => e.pri || 0)), T = U.filter(e => (e.pri || 0) === top); return T[Math.min(T.length - 1, Math.floor(K.R() * T.length))]; }
   function choose(m) {
-    const candidates = eligible(m), seen = ensureSeen(K.G);
+    const c = origCtx(), seen = ensureSeen(K.G);
+    // 元の 会話に 未読が あれば、優先度（pri）が 高い ものから。追加会話の 未読と 半々で まぜる（優先度が ある ものは 先に）
+    const o = chooseOrig(m, c), tUnread = eligible(m).filter(t => !seen[t.id]);
+    if (o && ((o.pri || 0) > 0 || !tUnread.length || K.R() < .5)) { seen[o.id] = 1; const L0 = (o.s(c) || []).filter(Boolean); if (L0.length) return { id: o.id, lines: L0 }; }
+    const candidates = eligible(m);
     if (!candidates.length) return null;
     const key = identity(m), history = recent.get(key) || [];
     const unread = candidates.filter(t => !seen[t.id]);
@@ -1274,19 +1289,23 @@
     return { id: t.id, lines: unread.length ? linesFor(t, m) : [format(m.id, t.ex, t.text.split('。')[0] + '。', m)] };
   }
   async function speak(m) {
-    const result = choose(m);
-    if (!result) return;
+    let result = choose(m);
+    if (!result) { // 話題が ない ときは 元の 短い 反応（人）・鳴き声（モンスター）
+      if (m.kind === 'mon') { if (previous.talkWith) await previous.talkWith(m.uid); return; }
+      const c = origCtx(), P = (previous.SHORT || {})[m.id] || (previous.SHORT || {}).sora; if (!P || !c) return;
+      const g = K.G; g.talkIdx = g.talkIdx || {}; const i = (g.talkIdx[m.id] || 0) % P.length; g.talkIdx[m.id] = i + 1; result = { id: null, lines: [K.who(m.id, 'smile', P[i](c))] }; }
     await K.say(result.lines);
     if (!K.save()) K.toast('かいわの きろくを ほぞんできませんでした');
   }
   async function openTalkMenu() {
     const members = teammates();
     if (!members.length) return;
-    const c = await K.menu({ title: 'だれと はなす？', items: members.map(m => ({ label: K.esc(K.nameOf(m)), sub: `Lv${m.lv}` })), where: 'center' });
+    const oc = origCtx();
+    const c = await K.menu({ title: 'だれと はなす？', items: members.map(m => { const n = unreadOf(m, oc).size; return { label: K.esc(K.nameOf(m)), sub: n ? `新しい 話 ${n}` : `Lv${m.lv}` }; }), where: 'center' });
     if (c >= 0 && members[c]) await speak(members[c]);
   }
 
   for (const t of TALKS) previous.L.push({ id: t.id, w: t.who, need: t.pwho ? [t.pwho] : [], when: t.cond, s: () => { const m = teammates().find(x => x.id === t.who); return m ? linesFor(t, m) : []; } });
   // 拡張用の読取・会話入口。既存APIやHOOKは差し替えない。
-  K.partyTalk = { ...previous, talkWith: ref => { const m = K.member(ref); return m && speak(m); }, open: openTalkMenu, register: entries => { for (const e of entries) { if (TALKS.some(t => t.id === e.id)) continue; const actors = e.t.filter(l => l.who).map(l => l.who); const t = { id: e.id, who: e.c, ex: 'smile', text: e.t.map(l => l.t || l).join('。'), lines: e.t, cond: () => actors.every(id => K.G.team.includes(id)) && e.cond(K.G, K.G.region) }; TALKS.push(t); previous.L.push({id:t.id,w:t.who,need:actors.filter(id=>id!==t.who),when:t.cond,s:()=>t.lines}); } }, choose, eligible, linesFor, counts: () => TALKS.reduce((a, t) => { a[t.who] = (a[t.who] || 0) + 1; return a; }, {}) };
+  K.partyTalk = { ...previous, talkWith: ref => { const m = K.member(ref); return m && speak(m); }, open: openTalkMenu, register: entries => { for (const e of entries) { if (TALKS.some(t => t.id === e.id)) continue; const actors = e.t.filter(l => l.who).map(l => l.who); const t = { id: e.id, who: e.c, ex: 'smile', text: e.t.map(l => l.t || l).join('。'), lines: e.t, cond: () => actors.every(id => K.G.team.includes(id)) && e.cond(K.G, K.G.region) }; TALKS.push(t); previous.L.push({id:t.id,w:t.who,need:actors.filter(id=>id!==t.who),when:t.cond,s:()=>t.lines}); } }, choose, eligible, linesFor, unreadOf, unreadTotal, counts: () => TALKS.reduce((a, t) => { a[t.who] = (a[t.who] || 0) + 1; return a; }, {}) };
 })();
