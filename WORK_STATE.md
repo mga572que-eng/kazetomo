@@ -1,28 +1,24 @@
 # 作業の再開
 
-更新: 2026-10-01T09:44:37.979Z
-ブランチ: work/gemini-polish
-直前コミット: b0fd71d2e14f4223bf80a751d055fe454d37d6ee
+更新: 2026-10-01T11:47:17.049Z
+ブランチ: work/next-plan
+直前コミット: 2bb23870b66c526812394e1cf8cf470208251c1f
 
 ## 目的
-Gemini共同レビューによる装備・覚醒の不具合改善
+計画書の改訂（ChatGPTの指摘を反映）
 
 ## 完了・途中の内容
-main b0fd71dで前回15ファイル保存を確認。AI Studioへ装備/バトル・UI/セーブ・QAレビューを依頼。HP0保持、未知装備ID、HP/MP比率、覚醒条件・同席台詞・保存失敗通知を修正。実ゲーム14検査と構文/PWAがPASS。ローカル保存のみ、未公開。
+NEXT.md：自動検査は4コミットとも成功と訂正、確認の区分（自動検査／ローカル実ゲーム／844x390／iPhone実機／通しプレイ）、優先順位を開発者決定の順に、運用ルール（Geminiは1件ずつ・保存済み/公開済み/未確認）、文の方針（ひらがな維持・個別修正）、落下ダメージは仕様決定が先、物語の提案は未承認扱い。PROMPTS.md：Gemini依頼をG1監査・G2設定・G3文の個別修正に分割、ChatGPT依頼を改訂
 
 ## 次の一手
-PUBLISH_GEMINI_POLISHの7ファイルをGitHubへ保存後、main一致と公開版20261001184146を確認。
+PR #11 統合。優先1：WORK_STATE/AI_HANDOFF更新、.gitattributesでLF統一（専用PR）
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- monplus.js
-- index.html
-- pwa.js
-- sw.js
-- version.json
-- AI_HANDOFF.md
+- docs/plan/NEXT.md
+- docs/plan/PROMPTS.md
 
 このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
