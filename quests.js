@@ -18,6 +18,7 @@
   R0.bushes = R0.bushes.filter(t => Math.hypot(t.x - SX, t.z - SZ) >= 18);
   const hs = [{ id: 'nami', x: SX, z: SZ - 11 }, { id: 'sinn', x: SX - 12, z: SZ - 2 }, { id: 'sitem', x: SX + 12, z: SZ - 3 }, { id: 'ryou', x: SX + 9, z: SZ + 10 }, { id: 'ruin1', x: SX - 10, z: SZ + 11 }, { id: 'ruin2', x: SX + 1, z: SZ + 15 }];
   hs.forEach((h, i) => { h.face = [SX, SZ]; K.buildHouse(h, [{ wall: 4, roof: 3, corner: 5 }, { wall: 4, roof: 8 }, { wall: 6, roof: 3 }, { wall: 0, roof: 3 }, { wall: 6, roof: 3 }, { wall: 4, roof: 3 }][i]); });
+  (K.extraHouses = K.extraHouses || []).push(...hs.map(h => Object.assign(h, { r: 0 }))); // 町の くらし・家の中で つかう
   // 焼けた 家（屋根と 壁を くずす）
   for (const h of hs.filter(h => h.id.startsWith('ruin'))) { const cx = Math.round(h.x), cz = Math.round(h.z); let fy = 1e9; const cells = [];
     B.each(0, (k) => { const [x, y, z] = k.split(',').map(Number); if (Math.abs(x - cx) <= 3 && Math.abs(z - cz) <= 3) cells.push([x, y, z]); });
@@ -96,7 +97,7 @@
   const oasis = (() => { World.setRegion(1); let best = null; for (let x = 50; x <= 200; x += 6) for (let z = -120; z <= 150; z += 6) { if (World.biomeAt(x, z) !== 'desert') continue; if (Math.hypot(x - World.RUINS1[0], z - World.RUINS1[1]) < 75 || Math.hypot(x - T1.x, z - T1.z) < 90) continue;
       let mn = 1e9, mx = -1e9; for (let i = -12; i <= 12; i += 4) for (let j = -12; j <= 12; j += 4) { const hh = K.hAt(x + i, z + j); mn = Math.min(mn, hh); mx = Math.max(mx, hh); } if (mn < 3) continue; const sc = mx - mn; if (!best || sc < best.sc) best = { x, z, sc }; } World.setRegion(0); return best || { x: 120, z: 80 }; })();
   const oh = [{ id: 'oelder', x: oasis.x, z: oasis.z - 10 }, { id: 'ourana', x: oasis.x - 11, z: oasis.z + 2 }, { id: 'oinn', x: oasis.x + 11, z: oasis.z + 3 }];
-  mkTown(1, oasis, oh, [{ wall: 4, roof: 9, corner: 5 }, { wall: 9, roof: 3 }, { wall: 4, roof: 9 }]);
+  mkTown(1, oasis, oh, [{ wall: 4, roof: 9, corner: 5 }, { wall: 9, roof: 3 }, { wall: 4, roof: 9 }]); K.extraHouses.push(...oh.map(h => Object.assign(h, { r: 1 })));
   { World.setRegion(1); const b = Math.floor(K.hAt(oasis.x + .5, oasis.z + 4.5)); for (let dx = -2; dx <= 2; dx++) for (let dz = 2; dz <= 6; dz++) { if (Math.abs(dx) === 2 || dz === 2 || dz === 6) B.set(oasis.x + dx, b, oasis.z + dz, 1, true, 1); } World.setRegion(0); }
   addNpc({ id: 'ushio', r: 1, x: oh[0].npc.x, z: oh[0].npc.z, yaw: oh[0].yaw, nm: '村長ハッサン' });
   addNpc({ id: 'nami', r: 1, x: oh[1].npc.x, z: oh[1].npc.z, yaw: oh[1].yaw, nm: '星占いの ウララ' });
@@ -105,7 +106,7 @@
   // ================= 第3章：風車の集落 ハヤテ（天空の浮島・西の小島） =================
   const I8 = World.ISL2[8]; const hayate = { x: I8.x, z: I8.z };
   const hh3 = [{ id: 'hmill', x: hayate.x + 4, z: hayate.z - 3 }, { id: 'hhome', x: hayate.x - 5, z: hayate.z + 3 }];
-  mkTown(2, hayate, hh3, [{ wall: 0, roof: 11, corner: 5 }, { wall: 4, roof: 11 }]);
+  mkTown(2, hayate, hh3, [{ wall: 0, roof: 11, corner: 5 }, { wall: 4, roof: 11 }]); K.extraHouses.push(...hh3.map(h => Object.assign(h, { r: 2 })));
   { World.setRegion(2); const cx = Math.round(hayate.x + 4), cz = Math.round(hayate.z - 3); const top = Math.floor(K.hAt(cx + .5, cz + .5)) + 8; for (let y = top; y < top + 5; y++) B.set(cx, y, cz, 5, true, 2); for (let k = -3; k <= 3; k++) { B.set(cx + k, top + 4, cz + 3, 0, true, 2); B.set(cx, top + 4 + k, cz + 3, 0, true, 2); } spots.mill = { x: cx + .5, z: cz + .5 }; World.setRegion(0); }
   addNpc({ id: 'ryou', r: 2, x: hh3[0].npc.x, z: hh3[0].npc.z, yaw: hh3[0].yaw, nm: '風車守り カザミ' });
   addNpc({ id: 'chibi', r: 2, x: hayate.x - 2, z: hayate.z + 7, nm: 'ハヤテの 子 ソラネ' });

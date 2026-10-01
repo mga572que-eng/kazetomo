@@ -127,7 +127,7 @@
     const ms = (g.team || []).map(u => (g.mons || []).find(m => m.uid === u)).filter(Boolean);
     const items = [{ label: 'みんなで はなす', sub: left(c) ? `新しい 話 ${left(c)}` : 'いつもの 話', v: '' }, ...hs.map(m => ({ label: K.nameOf(m), sub: left(c, m.id) ? '新しい 話が ある' : '', v: m.id })), ...ms.map(m => ({ label: K.nameOf(m), sub: 'なかまの いきもの', v: m.uid }))];
     const i = await K.menu({ title: 'はなす', items }); if (i < 0) return; await talkWith(items[i].v || null); }
-  H.menu.push(() => ({ label: 'はなす', sub: (() => { try { const n = left(ctx()); return n ? `仲間と 会話（新しい 話 ${n}）` : '仲間と 会話'; } catch (_) { return '仲間と 会話'; } })(), fn: () => K.partyTalk.open() }));
+  H.menu.push(() => ({ label: 'はなす', sub: (() => { try { const n = K.partyTalk && K.partyTalk.unreadTotal ? K.partyTalk.unreadTotal() : left(ctx()); return n ? `仲間と 会話（新しい 話 ${n}）` : '仲間と 会話'; } catch (_) { return '仲間と 会話'; } })(), fn: () => K.partyTalk.open() }));
   H.load.push(g => { if (!g.talkSeen || typeof g.talkSeen !== 'object') g.talkSeen = {}; });
   K.partyTalk = { L, talkWith, ctx, MV, TYPEV, SHORT };
 })();
@@ -174,6 +174,8 @@
   // [id, condFn, who, ex, text, partnerWho, partnerEx, partnerText, soloText]
   const TALKS = [];
   const previous = K.partyTalk;
+  // 元の 会話（第1段の L）。この 時点の L には 元の 50件だけが 入っている。ID・進行条件（when）・既読（G.talkSeen）は そのまま 使う
+  const ORIG_IDS = new Set((previous && previous.L || []).map(e => e.id));
   const addT = (id, cond, who, ex, text, pwho, pex, ptext, soloText) => {
     TALKS.push({ id: 'pt_' + id, cond, who, ex, text, pwho, pex, ptext, soloText });
   };
@@ -182,7 +184,7 @@
   addT("sora_01", () => true, "sora", "determined", "とうさんの おさがりの マフラー、 すこし しおの においが する。 これを まいてると、 まえを むけるんだ。");
   addT("sora_02", () => isNight() && K.G.region === 0 && !F().cleared, "sora", "smile", "よるの うみは くらいね。 とうだいの あかりを とりもどしたいな。");
   addT("sora_03", () => inTown() && K.G.region === 0 && isNight(), "sora", "smile", "むらの あかりを みると ほっとするよ。 かえりみちを たしかめよう。");
-  addT("sora_04", () => isLowHp(K.member("sora")), "sora", "worried", "うう…… さすがに すこし しんたいが おもいな。 どこかで ひとやすみ したいよ。");
+  addT("sora_04", () => isLowHp(K.member("sora")), "sora", "worried", "うう…… さすがに すこし からだが おもいな。 どこかで ひとやすみ したいよ。");
   addT("sora_05", () => recentBattle()?.res === "win", "sora", "joy", "みんな、 ケガは なかった？ かげものたち、 ちゃんと ひかりへ かえれたかな。");
   addT("sora_06", () => K.G.region === 1, "sora", "surprised", "たいりくの さばくは ひろいなぁ。 みわたす かぎり すなばかりで、 まいごに なりそうだよ。");
   addT("sora_07", () => K.G.region === 2, "sora", "worried", "あしの したに くもが あるなんて、 まだ しんじられないよ。 おちないように きをつけなきゃ。");
@@ -192,7 +194,7 @@
   addT("sora_11", () => F().c3done && !F().c3reunion, "sora", "smile", "星守さまも ほしを そらへ かえしてくれた。 ハル、 おとうさんに はやく あわせてあげたいな。");
   addT("sora_12", () => F().c3reunion, "sora", "smile", "ハルが おとうさんに「ただいま」って いえた。 ほんとうに よかったね。");
   addT("sora_13", () => F().c4done, "sora", "joy", "とうさんと いっしょに うみのそこの ともしびも ともせた。 かあさんの まつ いえへ、 いっしょに かえろう。");
-  addT("sora_14", () => !isNight() && inTown(), "sora", "smile", "まちの にんたちが げんきに はたらいてるのを みると、 なんだか ゆうきが わいてくるよ。");
+  addT("sora_14", () => !isNight() && inTown(), "sora", "smile", "まちの ひとたちが げんきに はたらいてるのを みると、 なんだか ゆうきが わいてくるよ。");
   addT("sora_15", () => true, "sora", "neutral", "たかい ところは やっぱり すこし にがてだけど…… ぼくが よわねを はいちゃ だめだよな。");
   addT("mio_01", () => true, "mio", "smile", "この みどりの ベストはね、 かあさんの かたみなんだ。 きていると、 うたの こえが よく ひびく きが するの。");
   addT("mio_02", () => isNight(), "mio", "smile", "くらいところは すこし こわいな。 みんなの そばを あるくね。");
@@ -204,8 +206,8 @@
   addT("mio_08", () => K.G.region === 1 && isNight(), "mio", "smile", "よるの さばくは さむいけど、 ほしが すっごく おおきく みえるね。 うたってても きもちいいな。");
   addT("mio_09", () => K.G.region === 2, "mio", "joy", "くもの うえの かぜって、 すずの ような きれいな おとが するの！ きこえる、 {name}？");
   addT("mio_10", () => K.G.region === 3, "mio", "smile", "うみの なかで うたうとね、 あわが ぽこぽこ うまれて おとが まるくなるの。 おもしろいよ！");
-  addT("mio_11", () => F().mio && !F().cleared, "mio", "determined", "よるに ないてる こえ…… あれは、 かなしみに のまれた にんのこえ なの。 たすけにいこう！");
-  addT("mio_12", () => F().cleared && !F().c2start, "mio", "joy", "しょうのしの やみが はれて、 あさの ひかりが まぶしかったね。 カイトさんも かえってきてくれて……！");
+  addT("mio_11", () => F().mio && !F().cleared, "mio", "determined", "よるに ないてる こえ…… あれは、 かなしみに のまれた ひとのこえ なの。 たすけにいこう！");
+  addT("mio_12", () => F().cleared && !F().c2start, "mio", "joy", "宵の祠の やみが はれて、 あさの ひかりが まぶしかったね。 カイトさんも かえってきてくれて……！");
   addT("mio_13", () => F().c2arrive && !F().c2done, "mio", "worried", "リクの いもうとの サナちゃん、 ぶじだと いいな。 きょうだいが はなればなれなんて、 つらすぎるよ。");
   addT("mio_14", () => F().c2done && !F().c3start, "mio", "smile", "サナちゃんが なかまに くわわってくれて うれしいな。 ふたりで うたうと ハーモニーに なるの。");
   addT("mio_15", () => F().c3elder && !F().c3done, "mio", "worried", "ハルの きいた こもりうた、 なんで しまの うたと おなじ なんだろう…… きになるな。");
@@ -216,7 +218,7 @@
   addT("mio_20", () => true, "mio", "grin", "{name}、 たまには たちとまって しんこきゅうしようよ。 ほら、 すー、 はー！");
   addT("mio_21", () => true, "mio", "grin", "リク、 さっきから やりの おていれ ばっかり。 ほんとは きんちょうしてるでしょ？",
     "riku", "smirk", "……うるせえ。 しおかぜで さびちまうと、 いざって ときに ささらねえんだよ。",
-    "who(\"mio\",\"joy\",\"ふふ、 どうぐを たいせつに する にんに、 わるい にんは いないって ナギおばさんも いってたよ！\")");
+    "who(\"mio\",\"joy\",\"ふふ、 どうぐを たいせつに する ひとに、 わるい ひとは いないって ナギおばさんも いってたよ！\")");
   addT("mio_22", () => F().c2done, "mio", "smile", "サナちゃん、 かみかざり とっても きれいだね。",
     "sana", "smile", "ありがとうございます。 いまも たいせつに しています。 ひかりが きれいですね。",
     "who(\"mio\",\"joy\",\"へえっ！ リクったら、 サナちゃんの かみかざり、 とっても すてきだね！\")");
@@ -248,13 +250,13 @@
   addT("riku_02", () => K.G.region === 0 && K.shiomi && Math.hypot(K.player.x - K.shiomi.x, K.player.z - K.shiomi.z) < 30, "riku", "smile", "シオミの まちか。 ……あしを とめて まわりを みるぞ。");
   addT("riku_03", () => isLowHp(K.member("riku")), "riku", "angry", "クソッ…… かすりきずだ！ てめえらに しんぱいされるほど、 おれは ヤワじゃねえ！");
   addT("riku_04", () => recentBattle()?.res === "win", "riku", "smirk", "フン、 たあいねえな。 やりの さびにも なりゃしねえぜ。");
-  addT("riku_05", () => inTown() && K.G.region === 0, "riku", "neutral", "風見の村の れんちゅうは、 おにんこうしが おおすぎる。 カイトの せがれに そっくりだ。");
-  addT("riku_06", () => inBeacon(), "riku", "neutral", "とうだいの てっぺんは かぜが きょうえな。 ふんはって ねえと ふきとばされそうだ。");
+  addT("riku_05", () => inTown() && K.G.region === 0, "riku", "neutral", "風見の村の れんちゅうは、 おひとよしが おおすぎる。 カイトの せがれに そっくりだ。");
+  addT("riku_06", () => inBeacon(), "riku", "neutral", "とうだいの てっぺんは かぜが つええな。 ふんばって ねえと ふきとばされそうだ。");
   addT("riku_07", () => K.G.region === 1 && !isNight(), "riku", "neutral", "さばくの ねっきは いきが つまるぜ。 すいとうの のこり、 ちゃんと みとけよ。");
   addT("riku_08", () => K.G.region === 1 && isNight(), "riku", "smile", "よるの だいりくは ひえるな。 むりを して あるくなよ。");
   addT("riku_09", () => K.G.region === 2, "riku", "surprised", "おいおい、 ほんとうに くもの うえに たってやがる。 あしもとが スースーして おちつかねえな。");
   addT("riku_10", () => K.G.region === 3, "riku", "neutral", "みずの なかで やりを つくと、 すいあつで うでが なまる。 いい たんれんに なるぜ。");
-  addT("riku_11", () => F().cleared && !F().c2start, "riku", "smile", "かんちゃん、 宵闇の王を しずめたな。 ……ま、 すこしは みなおしてやったよ。");
+  addT("riku_11", () => F().cleared && !F().c2start, "riku", "smile", "あまちゃん、 宵闇の王を しずめたな。 ……ま、 すこしは みなおしてやったよ。");
   addT("riku_12", () => F().c2start && !F().c2arrive, "riku", "determined", "霧の大陸に サナが いる。 あの ほしのかみかざりを つけた いもうとを、 かならず みつけだす。");
   addT("riku_13", () => F().c2mid && !F().c2done, "riku", "angry", "いせきの おくに サナの けはいが する。 まってろよ、 すぐに ひっぱりだしてやる！");
   addT("riku_14", () => F().c2done && !F().c3start, "riku", "neutral", "サナを たすけだせたのは、 てめえらの おかげだ。 ……れいは いわねえぞ、 かりに しとく。");
@@ -267,7 +269,7 @@
   addT("riku_21", () => F().c2done, "riku", "worried", "サナ、 みずは のんでるか？ つかれたら すぐ いえよ。",
     "sana", "smile", "ふふ、 だいじょうぶです、 にいさん。 こどもの ころから、 しんぱいしすぎ ですよ。",
     "who(\"riku\",\"neutral\",\"……しんぱいなんか してねえよ。 あしでまといに なられたら こまるだけだ。\")");
-  addT("riku_22", () => true, "riku", "smirk", "かんちゃん、 つるぎの かまえが まだ あまいぜ。 わきが ガラあきだ。",
+  addT("riku_22", () => true, "riku", "smirk", "あまちゃん、 つるぎの かまえが まだ あまいぜ。 わきが ガラあきだ。",
     "sora", "determined", "これでも ゲンおじさんに きたえてもらったんだからね！ まけないよ！",
     "who(\"riku\",\"smirk\",\"へっ、 くちだけは いっちょうまえだな。 バトルで みせてみろ。\")");
   addT("riku_23", () => F().c3elder, "riku", "neutral", "ハル、 その おうぎで やりの ほさきを あおぐな。 かぜで きっさきが ブレるだろ。",
@@ -279,11 +281,11 @@
   addT("riku_25", () => inTown() && K.G.region === 1, "riku", "neutral", "港町ミナトの ほしさかな、 しおの ききが ちょうど いい。 10ひきくらい かいだめしとくか。");
   addT("riku_26", () => isNight(), "riku", "neutral", "やえいの ときは、 ひの ばんを こうたいで やるぞ。 ゆだんした やつから かげに くわれる。");
   addT("riku_27", () => recentBattle()?.res === "flee", "riku", "neutral", "チッ…… にげるなんざ せいに あわねえが、 ぜんめつするよりは マシだ。");
-  addT("riku_28", () => isLowHp(K.member("sora")), "riku", "worried", "おい かんちゃん、 ふらついてんぞ！ まえを みて あるけ、 まえを！");
+  addT("riku_28", () => isLowHp(K.member("sora")), "riku", "worried", "おい あまちゃん、 ふらついてんぞ！ まえを みて あるけ、 まえを！");
   addT("riku_29", () => K.G.gold < 100, "riku", "neutral", "おいおい、 しょじきんが そこをつきかけてんぞ。 ギルドの いらいでも こなして かせぐか。");
   addT("riku_30", () => K.G.region === 1 && inTown(), "riku", "neutral", "ミナトの ギルドの けいじばん、 たまに ほねのある いらいが はってあるぜ。");
   addT("riku_31", () => K.G.region === 2 && inTown(), "riku", "smile", "くもの さとの れんちゅう、 のんびりしすぎてて どくけが ぬけるぜ。 わるい きは しねえがな。");
-  addT("riku_32", () => K.G.region === 3 && inTown(), "riku", "neutral", "かいていの やどの ベッド、 ぷにぷにしてて こしが しずみこむな……。");
+  addT("riku_32", () => K.G.region === 3 && inTown(), "riku", "neutral", "うみの そこの やどの ベッド、 ぷにぷにしてて こしが しずみこむな……。");
   addT("riku_33", () => true, "riku", "determined", "おれの やりは、 まもるべき ものが ある ときに いちばん つよく はしる。 ……そういう もんだ。");
   addT("riku_34", () => F().c2rumor && !F().c2mid, "riku", "angry", "サナを ひとりで いせきへ いかせた やつら…… たすけだしたら いっぱつ なぐってやる。");
   addT("riku_35", () => F().c3mid && !F().c3done, "riku", "determined", "星巣の塔の ちょうじょうか。 どんな バケモンが いようと、 つきとうすだけだ。");
@@ -337,7 +339,7 @@
   addT("sana_35", () => !isNight() && K.G.region === 1, "sana", "worried", "ひざしが つよいですね。 すいぶんを しっかり ほきゅうして すすみましょう。");
   addT("sana_36", () => F().c3mid && !F().c3done, "sana", "determined", "星巣の塔の うえで、 ほしたちの さけびが ひびいています。 はやく たすけなければ！");
   addT("sana_37", () => F().c4arrive && !F().c4elder, "sana", "smile", "アワの里の ちょうろうさま、 どのような ほうなのでしょうね。 はやく おあいしたいです。");
-  addT("sana_38", () => true, "sana", "neutral", "ほしの うんこうを みていると、 すべての であいには いみが あるのだと かんじます。");
+  addT("sana_38", () => true, "sana", "neutral", "ほしの うごきを みていると、 すべての であいには いみが あるのだと かんじます。");
   addT("sana_39", () => true, "sana", "joy", "こうして みなさんと かたを ならべて あるける まいにちが、 わたしの たからものです。");
   addT("sana_40", () => true, "sana", "smile", "さあ、 まいりましょう。 ほしぼしの しゅくふくが、 わたしたちと ともに ありますように。");
   addT("haru_01", () => !F().c3done, "haru", "smile", "むかしの ことは はっきり おぼえていないの。 いまの かぜを よんで すすむね。");
@@ -350,7 +352,7 @@
   addT("haru_08", () => !F().c3done && isLowHp(K.member("haru")), "haru", "worried", "いきが…… うまく すえない。 かぜが みだれているのかな……。");
   addT("haru_09", () => !F().c3done && recentBattle()?.res === "win", "haru", "smile", "ふふ、 かぜが みかたしてくれたね。 きれいに きまったよ。");
   addT("haru_10", () => !F().c3done, "haru", "neutral", "この ふるい たけの おうぎ…… なぜか ずっと てばなせなくて。 なつかしい においが するの。");
-  addT("haru_11", () => F().c3done && !F().c3reunion, "haru", "sad", "星守さまが ほしを そらへ かえしてくれた とき、 ぜんぶ おもいだしたの。 ……ちじょうの ちいさな しまに、 まってくれている にんが いる。");
+  addT("haru_11", () => F().c3done && !F().c3reunion, "haru", "sad", "星守さまが ほしを そらへ かえしてくれた とき、 ぜんぶ おもいだしたの。 ……ちじょうの ちいさな しまに、 まってくれている ひとが いる。");
   addT("haru_12", () => F().c3done && !F().c3reunion, "haru", "determined", "おとうさん…… クロウって なまえの、 とうだいしゅ。 はやく あいに いきたいな。");
   addT("haru_13", () => F().c3done && !F().c3reunion, "haru", "smile", "しじゅうねんも またせちゃったんだね。 おとうさん、 どんな かおをして むかえてくれるかな。");
   addT("haru_14", () => F().c3done && !F().c3reunion, "haru", "worried", "わたしの こと、 ちゃんと おぼえていてくれるかな…… ちょっとだけ ドキドキするよ。");
@@ -369,7 +371,7 @@
   addT("haru_23", () => true, "haru", "smile", "ミオの うたごえ、 くもの うえまで とどきそうなくらい すみきっているね。",
     "mio", "joy", "ほんと！？ ハルの おうぎの パタパタって おとも、 リズムに ぴったり だよ！",
     "who(\"haru\",\"joy\",\"あは、 いっしょに えんそうしてるみたいで たのしいね。\")");
-  addT("haru_24", () => F().c4start, "haru", "smile", "カイトさん、 かいていの かぜって、 どんな ながれを しているの？",
+  addT("haru_24", () => F().c4start, "haru", "smile", "カイトさん、 うみの そこの かぜって、 どんな ながれを しているの？",
     "kaito", "smile", "うみの なかじゃ かぜの かわりに「しお」が ながれてるのさ。 しおを よめば スイスイ およげるぞ。",
     "who(\"haru\",\"surprised\",\"しお……！ そらの かぜと よく にてるんだね。 はやく およいでみたいな！\")");
   addT("haru_25", () => K.G.region === 3, "haru", "joy", "みずのなかを とぶように およぐの、 そらを かっくうするのと そっくりで わくわくする！");
@@ -1259,8 +1261,21 @@
     }
     return lines;
   }
+  // 元の 会話の 候補：話す人（w）が m か、同席（need）に m が いる。w と need の 全員が 隊列に いること・when を みたすこと
+  const origCtx = () => { try { return previous.ctx(); } catch (_) { return null; } };
+  const origOk = (e, c) => (!e.w || inTeam(e.w)) && (e.need || []).every(inTeam) && (() => { try { return !!e.when(c); } catch (_) { return false; } })();
+  const origFor = (m, c) => (!m || m.kind === 'mon' || !c) ? [] : previous.L.filter(e => ORIG_IDS.has(e.id) && (e.w === m.id || (e.need || []).includes(m.id)) && origOk(e, c));
+  // 未読の 候補（メニューの 表示と 実際に 話す 候補を 同じ 関数で 数える）
+  const unreadOf = (m, c = origCtx()) => { const S = ensureSeen(K.G); const ids = new Set(); for (const e of origFor(m, c)) if (!S[e.id]) ids.add(e.id); for (const t of eligible(m)) if (!S[t.id]) ids.add(t.id); return ids; };
+  const unreadTotal = () => { const c = origCtx(), all = new Set(); for (const m of teammates()) for (const id of unreadOf(m, c)) all.add(id); return all.size; };
+  function chooseOrig(m, c) { const S = ensureSeen(K.G), U = origFor(m, c).filter(e => !S[e.id]); if (!U.length) return null;
+    const top = Math.max(...U.map(e => e.pri || 0)), T = U.filter(e => (e.pri || 0) === top); return T[Math.min(T.length - 1, Math.floor(K.R() * T.length))]; }
   function choose(m) {
-    const candidates = eligible(m), seen = ensureSeen(K.G);
+    const c = origCtx(), seen = ensureSeen(K.G);
+    // 元の 会話に 未読が あれば、優先度（pri）が 高い ものから。追加会話の 未読と 半々で まぜる（優先度が ある ものは 先に）
+    const o = chooseOrig(m, c), tUnread = eligible(m).filter(t => !seen[t.id]);
+    if (o && ((o.pri || 0) > 0 || !tUnread.length || K.R() < .5)) { seen[o.id] = 1; const L0 = (o.s(c) || []).filter(Boolean); if (L0.length) return { id: o.id, lines: L0 }; }
+    const candidates = eligible(m);
     if (!candidates.length) return null;
     const key = identity(m), history = recent.get(key) || [];
     const unread = candidates.filter(t => !seen[t.id]);
@@ -1274,19 +1289,23 @@
     return { id: t.id, lines: unread.length ? linesFor(t, m) : [format(m.id, t.ex, t.text.split('。')[0] + '。', m)] };
   }
   async function speak(m) {
-    const result = choose(m);
-    if (!result) return;
+    let result = choose(m);
+    if (!result) { // 話題が ない ときは 元の 短い 反応（人）・鳴き声（モンスター）
+      if (m.kind === 'mon') { if (previous.talkWith) await previous.talkWith(m.uid); return; }
+      const c = origCtx(), P = (previous.SHORT || {})[m.id] || (previous.SHORT || {}).sora; if (!P || !c) return;
+      const g = K.G; g.talkIdx = g.talkIdx || {}; const i = (g.talkIdx[m.id] || 0) % P.length; g.talkIdx[m.id] = i + 1; result = { id: null, lines: [K.who(m.id, 'smile', P[i](c))] }; }
     await K.say(result.lines);
     if (!K.save()) K.toast('かいわの きろくを ほぞんできませんでした');
   }
   async function openTalkMenu() {
     const members = teammates();
     if (!members.length) return;
-    const c = await K.menu({ title: 'だれと はなす？', items: members.map(m => ({ label: K.esc(K.nameOf(m)), sub: `Lv${m.lv}` })), where: 'center' });
+    const oc = origCtx();
+    const c = await K.menu({ title: 'だれと はなす？', items: members.map(m => { const n = unreadOf(m, oc).size; return { label: K.esc(K.nameOf(m)), sub: n ? `新しい 話 ${n}` : `Lv${m.lv}` }; }), where: 'center' });
     if (c >= 0 && members[c]) await speak(members[c]);
   }
 
   for (const t of TALKS) previous.L.push({ id: t.id, w: t.who, need: t.pwho ? [t.pwho] : [], when: t.cond, s: () => { const m = teammates().find(x => x.id === t.who); return m ? linesFor(t, m) : []; } });
   // 拡張用の読取・会話入口。既存APIやHOOKは差し替えない。
-  K.partyTalk = { ...previous, talkWith: ref => { const m = K.member(ref); return m && speak(m); }, open: openTalkMenu, register: entries => { for (const e of entries) { if (TALKS.some(t => t.id === e.id)) continue; const actors = e.t.filter(l => l.who).map(l => l.who); const t = { id: e.id, who: e.c, ex: 'smile', text: e.t.map(l => l.t || l).join('。'), lines: e.t, cond: () => actors.every(id => K.G.team.includes(id)) && e.cond(K.G, K.G.region) }; TALKS.push(t); previous.L.push({id:t.id,w:t.who,need:actors.filter(id=>id!==t.who),when:t.cond,s:()=>t.lines}); } }, choose, eligible, linesFor, counts: () => TALKS.reduce((a, t) => { a[t.who] = (a[t.who] || 0) + 1; return a; }, {}) };
+  K.partyTalk = { ...previous, talkWith: ref => { const m = K.member(ref); return m && speak(m); }, open: openTalkMenu, register: entries => { for (const e of entries) { if (TALKS.some(t => t.id === e.id)) continue; const actors = e.t.filter(l => l.who).map(l => l.who); const t = { id: e.id, who: e.c, ex: 'smile', text: e.t.map(l => l.t || l).join('。'), lines: e.t, cond: () => actors.every(id => K.G.team.includes(id)) && e.cond(K.G, K.G.region) }; TALKS.push(t); previous.L.push({id:t.id,w:t.who,need:actors.filter(id=>id!==t.who),when:t.cond,s:()=>t.lines}); } }, choose, eligible, linesFor, unreadOf, unreadTotal, counts: () => TALKS.reduce((a, t) => { a[t.who] = (a[t.who] || 0) + 1; return a; }, {}) };
 })();

@@ -35,11 +35,11 @@
     { id: 'mob_gem_s01', r: 0, t: 'man', x: -116, z: 52, yaw: 0.4, nm: 'さかばかよいのサブ',
       rumor: true, lines: ['へへっ…… さかばの おくの あんがりで、 サイコロころがしてる れんちゅうが いるのさ。', 'かてば めずらしい「ふねの かぎ」が てにいるって はなしだが…… イカサマかもな。'] },
     { id: 'mob_gem_s02', r: 0, t: 'woman', x: -126, z: 68, yaw: -1.8, nm: 'やけだされのサト',
-      rumor: true, lines: ['かじで やけのこった まちはずれの あのいえね…… すんでた じいさんは どこかへ きえちまったよ。', 'でもね、 えんとつの なかに きんいろの なにかを なげこむのを みた にんが いるんだってさ。'] },
+      rumor: true, lines: ['かじで やけのこった まちはずれの あのいえね…… すんでた じいさんは どこかへ きえちまったよ。', 'でもね、 えんとつの なかに きんいろの なにかを なげこむのを みた ひとが いるんだってさ。'] },
     { id: 'mob_gem_s03', r: 0, t: 'oldm', x: -112, z: 72, yaw: 2.2, nm: 'ふねだいくのゲンゾウ',
       rumor: true, lines: ['リョウの ふなつききばの いたのしたにな、 むかしの みつぼうえきの ぬけあなが うまってるんじゃ。', 'まんちょうの ときだけ、 あなの おくから しおが ふきだすんじゃよ。'] },
     { id: 'mob_gem_s04', r: 0, t: 'man', x: -124, z: 58, yaw: -0.9, nm: 'さかなやのウオキチ',
-      lines: ['へい いらっしゃい！ カゼヒラメの しおやきき、 たべてくかい？ うまいよ！'] },
+      lines: ['へい いらっしゃい！ カゼヒラメの しおやき、 たべてくかい？ うまいよ！'] },
     { id: 'mob_gem_s05', r: 0, t: 'boy', x: -118, z: 64, yaw: 1.6, nm: 'こぞうのタツ',
       lines: ['リクのにいちゃんは カッコいいんだ！ まちの おとなは わるく いうけど、 オイラは しんじてる！'] },
     { id: 'mob_gem_s06', r: 0, t: 'girl', x: -122, z: 48, yaw: 3.0, nm: 'かいひろいのアヤ',
@@ -53,7 +53,7 @@
     { id: 'mob_gem_s10', r: 0, t: 'boy', x: -126, z: 62, yaw: 2.1, nm: 'わんぱくショータ',
       lines: ['オイラも はやく おおきくなって、 やりを びゅんびゅん ふりまわしたいな！'] },
     { id: 'mob_gem_s11', r: 0, t: 'woman', x: -118, z: 74, yaw: -0.3, nm: 'やどのしたばたらきハルミ',
-      lines: ['しおかぜていの おふとんは しおかぜで ちょっぴり しめってるけど、 たびの にんは ぐっすり ねむってくれるわ。'] },
+      lines: ['しおかぜていの おふとんは しおかぜで ちょっぴり しめってるけど、 たびの ひとは ぐっすり ねむってくれるわ。'] },
     { id: 'mob_gem_s12', r: 0, t: 'oldm', x: -108, z: 56, yaw: 1.9, nm: '灯台みのロクロウ',
       lines: ['あそこの がけの 灯台…… ひざらが おきに ういてるじゃろ？ むかしの ともしびしゅの いじじゃよ。'] },
 
@@ -133,7 +133,7 @@
     { id: 'mob_gem_c07', r: 2, t: 'woman', x: -6, z: 86, yaw: 1.7, nm: 'さぼうのユキナ',
       lines: ['くもちゃの おかわりは どう？ くもの すいてきで えんれた、 すっきりした おちゃよ。'] },
     { id: 'mob_gem_c08', r: 2, t: 'oldw', x: 6, z: 84, yaw: -1.1, nm: 'あみもののチヨ',
-      lines: ['くもの いとは あたたかいよ。 ちじょうの にんは さむがりじゃから、 たくさん もっていきな。'] },
+      lines: ['くもの いとは あたたかいよ。 ちじょうの ひとは さむがりじゃから、 たくさん もっていきな。'] },
     { id: 'mob_gem_c09', r: 2, t: 'boy', x: -14, z: 68, yaw: 0.5, nm: 'とりつかいのポポ',
       lines: ['アマツバメに ごはん あげてたら、 てのひらに のってくれたんだ！'] },
     { id: 'mob_gem_c10', r: 2, t: 'girl', x: 14, z: 68, yaw: 2.9, nm: 'ふうしゃのルリ',
@@ -197,7 +197,7 @@
     { id: 'mob_gem_a10', r: 3, t: 'girl', x: -12, z: 134, yaw: -0.3, nm: 'アワたまつくりのネネ',
       lines: ['ぷく〜っと ふいて、 なないろの あわを つくるの。 われるとき パチンと うたうのよ。'] },
     { id: 'mob_gem_a11', r: 3, t: 'man', x: 14, z: 126, yaw: 2.0, nm: 'かいていこうさくのシン',
-      lines: ['かいていの はたけで そだてる ヒジキは えいようまんてんさ。 ちじょうの にんにも くわせてやりたいね。'] },
+      lines: ['うみの そこの はたけで そだてる ヒジキは えいようまんてんさ。 ちじょうの ひとにも くわせてやりたいね。'] },
     { id: 'mob_gem_a12', r: 3, t: 'oldm', x: 0, z: 144, yaw: -1.6, nm: 'しおみのジジ',
       lines: ['ちじょうの 灯台しゅが かえってきたか。 ……カイトよ、 むすこが こんなに りっぱに なったぞ。'] }
   ];
@@ -234,8 +234,8 @@ for(const r of RESIDENTS){r.name=r.nm; const a=r.id.startsWith('mob_gem_s')?K.sh
         if (npc && safe(npc.x, npc.z, r, row.id)) { npc.mobVisible = true; continue; }
         const pos = findSpot(row);
         if (!pos) { if (npc) npc.mobVisible = false; continue; }
-        if (!npc) { npc = { id: row.id, r, nm: row.name, yaw: 0, baseYaw: 0, mobVisible: true }; npc.show = () => npc.mobVisible; K.NPCS.push(npc); }
-        Object.assign(npc, pos, { mobVisible: true });
+        if (!npc) { npc = { id: row.id, r, nm: row.name, yaw: 0, baseYaw: 0, mobVisible: true }; npc.show = () => npc.mobVisible && !npc.mobHidden && !npc.indoor; K.NPCS.push(npc); }
+        Object.assign(npc, pos, { mobVisible: true, mobHidden: false });
         if (row.rumor) row.houseId = K.REG[r].houses[row.houseIndex]?.id || null;
       }
     } finally { World.setRegion(original); }
@@ -246,18 +246,27 @@ for(const r of RESIDENTS){r.name=r.nm; const a=r.id.startsWith('mob_gem_s')?K.sh
     if(row.rumor && K.townFeature)K.townFeature.hear(row);
     await K.say(text.map(t => K.nm(row.name,t)));
   };
-  let lastRegion = -1;
+  let lastRegion = -1, npcLen = -1, npcMap = new Map();
   H.init.push(registerAll);
-  H.load.push(() => { registerAll(); lastRegion = -1; });
-  H.frame.push(() => {
+  H.load.push(() => { registerAll(); lastRegion = -1; npcLen = -1; });
+  // 一時的な 障害物（置いた ブロック・家具など）で 永久に 消えないように：
+  //   ふさがれている 間だけ 隠す（mobHidden）→ 障害物が なくなれば 描画と 会話が もどる。4秒 ふさがれたままなら 近くの 空いた 場所へ うつす。
+  //   置き場所が 見つからなかった 住人（mobVisible=false）も 5秒ごとに 置きなおしを 試す。
+  let retryT = 0;
+  function relocate(row, n) { const prev = World.region; World.setRegion(row.r); try { const pos = findSpot(row); if (!pos) return false; Object.assign(n, pos, { mobVisible: true, mobHidden: false }); n.hidAt = 0; return true; } finally { World.setRegion(prev); } }
+  H.frame.push((dt = 0) => {
     for (const mesh of meshes) mesh.n = 0;
-    if (K.phase !== 'field') return;
+    if (K.phase !== 'field' || (K.B && K.B.active)) return; // 立体バトル中は 描かない
     if (lastRegion !== K.G.region) { registerRegion(K.G.region); lastRegion = K.G.region; }
+    retryT += dt; if (retryT > 5) { retryT = 0; for (const row of RESIDENTS) { if (row.r !== K.G.region) continue; const n = npcMap.get(row.id) || K.NPCS.find(x => x.id === row.id); if (n && n.mobVisible === false) relocate(row, n); else if (!n) registerRegion(row.r); } }
+    if (K.townLife && K.townLife.on) return; // 動きと 描画は townlife.js（町の くらし）が 受けもつ
+    if (npcLen !== K.NPCS.length) { npcLen = K.NPCS.length; npcMap = new Map(); for (const x of K.NPCS) if (!npcMap.has(x.id)) npcMap.set(x.id, x); } // 毎フレームの 線形検索を やめる
     RESIDENTS.forEach((row, i) => {
-      const n = K.NPCS.find(n => n.id === row.id);
+      const n = npcMap.get(row.id);
       if (!n || row.r !== K.G.region || !n.mobVisible || dist(n, K.player) > 85) return;
       const mesh = meshes[i % meshes.length], y = K.surfaceAt(n.x, n.z, 99);
-      if (K.blocked(n.x, n.z, y)) { n.mobVisible = false; return; }
+      if (K.blocked(n.x, n.z, y)) { if (!n.mobHidden) { n.mobHidden = true; n.hidAt = performance.now(); } else if (performance.now() - n.hidAt > 4000) relocate(row, n); return; }
+      if (n.mobHidden) { n.mobHidden = false; n.hidAt = 0; } // 障害物が なくなった → もどす
       const yaw = dist(n, K.player) < 6 ? Math.atan2(K.player.x - n.x, K.player.z - n.z) : n.baseYaw;
       if (mesh.n < mesh.maxN) mesh.set(mesh.n++, n.x, y, n.z, 1, yaw);
     });

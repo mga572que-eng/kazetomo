@@ -33,7 +33,7 @@
   for (const a of ADD_ARMOR) if (!DATA.armor.some(x => x.name === a.name)) DATA.armor.push({ ...a, add: true });
   // 職業ごとの 防具（見習いと 勇灯は ぜんぶ）。ふくは 全職業
   const JOB_A = { minarai: ['cloth', 'light', 'heavy', 'robe'], senshi: ['cloth', 'light', 'heavy'], mahou: ['cloth', 'robe'], souryo: ['cloth', 'robe'],
-    touzoku: ['cloth', 'light'], butouka: ['cloth', 'light'], ginyuu: ['cloth', 'light', 'robe'], yuutou: ['cloth', 'light', 'heavy', 'robe'] };
+    touzoku: ['cloth', 'light'], butouka: ['cloth', 'light'], shounin: ['cloth', 'light', 'robe'], kariudo: ['cloth', 'light'], ginyuu: ['cloth', 'light', 'robe'], yuutou: ['cloth', 'light', 'heavy', 'robe'] };
   for (const j of DATA.jobs || []) j.eqA = JOB_A[j.id] || ['cloth', 'light', 'heavy', 'robe'];
   const jobOf = m => (G().job && G().job[m.id] && G().job[m.id].cur) || 'minarai';
   const canWear = (m, ai, jid) => { const a = DATA.armor[ai]; if (!a) return false; if (!HUMANS.includes(m.id)) return true; return (JOB_A[jid || jobOf(m)] || JOB_A.minarai).includes(a.ty); };
@@ -47,7 +47,8 @@
   const takeA = i => { const b = bag(); if (!(b.a[i] > 0)) return false; if (--b.a[i] <= 0) delete b.a[i]; return true; };
   const valW = (id, i) => { const g = DATA.gear[id][i]; return g ? (g.price || Math.round(g.atk * 30)) : 0; };
   const valA = i => { const a = DATA.armor[i]; return a ? (a.price || Math.round(a.def * 30)) : 0; };
-  const sellW = (id, i) => Math.floor(valW(id, i) * SELL), sellA = i => Math.floor(valA(i) * SELL);
+  const rate = () => (K.jobPerk && K.jobPerk('shounin') ? .5 : SELL); // 商人が 仲間に いると 5割で 売れる
+  const sellW = (id, i) => Math.floor(valW(id, i) * rate()), sellA = i => Math.floor(valA(i) * rate());
   // 鍛冶で 打った 段（ゲンの工房の 防具の 進み具合）
   const armTier = () => { const g = G(); let t = g.armTier || 0; for (const id of HUMANS) { const a = g.eq[id] && g.eq[id].a; if (a != null && a < DATA.armorBase) t = Math.max(t, a); } return t; };
 
@@ -128,8 +129,8 @@
       if (o.t === 'a') { const a = DATA.armor[o.i];
         const list = humans().map((m, pi) => { const ok = canWear(m, o.i), d0 = m.st.def, d1 = defWith(m, o.i), same = G().eq[m.id].a === o.i;
           return `<div class="who">${face(m)}<span>${K.esc(K.nameOf(m))}　${ok ? `ぼうぎょ ${d0} → ${delta(d0, d1)}` : `<span class="no">${(DATA.jobs.find(j => j.id === jobOf(m)) || {}).name || ''}は 着られない</span>`}</span>${same ? '<span class="eq">そうび中</span>' : `<button data-one="${pi}" ${!ok || G().gold < o.price ? 'disabled' : ''}>${armed === 'one' + pi ? '本当に？' : `${o.price}G`}</button>`}</div>`; }).join('');
-        return `<div class="sdet"><h4>${o.icon} ${o.name}</h4><div>${CAT[a.ty]}・ぼうぎょ ${a.def}${a.note ? `　<small>${a.note}</small>` : ''}</div>${list}<div class="hint">買うと その人が そのまま 着る。外した 防具は 袋に 入り、4割で 売れる。</div></div>`; }
-      return `<div class="sdet"><h4>${o.icon} ${o.name}</h4><div>${o.sub}</div><div class="hint">定価の 4割で 買いとる。</div><button class="buy" data-buy="1">${armed === 'buy' ? '本当に 売る？' : `売る +${o.price}G`}</button></div>`; };
+        return `<div class="sdet"><h4>${o.icon} ${o.name}</h4><div>${CAT[a.ty]}・ぼうぎょ ${a.def}${a.note ? `　<small>${a.note}</small>` : ''}</div>${list}<div class="hint">買うと その人が そのまま 着る。外した 防具は 袋に 入り、売ることも できる。</div></div>`; }
+      return `<div class="sdet"><h4>${o.icon} ${o.name}</h4><div>${o.sub}</div><div class="hint">定価の ${Math.round(rate() * 10)}割で 買いとる。${rate() > SELL ? '（商人の おかげ）' : ''}</div><button class="buy" data-buy="1">${armed === 'buy' ? '本当に 売る？' : `売る +${o.price}G`}</button></div>`; };
     const paint = () => { const R0 = rows(); sel = Math.min(sel, Math.max(0, R0.length - 1)); const o = R0[sel];
       el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button><div class="shop-top"><div class="shop-face">${Art.portrait('shopW', armed ? 'grin' : 'smile')}</div><div><b>${title}</b><div class="shop-say">「${line}」</div></div><div class="shop-gold">${G().gold} G</div></div>
         <div class="tabs"><button class="tab${tab === 'buy' ? ' on' : ''}" data-tab="buy">かう</button><button class="tab${tab === 'sell' ? ' on' : ''}" data-tab="sell">うる</button></div>

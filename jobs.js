@@ -52,6 +52,14 @@
     j_hikaritate: { name: 'ひかりの盾', mp: 8, tg: 'party', buff: 'def', cure: true, verb: 'かかげた', fx: 'light', desc: '味方の ぼうぎょ アップ＋状態異常を なおす' },
     j_tenkuu: { type: 'light', name: '天空の灯剣', mp: 14, tg: 'enemies', power: 1.9, verb: 'ふりおろした', fx: 'light', desc: '敵全体に 天の ひかりの 剣' },
     j_gokui: { type: 'light', name: '灯火の極み', mp: 16, tg: 'enemy', power: 4.0, verb: 'はなった', fx: 'light', desc: '敵1体に 灯の すべてを こめた 一撃' },
+    // 商人（お金を 投げて たたかう：MPの かわりに ゴールドを つかう。 gold は 地域ごとに ふえる）
+    j_koban: { name: 'コバン投げ', mp: 0, gold: 15, tg: 'enemy', power: 2.0, verb: 'なげつけた', fx: 'slash', desc: '敵1体に 小判を 投げつける（ゴールドを つかう）' },
+    j_kobanrain: { name: 'コバンの雨', mp: 0, gold: 45, tg: 'enemies', power: 1.45, verb: 'ばらまいた', fx: 'light', desc: '敵全体に 小判の 雨（ゴールドを つかう）' },
+    j_ooban: { name: 'オオバン投げ', mp: 0, gold: 150, tg: 'enemy', power: 3.0, verb: 'なげつけた', fx: 'light', desc: '敵1体に 大判を 投げつける 大技（ゴールドを たくさん つかう）' },
+    // 狩人
+    j_nerai: { name: 'ねらい撃ち', mp: 4, tg: 'enemy', power: 2.0, verb: 'はなった', fx: 'slash', desc: '敵1体の 急所を ねらう 一撃' },
+    j_yanoame: { type: 'wind', name: '矢の雨', mp: 8, tg: 'enemies', power: 1.35, verb: 'ふらせた', fx: 'wind', desc: '敵全体に 矢の 雨' },
+    j_kariudo10: { type: 'wind', name: 'ゼカザネ撃ち', mp: 14, tg: 'enemy', power: 3.0, verb: 'はなった', fx: 'wind', desc: '敵1体に 風を まとった 必殺の 一射' },
   });
   // v9：名前の 系統（data.js の 文法）に そろえる（キーは そのまま）
   Object.assign(DATA.skillNames = DATA.skillNames || {}, {
@@ -83,6 +91,10 @@
       mul: { atk: .2, spd: .15, mp: -.3, def: -.05 }, pas: { crit: .1 }, mb: { crit: .02 }, sk: [[2, 'j_seiken'], [4, 'j_renkyaku'], [6, 'j_kikou'], [8, 'j_senpuu'], [10, 'j_touken']] },
     { id: 'ginyuu', name: '吟遊詩人', icon: '♪', desc: '歌で 仲間を ささえる 旅の 楽士。 毎ターン 味方全員が すこし 回復する。',
       mul: { mp: .15, spd: .1, atk: -.05 }, pas: { aura: .02 }, mb: { regen: .01 }, sk: [[2, 'hagemashi'], [4, 'j_komori'], [6, 'oikaze'], [8, 'j_nagiuta'], [10, 'j_gassou']] },
+    { id: 'shounin', name: '商人', icon: '💰', desc: 'お金の 力で たたかう 旅の 商人。 小判を 投げる わざは ゴールドを つかう。 仲間に いると、売値と 戦いの 稼ぎが ふえる。',
+      mul: { hp: .05, def: .05, spd: -.05 }, pas: {}, mb: { def: .03 }, sk: [[2, 'j_koban'], [4, 'hagemashi'], [6, 'j_kobanrain'], [8, 'oikaze'], [10, 'j_ooban']] },
+    { id: 'kariudo', name: '狩人', icon: '🏹', desc: '森と 野を かける 狩りの 名人。 すばやく、急所を ねらう。 仲間に いると、採取で 1つ 多く 手に入る。',
+      mul: { spd: .1, atk: .05, mp: -.1 }, pas: { crit: .06 }, mb: { spd: .03 }, sk: [[2, 'j_nerai'], [4, 'dokubari'], [6, 'j_yanoame'], [8, 'j_kagenui'], [10, 'j_kariudo10']] },
     { id: 'yuutou', name: '勇灯', icon: '☀', desc: '二つの 職業を きわめた 者だけが 就ける、灯の 勇者。 すべてが たかい。', adv: 2,
       mul: { hp: .15, mp: .1, atk: .15, def: .1, spd: .1 }, pas: { crit: .04, regen: .02 }, mb: { hp: .05, atk: .05 }, sk: [[2, 'j_yuuki'], [4, 'j_raikou'], [6, 'j_hikaritate'], [8, 'j_tenkuu'], [10, 'j_gokui']] },
   ];
@@ -98,6 +110,8 @@
     butouka: [['鍛錬', 'こうげき +5%', { atk: .05 }], ['見切り', '会心の 確率 アップ', { crit: .04 }]],
     ginyuu: [['肺活量', '最大MP +8%', { mp: .08 }], ['伴奏', '味方全員 毎ターン HP 1% 回復', { aura: .01 }]],
     yuutou: [['勇者の体', '最大HP +5%', { hp: .05 }], ['勇者の技', 'こうげき +5%', { atk: .05 }]],
+    shounin: [['そろばん', 'ぼうぎょ +5%', { def: .05 }], ['旅の 体力', '最大HP +6%', { hp: .06 }]],
+    kariudo: [['狩りの 目', '会心の 確率 アップ', { crit: .04 }], ['身の こなし', 'すばやさ +6%', { spd: .06 }]],
   };
   const SKC = { 2: 1, 4: 2, 6: 2, 8: 3, 10: 4 };
   // eqW / eqA：その 職業の あいだ 装備できる 種類（キャラ固有の 種類に 足される）
@@ -105,7 +119,7 @@
     minarai: [['sword', 'dagger', 'staff'], ['cloth', 'light', 'shield']], senshi: [['sword', 'spear', 'axe', 'mace'], ['light', 'heavy', 'shield']],
     mahou: [['staff'], ['cloth', 'robe']], souryo: [['staff', 'mace'], ['cloth', 'robe', 'shield']], touzoku: [['dagger', 'bow'], ['cloth', 'light']],
     butouka: [['fist'], ['cloth', 'light']], ginyuu: [['harp', 'fan', 'bow'], ['cloth', 'light', 'robe']], yuutou: [['sword', 'spear', 'axe', 'mace', 'staff', 'dagger'], ['light', 'heavy', 'robe', 'shield']] };
-  const WPN = { minarai: 'sword', senshi: 'sword', mahou: 'staff', souryo: 'staff', touzoku: 'dagger', butouka: 'fist', ginyuu: 'harp', yuutou: 'sword' };
+  const WPN = { shounin: 'dagger', kariudo: 'bow', minarai: 'sword', senshi: 'sword', mahou: 'staff', souryo: 'staff', touzoku: 'dagger', butouka: 'fist', ginyuu: 'harp', yuutou: 'sword' };
   for (const j of DATA.jobs) { const P = PASS[j.id] || [];
     j.tree = [...j.sk.map(([l, s], i) => ({ id: `${j.id}_${i}`, jl: l, cost: SKC[l] || 2, skill: s })), ...P.map(([name, desc, eff], i) => ({ id: `${j.id}_p${i}`, jl: i ? 7 : 3, cost: i ? 2 : 1, name, desc, eff }))].sort((a, b) => a.jl - b.jl);
     j.eqW = (EQ[j.id] || [[], []])[0]; j.eqA = (EQ[j.id] || [[], []])[1]; j.wpn = WPN[j.id]; }
@@ -113,7 +127,7 @@
   // v10：武器の 相性（キャラの 専用武器 × 職業）。得意 ×1.15・ふつう ×1・苦手 ×0.9（武器の こうげき力に かける）。装備は 制限しない
   const AFF = { minarai: {}, senshi: { sora: 1.15, mio: .9, riku: 1.15, sana: .9, haru: .9, kaito: 1.15 }, mahou: { sora: .9, riku: .9, sana: 1.15, kaito: .9 },
     souryo: { sora: .9, riku: .9, sana: 1.15, haru: .9 }, touzoku: { sora: 1.15, mio: .9, sana: .9, haru: 1.15, kaito: .9 }, butouka: { mio: .9, sana: .9, kaito: .9 },
-    ginyuu: { sora: .9, mio: 1.15, riku: .9, haru: 1.15, kaito: .9 }, yuutou: { sora: 1.15, riku: 1.15, kaito: 1.15 } };
+    ginyuu: { sora: .9, mio: 1.15, riku: .9, haru: 1.15, kaito: .9 }, shounin: { kaito: .9 }, kariudo: { riku: 1.15, haru: 1.15, sana: .9, mio: .9 }, yuutou: { sora: 1.15, riku: 1.15, kaito: 1.15 } };
   const affOf = (id, jid) => (AFF[jid] || {})[id] || 1;
   const affTxt = v => v > 1 ? '◎ 得意（武器の こうげき ×1.15）' : v < 1 ? '△ 苦手（武器の こうげき ×0.9）' : '○ ふつう';
   K.weaponAff = (m, jid) => affOf(m.id, jid || (rec(m.id).cur));

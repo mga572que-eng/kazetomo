@@ -302,7 +302,11 @@ float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
     const skin = hex(o.skin), hair = hex(o.hair), top = hex(o.top), bot = hex(o.bottom || '#3a3a44'), acc = hex(o.accent || o.top), boot = hex(o.boot || '#4a3222'), trim = hex(o.trim || '#f3c15a');
     const lx = .1 * s * W, legH = .58 * s * T, bodyY0 = legH, bodyY1 = legH + .52 * s * T;
     // legs & round little shoes
-    for (const sx of [-1, 1]) { prism(G, .085 * s, .07 * s, .08 * s, legH, 6, bot, sx * lx, 0); prism(G, .09 * s, .082 * s, .02 * s, .2 * s, 6, boot, sx * lx, 0); ell(G, [sx * lx, .065 * s, .045 * s], .09 * s, .07 * s, .13 * s, boot, 0); }
+    // o.pose = { legL, legR, armL, armR }（ラジアン。前へ ふる＝正）：関節（腰・肩）で 回して 歩く・はたらく 形を つくる
+    const PO = o.pose || null, swing = (i0, py, pz, ang) => { if (!ang) return; const c = Math.cos(ang), sn = Math.sin(ang);
+      for (let i = i0; i < G.p.length; i += 3) { const dy = G.p[i + 1] - py, dz = G.p[i + 2] - pz; G.p[i + 1] = py + dy * c - dz * sn; G.p[i + 2] = pz + dy * sn + dz * c; const ny = G.n[i + 1], nz = G.n[i + 2]; G.n[i + 1] = ny * c - nz * sn; G.n[i + 2] = ny * sn + nz * c; } };
+    for (const sx of [-1, 1]) { const i0 = G.p.length; prism(G, .085 * s, .07 * s, .08 * s, legH, 6, bot, sx * lx, 0); prism(G, .09 * s, .082 * s, .02 * s, .2 * s, 6, boot, sx * lx, 0); ell(G, [sx * lx, .065 * s, .045 * s], .09 * s, .07 * s, .13 * s, boot, 0);
+      if (PO) { const ang = sx < 0 ? PO.legL : PO.legR; swing(i0, legH, 0, -(ang || 0)); } }
     // torso
     if (o.belly) ico(G, .34 * s * W, [0, bodyY0 + .24 * s, .04 * s], top, .03, 1, 1.05);
     if (o.robe) prism(G, .32 * s * W, .19 * s * W, .07 * s, bodyY1, 8, top, 0, 0, 1, .85);
@@ -312,8 +316,9 @@ float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
     if (o.collar) prism(G, .16 * s, .14 * s, bodyY1 - .06 * s, bodyY1 + .16 * s, 8, hex(o.collar), 0, .01);
     // arms (short, soft) + small round hands
     const sh = bodyY1 - .06 * s, ax = .27 * s * W;
-    for (const sx of [-1, 1]) { const hand = [sx * (ax + .06 * s), bodyY0 - .02 * s, .03 * s]; seg(G, [sx * ax, sh, 0], hand, .07 * s, .058 * s, 6, o.sleeve === 'rolled' ? skin : top);
-      if (o.sleeve === 'rolled') seg(G, [sx * ax, sh, 0], [sx * (ax + .02 * s), sh - .15 * s, .01], .082 * s, .077 * s, 6, top); ico(G, .056 * s, hand, skin, 0, 0); }
+    for (const sx of [-1, 1]) { const i0 = G.p.length, hand = [sx * (ax + .06 * s), bodyY0 - .02 * s, .03 * s]; seg(G, [sx * ax, sh, 0], hand, .07 * s, .058 * s, 6, o.sleeve === 'rolled' ? skin : top);
+      if (o.sleeve === 'rolled') seg(G, [sx * ax, sh, 0], [sx * (ax + .02 * s), sh - .15 * s, .01], .082 * s, .077 * s, 6, top); ico(G, .056 * s, hand, skin, 0, 0);
+      if (PO) { const ang = sx < 0 ? PO.armL : PO.armR; swing(i0, sh, 0, -(ang || 0)); } }
     if (o.pauldron) ico(G, .14 * s, [ax * (o.pauldron === 'L' ? -1 : 1), sh + .02 * s, 0], hex('#8a8f98'), .1, 1, .6);
     if (o.epaulet) for (const sx of [-1, 1]) prism(G, .13 * s, .11 * s, sh, sh + .05 * s, 8, trim, sx * ax, 0);
     // neck & head (chibi: 大きめの頭・丸い頬)
@@ -567,7 +572,8 @@ float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
     if (k) { gl.bindBuffer(gl.ARRAY_BUFFER, vaoIb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, o, 0, k * 5); } return k; }
 
   // ---------- init ----------
-  let quadVAO, triVAO, partVAO, cubeVAO, blockIB, blockN = 0, blockData = new Float32Array(4 * 9000), ghostIB, ghostVAO;
+  const BMAX = 14000; // 描く ブロックの 上限（地方ごと。霧の大陸に 新しい 町を 足したため 9000→14000）
+  let quadVAO, triVAO, partVAO, cubeVAO, blockIB, blockN = 0, blockData = new Float32Array(4 * BMAX), ghostIB, ghostVAO;
   const PARTS = 260;
   function init(canvas, coarse) {
     cv = canvas; COARSE = coarse;
@@ -899,7 +905,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
 
     const PlV = planesOf(VP, plV);
     // blocks: 16m バケツ順に 並べ替えて アップロード（描画は 可視バケツの 連続区間ごと）
-    if (blocksDirty) { const L = []; for (const [k, t] of blocks) { if (L.length >= 9000) break; const [x, y, z] = k.split(',').map(Number); L.push([((Math.floor(x / 16) + 64) << 8) | (Math.floor(z / 16) + 64), x, y, z, t]); }
+    if (blocksDirty) { const L = []; for (const [k, t] of blocks) { if (t === 19) continue; /* 19＝見えない 当たり判定（家具など） */ if (L.length >= BMAX) break; const [x, y, z] = k.split(',').map(Number); L.push([((Math.floor(x / 16) + 64) << 8) | (Math.floor(z / 16) + 64), x, y, z, t]); }
       L.sort((a, b) => a[0] - b[0]); blockN = L.length; bkts = [];
       L.forEach((e, i) => { blockData[i * 4] = e[1]; blockData[i * 4 + 1] = e[2]; blockData[i * 4 + 2] = e[3]; blockData[i * 4 + 3] = e[4]; let b = bkts[bkts.length - 1];
         if (!b || b.k !== e[0]) bkts.push(b = { k: e[0], s: i, n: 0, x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9 });

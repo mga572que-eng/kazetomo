@@ -312,6 +312,7 @@ let G = { v: 3, name: 'ソラ', region: 0, party: [], mons: [], team: [], inv: {
   dex: { seen: {}, got: {} }, stam: 100, stamMax: 100, hpBonus: 0, seeds: 0, seedGot: {}, chests: {}, bounties: [], bountyDone: 0, rewards: {}, mat: 0, lit: [0, 0, 0, 0, 0], guard: [0, 0, 0, 0, 0], placed: [[], [], [], []], pos: null, wtrial: [{}, {}, {}], wind: [0, 0, 0],
   sp: { sora: 0, mio: 0, riku: 0, sana: 0, haru: 0, kaito: 0 }, board: { sora: [], mio: [], riku: [], sana: [], haru: [], kaito: [] }, hpPct: 0, trial: [{}, {}, {}, {}, {}], itemSeen: {}, tips: {}, speed: 1, auto: false, rankClaimed: {}, bosses: 0 };
 const HUMAN_IDS = ['sora', 'mio', 'riku', 'sana', 'haru', 'kaito'];
+const goldOf = s => s && s.gold ? Math.round(s.gold * (1 + G.region)) : 0; // 商人の わざの 値段
 function calc(m) {
   const st = {};
   if (m.kind === 'human') { const d = DATA.party[m.id]; for (const k of ['hp', 'mp', 'atk', 'def', 'spd']) st[k] = d.base[k] + d.grow[k] * (m.lv - 1);
@@ -625,7 +626,7 @@ function act() {
   if (t.type === 'npc') return run(() => talk(t.o));
   if (t.type === 'tree') { t.o.hits++; t.o.shake = 1; Music.sfx('chop');
     if (t.o.hits >= 3) { t.o.state = 'fall'; t.o.t = 0; t.o.hits = 0; gain('maki', 2); let msg = '薪 +2'; if (R() < .5) { gain('ha'); msg += '  葉っぱ +1'; } floatText([t.o.x, t.o.y + 2.5, t.o.z], msg); } else floatText([t.o.x, t.o.y + 2, t.o.z], '●'.repeat(t.o.hits) + '○'.repeat(3 - t.o.hits)); return; }
-  if (t.type === 'rock') { t.o.hits++; t.o.shake = 1; Music.sfx('mine'); const iw = G.mons.some(m => SPC[m.id].type === 'earth'); const needH = iw ? 2 : 3;
+  if (t.type === 'rock') { t.o.hits++; t.o.shake = 1; Music.sfx('mine'); const iw = G.mons.some(m => SPC[m.id].type === 'earth'); const needH = Math.max(1, (iw ? 2 : 3) - (window.KZ && KZ.jobPerk && KZ.jobPerk('senshi') ? 1 : 0)); // 戦士：岩を 少ない 回数で
     if (t.o.hits >= needH) { t.o.state = 'fall'; t.o.t = 0; t.o.hits = 0; const g = iw ? 3 : 2; gain('ishi', g); let msg = `石 +${g}`; if (G.region === 1 && R() < .08) { gain('hoshikake'); msg += '  星のかけら！'; } floatText([t.o.x, t.o.y + 1.6, t.o.z], msg); } else floatText([t.o.x, t.o.y + 1.4, t.o.z], '●'.repeat(t.o.hits) + '○'.repeat(needH - t.o.hits)); return; }
   if (t.type === 'bush') { t.o.has = false; t.o.t = 0; gain('mi', 2); Music.sfx('pick'); floatText([t.o.x, t.o.y + 1.2, t.o.z], '木の実 +2'); return; }
   if (t.type === 'shroom') { t.o.has = false; t.o.t = 0; gain('kinoko'); Music.sfx('pick'); floatText([t.o.x, t.o.y + .8, t.o.z], 'キノコ +1'); return; }
@@ -803,7 +804,7 @@ async function sail(dest) {
   player.x = r.pier.x; player.z = r.pier.z - 8; player.y = surfaceAt(player.x, player.z, 99); player.vx = player.vz = player.vy = 0; trail.length = 0; cam.yaw = Math.PI; player.yaw = Math.PI;
   await cinematic('sail', REGION_NAME[dest], dest ? '— かもめ丸の 船旅 —' : '— 帰りの 船旅 —');
   Music.play(fieldSong(), { restart: true }); await wait(250); await fade(false); save(); }
-async function talkInn() { const sky = G.region === 2, sea = G.region === 3, cost = sea ? 60 : sky ? 40 : 20; const c = await menu({ title: sea ? '泡の宿「あぶく亭」' : sky ? '雲の宿「ふわり亭」' : '宿屋「うみねこ亭」', items: [{ label: 'とまる', sub: `${cost}G・全回復＋記録`, disabled: G.gold < cost }, { label: 'はなす' }] });
+async function talkInn() { const sky = G.region === 2, sea = G.region === 3, cost = Math.round((sea ? 60 : sky ? 40 : 20) * (HOOK.priceK ? HOOK.priceK() : 1)); const c = await menu({ title: sea ? '泡の宿「あぶく亭」' : sky ? '雲の宿「ふわり亭」' : '宿屋「うみねこ亭」', items: [{ label: 'とまる', sub: `${cost}G・全回復＋記録`, disabled: G.gold < cost }, { label: 'はなす' }] });
   if (c === 0) await rest(cost); else if (c === 1) await say([sky ? nm('雲の宿の 主人', '雲わたの 布団は ふかふかだよ。 ……星が 減ってから、夜が さびしくてねえ。') : nm('宿屋の おかみ', '最近は 夜に なると 空が ざわつくのよ。 星が 東の 砂漠へ 落ちていくの。')]); }
 // ================= ショップ UI（v5） =================
 const ICON = (() => { const w = (b) => `<svg viewBox="0 0 32 32" class="ic" aria-hidden="true">${b}</svg>`;
@@ -842,7 +843,7 @@ function shopUI0(kind) {
     const rows = () => {
       if (tab === 'w') { const out = []; for (const m of G.party) DATA.gear[m.id].forEach((g, i) => { if (g.price && !!g.sky === sky && !!g.sea === sea) out.push({ t: 'w', m, i, g, name: g.name, price: g.price, sub: nameOf(m), icon: ICON.gear(m.id, i), dis: G.eq[m.id].w >= i }); }); return out; }
       if (tab === 'a') return DATA.armor.map((a, i) => ({ t: 'a', i, a, name: a.name, price: a.price, sub: `ぼうぎょ ${a.def}`, icon: ICON.armor(i), dis: G.party.every(m => G.eq[m.id].a >= i) })).filter(o => o.price && !!o.a.sky === sky && !!o.a.sea === sea);
-      if (tab === 'i') { const ids = (sea ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : sky ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : ['mi', 'pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi']).concat(HOOK.shopExtra ? HOOK.shopExtra(G.region) : []); return ids.map(k => ({ t: 'i', k, name: DATA.items[k].name, price: DATA.items[k].price, sub: `もち ${G.inv[k] || 0}`, icon: ICON.item(k) })); }
+      if (tab === 'i') { const ids = (sea ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : sky ? ['pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi'] : ['mi', 'pan', 'shizuku', 'nakayoshi', 'hane', 'ganbari', 'dokukeshi']).concat(HOOK.shopExtra ? HOOK.shopExtra(G.region) : []); return ids.map(k => ({ t: 'i', k, name: DATA.items[k].name, price: Math.max(1, Math.round(DATA.items[k].price * (HOOK.priceK ? HOOK.priceK() : 1))), sub: `もち ${G.inv[k] || 0}`, icon: ICON.item(k) })); }
       return Object.keys(DATA.items).filter(k => (G.inv[k] || 0) > 0 && DATA.items[k].sell).map(k => ({ t: 's', k, name: DATA.items[k].name, price: DATA.items[k].sell, sub: `もち ${G.inv[k]}${DATA.items[k].mat ? '・素材' : ''}`, icon: ICON.item(k) })); };
     const detail = o => {
       if (!o) return `<div class="sdet"><p class="st-eq">${tab === 's' ? 'うれる ものが ない。' : '品物が ない。'}</p></div>`;
@@ -1011,7 +1012,7 @@ async function finalOpen() {
 }
 async function shrineEvent() {
   await say([`（推奨Lv${DATA.bossCfg.yomikage[0]}　連戦に なる。 準備は いいか？）`, who('yomi', 'neutral', '来たか。'), who('yomi', 'angry', '灯が あるから、人は 海へ 出る。 そして 帰ってこない。 ……だから 消した。 もう だれも、見送らなくて すむように。'),
-    who('sora', 'determined', 'ちがう！ ぼくは 三年、消えた 灯台を 見てた。 灯が ないほうが、待つ 夜は ずっと 長いんだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
+    who('sora', 'determined', 'ちがう！ ぼくは 三年、消えた 灯台を 見てた。 灯が ないほうが、待つ 夜は ずっと 長いんだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, inParty('riku') ? who('riku', 'angry', 'シオミじゃ、かげを 連れてきたのは おれだって 言われたぜ。 ……見送るのが つらいなら、そう 言えよ。 灯を 消して、だれかの せいに するな！') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
   let res = await runBattle([{ boss: 'yomikage' }], { boss: true, noFlee: true });
   if (res !== 'win') return defeated();
   await say([who('yomi', 'angry', 'まだだ……！ この 悲しみごと、永遠の 夜に しずめてやる！'), { t: '闇が ふくれあがり、空いっぱいの 王の すがたに なった！', fx: () => battleParty().forEach(m => { m.hp = Math.max(m.hp, Math.round(m.st.hp * .8)); m.mp = Math.max(m.mp, Math.round(m.st.mp * .6)); }) }]);
@@ -1651,7 +1652,7 @@ async function runBattle(specs, opts = {}) {
   const combosFor = m => (DATA.combos || []).filter(c => (c.a === m.id || c.b === m.id || c.b === m.uid)).map(c => ({ c, partner: P.find(x => (x.id === (c.a === m.id ? c.b : c.a) || x.uid === (c.a === m.id ? c.b : c.a))) })).filter(o => o.partner && o.partner.hp > 0 && !(o.partner.sleep > 0) && m.mp >= o.c.mp && o.partner.mp >= o.c.mp);
   let turnN = 0;
   function aiPlan(m) {
-    const A = aliveP(), Fs = aliveF(); const can = sid => m.mp >= costOf(m, sid);
+    const A = aliveP(), Fs = aliveF(); const can = sid => m.mp >= costOf(m, sid) && !DATA.skills[sid].gold && !DATA.skills[sid].steal; // おまかせでは お金・ぬすむを つかわない
     if (Fs.some(f => f.charging) && m.hp < m.st.hp * .7 && !m.skills.some(sid => DATA.skills[sid].heal && can(sid))) return { type: 'guard' };
     if (Fs.some(f => f.boss) && turnN % 3 === 2) { const cb = combosFor(m).find(o => o.c.power); if (cb) return { type: 'combo', c: cb.c, partner: cb.partner, t: Fs[0] }; }
     if (A.some(a => a.ail === 'poison' || a.ail === 'burn') && !A.some(a => a.hp < a.st.hp * .45)) { const cs = m.skills.find(sid => DATA.skills[sid].cure && can(sid)); if (cs) return { type: 'skill', s: cs, t: null }; }
@@ -1678,7 +1679,7 @@ async function runBattle(specs, opts = {}) {
       if (c === 'auto') return aiPlan(m);
       if (c === -1) { if (canBack) return { type: 'back' }; continue; }
       if (c === 0) { const t = await pickFoe(null, nm0); if (t === 'auto') return aiPlan(m); if (t) return { type: 'atk', t }; continue; }
-      if (c === 1) { const i = await bmenu(sk.map(sid => { const d = DATA.skills[sid]; return { label: d.name + (d.type && d.type !== 'normal' ? ` ${typeTag(d.type)}` : ''), sub: `MP${costOf(m, sid)}`, hint: d.desc, disabled: m.mp < costOf(m, sid) }; }), `${nm0} ▸ <b>とくぎ</b>`);
+      if (c === 1) { const i = await bmenu(sk.map(sid => { const d = DATA.skills[sid]; return { label: d.name + (d.type && d.type !== 'normal' ? ` ${typeTag(d.type)}` : ''), sub: d.gold ? `${goldOf(d)}G` : `MP${costOf(m, sid)}`, hint: d.desc, disabled: m.mp < costOf(m, sid) || G.gold < goldOf(d) }; }), `${nm0} ▸ <b>とくぎ</b>`);
         if (i === 'auto') return aiPlan(m); if (i < 0) continue; const d = DATA.skills[sk[i]]; let t = null;
         if (d.tg === 'enemy') { t = await pickFoe(d.type, nm0); if (t === 'auto') return aiPlan(m); if (!t) continue; } else if (d.tg === 'ally') { t = await pickAlly(nm0); if (t === 'auto') return aiPlan(m); if (!t) continue; }
         return { type: 'skill', s: sk[i], t }; }
@@ -1716,6 +1717,7 @@ async function runBattle(specs, opts = {}) {
   }
   async function useSkill(a, id, tgt, isFoe, costPaid = false) {
     const s = DATA.skills[id];
+    if (!isFoe && !costPaid && s.gold) { const gc = goldOf(s); if (G.gold < gc) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし おかねが たりない！`); return; } G.gold -= gc; G.goldSpentB = (G.goldSpentB || 0) + gc; hud(); }
     if (!isFoe && !costPaid) { const cst = costOf(a, id); if (a.mp < cst) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし MPが たりない！`); return; } a.mp -= cst; redraw(); mpFx(a, cst); }
     const el = elemOf(s, a), big = s.tg === 'enemies' || s.tg === 'all' || s.tg === 'party' || !!a.boss;
     redraw(); actorOn(a, `${nameOr(a)}の ${s.name}！`); castStart(a, el, big); if (isFoe) cryOf(a, { vol: .8 }); if (big) screenFx(s.fx || (el === 'heal' ? 'heal' : 'light'));
@@ -1734,6 +1736,7 @@ async function runBattle(specs, opts = {}) {
     if (s.buff === 'atk') { alliesOf().forEach(m => m.atkUp = 3); redraw(); buffFx(alliesOf(), 'atk'); await bmsg('みんなの こうげきりょくが あがった！'); }
     if (s.buff === 'spd') { alliesOf().forEach(m => m.spdUp = 3); redraw(); buffFx(alliesOf(), 'spd'); await bmsg('おいかぜが ふいた！ みんなの すばやさが あがった！'); }
     if (s.sleep && s.tg === 'enemy') { const t = tgt && tgt.hp > 0 ? tgt : aliveF()[0]; if (!t) return; markTgt(t); if (!s.power) await castFly(a, el, [t]); if (!t.boss && R() < s.sleep) { t.sleep = 2 + Math.floor(R() * 2); redraw(); ailFx(t, 'sleep'); await bmsg(`${t.name}は ねむってしまった！`); } else { Music.sfx('miss'); await bmsg(`${t.name}には きかなかった！`); } }
+    if (s.steal && !isFoe && HOOK.steal) { const t = tgt && tgt.foe ? tgt : aliveF()[0]; if (t) await HOOK.steal(a, t, bmsg, { redraw, markTgt }); } // 職業の わざ「ぬすむ」（jobfield.js）
     } finally { actorOff(a); }
   }
   async function doParty(a, p) {
@@ -1899,7 +1902,7 @@ function checkRank() { const p = rankPts(); for (const x of DATA.ranks) if (p >=
   Music.sfx('friend'); tip(`<b>冒険者ランク ${x.r} に あがった！</b><span>ごほうび：${got.join('・')}</span>`); } }
 const expBar = m => `<div class="xp"><i style="width:${Math.min(100, m.exp / need(m.lv) * 100)}%"></i></div>`;
 // メインメニュー：9つの タイル（3列×3段）。モジュールの HOOK.menu は「ストーリー」「システム」「そのほか」に まとめる
-const MENU_IC = { 'きろく帳': '📔', 'しょくぎょう': '🎓', 'せってい': '⚙️' };
+const MENU_IC = { 'きろく帳': '📔', 'しょくぎょう': '🎓', 'せってい': '⚙️', '視点': '👁️', 'ぬけだす': '🆘' };
 const tile = (ic, label, sub, o = {}) => ({ label: `<i class="ti" aria-hidden="true">${ic}</i><b>${label}</b>`, sub: sub || '', ...o });
 const howtoPanel = () => panel(`<h3>あそびかた</h3><ul class="howto"><li><b>目標</b>：左上の「▶」が いま やること。上の 矢印が 方角。メニューの「ストーリー」と「地図」で くわしく 見られる。</li>
       <li><b>成長</b>：レベルが 上がると スキルポイント（SP）。メニューの「スキル」で 技や 能力を 覚える。</li>
@@ -1917,32 +1920,27 @@ async function openMenu() { await run(async () => {
     const spTotal = G.party.reduce((a, m) => a + (G.sp[m.id] || 0), 0); const rk = rankOf(rankPts()).r.r;
     const extra = HOOK.menu.map(f => { try { return f(); } catch (e) { return null; } }).filter(Boolean);
     const take = re => { const i = extra.findIndex(x => re.test(String(x.label))); return i < 0 ? null : extra.splice(i, 1)[0]; };
-    const story = take(/ストーリー|クエスト/), opt = take(/せってい|設定/);
+    const story = take(/ストーリー|クエスト/), opt = take(/せってい|設定/), talkI = take(/^はなす$/), equipI = take(/^そうび$/), jobI = take(/^しょくぎょう$/); // v15：よく 使う ものは 最初の 画面へ
     const others = [{ ic: '🔨', label: 'クラフト', sub: 'ブロックを つくる', fn: craftMenu }, ...extra.map(x => ({ ic: MENU_IC[x.label] || '✦', label: x.label, sub: x.sub, fn: x.fn, disabled: x.disabled })), { ic: '👥', label: 'じんぶつ', sub: 'であった 人たち', fn: charBook }];
     const sys = [{ ic: '💾', label: 'きろくする', sub: 'ぼうけんを 保存', fn: async () => { const ok = save(); await panel(`<h3>きろく</h3><p>${ok ? 'ぼうけんの きろくを のこした。' : 'このブラウザでは 保存が できないようだ。'}</p>`); } },
       ...(opt ? [{ ic: '⚙️', label: opt.label, sub: opt.sub, fn: opt.fn }] : []), { ic: '❓', label: 'あそびかた', sub: '操作と しくみ', fn: howtoPanel }];
     const nItems = Object.keys(G.inv).filter(k => G.inv[k] > 0 && DATA.items[k]).length;
-    const T = [
-      tile('🛡️', 'つよさ', `ランク ${rk}`),
-      tile('✨', 'スキル', spTotal ? `SP ${spTotal} つかえる` : 'わざ・のうりょく', { cls: spTotal ? 'badge' : '' }),
-      tile('👜', 'どうぐ', `${nItems}しゅるい`),
-      tile('🐾', 'なかま', `たいれつ・牧場 ${G.mons.length}ひき`),
-      tile('📖', 'いきもの図鑑', `${Object.keys(G.dex.got).length} / ${DEX_N}`),
-      tile('📜', 'ストーリー', 'クエスト・あらすじ'),
-      tile('🗺️', '地図', G.warp || G.region > 0 ? '現在地・ワープ' : '現在地・目的地'),
-      tile('🧰', 'そのほか', others.map(o => o.label).join('・')),
-      tile('⚙️', 'システム', sys.map(o => o.label).join('・')) ];
-    const c = await menu({ title: `メニュー<small>${G.gold}G　ランク${rk}${G.title ? `　${esc(G.title)}` : ''}</small>`, items: T, where: 'grid', cols: 3, sel: menuSel });
-    if (c < 0) return; menuSel = c; let r;
-    if (c === 0) await statusPanel();
-    if (c === 1) await skillMenu();
-    if (c === 2) r = await itemMenu();
-    if (c === 3) await partyMenu();
-    if (c === 4) await dexMenu();
-    if (c === 5) r = story ? await story.fn() : await questLog();
-    if (c === 6) r = await mapPanel();
-    if (c === 7) r = await subGrid('そのほか', others);
-    if (c === 8) r = await subGrid('システム', sys);
+    // v15：4列×3段。 よく 使う「はなす・そうび・しょくぎょう」を 最初の 画面に（部署8：UI）
+    const E = [
+      talkI && { t: tile('💬', 'はなす', talkI.sub || '仲間と 会話'), fn: () => talkI.fn() },
+      { t: tile('🛡️', 'つよさ', `ランク ${rk}`), fn: () => statusPanel() },
+      equipI && { t: tile('⚔️', 'そうび', equipI.sub || '武器・防具'), fn: () => equipI.fn() },
+      { t: tile('👜', 'どうぐ', `${nItems}しゅるい`), fn: () => itemMenu() },
+      { t: tile('✨', 'スキル', spTotal ? `SP ${spTotal} つかえる` : 'わざ・のうりょく', { cls: spTotal ? 'badge' : '' }), fn: () => skillMenu() },
+      jobI && { t: tile('🎓', 'しょくぎょう', jobI.sub || '職業・転職'), fn: () => jobI.fn() },
+      { t: tile('🐾', 'なかま', `たいれつ・牧場 ${G.mons.length}ひき`), fn: () => partyMenu() },
+      { t: tile('📖', 'いきもの図鑑', `${Object.keys(G.dex.got).length} / ${DEX_N}`), fn: () => dexMenu() },
+      { t: tile('📜', 'ストーリー', 'クエスト・あらすじ'), fn: () => story ? story.fn() : questLog() },
+      { t: tile('🗺️', '地図', G.warp || G.region > 0 ? '現在地・ワープ' : '現在地・目的地'), fn: () => mapPanel() },
+      { t: tile('🧰', 'そのほか', others.map(o => o.label).join('・')), fn: () => subGrid('そのほか', others) },
+      { t: tile('⚙️', 'システム', sys.map(o => o.label).join('・')), fn: () => subGrid('システム', sys) } ].filter(Boolean);
+    const c = await menu({ title: `メニュー<small>${G.gold}G　ランク${rk}${G.title ? `　${esc(G.title)}` : ''}</small>`, items: E.map(e => e.t), where: 'grid', cls: E.length > 9 ? 'c4' : '', cols: E.length > 9 ? 4 : 3, sel: menuSel });
+    if (c < 0) return; menuSel = c; const r = await E[c].fn();
     if (r === 'warped' || r === 'close') return;
   } }); }
 async function statusPanel() {
@@ -2145,14 +2143,21 @@ function depen(p) { if (!blocked(p.x, p.z, p.y)) return false;
   if (side(.05, .35)) return true;
   const up = footAt(p.x, p.z, p.y + 1.1); if (up - p.y <= 1.1 && !blocked(p.x, p.z, up)) { p.y = up; return true; }
   return side(.4, .9); }
-// 落下ダメージ：7.5m を こえる 落下で、高さに 応じて へる（ぜったいに たおれない＝HP1のこる）。 滑空・水・上昇気流・海の底は なし
-const FALL_SAFE = 7.5;
-function fallHurt(drop) { const f = clamp((drop - FALL_SAFE) * .04 + .05, .05, .6); let hit = 0;
+// 落下ダメージ（仕様B・2026-10-01 開発者決定）：7マス以上の 落下で、6マスを こえた 1マスごとに 最大HPの 5%（上限 40%）。 全員 均等。 HPは 1 のこる。
+// なし：滑空・水・上昇気流・海の底・町の中・祠の 試練の中・せってい「落下ダメージ：なし」
+const FALL_SAFE = 7;
+function fallSafeHere() { const K = window.KZ, r = G.region, R0 = REG[r] || {}; if (HOOK.OPT.fall === false) return true;
+  const d = (o, rad) => o && Math.hypot(o.x - player.x, o.z - player.z) < rad;
+  if (d(R0.town, 34)) return true; if (r === 0 && K && K.shiomi && d(K.shiomi, 30)) return true;
+  if (K && K.extraAreas && K.extraAreas.some(a => a.rg === r && Math.hypot(a.x - player.x, a.z - player.z) < (a.r || 30))) return true;
+  if (K && K.shrinesHere && K.shrinesHere(r).some(s => Math.abs(player.x - s.pos.x - .5) < 8 && Math.abs(player.z - s.pos.z - .5) < 8)) return true;
+  return false; }
+function fallHurt(drop) { if (fallSafeHere()) return; const f = clamp((Math.floor(drop + .001) - 6) * .05, .05, .4); let hit = 0;
   for (const m of battleParty()) { if (!(m.hp > 1)) continue; const d = Math.max(1, Math.round(m.st.hp * f)); m.hp = Math.max(1, m.hp - d); hit = Math.max(hit, d); }
   player.stag = .3 + Math.min(.45, (drop - FALL_SAFE) * .03); player.vx *= .2; player.vz *= .2; player.sq = .9;
   for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; puffs.push({ x: player.x + Math.cos(a) * .7, y: player.y + .1, z: player.z + Math.sin(a) * .7, t: 0, big: 1 }); }
   Music.sfx('hurt'); if (hit) try { floatText([player.x, player.y + 2.2, player.z], `ドスン！ -${hit}`); } catch (_) {}
-  hud(); tip('高い ところから 落ちると ダメージ（HPは 1 のこる）。<br>滑空・水・上昇気流で 着地すれば だいじょうぶ', 'fall', 3600); }
+  hud(); tip('高い ところから 落ちると ダメージ（HPは 1 のこる）。<br>風布で 滑空するか、水に 着地すれば だいじょうぶ。 町と 祠の 中では ダメージなし。 せっていで なしにも できる', 'fall', 4200); }
 
 // ================= followers（V字で 2.5〜3.5 うしろ・カメラの 視線を よける） =================
 const folSt = {};
@@ -2377,7 +2382,7 @@ function frameBody(now) {
     shinyFx = [];
     for (const e of enemies) { const d = Math.hypot(player.x - e.x, player.z - e.z);
       if (md === 'field') { const ox = e.x, oz = e.z;
-        if (d < (e.tut ? 5 : 12) && cool <= 0 && !player.glide) moveEntity(e, player.x, player.z, (night > .5 ? 5.2 : 4.3) * (e.legend ? .6 : 1), dt);
+        if (d < (e.tut ? 5 : (window.KZ && KZ.jobPerk && KZ.jobPerk('ginyuu') ? 7 : 12)) && cool <= 0 && !player.glide) moveEntity(e, player.x, player.z, (night > .5 ? 5.2 : 4.3) * (e.legend ? .6 : 1), dt);
         else { e.wt -= dt; if (e.wt <= 0) { e.tx = e.hx + (R() - .5) * 16; e.tz = e.hz + (R() - .5) * 16; e.wt = 3 + R() * 4; } moveEntity(e, e.tx, e.tz, 1.4, dt); }
         if (G.region === 2 && !e.fixedY && hAt(e.x, e.z) < 4) { e.x = e.px ?? e.hx; e.z = e.pz ?? e.hz; e.wt = 0; }
         if (!e.fixedY && blocked(e.x, e.z, e.y) && !blocked(ox, oz, e.y)) { e.x = ox; e.z = oz; e.wt = 0; } // 魔物も かべを すりぬけない
@@ -2447,13 +2452,16 @@ function frameBody(now) {
     for (let k = streaks.length - 1; k >= 0; k--) { const q = streaks[k]; q.t += dt; if (q.t > .45) { streaks.splice(k, 1); continue; } fx.push({ type: 1, p: [q.x, q.y, q.z], size: [.35, .35], grow: (1 - q.t / .45) * 2.5, tint: [.9, 1, 1] }); }
     if (puffs.length > 40) puffs.splice(0, puffs.length - 40); if (streaks.length > 30) streaks.splice(0, streaks.length - 30); }
   const lightMon = battleParty().some(m => m.kind === 'mon' && SPC[m.id].type === 'light');
-  const lan = [player.x + Math.cos(player.yaw) * .44 + Math.sin(player.yaw) * .14, player.y + .85, player.z - Math.sin(player.yaw) * .44 + Math.cos(player.yaw) * .14, lightMon ? 2.6 : 1.6];
+  const lan = [player.x + Math.cos(player.yaw) * .44 + Math.sin(player.yaw) * .14, player.y + .85, player.z - Math.sin(player.yaw) * .44 + Math.cos(player.yaw) * .14, (lightMon ? 2.6 : 1.6) * (window.KZ && KZ.jobPerk && KZ.jobPerk('mahou') ? 1.5 : 1)]; // 魔法使い：灯りが 広い
   fx.push({ type: 1, p: lan.slice(0, 3), size: [.9, .9], grow: night * .5 });
   const beaconU = new Float32Array(20); if (G.region === 0) r.beacons.forEach((b, i) => beaconU.set([b.fireAt[0], b.fireAt[1] + .25, b.fireAt[2], b.lit ? 1 : 0], i * 4));
   if (G.region === 0 && phase === 'field') { const b0 = r.beacons[0]; if (!b0.lit) b0.shards.forEach((sh, k) => { if (!(G.trial[0].got || []).includes(k)) fx.push({ type: 1, p: [sh.x, sh.y + .7, sh.z], size: [1.6, 1.6], grow: 1.5, tint: [1, .8, .35] }); }); }
   let ghost = null; if (G.build && md === 'field') { const [x, y, z] = buildCell(); ghost = [x, y, z, G.mat]; }
   if (DEBUG) { const hid = window.__norender ? 'hidden' : ''; if (cv.style.visibility !== hid) cv.style.visibility = hid; }
   let rEye = eye, rTgt = tgt; if (B.active && B.d3 && HOOK.b3dFrame) { const c = HOOK.b3dFrame(dt, T); if (c) { rEye = c.eye; rTgt = c.tgt; } }
+  // v15：一人称（部署9）。目の 高さから カメラの 向きを 見る（ドラッグで 見回し、移動は 見ている 方向が 前）。 自分の 体と 風布は 描かない
+  else if (HOOK.OPT.fpv && phase === 'field' && !B.active) { const p = (cam.pitch ?? .3) - .3, y = cam.yaw, h = [player.x, player.y + (player.swim ? 1.0 : 1.55), player.z];
+    rEye = h; rTgt = [h[0] + Math.sin(y) * Math.cos(p) * 4, h[1] - Math.sin(p) * 4, h[2] + Math.cos(y) * Math.cos(p) * 4]; mH.sora.n = 0; mGlider.n = 0; for (const m of battleParty()) if (m.kind === 'human' && mH[m.id]) mH[m.id].n = 0; } // 目の 前を ふさがないよう、ついてくる 仲間も かくす
   if (!(DEBUG && window.__norender) && !B.stage) World.render({ eye: rEye, tgt: rTgt, tod: G.tod, T, player: [player.x, player.y, player.z], lantern: lan, beaconU, fx, ghost, darkness, stars: G.flags.c3done ? 1.7 : G.flags.c3start ? .35 : 1 });
   if (B.active && B.d3 && HOOK.b3dAnchors) HOOK.b3dAnchors();
   dlgUpdate(dt); Music.tick();

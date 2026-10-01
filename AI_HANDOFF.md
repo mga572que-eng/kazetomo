@@ -4,32 +4,42 @@
 - ゲーム：ともしびアイランド（ブラウザー3D冒険RPG / PWA）
 - GitHub：https://github.com/mga572que-eng/kazetomo
 - 公開URL：https://mga572que-eng.github.io/kazetomo/
-- 初回基準：6c656eb8573c7d12912db00d896e6c7f7515d406（main、10コミット）
-- ゲーム版：20260930230833
+- 最新main：f70088b（PR #11 統合、2026-10-01 20:54 JST）
+- ゲーム版：20261001184146（公開済み）
 - 記録日：2026-10-01 JST
-- 現担当：Codex / 開発環境・保全の初期設定
-
-## 今回の変更
-共通ルール、Claude/Gemini入口、運用手順、Node起動・構文/参照検査・Gitバックアップを追加。既存ゲームファイルは変更しない。
-開発環境はPR #1でmainへ統合済み。作業開始は最新mainから担当別ブランチを作る。
+- 担当：固定しない（Claude / Codex / Gemini）。今回の記録：Claude
 
 ## 構成と壊しやすい箇所
-ビルド不要のHTMLと通常スクリプト。index.htmlの順序：pwa → music → art → data → art_mon → art_face → world → game → settings → life → shrines → base → ch4 → jobs → quests → deco → ux → onboard → unstuck。
+ビルド不要のHTMLと通常スクリプト。index.htmlの順序：pwa → music → art → data → art_mon → art_face → world → game → settings → life → shrines → base → ch4 → jobs → quests → deco → ux → onboard → unstuck → names → balance → battle3d → talk → town → mobs → monplus → gemini-talk。
 world.jsが描画・地形、game.jsが進行・戦闘・セーブとwindow.KZ/HOOK。後続モジュールはKZ/HOOKへ追加する。data.jsが共通データ、ch4.jsが第4章、jobs/quests/base/life/shrinesが拡張、ux/onboard/unstuck/settingsが操作・救出・設定。
+追加モジュール：names（技の表示名）、balance（そうび袋・防具の種類・店・売却、K.bal）、battle3d（立体バトル、設定で平面に戻せる）、talk / gemini-talk（仲間会話）、town（酒場・訳あり家・探索）、mobs（町の住人）、monplus（モンスター装備・覚醒・連携）。
 セーブ：kazetomo-rpg-3、追加スロットkazetomo-rpg-3-sN、旧kazetomo-rpg-1。設定：kazetomo-opt。IDと進行フラグを勝手に変更しない。
-PWA版番号はindex/pwa/sw/versionで同期（ch4.jsの?v欠落はwork/qa-audit-fixesで修正）。
+追加のセーブ値：bag、armTier、talkSeen、talkIdx、town、flags.tw_*、monEq、monAwake。旧セーブでは無くても動く（HOOK.loadで補う）。
+PWA版番号はindex/pwa/sw/versionで同期する。
+
+## 状況（保存済み／公開済み／未確認）
+| 区分 | 内容 |
+|---|---|
+| 公開済み（main・Pages） | PR #3〜#11 と、直接アップロード 301ca07〜7c699d9（Gemini成果の適用・小修正）。自動検査（Game checks・build・deploy）は、すべて success |
+| 保存済み・未統合 | なし（2026-10-01 20:55 時点） |
+| ローカルの実ゲーム検査 | Codex：装備・覚醒・在庫・セーブ／ロードなど14項目。Claude：メニュー7項目、仲間会話25回（重複なし）、戦闘、新しいセーブ値の保存。どちらもエラー0 |
+| 844×390 画面 | ブラウザの模擬画面で確認済み（そうび・モンスター・戦闘） |
+| **未確認** | **iPhone 実機**（立体バトルの重さ・操作・PWA）、**全章の通しプレイ**、旧セーブでの長時間の継続 |
 
 ## 未確認と次の一手
-- Claude側のソースはGitHub版と比較済み（2026-10-01、Claude）。版番号以外の差分は、game.jsのデバッグ用の1行（`window.__B`）だけだったため、採用していない。未保存の機能はない。
-- Claude環境の旧 `deploy.sh`（リポジトリ外）は、リポジトリを公開用ファイルで丸ごと上書きする方式。今の運用では使用禁止。
-- 部署・方針・優先順位は ROADMAP.md、AIへの作業指示は docs/briefs/ に置く。
-- 各AIアカウントへのログイン・権限付与・AI Studioへのインポートは未実施。接続時は必要な範囲だけ許可する。
-- ブラウザーでゲーム全章の動作と既存セーブの継続確認は未実施。
-- この作業の最終検証は SETUP_REPORT.md を参照。
-- 次担当：このファイルを読んで git status と HEAD を確認。変更したい機能を1つに絞り、作業ブランチから開始。
+- 計画と優先順位：docs/plan/NEXT.md。他のAIへの依頼文：docs/plan/PROMPTS.md。
+- 優先順位（開発者決定）：
+  1. 作業記録の更新・改行のLF統一（専用PR）・PR運用
+  2. 新しいモジュールの監査と、既存設定との食い違いの修正
+  3. iPhoneでの10分テストと、その結果にもとづく改善
+  4. 追加要素（落下ダメージは仕様を先に決める・職業支援・物語改稿）
+- 運用：mainへ直接アップロードしない。作業ブランチ → PR → 統合。Geminiへの依頼は1件ずつ、対象コミットと必要なソースだけを渡す。成果物はClaudeかCodexが確認・適用・検査してからPRにする。
+- 物語の新しい過去・年齢・家族関係（docs/design/story.md・docs/lore/foreshadow.md）は未承認の提案。本編に入れない。
+- 文の方針：「難しい漢字はひらがな」を維持。意味が取りにくい文を個別に直す。固有名詞は本編の表記に合わせる。
+- Claude環境の旧 `deploy.sh`（リポジトリ外）は使用禁止（リポジトリを丸ごと上書きする方式のため）。
 
 ## 次回終了時に更新
-担当 / 開始コミット / 終了コミット（文書更新時点の直前コミット可） / 変更ファイル / 実施した検証と結果 / 未解決 / 次の一手。
+担当 / 開始コミット / 終了コミット / 変更ファイル / 実施した検証と結果（保存済み／公開済み／未確認を分ける） / 未解決 / 次の一手。
 
 ## PCに依存しない設定の追加
 .devcontainer（Node 22）、.nvmrc、GitHub検査と手動バックアップワークフロー、CLOUD_DEVELOPMENT.mdを追加。リモート反映・main統合とGame checks成功を確認済み。Codespacesの初回起動は未実施。保存はGitHubへのcommit/pushを完了条件とする。セーブはブラウザー単位で自動同期されない。
