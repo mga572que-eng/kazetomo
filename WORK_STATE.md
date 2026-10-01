@@ -1,17 +1,17 @@
 # 作業の再開
 
-更新: 2026-10-01T11:38:20.650Z
+更新: 2026-10-01T11:47:17.049Z
 ブランチ: work/next-plan
-直前コミット: 7c699d94542f84f356b5d2bcab743019e9b76eb5
+直前コミット: 2bb23870b66c526812394e1cf8cf470208251c1f
 
 ## 目的
-GitHubの現状分析と次の計画（全部署の意見・ChatGPT/AI Studio依頼文）
+計画書の改訂（ChatGPTの指摘を反映）
 
 ## 完了・途中の内容
-docs/plan/NEXT.md（現状・問題点・16部署の意見・優先順位・文体基準）、docs/plan/PROMPTS.md（AI Studio用・ChatGPT用の依頼文）を追加。mainの動作をヘッドレスで確認（メニュー・会話25回・戦闘・セーブ、エラー0）
+NEXT.md：自動検査は4コミットとも成功と訂正、確認の区分（自動検査／ローカル実ゲーム／844x390／iPhone実機／通しプレイ）、優先順位を開発者決定の順に、運用ルール（Geminiは1件ずつ・保存済み/公開済み/未確認）、文の方針（ひらがな維持・個別修正）、落下ダメージは仕様決定が先、物語の提案は未承認扱い。PROMPTS.md：Gemini依頼をG1監査・G2設定・G3文の個別修正に分割、ChatGPT依頼を改訂
 
 ## 次の一手
-PR統合。P0：mainへの直接アップロードをやめPRへ、.gitattributesで改行LF統一、WORK_STATE更新、iPhone実機確認
+PR #11 統合。優先1：WORK_STATE/AI_HANDOFF更新、.gitattributesでLF統一（専用PR）
 
 ## 検証
 構文・参照・PWA検査: PASS
