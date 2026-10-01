@@ -1,28 +1,18 @@
 # 作業の再開
 
-更新: 2026-10-01T05:08:09.219Z
-ブランチ: work/roadmap-handoff
-直前コミット: 565613577abd84f5ac22a5099cac1ba65680f35e
+更新: 2026-10-01 / 担当: Claude
 
-## 目的
-AI Studio向け作業指示を追加
+## 完了
+- PR #3（work/qa-audit-fixes）を main に統合済み：Gemini監査(06)の正しい指摘5件を修正（復活技、旧セーブの仲間キー、草の判定、比率リセット、ch4.jsの?v）。ゲーム版 20261001051529。検証の詳細は docs/reports/qa-audit.md。
+- このブランチ（work/roadmap-handoff, PR #4）：ROADMAP.md と docs/briefs/（AI作業指示01〜06）。文書のみ。
 
-## 完了・途中の内容
-docs/briefs/README.md と指示02〜06（酒場・訳あり家、仲間モンスター、バランス設計書、物語改稿、全コード監査）を追加。ゲーム本体は変更なし
+## 進行中
+- Gemini 04（バランス設計書）を AI Studio に依頼中。返ってきた docs/design/balance.md は、Claude が検証してから実装する。
 
 ## 次の一手
-ユーザー確認後にPRでmainへ統合。AI Studioの返答ファイルは、Gitを操作できるAIが各work/ブランチへ入れて検査する
+1. PR #4 を統合する（ユーザー確認済み、統合ボタンはユーザーが押す）。
+2. iPhone 実機で、公開版の戦闘と旧セーブの継続を確認する（未確認）。
+3. 04 の設計書が届いたら、work/balance-skillpoints を最新 main から作り、スキル振り・職業ごとの装備から実装する。
 
 ## 検証
-構文・参照・PWA検査: PASS
-実プレイ: 未確認（担当AIが結果を別途記録）
-
-## 保存対象
-- docs/briefs/README.md
-- docs/briefs/gemini-02-town-and-foreshadow.md
-- docs/briefs/gemini-03-monster-companions.md
-- docs/briefs/gemini-04-balance-design.md
-- docs/briefs/gemini-05-story.md
-- docs/briefs/gemini-06-qa-audit.md
-
-このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
+npm run check: PASS（main 9f97e98 時点）。実機確認は未実施。

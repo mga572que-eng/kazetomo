@@ -15,7 +15,7 @@
     if (O.quality === 'auto') { if (autoQ == null) autoQ = World.quality; World.setQuality(autoQ); } else World.setQuality({ low: 0, mid: 1, high: 2 }[O.quality]);
   }
   function applyRatio() { const r = { '16:9': 16 / 9, '19.5:9': 19.5 / 9, '4:3': 4 / 3, '3:2': 3 / 2 }[O.ratio] || 0; const vv = window.visualViewport; const iw = vv ? vv.width : innerWidth, ih = vv ? vv.height : innerHeight; const b = document.body;
-    if (!r) { window.__vw = 0; window.__vh = 0; ['position', 'left', 'top', 'width', 'height', 'transform'].forEach(k => b.style[k] = '');
+    if (!r) { window.__vw = 0; window.__vh = 0; ['position', 'left', 'top', 'width', 'height', 'transform'].forEach(k => b.style[k] = ''); document.documentElement.style.height = ''; document.documentElement.style.background = '';
       // iOS の ホーム画面アプリで 下に 黒い帯が でる 不具合（innerHeight が 画面より 小さい）対策：画面いっぱいに 広げる
       const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
