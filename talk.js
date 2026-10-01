@@ -182,7 +182,7 @@
   addT("sora_01", () => true, "sora", "determined", "とうさんの おさがりの マフラー、 すこし しおの においが する。 これを まいてると、 まえを むけるんだ。");
   addT("sora_02", () => isNight() && K.G.region === 0 && !F().cleared, "sora", "smile", "よるの うみは くらいね。 とうだいの あかりを とりもどしたいな。");
   addT("sora_03", () => inTown() && K.G.region === 0 && isNight(), "sora", "smile", "むらの あかりを みると ほっとするよ。 かえりみちを たしかめよう。");
-  addT("sora_04", () => isLowHp(K.member("sora")), "sora", "worried", "うう…… さすがに すこし しんたいが おもいな。 どこかで ひとやすみ したいよ。");
+  addT("sora_04", () => isLowHp(K.member("sora")), "sora", "worried", "うう…… さすがに すこし からだが おもいな。 どこかで ひとやすみ したいよ。");
   addT("sora_05", () => recentBattle()?.res === "win", "sora", "joy", "みんな、 ケガは なかった？ かげものたち、 ちゃんと ひかりへ かえれたかな。");
   addT("sora_06", () => K.G.region === 1, "sora", "surprised", "たいりくの さばくは ひろいなぁ。 みわたす かぎり すなばかりで、 まいごに なりそうだよ。");
   addT("sora_07", () => K.G.region === 2, "sora", "worried", "あしの したに くもが あるなんて、 まだ しんじられないよ。 おちないように きをつけなきゃ。");
@@ -205,7 +205,7 @@
   addT("mio_09", () => K.G.region === 2, "mio", "joy", "くもの うえの かぜって、 すずの ような きれいな おとが するの！ きこえる、 {name}？");
   addT("mio_10", () => K.G.region === 3, "mio", "smile", "うみの なかで うたうとね、 あわが ぽこぽこ うまれて おとが まるくなるの。 おもしろいよ！");
   addT("mio_11", () => F().mio && !F().cleared, "mio", "determined", "よるに ないてる こえ…… あれは、 かなしみに のまれた にんのこえ なの。 たすけにいこう！");
-  addT("mio_12", () => F().cleared && !F().c2start, "mio", "joy", "しょうのしの やみが はれて、 あさの ひかりが まぶしかったね。 カイトさんも かえってきてくれて……！");
+  addT("mio_12", () => F().cleared && !F().c2start, "mio", "joy", "宵の祠の やみが はれて、 あさの ひかりが まぶしかったね。 カイトさんも かえってきてくれて……！");
   addT("mio_13", () => F().c2arrive && !F().c2done, "mio", "worried", "リクの いもうとの サナちゃん、 ぶじだと いいな。 きょうだいが はなればなれなんて、 つらすぎるよ。");
   addT("mio_14", () => F().c2done && !F().c3start, "mio", "smile", "サナちゃんが なかまに くわわってくれて うれしいな。 ふたりで うたうと ハーモニーに なるの。");
   addT("mio_15", () => F().c3elder && !F().c3done, "mio", "worried", "ハルの きいた こもりうた、 なんで しまの うたと おなじ なんだろう…… きになるな。");
@@ -248,13 +248,13 @@
   addT("riku_02", () => K.G.region === 0 && K.shiomi && Math.hypot(K.player.x - K.shiomi.x, K.player.z - K.shiomi.z) < 30, "riku", "smile", "シオミの まちか。 ……あしを とめて まわりを みるぞ。");
   addT("riku_03", () => isLowHp(K.member("riku")), "riku", "angry", "クソッ…… かすりきずだ！ てめえらに しんぱいされるほど、 おれは ヤワじゃねえ！");
   addT("riku_04", () => recentBattle()?.res === "win", "riku", "smirk", "フン、 たあいねえな。 やりの さびにも なりゃしねえぜ。");
-  addT("riku_05", () => inTown() && K.G.region === 0, "riku", "neutral", "風見の村の れんちゅうは、 おにんこうしが おおすぎる。 カイトの せがれに そっくりだ。");
-  addT("riku_06", () => inBeacon(), "riku", "neutral", "とうだいの てっぺんは かぜが きょうえな。 ふんはって ねえと ふきとばされそうだ。");
+  addT("riku_05", () => inTown() && K.G.region === 0, "riku", "neutral", "風見の村の れんちゅうは、 おひとよしが おおすぎる。 カイトの せがれに そっくりだ。");
+  addT("riku_06", () => inBeacon(), "riku", "neutral", "とうだいの てっぺんは かぜが つええな。 ふんばって ねえと ふきとばされそうだ。");
   addT("riku_07", () => K.G.region === 1 && !isNight(), "riku", "neutral", "さばくの ねっきは いきが つまるぜ。 すいとうの のこり、 ちゃんと みとけよ。");
   addT("riku_08", () => K.G.region === 1 && isNight(), "riku", "smile", "よるの だいりくは ひえるな。 むりを して あるくなよ。");
   addT("riku_09", () => K.G.region === 2, "riku", "surprised", "おいおい、 ほんとうに くもの うえに たってやがる。 あしもとが スースーして おちつかねえな。");
   addT("riku_10", () => K.G.region === 3, "riku", "neutral", "みずの なかで やりを つくと、 すいあつで うでが なまる。 いい たんれんに なるぜ。");
-  addT("riku_11", () => F().cleared && !F().c2start, "riku", "smile", "かんちゃん、 宵闇の王を しずめたな。 ……ま、 すこしは みなおしてやったよ。");
+  addT("riku_11", () => F().cleared && !F().c2start, "riku", "smile", "あまちゃん、 宵闇の王を しずめたな。 ……ま、 すこしは みなおしてやったよ。");
   addT("riku_12", () => F().c2start && !F().c2arrive, "riku", "determined", "霧の大陸に サナが いる。 あの ほしのかみかざりを つけた いもうとを、 かならず みつけだす。");
   addT("riku_13", () => F().c2mid && !F().c2done, "riku", "angry", "いせきの おくに サナの けはいが する。 まってろよ、 すぐに ひっぱりだしてやる！");
   addT("riku_14", () => F().c2done && !F().c3start, "riku", "neutral", "サナを たすけだせたのは、 てめえらの おかげだ。 ……れいは いわねえぞ、 かりに しとく。");
@@ -267,7 +267,7 @@
   addT("riku_21", () => F().c2done, "riku", "worried", "サナ、 みずは のんでるか？ つかれたら すぐ いえよ。",
     "sana", "smile", "ふふ、 だいじょうぶです、 にいさん。 こどもの ころから、 しんぱいしすぎ ですよ。",
     "who(\"riku\",\"neutral\",\"……しんぱいなんか してねえよ。 あしでまといに なられたら こまるだけだ。\")");
-  addT("riku_22", () => true, "riku", "smirk", "かんちゃん、 つるぎの かまえが まだ あまいぜ。 わきが ガラあきだ。",
+  addT("riku_22", () => true, "riku", "smirk", "あまちゃん、 つるぎの かまえが まだ あまいぜ。 わきが ガラあきだ。",
     "sora", "determined", "これでも ゲンおじさんに きたえてもらったんだからね！ まけないよ！",
     "who(\"riku\",\"smirk\",\"へっ、 くちだけは いっちょうまえだな。 バトルで みせてみろ。\")");
   addT("riku_23", () => F().c3elder, "riku", "neutral", "ハル、 その おうぎで やりの ほさきを あおぐな。 かぜで きっさきが ブレるだろ。",
@@ -279,11 +279,11 @@
   addT("riku_25", () => inTown() && K.G.region === 1, "riku", "neutral", "港町ミナトの ほしさかな、 しおの ききが ちょうど いい。 10ひきくらい かいだめしとくか。");
   addT("riku_26", () => isNight(), "riku", "neutral", "やえいの ときは、 ひの ばんを こうたいで やるぞ。 ゆだんした やつから かげに くわれる。");
   addT("riku_27", () => recentBattle()?.res === "flee", "riku", "neutral", "チッ…… にげるなんざ せいに あわねえが、 ぜんめつするよりは マシだ。");
-  addT("riku_28", () => isLowHp(K.member("sora")), "riku", "worried", "おい かんちゃん、 ふらついてんぞ！ まえを みて あるけ、 まえを！");
+  addT("riku_28", () => isLowHp(K.member("sora")), "riku", "worried", "おい あまちゃん、 ふらついてんぞ！ まえを みて あるけ、 まえを！");
   addT("riku_29", () => K.G.gold < 100, "riku", "neutral", "おいおい、 しょじきんが そこをつきかけてんぞ。 ギルドの いらいでも こなして かせぐか。");
   addT("riku_30", () => K.G.region === 1 && inTown(), "riku", "neutral", "ミナトの ギルドの けいじばん、 たまに ほねのある いらいが はってあるぜ。");
   addT("riku_31", () => K.G.region === 2 && inTown(), "riku", "smile", "くもの さとの れんちゅう、 のんびりしすぎてて どくけが ぬけるぜ。 わるい きは しねえがな。");
-  addT("riku_32", () => K.G.region === 3 && inTown(), "riku", "neutral", "かいていの やどの ベッド、 ぷにぷにしてて こしが しずみこむな……。");
+  addT("riku_32", () => K.G.region === 3 && inTown(), "riku", "neutral", "うみの そこの やどの ベッド、 ぷにぷにしてて こしが しずみこむな……。");
   addT("riku_33", () => true, "riku", "determined", "おれの やりは、 まもるべき ものが ある ときに いちばん つよく はしる。 ……そういう もんだ。");
   addT("riku_34", () => F().c2rumor && !F().c2mid, "riku", "angry", "サナを ひとりで いせきへ いかせた やつら…… たすけだしたら いっぱつ なぐってやる。");
   addT("riku_35", () => F().c3mid && !F().c3done, "riku", "determined", "星巣の塔の ちょうじょうか。 どんな バケモンが いようと、 つきとうすだけだ。");
@@ -337,7 +337,7 @@
   addT("sana_35", () => !isNight() && K.G.region === 1, "sana", "worried", "ひざしが つよいですね。 すいぶんを しっかり ほきゅうして すすみましょう。");
   addT("sana_36", () => F().c3mid && !F().c3done, "sana", "determined", "星巣の塔の うえで、 ほしたちの さけびが ひびいています。 はやく たすけなければ！");
   addT("sana_37", () => F().c4arrive && !F().c4elder, "sana", "smile", "アワの里の ちょうろうさま、 どのような ほうなのでしょうね。 はやく おあいしたいです。");
-  addT("sana_38", () => true, "sana", "neutral", "ほしの うんこうを みていると、 すべての であいには いみが あるのだと かんじます。");
+  addT("sana_38", () => true, "sana", "neutral", "ほしの うごきを みていると、 すべての であいには いみが あるのだと かんじます。");
   addT("sana_39", () => true, "sana", "joy", "こうして みなさんと かたを ならべて あるける まいにちが、 わたしの たからものです。");
   addT("sana_40", () => true, "sana", "smile", "さあ、 まいりましょう。 ほしぼしの しゅくふくが、 わたしたちと ともに ありますように。");
   addT("haru_01", () => !F().c3done, "haru", "smile", "むかしの ことは はっきり おぼえていないの。 いまの かぜを よんで すすむね。");
@@ -369,7 +369,7 @@
   addT("haru_23", () => true, "haru", "smile", "ミオの うたごえ、 くもの うえまで とどきそうなくらい すみきっているね。",
     "mio", "joy", "ほんと！？ ハルの おうぎの パタパタって おとも、 リズムに ぴったり だよ！",
     "who(\"haru\",\"joy\",\"あは、 いっしょに えんそうしてるみたいで たのしいね。\")");
-  addT("haru_24", () => F().c4start, "haru", "smile", "カイトさん、 かいていの かぜって、 どんな ながれを しているの？",
+  addT("haru_24", () => F().c4start, "haru", "smile", "カイトさん、 うみの そこの かぜって、 どんな ながれを しているの？",
     "kaito", "smile", "うみの なかじゃ かぜの かわりに「しお」が ながれてるのさ。 しおを よめば スイスイ およげるぞ。",
     "who(\"haru\",\"surprised\",\"しお……！ そらの かぜと よく にてるんだね。 はやく およいでみたいな！\")");
   addT("haru_25", () => K.G.region === 3, "haru", "joy", "みずのなかを とぶように およぐの、 そらを かっくうするのと そっくりで わくわくする！");

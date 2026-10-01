@@ -49,7 +49,7 @@ const entries = [
 
   // ---------------- リク (riku) ----------------
   { id: 'tk_riku_add_01', c: 'riku', cond: (G, r) => r === 0 && !G.flags.cleared,
-    t: [who('riku', 'smirk', 'おい かんちゃん。 あしもと フラついてんぞ。 ちゃんと めし くっってんのか？'), who('sora', 'angry', 'フラついてないよ！ まだまだ あるけるし！')] },
+    t: [who('riku', 'smirk', 'おい あまちゃん。 あしもと フラついてんぞ。 ちゃんと めし くってんのか？'), who('sora', 'angry', 'フラついてないよ！ まだまだ あるけるし！')] },
   { id: 'tk_riku_add_02', c: 'riku', cond: (G, r) => r === 0 && World.skyInfo(G.tod).night > .5,
     t: [who('riku', 'neutral', 'よみちは かげものの なわばりだ。 やりの とどく はんいから はなれるなよ。')] },
   { id: 'tk_riku_add_03', c: 'riku', cond: (G, r) => r === 0 && G.order >= 3,
@@ -131,7 +131,7 @@ const entries = [
   { id: 'tk_kaito_add_03', c: 'kaito', cond: (G, r) => r === 3 && G.flags.c4elder,
     t: [who('kaito', 'neutral', 'ウシオの じいさん、 むかしから こごとばっかり だったが…… まちを まもる おもいは ほんものだ。')] },
   { id: 'tk_kaito_add_04', c: 'kaito', cond: (G, r) => r === 3 && World.skyInfo(G.tod).night > .5,
-    t: [who('kaito', 'smile', 'よるの かいていの しずけさは かくべつだな。 ……ほら、 ちょうちんアンコウが 灯台の まねをして およいでるぞ。')] },
+    t: [who('kaito', 'smile', 'よるの うみの そこの しずけさは かくべつだな。 ……ほら、 ちょうちんアンコウが 灯台の まねをして およいでるぞ。')] },
   { id: 'tk_kaito_add_05', c: 'kaito', cond: (G, r) => r === 3 && G.flags.c4done,
     t: [who('kaito', 'joy', 'ハッハ！ おやこで 深みの王と たたかいぬいたな！ ゲンあにきに じまんしてやるか。')] },
   { id: 'tk_kaito_add_06', c: 'kaito', cond: (G, r) => r === 1,
@@ -213,7 +213,7 @@ K.partyTalk.register(entries);
     yukinomiko: (b) => ['みこ……。 こおりつく ふゆを こえて、 あなたの こころに はなを さかせましょう。'],
     hitoden: (b) => ['ピカッ！ ヒトデだって ほしなんだヒト！ うみの そこから そらへ ウィンクするヒト！'],
     takosumi: (b) => ['チュウ！ すみで {name}の にがおえを かいてあげたタコ！ ……かっこいいタコ？'],
-    oodako: (b) => ['グハハ！ かいていの たからばこなら はちほんうでの おれに まかせとけタコ！'],
+    oodako: (b) => ['グハハ！ うみの そこの たからばこなら はちほんうでの おれに まかせとけタコ！'],
     sangoron: (b) => ['サンゴ……。 ちいさな さかなたちが、 おれの えだで こもりうたを うたっているサンゴ。'],
     uminokami: (b) => ['たいこの しおさいよ……。 にんの こよ、 ふかき やみを てらす とうかの ゆうき、 みごとであったぞ。']
   };
