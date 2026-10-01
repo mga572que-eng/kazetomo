@@ -354,7 +354,7 @@ function save() { try { const gp = player.ground && !player.swim && !player.glid
 function hasSave() { return [1, 2, 3].some(n => slotInfo(n)); }
 function load() { try {
   let raw = localStorage.getItem(keyOf(SLOT));
-  if (raw) { const d = JSON.parse(raw); const inv = Object.assign({}, G.inv, d.G.inv); const def = { sp: G.sp, board: G.board, trial: G.trial, itemSeen: G.itemSeen, tips: G.tips, rankClaimed: G.rankClaimed, wtrial: G.wtrial, wind: G.wind }; G = Object.assign(G, def, d.G); G.inv = inv; uidN = d.uidN || 100; }
+  if (raw) { const d = JSON.parse(raw); const inv = Object.assign({}, G.inv, d.G.inv); const def = { sp: G.sp, board: G.board, trial: G.trial, itemSeen: G.itemSeen, tips: G.tips, rankClaimed: G.rankClaimed, wtrial: G.wtrial, wind: G.wind }; G = Object.assign(G, def, d.G); G.inv = inv; G.sp = Object.assign({}, def.sp, d.G.sp); G.board = Object.assign({}, def.board, d.G.board); /* 旧セーブに 後から 加わった 仲間の キーを 補う */ uidN = d.uidN || 100; }
   else { raw = SLOT === 1 && localStorage.getItem(OLD_KEY); if (!raw) return false; const o = JSON.parse(raw);
     G.name = o.name; G.party = o.party.map(m => ({ ...m, kind: 'human' })); G.mons = Object.values(o.friends || {}).map(f => ({ ...f, uid: 'm' + (uidN++), kind: 'mon' }));
     Object.assign(G.inv, o.inv); G.flags = o.flags || {}; G.met = o.met || G.met; G.order = o.order || 0; G.tod = o.tod || .3; G.pos = o.pos;
@@ -1637,6 +1637,8 @@ async function runBattle(specs, opts = {}) {
   const battleItems = () => Object.keys(DATA.items).filter(k => (G.inv[k] || 0) > 0 && (DATA.items[k].heal || DATA.items[k].mp || DATA.items[k].healAll || DATA.items[k].battle || DATA.items[k].cure));
   const setAil = async (t, ail, ch) => { if (!ail || !t || t.hp <= 0 || t.ail || R() >= ch * (t.boss ? .45 : 1)) return; t.ail = ail; redraw(); ailFx(t, ail); await bmsg(`${nameOr(t)}は ${DATA.ailName[ail]}に なった！`, 300);
     if (!G.tips.ail) tip('<b>状態異常</b><span>☠どく・🔥やけど（毎ターン ダメージ）、⚡まひ（ときどき 動けない）。どくけし草や 回復の歌で なおる。</span>', 'ail'); };
+  // 復活：たおれた 味方を 最大HPの s.revive 割で 起こす（状態異常も はらう）。HOOK.revive が あれば そちらを 優先
+  const reviveDown = (L, s) => L.filter(t => t.hp <= 0).map(t => { t.hp = Math.max(1, Math.round(t.st.hp * (s.revive || .3))); t.ail = null; t.sleep = 0; return t; });
   const cureAll = T => { let any = false; for (const t of T) { if (t.ail || t.sleep > 0) { t.ail = null; t.sleep = 0; any = true; } } return any; };
   const combosFor = m => (DATA.combos || []).filter(c => (c.a === m.id || c.b === m.id)).map(c => ({ c, partner: P.find(x => x.id === (c.a === m.id ? c.b : c.a)) })).filter(o => o.partner && o.partner.hp > 0 && !(o.partner.sleep > 0) && m.mp >= o.c.mp && o.partner.mp >= o.c.mp);
   let turnN = 0;
@@ -1719,7 +1721,7 @@ async function runBattle(specs, opts = {}) {
     if (s.heal) { const T = s.tg === 'party' ? alliesOf() : [tgt && tgt.hp > 0 ? tgt : a]; for (const t of T) { if (t.hp <= 0) continue; const mx = t.foe ? t.max : t.st.hp; const v = Math.min(Math.round((s.heal + (s.healPct || 0) * mx) * (1 + ((!isFoe && a.pas && a.pas.healUp) || 0))), mx - t.hp); t.hp += v; redraw();
       numAt(t, '+' + v, true); fxAt(bArtOf(t), 'heal'); if (!t.foe) { const ce = bElOf(t); if (ce) { ce.classList.remove('healg'); void ce.offsetWidth; ce.classList.add('healg'); } } await bmsg(`${nameOr(t)}の HPが ${v} かいふくした！`, 300); } }
     if (s.cure) { const T = alliesOf(); if (cureAll(T)) { redraw(); T.forEach(t => fxAt(bArtOf(t), 'heal')); Music.sfx('heal'); await bmsg('みんなの 状態異常が なおった！', 300); } }
-    if (s.revive && !isFoe && HOOK.revive) { const up = HOOK.revive(P, s); if (up.length) { redraw(); up.forEach(t => fxAt(bArtOf(t), 'heal')); Music.sfx('heal'); await bmsg(`${up.map(nameOf).join('と ')}が 灯に みちびかれて 立ちあがった！`, 400); } } // v9：復活（balance.js）
+    if (s.revive && !isFoe) { const up = (HOOK.revive || reviveDown)(P, s); if (up.length) { redraw(); up.forEach(t => fxAt(bArtOf(t), 'heal')); Music.sfx('heal'); await bmsg(`${up.map(nameOf).join('と ')}が 灯に みちびかれて 立ちあがった！`, 400); } } // v9：復活（balance.js）
     if (s.buff === 'def') { alliesOf().forEach(m => m.defUp = 3); redraw(); buffFx(alliesOf(), 'def'); await bmsg('みんなの まもりが 灯に つつまれた！'); }
     if (s.buff === 'atk') { alliesOf().forEach(m => m.atkUp = 3); redraw(); buffFx(alliesOf(), 'atk'); await bmsg('みんなの こうげきりょくが あがった！'); }
     if (s.buff === 'spd') { alliesOf().forEach(m => m.spdUp = 3); redraw(); buffFx(alliesOf(), 'spd'); await bmsg('おいかぜが ふいた！ みんなの すばやさが あがった！'); }
