@@ -1,27 +1,27 @@
 # 作業の再開
 
-更新: 2026-10-01T05:54:25.284Z
-ブランチ: work/balance-v1
-直前コミット: e6a4dff1d27fcb3113bc719fa25912f2843f8353
+更新: 2026-10-01T06:04:23.631Z
+ブランチ: work/gear-bag
+直前コミット: fb592f57b5f4cb77908d5d4e73b54ae5d493465e
 
 ## 目的
-バランスv10：技名の法則・武器の相性・第4章ボス是正
+v11：そうび袋・防具の種類・店の品ぞろえ・売却
 
 ## 完了・途中の内容
-names.js（全技の表示名、IDは不変）、jobs.js（職業×専用武器の相性）、game.js（MP吸収の1人化、ボスの全体攻撃連続を禁止）、data.js（深海の圧・深み喰らいの弱体）、版番号同期。ヘッドレスで技名・相性・裏ボス戦を確認。設計書は docs/design/balance.md
+balance.js を新設（K.bal・HOOK.shopUI・HOOK.gearFlat）。防具4種類と職業ごとの制限、地域ごとの防具12種を追加、袋・売却（4割）・メニュー「そうび」・転職時の自動着替え。ux.js 鍛冶の防具段は armTier で管理。game.js は shopUI0/ICON を公開。ヘッドレスで購入・売却・転職・装備画面・道具屋を確認
 
 ## 次の一手
-ユーザー確認後にPR統合。次は v11：防具の種類（cloth/light/heavy/robe/shield）と地域ごとの店の品ぞろえ・売却。iPhone実機確認
+ユーザー確認後にPR統合。iPhone実機で店・そうび画面の操作確認。次は戦闘演出（ROADMAP優先1）または 02 酒場
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- names.js
-- jobs.js
+- balance.js
 - game.js
-- data.js
+- jobs.js
+- ux.js
 - index.html
 - sw.js
 - pwa.js
