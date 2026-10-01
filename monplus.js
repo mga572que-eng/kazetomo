@@ -183,8 +183,16 @@
   // ---------------- 5. バトルれんけい・かばうはんてい ----------------
   // せんとうちゅうのれんけいこうほにモンスターれんけいをこんにゅう
   const origCombos = DATA.combos;
-  function updateBattleCombos() {
+  // 連携の 候補は「状態が かわった ときだけ」作りなおす（毎フレームの 配列づくりを やめる）。
+  // 状態の 鍵：隊列の 順・個体（人は id／モンスターは uid）・種族（進化で かわる）・生死・睡眠・MPが 各連携の 必要量に とどくか・なつき50以上か
+  const MP_TH = [...new Set(MON_COMBOS.map(c => c.mp))].sort((a, b) => a - b);
+  let lastKey = null;
+  const sigOf = P => P.map(m => [m.kind === 'mon' ? m.uid : m.id, m.id, m.hp > 0 ? 1 : 0, m.sleep > 0 ? 1 : 0, MP_TH.map(t => m.mp >= t ? 1 : 0).join(''), m.kind === 'mon' ? ((m.bond || 0) >= 50 ? 1 : 0) : ''].join(':')).join('|');
+  function updateBattleCombos(force) {
     const P = K.battleParty();
+    const key = sigOf(P);
+    if (!force && key === lastKey) return false;
+    lastKey = key;
     const curMons = P.filter(m => m.kind === 'mon');
     const dynamic = [];
 
@@ -199,18 +207,21 @@
         dynamic.push({ ...c, a: hu.id, b: mon.uid, partnerId: mon.uid });
       }
     }
-    DATA.combos = [...origCombos, ...dynamic];
+    DATA.combos = dynamic.length ? [...origCombos, ...dynamic] : origCombos;
+    return true;
   }
+  const restoreCombos = () => { DATA.combos = origCombos; lastKey = null; };
 
   H.battleEnd.push(() => {
-    DATA.combos = origCombos; // せんとうしゅうりょうごにふくげん
+    restoreCombos(); // せんとうしゅうりょうごにふくげん（つぎの 戦闘で かならず 作りなおす）
   });
+  H.load.push(restoreCombos); // 戦闘中に ロードした ときも もとに もどす
 
-  // せんとうフレームかいしじにコンボをこうしん
+  // 戦闘中だけ 更新。戦闘が おわった 直後の フレームで 古い 候補が のこらないよう、戦闘外では もとに もどす
   H.frame.push(() => {
-    if (document.body.classList.contains('inbattle')) {
-      updateBattleCombos();
-    }
+    const active = K.B ? !!K.B.active : document.body.classList.contains('inbattle');
+    if (active) updateBattleCombos();
+    else if (lastKey !== null) restoreCombos();
   });
 
   H.battleEnd.push((result,specs,opts,party)=>{
@@ -219,7 +230,7 @@
       const hp=m.hp/m.st.hp,mp=m.mp/Math.max(1,m.st.mp);K.calc(m);m.hp=Math.max(1,Math.round(m.st.hp*hp));m.mp=Math.round(m.st.mp*mp);
     }
   });
-  K.monPlus={gear:DATA.monGear,combos:MON_COMBOS,canEquipMon,updateBattleCombos,initialize};
+  K.monPlus={gear:DATA.monGear,combos:MON_COMBOS,canEquipMon,updateBattleCombos,restoreCombos,comboKey:()=>lastKey,initialize};
   // ---------------- 6. モンスターしょうさいパネル（monPanel）かくちょう ----------------
   // K.monPanel をあんぜんにフックして、せんようそうび・かくせい・なつきどしょうさいをついかひょうじ
   const prevMonPanel = K.monPanel;
