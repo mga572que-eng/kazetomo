@@ -1,31 +1,18 @@
 # 作業の再開
 
-更新: 2026-10-01T05:17:37.069Z
-ブランチ: work/qa-audit-fixes
-直前コミット: f889309529e48cb5a73bcf8b09b3eef8e82abc9a
+更新: 2026-10-01 / 担当: Claude
 
-## 目的
-Gemini監査(06)の指摘を検証して修正
+## 完了
+- PR #3（work/qa-audit-fixes）を main に統合済み：Gemini監査(06)の正しい指摘5件を修正（復活技、旧セーブの仲間キー、草の判定、比率リセット、ch4.jsの?v）。ゲーム版 20261001051529。検証の詳細は docs/reports/qa-audit.md。
+- このブランチ（work/roadmap-handoff, PR #4）：ROADMAP.md と docs/briefs/（AI作業指示01〜06）。文書のみ。
 
-## 完了・途中の内容
-正しかった5件を修正：復活技が効かない、旧セーブの仲間キー欠落、草の毎フレーム文字列、比率リセット、ch4.jsの?v欠落と版番号同期。1件は誤検出。実プレイ（ヘッドレス）で復活・旧セーブ読込・比率を確認
+## 進行中
+- Gemini 04（バランス設計書）を AI Studio に依頼中。返ってきた docs/design/balance.md は、Claude が検証してから実装する。
 
 ## 次の一手
-iPhone実機で戦闘と旧セーブの継続を確認し、ユーザー確認後にPRでmainへ統合（公開）。その後Gemini 04（バランス設計書）へ
+1. PR #4 を統合する（ユーザー確認済み、統合ボタンはユーザーが押す）。
+2. iPhone 実機で、公開版の戦闘と旧セーブの継続を確認する（未確認）。
+3. 04 の設計書が届いたら、work/balance-skillpoints を最新 main から作り、スキル振り・職業ごとの装備から実装する。
 
 ## 検証
-構文・参照・PWA検査: PASS
-実プレイ: 未確認（担当AIが結果を別途記録）
-
-## 保存対象
-- game.js
-- world.js
-- settings.js
-- index.html
-- pwa.js
-- sw.js
-- version.json
-- AI_HANDOFF.md
-- docs/reports/qa-audit.md
-
-このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
+npm run check: PASS（main 9f97e98 時点）。実機確認は未実施。
