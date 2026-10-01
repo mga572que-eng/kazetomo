@@ -1902,7 +1902,7 @@ function checkRank() { const p = rankPts(); for (const x of DATA.ranks) if (p >=
   Music.sfx('friend'); tip(`<b>冒険者ランク ${x.r} に あがった！</b><span>ごほうび：${got.join('・')}</span>`); } }
 const expBar = m => `<div class="xp"><i style="width:${Math.min(100, m.exp / need(m.lv) * 100)}%"></i></div>`;
 // メインメニュー：9つの タイル（3列×3段）。モジュールの HOOK.menu は「ストーリー」「システム」「そのほか」に まとめる
-const MENU_IC = { 'きろく帳': '📔', 'しょくぎょう': '🎓', 'せってい': '⚙️' };
+const MENU_IC = { 'きろく帳': '📔', 'しょくぎょう': '🎓', 'せってい': '⚙️', '視点': '👁️', 'ぬけだす': '🆘' };
 const tile = (ic, label, sub, o = {}) => ({ label: `<i class="ti" aria-hidden="true">${ic}</i><b>${label}</b>`, sub: sub || '', ...o });
 const howtoPanel = () => panel(`<h3>あそびかた</h3><ul class="howto"><li><b>目標</b>：左上の「▶」が いま やること。上の 矢印が 方角。メニューの「ストーリー」と「地図」で くわしく 見られる。</li>
       <li><b>成長</b>：レベルが 上がると スキルポイント（SP）。メニューの「スキル」で 技や 能力を 覚える。</li>
@@ -1920,32 +1920,27 @@ async function openMenu() { await run(async () => {
     const spTotal = G.party.reduce((a, m) => a + (G.sp[m.id] || 0), 0); const rk = rankOf(rankPts()).r.r;
     const extra = HOOK.menu.map(f => { try { return f(); } catch (e) { return null; } }).filter(Boolean);
     const take = re => { const i = extra.findIndex(x => re.test(String(x.label))); return i < 0 ? null : extra.splice(i, 1)[0]; };
-    const story = take(/ストーリー|クエスト/), opt = take(/せってい|設定/);
+    const story = take(/ストーリー|クエスト/), opt = take(/せってい|設定/), talkI = take(/^はなす$/), equipI = take(/^そうび$/), jobI = take(/^しょくぎょう$/); // v15：よく 使う ものは 最初の 画面へ
     const others = [{ ic: '🔨', label: 'クラフト', sub: 'ブロックを つくる', fn: craftMenu }, ...extra.map(x => ({ ic: MENU_IC[x.label] || '✦', label: x.label, sub: x.sub, fn: x.fn, disabled: x.disabled })), { ic: '👥', label: 'じんぶつ', sub: 'であった 人たち', fn: charBook }];
     const sys = [{ ic: '💾', label: 'きろくする', sub: 'ぼうけんを 保存', fn: async () => { const ok = save(); await panel(`<h3>きろく</h3><p>${ok ? 'ぼうけんの きろくを のこした。' : 'このブラウザでは 保存が できないようだ。'}</p>`); } },
       ...(opt ? [{ ic: '⚙️', label: opt.label, sub: opt.sub, fn: opt.fn }] : []), { ic: '❓', label: 'あそびかた', sub: '操作と しくみ', fn: howtoPanel }];
     const nItems = Object.keys(G.inv).filter(k => G.inv[k] > 0 && DATA.items[k]).length;
-    const T = [
-      tile('🛡️', 'つよさ', `ランク ${rk}`),
-      tile('✨', 'スキル', spTotal ? `SP ${spTotal} つかえる` : 'わざ・のうりょく', { cls: spTotal ? 'badge' : '' }),
-      tile('👜', 'どうぐ', `${nItems}しゅるい`),
-      tile('🐾', 'なかま', `たいれつ・牧場 ${G.mons.length}ひき`),
-      tile('📖', 'いきもの図鑑', `${Object.keys(G.dex.got).length} / ${DEX_N}`),
-      tile('📜', 'ストーリー', 'クエスト・あらすじ'),
-      tile('🗺️', '地図', G.warp || G.region > 0 ? '現在地・ワープ' : '現在地・目的地'),
-      tile('🧰', 'そのほか', others.map(o => o.label).join('・')),
-      tile('⚙️', 'システム', sys.map(o => o.label).join('・')) ];
-    const c = await menu({ title: `メニュー<small>${G.gold}G　ランク${rk}${G.title ? `　${esc(G.title)}` : ''}</small>`, items: T, where: 'grid', cols: 3, sel: menuSel });
-    if (c < 0) return; menuSel = c; let r;
-    if (c === 0) await statusPanel();
-    if (c === 1) await skillMenu();
-    if (c === 2) r = await itemMenu();
-    if (c === 3) await partyMenu();
-    if (c === 4) await dexMenu();
-    if (c === 5) r = story ? await story.fn() : await questLog();
-    if (c === 6) r = await mapPanel();
-    if (c === 7) r = await subGrid('そのほか', others);
-    if (c === 8) r = await subGrid('システム', sys);
+    // v15：4列×3段。 よく 使う「はなす・そうび・しょくぎょう」を 最初の 画面に（部署8：UI）
+    const E = [
+      talkI && { t: tile('💬', 'はなす', talkI.sub || '仲間と 会話'), fn: () => talkI.fn() },
+      { t: tile('🛡️', 'つよさ', `ランク ${rk}`), fn: () => statusPanel() },
+      equipI && { t: tile('⚔️', 'そうび', equipI.sub || '武器・防具'), fn: () => equipI.fn() },
+      { t: tile('👜', 'どうぐ', `${nItems}しゅるい`), fn: () => itemMenu() },
+      { t: tile('✨', 'スキル', spTotal ? `SP ${spTotal} つかえる` : 'わざ・のうりょく', { cls: spTotal ? 'badge' : '' }), fn: () => skillMenu() },
+      jobI && { t: tile('🎓', 'しょくぎょう', jobI.sub || '職業・転職'), fn: () => jobI.fn() },
+      { t: tile('🐾', 'なかま', `たいれつ・牧場 ${G.mons.length}ひき`), fn: () => partyMenu() },
+      { t: tile('📖', 'いきもの図鑑', `${Object.keys(G.dex.got).length} / ${DEX_N}`), fn: () => dexMenu() },
+      { t: tile('📜', 'ストーリー', 'クエスト・あらすじ'), fn: () => story ? story.fn() : questLog() },
+      { t: tile('🗺️', '地図', G.warp || G.region > 0 ? '現在地・ワープ' : '現在地・目的地'), fn: () => mapPanel() },
+      { t: tile('🧰', 'そのほか', others.map(o => o.label).join('・')), fn: () => subGrid('そのほか', others) },
+      { t: tile('⚙️', 'システム', sys.map(o => o.label).join('・')), fn: () => subGrid('システム', sys) } ].filter(Boolean);
+    const c = await menu({ title: `メニュー<small>${G.gold}G　ランク${rk}${G.title ? `　${esc(G.title)}` : ''}</small>`, items: E.map(e => e.t), where: 'grid', cls: E.length > 9 ? 'c4' : '', cols: E.length > 9 ? 4 : 3, sel: menuSel });
+    if (c < 0) return; menuSel = c; const r = await E[c].fn();
     if (r === 'warped' || r === 'close') return;
   } }); }
 async function statusPanel() {
@@ -2464,6 +2459,9 @@ function frameBody(now) {
   let ghost = null; if (G.build && md === 'field') { const [x, y, z] = buildCell(); ghost = [x, y, z, G.mat]; }
   if (DEBUG) { const hid = window.__norender ? 'hidden' : ''; if (cv.style.visibility !== hid) cv.style.visibility = hid; }
   let rEye = eye, rTgt = tgt; if (B.active && B.d3 && HOOK.b3dFrame) { const c = HOOK.b3dFrame(dt, T); if (c) { rEye = c.eye; rTgt = c.tgt; } }
+  // v15：一人称（部署9）。目の 高さから カメラの 向きを 見る（ドラッグで 見回し、移動は 見ている 方向が 前）。 自分の 体と 風布は 描かない
+  else if (HOOK.OPT.fpv && phase === 'field' && !B.active) { const p = (cam.pitch ?? .3) - .3, y = cam.yaw, h = [player.x, player.y + (player.swim ? 1.0 : 1.55), player.z];
+    rEye = h; rTgt = [h[0] + Math.sin(y) * Math.cos(p) * 4, h[1] - Math.sin(p) * 4, h[2] + Math.cos(y) * Math.cos(p) * 4]; mH.sora.n = 0; mGlider.n = 0; for (const m of battleParty()) if (m.kind === 'human' && mH[m.id]) mH[m.id].n = 0; } // 目の 前を ふさがないよう、ついてくる 仲間も かくす
   if (!(DEBUG && window.__norender) && !B.stage) World.render({ eye: rEye, tgt: rTgt, tod: G.tod, T, player: [player.x, player.y, player.z], lantern: lan, beaconU, fx, ghost, darkness, stars: G.flags.c3done ? 1.7 : G.flags.c3start ? .35 : 1 });
   if (B.active && B.d3 && HOOK.b3dAnchors) HOOK.b3dAnchors();
   dlgUpdate(dt); Music.tick();
