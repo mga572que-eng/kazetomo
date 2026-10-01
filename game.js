@@ -1734,6 +1734,7 @@ async function runBattle(specs, opts = {}) {
     if (s.buff === 'atk') { alliesOf().forEach(m => m.atkUp = 3); redraw(); buffFx(alliesOf(), 'atk'); await bmsg('みんなの こうげきりょくが あがった！'); }
     if (s.buff === 'spd') { alliesOf().forEach(m => m.spdUp = 3); redraw(); buffFx(alliesOf(), 'spd'); await bmsg('おいかぜが ふいた！ みんなの すばやさが あがった！'); }
     if (s.sleep && s.tg === 'enemy') { const t = tgt && tgt.hp > 0 ? tgt : aliveF()[0]; if (!t) return; markTgt(t); if (!s.power) await castFly(a, el, [t]); if (!t.boss && R() < s.sleep) { t.sleep = 2 + Math.floor(R() * 2); redraw(); ailFx(t, 'sleep'); await bmsg(`${t.name}は ねむってしまった！`); } else { Music.sfx('miss'); await bmsg(`${t.name}には きかなかった！`); } }
+    if (s.steal && !isFoe && HOOK.steal) { const t = tgt && tgt.foe ? tgt : aliveF()[0]; if (t) await HOOK.steal(a, t, bmsg, { redraw, markTgt }); } // 職業の わざ「ぬすむ」（jobfield.js）
     } finally { actorOff(a); }
   }
   async function doParty(a, p) {
