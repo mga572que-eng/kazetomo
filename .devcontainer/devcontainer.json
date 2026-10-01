@@ -1,0 +1,22 @@
+{
+  "name": "Kazetomo portable development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22-bookworm",
+  "remoteUser": "node",
+  "forwardPorts": [
+    4173
+  ],
+  "portsAttributes": {
+    "4173": {
+      "label": "Game preview",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "npm run check",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "files.autoSave": "afterDelay"
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const root=path.dirname(fileURLToPath(import.meta.url));
+const git=(args)=>execFileSync(process.env.KAZETOMO_GIT||'git',args,{cwd:root,encoding:'utf8'}).trim();
+if(git(['status','--porcelain']))throw new Error('Working tree is dirty. Preserve and commit reviewed changes first.');
+const out=path.resolve(root,'../backups',new Date().toISOString().replace(/[:.]/g,'-'));
+fs.mkdirSync(out,{recursive:true});
+git(['bundle','create',path.join(out,'history.bundle'),'--all']);
+git(['bundle','verify',path.join(out,'history.bundle')]);
+git(['archive','--format=zip','--output='+path.join(out,'source.zip'),'HEAD']);
+const hashes={};for(const name of ['history.bundle','source.zip'])hashes[name]=crypto.createHash('sha256').update(fs.readFileSync(path.join(out,name))).digest('hex');
+fs.writeFileSync(path.join(out,'manifest.json'),JSON.stringify({created:new Date().toISOString(),head:git(['rev-parse','HEAD']),branch:git(['branch','--show-current']),remote:git(['remote','get-url','origin']),hashes,scope:'Committed files and Git refs only. No browser saves or ignored/untracked files.'},null,2));
+console.log('Backup: '+out);
