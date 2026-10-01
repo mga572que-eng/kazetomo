@@ -1236,7 +1236,7 @@
   const eligible = m => {
     if (!m || !K.G.team.includes(identity(m))) return [];
     selectedMember = m;
-    return TALKS.filter(t => t.who === m.id && (!t.pwho || partnerOf(t, m)) && t.cond());
+    return TALKS.filter(t => t.who === m.id && (!t.pwho || partnerOf(t, m)) && (() => { try { return t.cond(); } catch (_) { return false; } })());
   };
   const format = (id, ex, text, member) => (member ? member.kind === 'human' : ['sora', 'mio', 'riku', 'sana', 'haru', 'kaito'].includes(id))
     ? K.who(id, ex, text)
@@ -1248,6 +1248,7 @@
     return a ? { id: a[1], ex: a[2], text: a[3] } : null;
   };
   function linesFor(t, m) {
+    if (t.lines) return t.lines;
     const lines = [format(t.who, t.ex, t.text, m)];
     if (t.pwho) {
       const p = partnerOf(t, m);
@@ -1287,5 +1288,5 @@
 
   for (const t of TALKS) previous.L.push({ id: t.id, w: t.who, need: t.pwho ? [t.pwho] : [], when: t.cond, s: () => { const m = teammates().find(x => x.id === t.who); return m ? linesFor(t, m) : []; } });
   // 拡張用の読取・会話入口。既存APIやHOOKは差し替えない。
-  K.partyTalk = { ...previous, talkWith: ref => { const m = K.member(ref); return m && speak(m); }, open: openTalkMenu, choose, eligible, linesFor, counts: () => TALKS.reduce((a, t) => { a[t.who] = (a[t.who] || 0) + 1; return a; }, {}) };
+  K.partyTalk = { ...previous, talkWith: ref => { const m = K.member(ref); return m && speak(m); }, open: openTalkMenu, register: entries => { for (const e of entries) { if (TALKS.some(t => t.id === e.id)) continue; const actors = e.t.filter(l => l.who).map(l => l.who); const t = { id: e.id, who: e.c, ex: 'smile', text: e.t.map(l => l.t || l).join('。'), lines: e.t, cond: () => actors.every(id => K.G.team.includes(id)) && e.cond(K.G, K.G.region) }; TALKS.push(t); previous.L.push({id:t.id,w:t.who,need:actors.filter(id=>id!==t.who),when:t.cond,s:()=>t.lines}); } }, choose, eligible, linesFor, counts: () => TALKS.reduce((a, t) => { a[t.who] = (a[t.who] || 0) + 1; return a; }, {}) };
 })();

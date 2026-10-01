@@ -41,8 +41,12 @@ PWA版番号はindex/pwa/sw/versionで同期（ch4.jsの?v欠落はwork/qa-audit
 - クラウドバックアップ初回はupload-artifact v7の相対パス制限で失敗。runner.tempへコピーする修正を反映し、再実行：https://github.com/mga572que-eng/kazetomo/actions/runs/36805603525
 - SETUP_REPORT.mdの初期リモート未反映記録は過去の状態。この節を最新の進捗として扱う。
 
-## 会話と住人（2026-10-01追加）
-- talk.js: 既存APIと会話登録Lを残し、999件の追加データ・隊列/個体に基づく選択・既読保存を拡張。
-- mobs.js: 4地域各12名。HOOKで登録・描画。既存NPC/住居のIDを変更せず、障害物や入口と重ならない場所を選ぶ。配置不能なら表示を省略する。
-- 読込順は既存talk.jsの直後にmobs.js。版番号はindex/pwa/sw/versionを同期。
-- 人物の新しい過去を追加せず、ハルの物語会話はc3done/c3reunion、第4章はc4doneとsuperDoneを分離する。
+## Gemini 4件の適用（2026-10-01）
+- 基準main: 301ca07。work/gemini-fourで実装、ローカルのみ保存。公開確認は別途行う。
+- gemini-talk.js: AI Studioの追加会話65件と口調45種を登録。コオリドリ1種は既存の会話を補完。talk.jsの選択機構にregister APIを足し、既読キーと隊列・個体の条件を維持する。
+- mobs.js: 今回のGemini全文の住人86人を採用。既存の生成町の座標に合わせ、障害物や建物を避けて7町に配置。以前の48人版を更新した。
+- town.js: 酒場4店、訳あり家6軒、探索29か所。G.townとG.flags.tw_*で独立して保存。既存本編フラグは変更しない。
+- monplus.js: 装備9種、覚醒、連携6種。本体にモンスターのcalcフックを接続し、パネルへの入口と連携UID、MP二重消費を修正。対応済み/設計のみの効果はdocs/design/monsters.md冒頭に明記。
+- docs/lore/foreshadow.md、docs/design/monsters.md、docs/design/story.mdはGemini成果物の全文。物語の新しい過去・年齢は提案扱いで、本編には実装していない。
+- 追加の画面文言は難しい漢字をひらがなにした。表示名以外のID・既存セーブキー・キャラの種族IDは維持。
+- 検証: 構文/参照/PWA、実ゲームで4モジュール、候補会話・同席除外、86人の安全配置、4店、探索の一度だけ取得、装備/覚醒のステータス、連携UID、実save/load保持。844x390でモンスター画面も確認。実端末と全シナリオ通しプレイは未検証。

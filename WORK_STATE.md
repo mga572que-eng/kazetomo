@@ -1,13 +1,36 @@
 # 作業の再開
 
-ブランチ: work/talk-and-mobs
-基準main: 6136dd4（PR #10 統合後）
+更新: 2026-10-01T08:57:08.497Z
+ブランチ: work/gemini-four
+直前コミット: 301ca0705f1a1e29881c6ee71a5f5747367a6d2b
 
-## 完了
-既存 talk.js の L / ctx / MV / TYPEV / SHORT を保全して、会話999件（人間306・モンスター693）を追加。現在隊列と個体UIDを使って条件選択。既読は既存 G.talkSeen に保存。追加セリフの難しい漢字はひらがな化。4町に12人ずつの住人、昼夜・昼の台詞と各町3本のうわさを追加。既存ID・フラグ・セーブキー・3D戦闘を変更しない。
+## 目的
+Gemini 01・02・03・05の4成果物を適用
 
-## 検証
-npm run check: PASS（20261001165123）。ローカルChromeの実ゲーム上で52キャラ×4地域×10回の会話に重複なし。旧セーブの既読初期化、実save/loadによる所持品・進行・既読保持、同種個体HPと同席条件、ハル3状態、48人の安全な配置と重複登録を確認。本番セーブは未使用。iPhone端末・全シナリオ通しプレイは未検証。
+## 完了・途中の内容
+4件の全文を取り込み、現在の本体へ接続。構文/PWA検査と実ゲームで会話・86人配置・酒場・探索・装備・覚醒・連携UID・save/load保持を確認。文書内の設計のみの効果と物語案は明示。ローカル保存のみで未公開。
 
 ## 次の一手
-GitHubへの保存、PR、main統合、GitHub Pagesの新しい版を確認する。現時点ではローカル保存のみで未公開。公開後にこの欄を更新する。
+PUBLISH_GEMINI_FOURの中身をGitHubへ保存し、mainとの差分確認と公開版20261001174433の確認を行う。
+
+## 検証
+構文・参照・PWA検査: PASS
+実プレイ: 未確認（担当AIが結果を別途記録）
+
+## 保存対象
+- game.js
+- talk.js
+- gemini-talk.js
+- mobs.js
+- town.js
+- monplus.js
+- index.html
+- pwa.js
+- sw.js
+- version.json
+- AI_HANDOFF.md
+- docs/lore/foreshadow.md
+- docs/design/monsters.md
+- docs/design/story.md
+
+このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。

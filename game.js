@@ -325,7 +325,11 @@ function calc(m) {
     m.skills = [...d.skills.filter(([, l]) => l <= m.lv).map(([s]) => s), ...extra]; m.type = null; m.pas = pas; }
   else { const S = SPC[m.id]; const iv = m.iv || {}; ['hp', 'mp', 'atk', 'def', 'spd'].forEach((k, i) => st[k] = Math.round((S.base[i] + S.grow[i] * (m.lv - 1)) * (1 + (iv[k] ?? 8) / 100)));
     m.skills = [...S.sk.filter(([, l]) => l <= m.lv).map(([s]) => s), ...(m.extra || []).filter(s => DATA.skills[s])]; m.skills = m.skills.filter((s, i) => m.skills.indexOf(s) === i);
-    m.type = S.type; m.pas = { crit: (m.bond || 0) >= 80 ? .05 : 0, regen: 0, mpSave: 0, healUp: 0, aura: 0, first: 0 }; }
+    m.type = S.type; m.pas = { crit: (m.bond || 0) >= 80 ? .05 : 0, regen: 0, mpSave: 0, healUp: 0, aura: 0, first: 0 };
+    const mul = { hp: 0, mp: 0, atk: 0, def: 0, spd: 0 }, extra = [];
+    for (const f of HOOK.calc) f(m, st, mul, m.pas, extra);
+    for (const k in mul) st[k] = Math.round(st[k] * (1 + mul[k]));
+    m.skills = [...new Set([...m.skills, ...extra.filter(k => DATA.skills[k])])]; }
   m.st = st; return m; }
 function mkHuman(id, lv) { const m = { id, lv, exp: 0, kind: 'human' }; G.sp[id] = (G.sp[id] || 0) + spFor(lv); calc(m); m.hp = m.st.hp; m.mp = m.st.mp; return m; }
 const rollIv = shiny => { const o = {}; for (const k of ['hp', 'mp', 'atk', 'def', 'spd']) o[k] = Math.min(15, Math.floor(R() * 16) + (shiny ? 5 : 0)); return o; };
@@ -1644,7 +1648,7 @@ async function runBattle(specs, opts = {}) {
   // 復活：たおれた 味方を 最大HPの s.revive 割で 起こす（状態異常も はらう）。HOOK.revive が あれば そちらを 優先
   const reviveDown = (L, s) => L.filter(t => t.hp <= 0).map(t => { t.hp = Math.max(1, Math.round(t.st.hp * (s.revive || .3))); t.ail = null; t.sleep = 0; return t; });
   const cureAll = T => { let any = false; for (const t of T) { if (t.ail || t.sleep > 0) { t.ail = null; t.sleep = 0; any = true; } } return any; };
-  const combosFor = m => (DATA.combos || []).filter(c => (c.a === m.id || c.b === m.id)).map(c => ({ c, partner: P.find(x => x.id === (c.a === m.id ? c.b : c.a)) })).filter(o => o.partner && o.partner.hp > 0 && !(o.partner.sleep > 0) && m.mp >= o.c.mp && o.partner.mp >= o.c.mp);
+  const combosFor = m => (DATA.combos || []).filter(c => (c.a === m.id || c.b === m.id || c.b === m.uid)).map(c => ({ c, partner: P.find(x => (x.id === (c.a === m.id ? c.b : c.a) || x.uid === (c.a === m.id ? c.b : c.a))) })).filter(o => o.partner && o.partner.hp > 0 && !(o.partner.sleep > 0) && m.mp >= o.c.mp && o.partner.mp >= o.c.mp);
   let turnN = 0;
   function aiPlan(m) {
     const A = aliveP(), Fs = aliveF(); const can = sid => m.mp >= costOf(m, sid);
@@ -1710,9 +1714,9 @@ async function runBattle(specs, opts = {}) {
     if (endured) await bmsg(`${nameOf(t)}は ${G.name}の ために ふんばった！（なつき）`, 400);
     if (t.hp <= 0) { redraw(); await bmsg(t.foe ? `${t.name}を しずめた！` : `${nameOf(t)}は たおれた……`); }
   }
-  async function useSkill(a, id, tgt, isFoe) {
+  async function useSkill(a, id, tgt, isFoe, costPaid = false) {
     const s = DATA.skills[id];
-    if (!isFoe) { const cst = costOf(a, id); if (a.mp < cst) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし MPが たりない！`); return; } a.mp -= cst; redraw(); mpFx(a, cst); }
+    if (!isFoe && !costPaid) { const cst = costOf(a, id); if (a.mp < cst) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし MPが たりない！`); return; } a.mp -= cst; redraw(); mpFx(a, cst); }
     const el = elemOf(s, a), big = s.tg === 'enemies' || s.tg === 'all' || s.tg === 'party' || !!a.boss;
     redraw(); actorOn(a, `${nameOr(a)}の ${s.name}！`); castStart(a, el, big); if (isFoe) cryOf(a, { vol: .8 }); if (big) screenFx(s.fx || (el === 'heal' ? 'heal' : 'light'));
     try {
@@ -1738,7 +1742,7 @@ async function runBattle(specs, opts = {}) {
     if (a.ail === 'para' && R() < .25) { ailFx(a, 'para'); await bmsg(`${nameOf(a)}は しびれて うごけない！`, 300); return; }
     if (p.type === 'combo') { const pt = p.partner; if (pt.hp <= 0 || a.mp < p.c.mp || pt.mp < p.c.mp) { await bmsg(`${nameOf(a)}は れんけいを しようとしたが うまく いかなかった！`); return; }
       a.mp -= p.c.mp; pt.mp -= p.c.mp; redraw(); mpFx(a, p.c.mp); mpFx(pt, p.c.mp); screenFx('white'); Music.sfx('crit'); setCls(pt, 'actor', true); ribbon(pt, `${nameOf(pt)}も あわせる！`, 'combo'); await bmsg(`${nameOf(a)}と ${nameOf(pt)}の れんけい！`, 300);
-      const el1 = $('pc' + P.indexOf(a)), el2 = $('pc' + P.indexOf(pt)); [el1, el2].forEach(e => e && e.classList.add('act')); try { await useSkill(a, p.c.id, p.t, false); } finally { actorOff(pt); } return; }
+      const el1 = $('pc' + P.indexOf(a)), el2 = $('pc' + P.indexOf(pt)); [el1, el2].forEach(e => e && e.classList.add('act')); try { await useSkill(a, p.c.id, p.t, false, true); } finally { actorOff(pt); } return; }
     if (p.type === 'guard') { a.guard = true; redraw(); setCls(a, 'actor', true); ribbon(a, `${nameOf(a)}は ぼうぎょ！`, 'guard'); Music.sfx('guard'); await bmsg(`${nameOf(a)}は みを まもっている。`, 300); actorOff(a); return; }
     if (p.type === 'atk') { const t = p.t.hp > 0 ? p.t : aliveF()[0]; if (!t) return; actorOn(a, `${nameOf(a)}の こうげき！`);
       try { const bm = bmsg(`${nameOf(a)}の こうげき！`, 150); const o = await strikeFx(a, t); await bm; await hit(a, t, 1, o); } finally { actorOff(a); } return; }
@@ -2050,9 +2054,9 @@ async function partyMenu() {
     const i = await menu({ title: 'なかま：たいれつ（最大4）', items: [...team.map((m, k) => ({ label: `${k + 1}. ${esc(nameOf(m))}`, sub: `Lv${m.lv} HP${m.hp}/${m.st.hp}` })), { label: '牧場の いきものを 見る', sub: `${G.mons.length}ひき` }], where: 'side' });
     if (i < 0) return;
     if (i === team.length) { await ranch(); continue; }
-    const m = team[i]; if (m.id === 'sora') { await monPanel(m); continue; }
+    const m = team[i]; if (m.id === 'sora') { await window.KZ.monPanel(m); continue; }
     const c = await menu({ title: esc(nameOf(m)), items: [{ label: 'くわしく 見る' }, { label: 'たいれつから はずす' }, { label: '前へ', disabled: i <= 1 }] });
-    if (c === 0) await monPanel(m); if (c === 1) G.team.splice(i, 1); if (c === 2) { [G.team[i - 1], G.team[i]] = [G.team[i], G.team[i - 1]]; }
+    if (c === 0) await window.KZ.monPanel(m); if (c === 1) G.team.splice(i, 1); if (c === 2) { [G.team[i - 1], G.team[i]] = [G.team[i], G.team[i - 1]]; }
   } }
 async function monPanel(m) { if (m.kind === 'human') { await charPanel(m.id); return; } const S = SPC[m.id];
   await panel(`<div class="fr"><div class="fr-art">${Art.species(m.id, { shiny: m.shiny })}</div><div><h3>${esc(nameOf(m))} <small>Lv${m.lv}</small> ${typeTag(S.type)}</h3><p>${S.desc}</p>
@@ -2068,7 +2072,7 @@ async function ranch() {
     const snack = ['stew', 'kinojiru', 'yakimi', 'pan', 'mi'].find(k => (G.inv[k] || 0) > 0);
     const c = await menu({ title: nameOf(m), items: [{ label: 'くわしく 見る' }, { label: inTeam ? 'たいれつから はずす' : 'たいれつに 入れる' }, { label: 'にがす', disabled: G.mons.length <= 1 || inTeam }, { label: 'おやつを あげる', sub: snack ? `${DATA.items[snack].name}（のこり${G.inv[snack]}）` : 'たべもの なし', disabled: !snack || (m.bond || 0) >= 100 }] });
     if (c === 3) { G.inv[snack]--; const up = { stew: 12, kinojiru: 8, yakimi: 5, pan: 4, mi: 2 }[snack]; m.bond = Math.min(100, (m.bond || 0) + up); calc(m); Music.sfx('friend'); await say([`${nameOf(m)}は ${DATA.items[snack].name}を おいしそうに たべた！`, `なつき +${up}（${m.bond}/100）`]); save(); }
-    if (c === 0) await monPanel(m);
+    if (c === 0) await window.KZ.monPanel(m);
     if (c === 1) { if (inTeam) G.team.splice(G.team.indexOf(m.uid), 1); else { if (G.team.length >= 4) G.team[3] = m.uid; else G.team.push(m.uid); } }
     if (c === 2 && await confirm(`${nameOf(m)}を 自然に かえしますか？`)) { G.mons = G.mons.filter(x => x !== m); await say([`${nameOf(m)}は なんども ふりかえりながら 帰っていった。`]); }
   } }
