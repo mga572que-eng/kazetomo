@@ -87,8 +87,8 @@
     return { eye, tgt }; };
   // 目印（2D演出の 位置）を 3Dの 位置へ：レンダーの あと（VPが 新しい）に うごかす
   H.b3dAnchors = () => { if (!A) return; const P = B.P || [], F = B.F || [];
-    const place = (x, el, art, isFoe) => { const st = S.get(x); if (!st || !el || st.sx == null) return; const h = tall(x);
-      const a = World.project([st.sx, st.sy + h * .5, st.sz]), b = World.project([st.sx, st.sy + h, st.sz]); if (!a || !b) { el.style.visibility = 'hidden'; return; }
+    const place = (x, el, art, isFoe) => { const st = S.get(x); if (!st || !el || st.sx == null || !isFinite(st.sx)) return; const h = tall(x);
+      const a = World.project([st.sx, st.sy + h * .5, st.sz]), b = World.project([st.sx, st.sy + h, st.sz]); if (!a || !b || !isFinite(a[0]) || !isFinite(a[1]) || !isFinite(b[1])) { el.style.visibility = 'hidden'; return; }
       el.style.visibility = ''; const px = Math.max(36, Math.min(260, Math.abs(a[1] - b[1]) * 2.1));
       el.style.setProperty('--sx', a[0].toFixed(1) + 'px'); el.style.setProperty('--sy', a[1].toFixed(1) + 'px'); el.style.setProperty('--fw', px.toFixed(0) + 'px');
       el.classList.toggle('m3', !!st.mesh); };

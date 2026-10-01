@@ -142,7 +142,7 @@
       const i = await K.menu({
         title: `さかば「${townName}」`,
         items: [
-          { label: 'かけこと：ちろちろダイス', sub: 'サイコロで しょうぶ' },
+          { label: 'かけこと：ちろちろダイス', sub: 'ゾロめ 2.5ばい・どうてんは おやの かち' },
           { label: 'じょうほうや：うわさを かう', sub: 'かくしようそ・おたからの ヒント' },
           { label: 'ひとやすみ', sub: '10G・HPぜんかい' }
         ],
@@ -189,24 +189,25 @@
       ]);
 
       let win = false, mul = 2;
-      if (pZoro && !dZoro) { win = true; mul = 3; }
+      // 配当（v14）：ゾロめ ×2.5・ふつう ×2・どうてんは おやの かち（期待値 −1.9%。旧：ゾロめ×3・どうてん返金で +15% の 抜け道）
+      const ZM = 2.5;
+      if (pZoro && !dZoro) { win = true; mul = ZM; }
       else if (!pZoro && dZoro) { win = false; }
-      else if (pSum > dSum) { win = true; mul = pZoro ? 3 : 2; }
+      else if (pSum > dSum) { win = true; mul = pZoro ? ZM : 2; }
       else if (pSum === dSum) {
         Music.sfx('cancel');
-        g.gold += bet; // ひきわけはへんきゃく
-        await K.say([nm('どうもとのサイコロふり', 'どうてん！ ひきわけだから かけがねは おかえしだ！')]);
+        await K.say([nm('どうもとのサイコロふり', 'どうてん！ どうてんは おやの かちだよ。 わるいね！')]);
         K.hud(); K.save();
         continue;
       }
 
       if (win) {
-        const prize = bet * mul;
+        const prize = Math.floor(bet * mul);
         g.gold += prize;
         g.town.diceWins = (g.town.diceWins || 0) + 1;
         Music.sfx('friend');
         await K.say([
-          nm('どうもとのサイコロふり', `あんたの かちだ！ ${mul === 3 ? 'ゾロめばいつけ！ ' : ''}${prize}ゴールド もっていきな！`),
+          nm('どうもとのサイコロふり', `あんたの かちだ！ ${mul > 2 ? 'ゾロめばいつけ！ ' : ''}${prize}ゴールド もっていきな！`),
           g.town.diceWins === 5 ? nm('どうもとのサイコロふり', 'おいおい、 5かいも かつなんて スジが いいじゃねえか。 これを もっていきな！') : null
         ].filter(Boolean));
         if (g.town.diceWins === 5 && !g.town.dicePrize) {
@@ -319,7 +320,7 @@
   }
   for(const spot of HIDDEN_SPOTS){const h=BUILD_HOUSES.find(b=>spot.id.startsWith(b.h.id));if(h?.visible){spot.x=h.h.npc.x;spot.z=h.h.npc.z;}spot.visible=place(spot,spot.r);}
   const barMesh=World.makeMesh(World.human({skin:'#d9bb98',hair:'#493828',top:'#70473d',bottom:'#303d49'}),8);
-  H.frame.push(()=>{barMesh.n=0;if(K.phase!=='field')return;for(const n of BAR_NPCS)if(n.r===G().region&&n.visible&&distance(n,K.player)<75)barMesh.set(barMesh.n++,n.x,K.surfaceAt(n.x,n.z,99),n.z,1,n.yaw||0);});
+  H.frame.push(()=>{barMesh.n=0;if(K.phase!=='field'||(K.B&&K.B.active))return;for(const n of BAR_NPCS)if(n.r===G().region&&n.visible&&distance(n,K.player)<75)barMesh.set(barMesh.n++,n.x,K.surfaceAt(n.x,n.z,99),n.z,1,n.yaw||0);});
   for (const n of BAR_NPCS) { n.visible=place(n,n.r);if(!n.visible)continue;
     n.yaw = 0; n.baseYaw = 0;
     K.NPCS.push(n);

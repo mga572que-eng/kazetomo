@@ -214,8 +214,8 @@
   });
 
   H.battleEnd.push((result,specs,opts,party)=>{
-    if(result==='win') for(const m of party||[]) if(m.kind==='mon'&&m.hp>0){
-      if(G().monEq[m.uid]==='m_ribbon_kizuna')m.bond=Math.min(100,(m.bond||0)+1);
+    if(result==='win') for(const m of party||[]) if(m&&m.kind==='mon'&&m.hp>0&&m.st){
+      if((G().monEq||{})[m.uid]==='m_ribbon_kizuna')m.bond=Math.min(100,(m.bond||0)+1);
       const hp=m.hp/m.st.hp,mp=m.mp/Math.max(1,m.st.mp);K.calc(m);m.hp=Math.max(1,Math.round(m.st.hp*hp));m.mp=Math.round(m.st.mp*mp);
     }
   });

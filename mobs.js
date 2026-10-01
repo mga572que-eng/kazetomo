@@ -246,15 +246,16 @@ for(const r of RESIDENTS){r.name=r.nm; const a=r.id.startsWith('mob_gem_s')?K.sh
     if(row.rumor && K.townFeature)K.townFeature.hear(row);
     await K.say(text.map(t => K.nm(row.name,t)));
   };
-  let lastRegion = -1;
+  let lastRegion = -1, npcLen = -1, npcMap = new Map();
   H.init.push(registerAll);
-  H.load.push(() => { registerAll(); lastRegion = -1; });
+  H.load.push(() => { registerAll(); lastRegion = -1; npcLen = -1; });
   H.frame.push(() => {
     for (const mesh of meshes) mesh.n = 0;
-    if (K.phase !== 'field') return;
+    if (K.phase !== 'field' || (K.B && K.B.active)) return; // 立体バトル中は 描かない
     if (lastRegion !== K.G.region) { registerRegion(K.G.region); lastRegion = K.G.region; }
+    if (npcLen !== K.NPCS.length) { npcLen = K.NPCS.length; npcMap = new Map(); for (const x of K.NPCS) if (!npcMap.has(x.id)) npcMap.set(x.id, x); } // 毎フレームの 線形検索を やめる
     RESIDENTS.forEach((row, i) => {
-      const n = K.NPCS.find(n => n.id === row.id);
+      const n = npcMap.get(row.id);
       if (!n || row.r !== K.G.region || !n.mobVisible || dist(n, K.player) > 85) return;
       const mesh = meshes[i % meshes.length], y = K.surfaceAt(n.x, n.z, 99);
       if (K.blocked(n.x, n.z, y)) { n.mobVisible = false; return; }
