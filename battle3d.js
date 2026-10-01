@@ -62,20 +62,34 @@
   function animate(x, st, el, dt, T) { const foeSide = x.foe ? -1 : 1, fw = A.f; // 前（相手の 方）
     const actor = cls(el, 'actor'), strike = cls(el, 'strike') || cls(el, 'lunge'), hurt = cls(el, 'hurt') || cls(el, 'hitw'), down = x.hp <= 0;
     if (edge(st, 'strike', strike)) st.lt = 0; if (edge(st, 'hurt', hurt)) st.ht = 0;
-    let df = actor ? .9 : 0; // 行動者は 一歩 前へ
-    if (st.lt != null) { st.lt += dt; const k = st.lt / .5; if (k >= 1) st.lt = null; else df += Math.sin(Math.min(1, k) * Math.PI) * 1.9; } // つっこんで もどる
-    let shake = 0; if (st.ht != null) { st.ht += dt; const k = st.ht / .4; if (k >= 1) st.ht = null; else { df -= Math.sin(k * Math.PI) * .45; shake = Math.sin(st.ht * 70) * .08 * (1 - k); } }
+    let df = actor ? .9 : 0, up = 0, yo = 0, sq = 1; // 行動者は 一歩 前へ
+    // 攻撃の 動き（種族の 体つきで かえる）：hop＝とびかかる／swoop＝まわって 急降下／slam＝ふりあげて たたきつけ／charge＝低く 突進／ふつう＝つっこんで もどる
+    const style = st.style || (st.style = styleOf(x));
+    if (st.lt != null) { st.lt += dt; const D = DUR[style] || .5, k = Math.min(1, st.lt / D); if (st.lt >= D) st.lt = null; else { const s1 = Math.sin(k * Math.PI);
+      if (style === 'hop') { df += s1 * 2.1; up += s1 * 1.3; sq = 1 + (k > .85 ? (1 - k) * 1.2 : 0) * -.5 + (k < .15 ? -.12 : 0); }
+      else if (style === 'swoop') { df += s1 * 2.3; up += Math.sin(k * Math.PI * 2) * .9; yo = k * Math.PI * 2; }
+      else if (style === 'slam') { const r = k < .55 ? k / .55 : 1, fall = k < .55 ? 0 : (k - .55) / .45; df += Math.sin(r * Math.PI / 2) * 1.6 * (1 - fall * .4); up += k < .55 ? Math.sin(r * Math.PI / 2) * 1.4 : (1 - fall) * 1.4; sq = k > .9 ? 1.18 - (k - .9) * 1.8 : 1; if (k > .55 && !st.slammed) { st.slammed = 1; quake(); } }
+      else if (style === 'charge') { df += (k < .7 ? Math.sin(k / .7 * Math.PI / 2) * 2.8 : (1 - (k - .7) / .3) * 2.8); up -= s1 * .12; }
+      else df += s1 * 1.9; } } else st.slammed = 0;
+    // 技を となえる（行動中で 攻撃以外）：すこし 浮いて ゆっくり まわる
+    if (actor && st.lt == null && x.foe) { up += .25 + Math.sin(T * 6) * .05; yo += Math.sin(T * 3) * .35; }
+    let shake = 0; if (st.ht != null) { st.ht += dt; const k = st.ht / .4; if (k >= 1) st.ht = null; else { df -= Math.sin(k * Math.PI) * .45; shake = Math.sin(st.ht * 70) * .08 * (1 - k); yo += Math.sin(st.ht * 40) * .25 * (1 - k); sq *= 1 - Math.sin(k * Math.PI) * .08; } }
+    st.yo = lerp(st.yo || 0, yo, Math.min(1, dt * 18)); st.sq = lerp(st.sq || 1, sq, Math.min(1, dt * 20)); st.up = lerp(st.up || 0, up, Math.min(1, dt * 16));
     const tx = df * fw[0] * foeSide + shake * A.r[0], tz = df * fw[1] * foeSide + shake * A.r[1];
     st.ox = lerp(st.ox, tx, Math.min(1, dt * 14)); st.oz = lerp(st.oz, tz, Math.min(1, dt * 14));
     const sp = spcOf(x), fly = sp && (sp.arch === 'sprite' || sp.arch === 'bird' || sp.arch === 'fish');
     const bob = down ? 0 : fly ? .55 + Math.sin(T * 2.2 + st.t0) * .18 : x.kind === 'human' && !x.foe ? Math.abs(Math.sin(T * 2.4 + st.t0)) * .04 : Math.abs(Math.sin(T * 3 + st.t0)) * .1;
-    st.oy = lerp(st.oy, (down ? -.55 : 0) + bob + (actor && !x.foe ? .08 : 0), Math.min(1, dt * 10));
-    if (x.foe && down) st.gone = Math.min(1, (st.gone || 0) + dt * 1.6); }
+    st.oy = lerp(st.oy, (down ? -.55 : 0) + bob + (actor && !x.foe ? .08 : 0), Math.min(1, dt * 10)) ; st.oyy = st.up || 0;
+    if (x.foe && down) { st.gone = Math.min(1, (st.gone || 0) + dt * 1.6); st.yo = (st.yo || 0) + dt * 9 * st.gone; } }
+  const DUR = { hop: .6, swoop: .7, slam: .75, charge: .55 };
+  function styleOf(x) { if (!x.foe && x.kind === 'human') return 'normal'; const s = spcOf(x); const a = s && s.arch;
+    return a === 'fluff' || a === 'blob' || a === 'sprite' || a === 'plant' ? 'hop' : a === 'bird' || a === 'fish' ? 'swoop' : a === 'golem' ? 'slam' : a === 'quad' ? 'charge' : x.boss ? 'slam' : 'normal'; }
+  function quake() { try { if (K.HOOK.OPT.calm) return; const b = $('battle'); b.classList.remove('quake'); void b.offsetWidth; b.classList.add('quake'); Music.sfx('stamp'); } catch (e) {} }
   H.b3dFrame = (dt, T) => { if (!A) return null; const P = B.P || [], F = B.F || [];
     for (const k in K.mSp) K.mSp[k].n = 0; for (const k in K.mH) if (k !== 'statue') K.mH[k].n = 0;
     const fc = center(F), pc = center(P);
-    const put = (x, el) => { const st = S.get(x); if (!st) return; animate(x, st, el, dt, T); const me = meshOf(x); const px = st.bx + st.ox, pz = st.bz + st.oz, py = st.by + st.oy;
-      const c = x.foe ? pc : fc; const yaw = yawTo(px, pz, c[0], c[2]); const sc = sizeOf(x) * (x.foe ? 1 - (st.gone || 0) : 1);
+    const put = (x, el) => { const st = S.get(x); if (!st) return; animate(x, st, el, dt, T); const me = meshOf(x); const px = st.bx + st.ox, pz = st.bz + st.oz, py = st.by + st.oy + (st.oyy || 0);
+      const c = x.foe ? pc : fc; const yaw = yawTo(px, pz, c[0], c[2]) + (st.yo || 0); const sc = sizeOf(x) * (st.sq || 1) * (x.foe ? 1 - (st.gone || 0) : 1);
       st.mesh = !!me && sc > .02; if (me && sc > .02) { if (me.h) { me.h.set(0, px, py, pz, sc, yaw); me.h.n = 1; }
         else if (me.m.n < 14) { const legend = sp => K.SPC[sp] && K.SPC[sp].legend; const neg = x.foe && !x.boss && !legend(me.sp) ? -1 : 1; me.m.set(me.m.n++, px, py, pz, neg * sc, yaw + (x.shiny ? 100 : 0)); } }
       st.sx = px; st.sy = py; st.sz = pz; };
@@ -113,6 +127,6 @@
   #battle.b3d.spot .foe:not(.actor):not(.tgt) .foe-art{filter:none}
   #battle.b3d .foe:not(.m3) .foe-art{filter:drop-shadow(0 10px 6px rgba(0,0,0,.45))}
   body.b3d-on #bFlash.go{animation:flash3d calc(.34s / var(--bs,1))}
-  @keyframes flash3d{0%{opacity:.3}100%{opacity:0}}`;
+  @keyframes flash3d{0%{opacity:.22}100%{opacity:0}}`;
   document.head.appendChild(css);
 })();
