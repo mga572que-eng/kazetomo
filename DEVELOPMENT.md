@@ -54,3 +54,6 @@ npm run backupはクリーンなGitツリーのみ受け付ける。../backups/�
 
 ## PCに依存しない開発
 ブラウザー編集、Codespaces、別PCでのclone、GitHubからの手動バックアップはCLOUD_DEVELOPMENT.mdを参照。保存完了はcommit/pushまで確認する。
+
+## AI交代の更新
+普段の運用はOPERATIONS.mdを優先する。担当は固定せず、workブランチとWORK_STATE.mdを引き継ぐ。npm run resumeで状態確認、npm run checkpointで小さな単位の途中保存を行う。

@@ -1,4 +1,4 @@
-# Claude Code の入口
+# Claude Codeの入口
 @AGENTS.md
 
-AI_HANDOFF.md を読み、今回の担当範囲を確かめる。物語・クエスト・既存仕様の継続を主担当とし、割り当てがあれば実装も行う。前のClaudeチャットにしかないコードは、Git版と差分比較してから採用する。DEVELOPMENT.md の手順に従う。
+担当は固定しない。`npm run resume`で保存状態を確認し、WORK_STATE.mdの次の一手から実装を続ける。小さな単位でcheckpointとpushを行い、制限前から交代可能な状態を保つ。Claudeのチャット内だけにあるソースはGitと比較してから採用する。

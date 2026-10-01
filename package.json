@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "node dev-server.mjs",
     "check": "node check.mjs",
-    "backup": "node backup.mjs"
+    "backup": "node backup.mjs",
+    "resume": "node checkpoint.mjs --status",
+    "checkpoint": "node checkpoint.mjs"
   },
   "engines": {
     "node": ">=20"
