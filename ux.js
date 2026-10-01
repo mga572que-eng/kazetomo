@@ -86,7 +86,7 @@
     const paint = () => { const hs = G().party.filter(m => m.kind === 'human'); const m = hs.find(x => x.id === who) || hs[0]; const e = G().eq[m.id]; const L = DATA.gear[m.id]; const curW = L[e.w];
       const rows = []; for (let i = e.w + 1; i < L.length; i++) { const g = L[i]; const c = FORGE_TIER(g); if (!c) continue; const lock = !forgeable(g); const d = g.atk - curW.atk;
         rows.push(`<div class="qrow"><div><b>${g.name}</b>　<span class="cmp">こうげき ${curW.atk} → <span class="fg-up">${g.atk}（+${d}）</span></span><small>${lock ? (g.sea ? '海の底で 材料の ありかを 知ってから' : '空へ 行ってから') : costTxt(c)}</small></div><button type="button" data-i="${i}" ${lock || !can(c) ? 'disabled style="opacity:.4"' : ''}>つくる</button></div>`); }
-      const ha = G().eq.sora.a; const aNext = DATA.armor[ha + 1]; const aC = aNext ? (aNext.cost || FORGE_TIER(aNext)) : null; const aLock = aNext && !forgeable(aNext);
+      const ha = K.bal ? K.bal.armTier() : G().eq.sora.a; const aNext = ha + 1 < (DATA.armorBase || DATA.armor.length) ? DATA.armor[ha + 1] : null; const aC = aNext ? (aNext.cost || FORGE_TIER(aNext)) : null; const aLock = aNext && !forgeable(aNext);
       el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button><h3>ゲンの工房 <small class="st-eq">材料で 武器・防具を 打つ</small></h3>
         <div class="qtabs">${hs.map(x => `<button type="button" data-w="${x.id}" class="${x.id === m.id ? 'on' : ''}">${K.nameOf(x)}</button>`).join('')}</div>
         <p class="st-eq">いまの ぶき：<b>${curW.name}</b>（こうげき ${curW.atk}）　${K.nameOf(m)}の こうげき ${m.st.atk}</p>
@@ -96,7 +96,7 @@
       el.querySelector('.m-x').onclick = () => { Music.sfx('cancel'); K.closeMenu(M, -1); };
       el.querySelectorAll('[data-w]').forEach(b => b.onclick = () => { who = b.dataset.w; Music.sfx('cursor'); paint(); });
       el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const i = +b.dataset.i, g = L[i], c = FORGE_TIER(g); if (!can(c)) return; for (const [k, v] of Object.entries(c)) G().inv[k] -= v; e.w = i; const r = m.hp / m.st.hp; K.calc(m); m.hp = Math.round(m.st.hp * r); Music.sfx('place'); K.toast(`${g.name}を つくった！<br><span style="font-size:.6em">${K.nameOf(m)}の こうげき ${m.st.atk}</span>`, 1800); K.save(); paint(); });
-      const ab = el.querySelector('[data-a]'); if (ab) ab.onclick = () => { if (!can(aC)) return; for (const [k, v] of Object.entries(aC)) G().inv[k] -= v; for (const k in G().eq) if (G().eq[k].a < ha + 1) G().eq[k].a = ha + 1; G().party.forEach(x => { const r = x.hp / x.st.hp; K.calc(x); x.hp = Math.round(x.st.hp * r); }); Music.sfx('place'); K.toast(`${aNext.name}を みんなに つくった！`, 1800); K.save(); paint(); }; };
+      const ab = el.querySelector('[data-a]'); if (ab) ab.onclick = () => { if (!can(aC)) return; for (const [k, v] of Object.entries(aC)) G().inv[k] -= v; G().armTier = Math.max(G().armTier || 0, ha + 1); for (const k in G().eq) { const cur = DATA.armor[G().eq[k].a] || { def: 0 }; const pm = G().party.find(x => x.id === k); if (cur.def < aNext.def && (!K.bal || !pm || K.bal.canWear(pm, ha + 1))) G().eq[k].a = ha + 1; else if (K.bal && pm) { const b = K.bal.bag(); b.a[ha + 1] = (b.a[ha + 1] || 0) + 1; } } G().party.forEach(x => { const r = x.hp / x.st.hp; K.calc(x); x.hp = Math.round(x.st.hp * r); }); Music.sfx('place'); K.toast(`${aNext.name}を みんなに つくった！`, 1800); K.save(); paint(); }; };
     paint(); $('ui').appendChild(el); K.MENUS.push(M); }); }
   K.forgeUI = forgeUI;
   const prevGen = H.talks.gen;
