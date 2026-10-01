@@ -1447,8 +1447,12 @@ function drawAllies(P, ai = -1) { let host = $('bAllies'); if (!host) { host = d
     const a = el.querySelector('.al-art'), fk = m.id + ':' + (m.kind === 'human' ? (m.hp <= 0 ? 'c' : m.hp < m.st.hp * .3 ? 'w' : 'd') : m.shiny ? 's' : ''); if (a.dataset.k !== fk) { a.dataset.k = fk; a.innerHTML = faceOf(m); }
     const n = el.querySelector('.al-n'), nt = nameOf(m); if (n.textContent !== nt) n.textContent = nt; }); }
 // 行動者：一歩 前へ（カードも ステージの コマも）＋ 名前リボン＋ 軽い カメラ寄り
-function actorOn(a, label) { B.fxSkip = false; setCls(a, 'actor', true); if (label) ribbon(a, label); const s = a.foe ? bArtOf(a) : bSprOf(a); if (s) camTo(s, 1.04); }
-function actorOff(...A) { for (const a of A) if (a) { setCls(a, 'actor', false); setCls(a, 'strike', false); } camReset(); }
+// v12：行動者の 名札（画面上部・大きく）＋ スポットライト（行動者と ねらい以外を 暗く）
+function actorPlate(a, label) { const old = B.plate; if (old) old.remove(); const L = String(label || ''), k = L.indexOf('の '); const nm = k > 0 ? L.slice(0, k) : (a.foe ? a.name : nameOf(a)), act = k > 0 ? L.slice(k + 2) : L;
+  const f = a.foe ? '<span class="ap-f foe">⚔</span>' : `<span class="ap-f">${a.kind === 'human' ? Art.portrait(a.id, 'determined') : faceOf(a)}</span>`;
+  const el = bAdd('aplate ' + (a.foe ? 'foe' : 'ally'), `${f}<b>${esc(nm)}</b><em>${esc(act)}</em>`); el.style.setProperty('--ac', a.foe ? '#d0405a' : acol(a)); el.style.setProperty('--bs', bspd()); B.plate = el; }
+function actorOn(a, label) { B.fxSkip = false; setCls(a, 'actor', true); if (label) actorPlate(a, label); if (!calmOn()) $('battle').classList.add('spot'); const s = a.foe ? bArtOf(a) : bSprOf(a); if (s) camTo(s, 1.04); }
+function actorOff(...A) { for (const a of A) if (a) { setCls(a, 'actor', false); setCls(a, 'strike', false); } camReset(); $('battle').classList.remove('spot'); const p = B.plate; if (p) { B.plate = null; p.classList.add('out'); setTimeout(() => p.remove(), 220); } }
 function strike(a) { const s = a.foe ? bElOf(a) : bSprOf(a); if (!s) return; s.classList.remove('strike'); void s.offsetWidth; s.classList.add('strike'); }
 // 数字は ステージの コマに（なければ カード）
 function numAt(x, v, heal, cls = '') { const el = x.foe ? bElOf(x) : (bSprOf(x) || bElOf(x)); hitFx(el, v, heal, cls); }
