@@ -1378,10 +1378,10 @@ const fxQ = () => calmOn() ? .5 : 1;
 // 腕の みせどころは 待ちも スキップ可能（タップで その行動の 演出を まとめて とばす）
 async function fxw(ms) { if (B.fxSkip) return; if (await bwait(ms)) B.fxSkip = true; }
 // ---- カメラ：ステージ・敵・味方を 同じ 点を 中心に すこし ズーム＆パン ----
-function camTo(el, s = 1.06) { if (!el || calmOn() || !B.active) return camReset(); const c = ctrOf(el), W = innerWidth, H = innerHeight;
+function camTo(el, s = 1.06) { if (B.d3 && HOOK.b3dCam && B.active) return HOOK.b3dCam(el, s); if (!el || calmOn() || !B.active) return camReset(); const c = ctrOf(el), W = innerWidth, H = innerHeight;
   const px = Math.max(-40, Math.min(40, (W / 2 - c.x) * .1)), py = Math.max(-18, Math.min(18, (H * .42 - c.y) * .1));
   for (const id of ['bStage', 'bFoes', 'bAllies']) { const e = $(id); if (!e) continue; e.style.transformOrigin = `${(c.x - e.offsetLeft).toFixed(0)}px ${(c.y - e.offsetTop).toFixed(0)}px`; e.style.scale = s; e.style.translate = `${px.toFixed(1)}px ${py.toFixed(1)}px`; } }
-function camReset() { for (const id of ['bStage', 'bFoes', 'bAllies']) { const e = $(id); if (e) { e.style.scale = ''; e.style.translate = ''; } } }
+function camReset() { if (B.d3 && HOOK.b3dCam) HOOK.b3dCam(null); for (const id of ['bStage', 'bFoes', 'bAllies']) { const e = $(id); if (e) { e.style.scale = ''; e.style.translate = ''; } } }
 // ---- 行動者の リボン「ソラの こうげき！」 ----
 function ribbon(x, text, cls = '') { const el = bElOf(x); if (!el) return; const r = (x.foe ? (el.querySelector('.foe-art') || el) : (bSprOf(x) || el)).getBoundingClientRect(); if (!r.width) return;
   const W = innerWidth, cx = Math.max(90, Math.min(W - 90, r.left + r.width / 2)); const y = Math.max(16, r.top + (x.foe ? 2 : -2));
@@ -1612,7 +1612,7 @@ async function runBattle(specs, opts = {}) {
   let friendBoost = 1;
   $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF'; $('bSpd').textContent = `はやさ ×${G.speed || 1}`;
   if (!G.tips.battle1) tip('<b>バトルの コツ</b><span>敵の 下の「弱点」タイプの 技は 1.5倍。「おまかせ」で 自動、「はやさ」で 倍速に できる。</span>', 'battle1');
-  $('bMsg').innerHTML = ''; buildStage(opts); $('battle').hidden = false; $('battle').classList.toggle('isboss', !!opts.boss);
+  $('bMsg').innerHTML = ''; buildStage(opts); B.d3 = false; try { B.d3 = !!(HOOK.b3dStart && HOOK.b3dStart(opts, P, F)); } catch (e) { console.error(e); } if (B.d3) B.stage = false; $('battle').hidden = false; $('battle').classList.toggle('isboss', !!opts.boss);
   const redraw = (ai = -1) => { drawParty(P, ai); drawAllies(P, ai); drawFoes(F); };
   redraw(); $('swipe').classList.remove('go');
   // 登場演出：うずまきが ひらき、敵が はずんで 着地 → なきごえ
@@ -1875,12 +1875,13 @@ async function runBattle(specs, opts = {}) {
   } else if (result === 'lose') { $('battle').classList.add('lose'); Music.sfx('lose'); const lb = bAdd('b-banner lose', '<span>ちからつきた……</span>');
     await bmsg(`${G.name}たちは ちからつきた……`, 600); await bwait(900); lb.remove(); }
   P.forEach(m => { if (m.hp <= 0 && result !== 'lose') m.hp = 1; m.sleep = 0; m.defUp = 0; m.slow = 0; m.ail = null; });
+  if (evolving.length && B.d3) $('battle').classList.remove('b3d'); // 進化の 場面は 2Dで みせる
   for (const m of evolving) { const from = SPC[m.id], to = SPC[from.evo.to];
     $('bFoes').innerHTML = `<div class="foe evo"><div class="foe-art">${Art.species(m.id, { shiny: m.shiny })}</div></div>`; await bmsg(`${from.name}の からだが 光に つつまれていく……！`, 700);
     screenFx('white'); Music.jingle('light', opts.boss ? null : fieldSong()); m.id = from.evo.to; const r = m.hp / m.st.hp; calc(m); m.hp = Math.max(1, Math.round(m.st.hp * r)); G.dex.seen[m.id] = 1; G.dex.got[m.id] = 1;
     $('bFoes').innerHTML = `<div class="foe evo"><div class="foe-art">${Art.species(m.id, { shiny: m.shiny })}</div></div>`; await bmsg(`${from.name}は ${to.name}に すがたを かえた！`, 1200); }
   $('battle').querySelectorAll('.b-win,.b-banner,.b-res,.b-lv').forEach(e => e.remove()); $('battle').classList.remove('res-on', 'won', 'lose'); camReset(); $('bfx').innerHTML = ''; { const tn = $('bTint'); if (tn) tn.className = ''; }
-  $('battle').hidden = true; B.active = false; B.stage = false;
+  if (B.d3 && HOOK.b3dEnd) HOOK.b3dEnd(); B.d3 = false; $('battle').hidden = true; B.active = false; B.stage = false;
   for (const f of HOOK.battleEnd) try { await f(result, specs, opts, P); } catch (e) { console.error(e); }
   if (result === 'flee') Music.play(fieldSong());
   hud(); return result;
@@ -2448,7 +2449,9 @@ function frameBody(now) {
   if (G.region === 0 && phase === 'field') { const b0 = r.beacons[0]; if (!b0.lit) b0.shards.forEach((sh, k) => { if (!(G.trial[0].got || []).includes(k)) fx.push({ type: 1, p: [sh.x, sh.y + .7, sh.z], size: [1.6, 1.6], grow: 1.5, tint: [1, .8, .35] }); }); }
   let ghost = null; if (G.build && md === 'field') { const [x, y, z] = buildCell(); ghost = [x, y, z, G.mat]; }
   if (DEBUG) { const hid = window.__norender ? 'hidden' : ''; if (cv.style.visibility !== hid) cv.style.visibility = hid; }
-  if (!(DEBUG && window.__norender) && !B.stage) World.render({ eye, tgt, tod: G.tod, T, player: [player.x, player.y, player.z], lantern: lan, beaconU, fx, ghost, darkness, stars: G.flags.c3done ? 1.7 : G.flags.c3start ? .35 : 1 });
+  let rEye = eye, rTgt = tgt; if (B.active && B.d3 && HOOK.b3dFrame) { const c = HOOK.b3dFrame(dt, T); if (c) { rEye = c.eye; rTgt = c.tgt; } }
+  if (!(DEBUG && window.__norender) && !B.stage) World.render({ eye: rEye, tgt: rTgt, tod: G.tod, T, player: [player.x, player.y, player.z], lantern: lan, beaconU, fx, ghost, darkness, stars: G.flags.c3done ? 1.7 : G.flags.c3start ? .35 : 1 });
+  if (B.active && B.d3 && HOOK.b3dAnchors) HOOK.b3dAnchors();
   dlgUpdate(dt); Music.tick();
   if (DEBUG) { window.__fc = (window.__fc || 0) + 1; window.__md = md; }
 }
@@ -2510,7 +2513,7 @@ async function opening() {
 }
 function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() => run(async () => { await reunion(); save(); }), 600); phase = 'field'; $('hud').hidden = false; document.body.classList.add('infield'); cam.yaw = Math.atan2(REGr().town.x - player.x, REGr().town.z - player.z); camFrame(cam.yaw); player.yaw = cam.yaw; hud(); Music.play(fieldSong(), { restart: true });
   if (G.region === 0 && G.flags.shrineOpen && !G.flags.cleared) { darkTarget = 1; darkness = 1; } if (!G.blk[G.mat]) cycleMat(true); }
-window.KZ = { HOOK, get G() { return G; }, shopUI0, ICON, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
+window.KZ = { HOOK, get G() { return G; }, shopUI0, ICON, B, mH, mSp, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
   say, who, nm, menu, panel, confirm, run, toast, tip, gain, save, load, hud, fade, wait, R, esc, $, floatText, runBattle, titleCard, cinematic, mkMon, mkHuman, calc, fixTeam, battleParty, allMembers, member, nameOf, inParty,
   defeated, fieldSong, warpTo, credits, rest, objective, need, regionName: r => REGION_NAME[r], townName: r => TOWN_NAME[r], get enemies() { return enemies; }, set enemies(v) { enemies = v; },
   surfaceAt, hAt, Blocks, blocked, footAt, depen, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, buildHouse, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
