@@ -15,10 +15,13 @@ jobs:
         with:
           node-version-file: .nvmrc
           package-manager-cache: false
-      - run: npm run backup
+      - run: |
+          npm run backup
+          mkdir -p "$RUNNER_TEMP/kazetomo-backup"
+          cp ../backups/*/* "$RUNNER_TEMP/kazetomo-backup/"
       - uses: actions/upload-artifact@v7
         with:
           name: kazetomo-git-backup
-          path: ../backups/*/*
+          path: ${{ runner.temp }}/kazetomo-backup/
           if-no-files-found: error
           retention-days: 30
