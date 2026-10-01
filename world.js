@@ -572,7 +572,8 @@ float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
     if (k) { gl.bindBuffer(gl.ARRAY_BUFFER, vaoIb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, o, 0, k * 5); } return k; }
 
   // ---------- init ----------
-  let quadVAO, triVAO, partVAO, cubeVAO, blockIB, blockN = 0, blockData = new Float32Array(4 * 9000), ghostIB, ghostVAO;
+  const BMAX = 14000; // 描く ブロックの 上限（地方ごと。霧の大陸に 新しい 町を 足したため 9000→14000）
+  let quadVAO, triVAO, partVAO, cubeVAO, blockIB, blockN = 0, blockData = new Float32Array(4 * BMAX), ghostIB, ghostVAO;
   const PARTS = 260;
   function init(canvas, coarse) {
     cv = canvas; COARSE = coarse;
@@ -904,7 +905,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
 
     const PlV = planesOf(VP, plV);
     // blocks: 16m バケツ順に 並べ替えて アップロード（描画は 可視バケツの 連続区間ごと）
-    if (blocksDirty) { const L = []; for (const [k, t] of blocks) { if (t === 19) continue; /* 19＝見えない 当たり判定（家具など） */ if (L.length >= 9000) break; const [x, y, z] = k.split(',').map(Number); L.push([((Math.floor(x / 16) + 64) << 8) | (Math.floor(z / 16) + 64), x, y, z, t]); }
+    if (blocksDirty) { const L = []; for (const [k, t] of blocks) { if (t === 19) continue; /* 19＝見えない 当たり判定（家具など） */ if (L.length >= BMAX) break; const [x, y, z] = k.split(',').map(Number); L.push([((Math.floor(x / 16) + 64) << 8) | (Math.floor(z / 16) + 64), x, y, z, t]); }
       L.sort((a, b) => a[0] - b[0]); blockN = L.length; bkts = [];
       L.forEach((e, i) => { blockData[i * 4] = e[1]; blockData[i * 4 + 1] = e[2]; blockData[i * 4 + 2] = e[3]; blockData[i * 4 + 3] = e[4]; let b = bkts[bkts.length - 1];
         if (!b || b.k !== e[0]) bkts.push(b = { k: e[0], s: i, n: 0, x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9 });

@@ -96,13 +96,17 @@
     if (type === 'boy' || type === 'girl') return 'kid'; if (type === 'oldm' || type === 'oldw') return 'elder'; if (SHOP.test(name)) return 'shop'; return i % 3 === 0 ? 'barfly' : 'worker'; }
   function addPeople() { const D = K.mobResidents.data;
     for (const T of TOWNS) { const rows = D.filter(d => d.id.startsWith('mob_gem_' + T.pre)); rows.forEach((row, i) => { people.push({ row, id: row.id, town: T, type: LOOK[row.t] ? row.t : 'man', look: i % 2, role: roleOf(row.t, row.nm, i), i, work: { x: row.x, z: row.z } }); });
-      (POOL[T.key] || []).slice(0, T.extras).forEach(([type, nmTxt, lines], k) => { const id = `tl_${T.key}_${k}`; const n = { id, r: T.r, nm: nmTxt, x: 0, z: 0, yaw: 0, baseYaw: 0, life: true }; n.show = () => !n.indoor && n.placed; K.NPCS.push(n);
-        H.talks[id] = async () => { await K.say(lines.map(t => K.nm(nmTxt, t))); };
-        people.push({ id, npc: n, town: T, type, look: k % (LOOK[type] || [0]).length, role: roleOf(type, nmTxt, k + 1), i: rows.length + k, extra: true, work: null }); }); } }
+      // 町ごとの 追加の 人。[種類, 名前, 台詞（配列 または 関数）, { at: 立つ場所（関数可）, yaw, act }]。at が ある 人は いつも そこに いる（店番・王さまなど）
+      const pool = POOL[T.key] || T.pool || [];
+      pool.slice(0, T.extras ?? pool.length).forEach(([type, nmTxt, lines, opt], k) => { const id = `tl_${T.key}_${k}`; const n = { id, r: T.r, nm: nmTxt, x: 0, z: 0, yaw: 0, baseYaw: 0, life: true }; n.show = () => !n.indoor && n.placed; K.NPCS.push(n);
+        H.talks[id] = typeof lines === 'function' ? async () => lines(n) : async () => { await K.say(lines.map(t => K.nm(nmTxt, t))); };
+        const o = opt || {}, at = typeof o.at === 'function' ? o.at() : o.at;
+        people.push({ id, npc: n, town: T, type, look: o.look ?? k % (LOOK[type] || [0]).length, role: at ? 'fixed' : roleOf(type, nmTxt, k + 1), i: rows.length + k, extra: true, work: at || null, fyaw: o.yaw, fact: o.act }); }); } }
   // ---------- 1日の 予定（時刻 → 行き先と 行動） ----------
   const pick = (arr, i) => arr && arr.length ? arr[i % arr.length] : null;
   function plan(p, h, S) { const i = p.i, home = pick(S.homes, i), work = p.work || pick(S.market, i) || pick(S.plaza, i), plaza = pick(S.plaza, i + Math.floor(h / 2)), market = pick(S.market, i + 1), food = pick(S.food, i), bar = pick(S.bar, i);
     const R = p.role, night = h < 5.5 || h >= 21.5;
+    if (R === 'fixed') return { to: p.work, act: p.fact || 'stand', yaw: p.fyaw };
     if (R === 'guard') { const k = Math.floor(h * 1.5 + i) % S.walk.length; return { to: S.walk[k] || plaza, act: 'stand' }; }
     if (R === 'mail') { if (h < 8 || h >= 17) return { to: home, act: 'home' }; return { to: pick([...S.homes, ...S.market, ...S.food], Math.floor(h * 2) + i), act: 'stand' }; }
     if (R === 'teacher') { if (S.school && h >= 8 && h < 15 && !(h >= 12 && h < 13)) return { to: S.school, act: 'stand', yaw: S.schoolYaw + Math.PI }; if (h >= 15 && h < 18) return { to: market, act: 'stand' }; return { to: home, act: h < 20 ? 'stand' : 'home' }; }
@@ -155,5 +159,5 @@
   // ---------- 物価（宿・道具屋の 買値に かける） ----------
   K.townHere = () => { const r = K.G.region, pl = K.player; return TOWNS.find(t => t.r === r && t.at() && dist(t.at(), pl) < 45) || null; };
   H.priceK = () => { const t = K.townHere(); return t ? t.price : 1; };
-  K.townLife = { on: true, TOWNS, towns, people, plan, setupTown, near, okSpot };
+  K.townLife = { on: true, TOWNS, towns, people, plan, setupTown, near, okSpot, LOOK };
 })();

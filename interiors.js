@@ -156,5 +156,5 @@
   H.labels.garden = t => ['花に 水を やる', '花が そだっている', '花を つみとる'][gstate(t.o.key)];
   H.acts.inEnter = async h => enter(h); H.acts.inExit = async () => leave(); H.acts.inSearch = async o => search(o); H.acts.garden = async o => garden(o);
   H.load.push(g => { g.searched = g.searched || {}; g.garden = g.garden || {}; cur = null; });
-  K.interior = { houses, enter, leave, get cur() { return cur; }, outdoor, outside, search, garden, gstate, ROOM };
+  K.interior = { KIND, NAMEH, houses, enter, leave, get cur() { return cur; }, outdoor, outside, search, garden, gstate, ROOM };
 })();
