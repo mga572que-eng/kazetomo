@@ -2145,14 +2145,21 @@ function depen(p) { if (!blocked(p.x, p.z, p.y)) return false;
   if (side(.05, .35)) return true;
   const up = footAt(p.x, p.z, p.y + 1.1); if (up - p.y <= 1.1 && !blocked(p.x, p.z, up)) { p.y = up; return true; }
   return side(.4, .9); }
-// 落下ダメージ：7.5m を こえる 落下で、高さに 応じて へる（ぜったいに たおれない＝HP1のこる）。 滑空・水・上昇気流・海の底は なし
-const FALL_SAFE = 7.5;
-function fallHurt(drop) { const f = clamp((drop - FALL_SAFE) * .04 + .05, .05, .6); let hit = 0;
+// 落下ダメージ（仕様B・2026-10-01 開発者決定）：7マス以上の 落下で、6マスを こえた 1マスごとに 最大HPの 5%（上限 40%）。 全員 均等。 HPは 1 のこる。
+// なし：滑空・水・上昇気流・海の底・町の中・祠の 試練の中・せってい「落下ダメージ：なし」
+const FALL_SAFE = 7;
+function fallSafeHere() { const K = window.KZ, r = G.region, R0 = REG[r] || {}; if (HOOK.OPT.fall === false) return true;
+  const d = (o, rad) => o && Math.hypot(o.x - player.x, o.z - player.z) < rad;
+  if (d(R0.town, 34)) return true; if (r === 0 && K && K.shiomi && d(K.shiomi, 30)) return true;
+  if (K && K.extraAreas && K.extraAreas.some(a => a.rg === r && Math.hypot(a.x - player.x, a.z - player.z) < (a.r || 30))) return true;
+  if (K && K.shrinesHere && K.shrinesHere(r).some(s => Math.abs(player.x - s.pos.x - .5) < 8 && Math.abs(player.z - s.pos.z - .5) < 8)) return true;
+  return false; }
+function fallHurt(drop) { if (fallSafeHere()) return; const f = clamp((Math.floor(drop + .001) - 6) * .05, .05, .4); let hit = 0;
   for (const m of battleParty()) { if (!(m.hp > 1)) continue; const d = Math.max(1, Math.round(m.st.hp * f)); m.hp = Math.max(1, m.hp - d); hit = Math.max(hit, d); }
   player.stag = .3 + Math.min(.45, (drop - FALL_SAFE) * .03); player.vx *= .2; player.vz *= .2; player.sq = .9;
   for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; puffs.push({ x: player.x + Math.cos(a) * .7, y: player.y + .1, z: player.z + Math.sin(a) * .7, t: 0, big: 1 }); }
   Music.sfx('hurt'); if (hit) try { floatText([player.x, player.y + 2.2, player.z], `ドスン！ -${hit}`); } catch (_) {}
-  hud(); tip('高い ところから 落ちると ダメージ（HPは 1 のこる）。<br>滑空・水・上昇気流で 着地すれば だいじょうぶ', 'fall', 3600); }
+  hud(); tip('高い ところから 落ちると ダメージ（HPは 1 のこる）。<br>風布で 滑空するか、水に 着地すれば だいじょうぶ。 町と 祠の 中では ダメージなし。 せっていで なしにも できる', 'fall', 4200); }
 
 // ================= followers（V字で 2.5〜3.5 うしろ・カメラの 視線を よける） =================
 const folSt = {};

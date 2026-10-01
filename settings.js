@@ -3,14 +3,14 @@
 (() => {
   const K = window.KZ; if (!K) return;
   const KEY = 'kazetomo-opt';
-  const DEF = { bgm: 75, se: 70, text: 1, quality: 'auto', lefty: false, look: 1, calm: false, ratio: 'auto', b3d: true };
+  const DEF = { bgm: 75, se: 70, text: 1, quality: 'auto', lefty: false, look: 1, calm: false, ratio: 'auto', b3d: true, fall: true };
   let O = { ...DEF }; try { Object.assign(O, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   if (O.rv !== 2) { O.ratio = 'auto'; O.rv = 2; try { localStorage.setItem(KEY, JSON.stringify(O)); } catch (e) {} } // 旧版の 比率バグ対策：一度 自動に もどす
   const store = () => { try { localStorage.setItem(KEY, JSON.stringify(O)); } catch (e) {} };
   let autoMax = 2, autoQ = null;
   function apply() {
     Music.setVol(O.bgm / 100, O.se / 100);
-    K.HOOK.OPT.text = O.text; K.HOOK.OPT.look = O.look; K.HOOK.OPT.lefty = O.lefty; K.HOOK.OPT.calm = O.calm; K.HOOK.OPT.b3d = O.b3d !== false;
+    K.HOOK.OPT.text = O.text; K.HOOK.OPT.look = O.look; K.HOOK.OPT.lefty = O.lefty; K.HOOK.OPT.calm = O.calm; K.HOOK.OPT.b3d = O.b3d !== false; K.HOOK.OPT.fall = O.fall !== false;
     document.body.classList.toggle('lefty', !!O.lefty); document.body.classList.toggle('calm', !!O.calm);
     if (O.quality === 'auto') { if (autoQ == null) autoQ = World.quality; World.setQuality(autoQ); } else World.setQuality({ low: 0, mid: 1, high: 2 }[O.quality]);
   }
@@ -52,6 +52,7 @@
           ${seg('画質', 'quality', [['auto', 'じどう'], ['low', '低'], ['mid', '中'], ['high', '高']])}
           ${seg('カメラ感度', 'look', [[.6, '低'], [1, '中'], [1.5, '高']])}
           ${seg('操作の 左右', 'lefty', [[false, 'スティック左'], [true, 'スティック右']])}
+          ${seg('落下ダメージ', 'fall', [[true, 'あり'], [false, 'なし']])}
           ${seg('戦闘の 表示', 'b3d', [[true, '立体（3D）'], [false, '平面（2D・軽い）']])}
           ${seg('画面の ゆれ', 'calm', [[false, 'あり'], [true, 'へらす']])}
           ${seg('画面の 比率', 'ratio', [['auto', 'じどう（おすすめ）'], ['19.5:9', 'iPhone（ノッチあり）'], ['16:9', 'iPhone SE・16:9'], ['3:2', '3:2'], ['4:3', 'iPad・4:3']])}
