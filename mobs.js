@@ -234,8 +234,8 @@ for(const r of RESIDENTS){r.name=r.nm; const a=r.id.startsWith('mob_gem_s')?K.sh
         if (npc && safe(npc.x, npc.z, r, row.id)) { npc.mobVisible = true; continue; }
         const pos = findSpot(row);
         if (!pos) { if (npc) npc.mobVisible = false; continue; }
-        if (!npc) { npc = { id: row.id, r, nm: row.name, yaw: 0, baseYaw: 0, mobVisible: true }; npc.show = () => npc.mobVisible; K.NPCS.push(npc); }
-        Object.assign(npc, pos, { mobVisible: true });
+        if (!npc) { npc = { id: row.id, r, nm: row.name, yaw: 0, baseYaw: 0, mobVisible: true }; npc.show = () => npc.mobVisible && !npc.mobHidden; K.NPCS.push(npc); }
+        Object.assign(npc, pos, { mobVisible: true, mobHidden: false });
         if (row.rumor) row.houseId = K.REG[r].houses[row.houseIndex]?.id || null;
       }
     } finally { World.setRegion(original); }
@@ -249,16 +249,23 @@ for(const r of RESIDENTS){r.name=r.nm; const a=r.id.startsWith('mob_gem_s')?K.sh
   let lastRegion = -1, npcLen = -1, npcMap = new Map();
   H.init.push(registerAll);
   H.load.push(() => { registerAll(); lastRegion = -1; npcLen = -1; });
-  H.frame.push(() => {
+  // 一時的な 障害物（置いた ブロック・家具など）で 永久に 消えないように：
+  //   ふさがれている 間だけ 隠す（mobHidden）→ 障害物が なくなれば 描画と 会話が もどる。4秒 ふさがれたままなら 近くの 空いた 場所へ うつす。
+  //   置き場所が 見つからなかった 住人（mobVisible=false）も 5秒ごとに 置きなおしを 試す。
+  let retryT = 0;
+  function relocate(row, n) { const prev = World.region; World.setRegion(row.r); try { const pos = findSpot(row); if (!pos) return false; Object.assign(n, pos, { mobVisible: true, mobHidden: false }); n.hidAt = 0; return true; } finally { World.setRegion(prev); } }
+  H.frame.push((dt = 0) => {
     for (const mesh of meshes) mesh.n = 0;
     if (K.phase !== 'field' || (K.B && K.B.active)) return; // 立体バトル中は 描かない
     if (lastRegion !== K.G.region) { registerRegion(K.G.region); lastRegion = K.G.region; }
+    retryT += dt; if (retryT > 5) { retryT = 0; for (const row of RESIDENTS) { if (row.r !== K.G.region) continue; const n = npcMap.get(row.id) || K.NPCS.find(x => x.id === row.id); if (n && n.mobVisible === false) relocate(row, n); else if (!n) registerRegion(row.r); } }
     if (npcLen !== K.NPCS.length) { npcLen = K.NPCS.length; npcMap = new Map(); for (const x of K.NPCS) if (!npcMap.has(x.id)) npcMap.set(x.id, x); } // 毎フレームの 線形検索を やめる
     RESIDENTS.forEach((row, i) => {
       const n = npcMap.get(row.id);
       if (!n || row.r !== K.G.region || !n.mobVisible || dist(n, K.player) > 85) return;
       const mesh = meshes[i % meshes.length], y = K.surfaceAt(n.x, n.z, 99);
-      if (K.blocked(n.x, n.z, y)) { n.mobVisible = false; return; }
+      if (K.blocked(n.x, n.z, y)) { if (!n.mobHidden) { n.mobHidden = true; n.hidAt = performance.now(); } else if (performance.now() - n.hidAt > 4000) relocate(row, n); return; }
+      if (n.mobHidden) { n.mobHidden = false; n.hidAt = 0; } // 障害物が なくなった → もどす
       const yaw = dist(n, K.player) < 6 ? Math.atan2(K.player.x - n.x, K.player.z - n.z) : n.baseYaw;
       if (mesh.n < mesh.maxN) mesh.set(mesh.n++, n.x, y, n.z, 1, yaw);
     });
