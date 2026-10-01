@@ -1,25 +1,28 @@
 # 作業の再開
 
-更新: 2026-10-01T03:44:31.488Z
+更新: 2026-10-01T05:08:09.219Z
 ブランチ: work/roadmap-handoff
-直前コミット: f889309529e48cb5a73bcf8b09b3eef8e82abc9a
+直前コミット: 565613577abd84f5ac22a5099cac1ba65680f35e
 
 ## 目的
-引き継ぎ整備：部署・方針・優先順位とGemini指示をGitへ移す
+AI Studio向け作業指示を追加
 
 ## 完了・途中の内容
-ROADMAP.md、docs/briefs/gemini-01-talk-and-mobs.md を追加し、AI_HANDOFF.mdのClaude未確認項目を解消。ゲーム本体は変更なし
+docs/briefs/README.md と指示02〜06（酒場・訳あり家、仲間モンスター、バランス設計書、物語改稿、全コード監査）を追加。ゲーム本体は変更なし
 
 ## 次の一手
-ユーザー確認後にPRでmainへ統合。Geminiは brief 01 を work/talk-and-mobs で実装する。Claudeは戦闘演出＋バランス骨格（ROADMAP優先1）を別ブランチで進める
+ユーザー確認後にPRでmainへ統合。AI Studioの返答ファイルは、Gitを操作できるAIが各work/ブランチへ入れて検査する
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- ROADMAP.md
-- docs/briefs/gemini-01-talk-and-mobs.md
-- AI_HANDOFF.md
+- docs/briefs/README.md
+- docs/briefs/gemini-02-town-and-foreshadow.md
+- docs/briefs/gemini-03-monster-companions.md
+- docs/briefs/gemini-04-balance-design.md
+- docs/briefs/gemini-05-story.md
+- docs/briefs/gemini-06-qa-audit.md
 
 このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
