@@ -1748,17 +1748,20 @@ async function runBattle(specs, opts = {}) {
       if (it.mp) { const v = Math.min(it.mp, t.st.mp - t.mp); t.mp += v; Music.sfx('mp'); redraw(); numAt(t, '+' + v, true, 'mpn'); { const ce = bElOf(t); if (ce) { ce.classList.remove('mpglow'); void ce.offsetWidth; ce.classList.add('mpglow'); } } await bmsg(`${nameOf(t)}の MPが ${v} かいふくした！`); } return; }
     if (p.type === 'skill') await useSkill(a, p.s, p.t, false);
   }
+  // MPを うばう：drainOne なら 1人だけ（立て直しの 余地を のこす）
+  async function drainMp(s) { const A = aliveP(); const L = s.drainOne ? [A[Math.floor(R() * A.length)]].filter(Boolean) : A; L.forEach(m => { m.mp = Math.max(0, m.mp - s.drain); mpFx(m, s.drain); }); redraw(); await bmsg(s.drainOne && L[0] ? `${nameOf(L[0])}の MPが すいとられた！` : 'みんなの MPが すいとられた！'); }
   async function doFoe(f) {
     const T1 = () => { const A = aliveP(); return A[Math.floor(R() * A.length)]; };
     if (f.ail === 'para' && R() < (f.boss ? .12 : .25)) { ailFx(f, 'para'); await bmsg(`${f.name}は しびれて うごけない！`, 300); return; }
-    if (f.charging) { f.charging = false; const s = DATA.skills[f.d.charge]; const el = elemOf(s, f); redraw(); screenFx('dark'); Music.sfx('crit'); cryOf(f, { vol: 1.1 }); $('battle').classList.remove('quake'); void $('battle').offsetWidth; $('battle').classList.add('quake');
+    if (f.charging) { f.charging = false; f.allLast = true; const s = DATA.skills[f.d.charge]; const el = elemOf(s, f); redraw(); screenFx('dark'); Music.sfx('crit'); cryOf(f, { vol: 1.1 }); $('battle').classList.remove('quake'); void $('battle').offsetWidth; $('battle').classList.add('quake');
       actorOn(f, `${f.name}の ${s.name}！！`); castStart(f, el, true); try { await bmsg(`${f.name}の ${s.name}！！`, 400); aliveP().forEach(t => markTgt(t)); await castFly(f, el, aliveP()); for (const t of aliveP()) await hit(f, t, s.power, { noMiss: true, type: s.type, el }); } finally { actorOff(f); }
-      if (s.drain) { aliveP().forEach(m => { m.mp = Math.max(0, m.mp - s.drain); mpFx(m, s.drain); }); redraw(); await bmsg('みんなの MPが すいとられた！'); } if (s.ail) for (const t of aliveP()) await setAil(t, s.ail[0], s.ail[1]); return; }
+      if (s.drain) await drainMp(s); if (s.ail) for (const t of aliveP()) await setAil(t, s.ail[0], s.ail[1]); return; }
     if (f.boss) { const acts = f.d.acts || [['atk', 1]]; let r = R(), pick = acts[0][0]; for (const [k, pr] of acts) { if ((r -= pr) <= 0) { pick = k; break; } }
       const fe = $('foe' + F.indexOf(f)); if (fe && !(pick === 'atk' || (pick === 'charge' && f.chargedLast))) { fe.classList.remove('lunge'); void fe.offsetWidth; fe.classList.add('lunge'); }
       if (pick === 'charge' && f.d.charge && !f.chargedLast) { f.charging = true; f.chargedLast = true; redraw(); Music.sfx('charge'); cryOf(f, { vol: .9 }); castStart(f, elemOf(DATA.skills[f.d.charge] || {}, f), true); ribbon(f, `${f.name}は ちからを ためている！`, 'warn'); await bmsg(`${f.name}は ちからを ためている……！`, 500);
         if (!G.tips.charge) tip('<b>⚠ ため攻撃が くる！</b><span>次の ターンに 全体へ 大ダメージ。「ぼうぎょ」で 半分に できる。回復も 先に。</span>', 'charge'); return; }
       f.chargedLast = false; if (pick === 'charge') pick = 'atk';
+      { const S0 = DATA.skills[pick]; const isAll = !!(S0 && S0.power && S0.tg !== 'one'); if (isAll && f.allLast) pick = 'atk'; f.allLast = isAll && pick !== 'atk'; } // 全体攻撃は 2回 つづけない
       if (pick === 'atk') { const t = T1(); actorOn(f, `${f.name}の こうげき！`); try { const bm = bmsg(`${f.name}の こうげき！`, 150); const o = await strikeFx(f, t); await bm; await hit(f, t, 1, { type: f.type, ...o }); } finally { actorOff(f); } return; }
       const s = DATA.skills[pick]; const el = elemOf(s, f); cryOf(f, { vol: .9 }); actorOn(f, `${f.name}の ${s.name}！`); castStart(f, el, s.tg !== 'one'); screenFx('dark'); Music.sfx('magic'); await bmsg(`${f.name}の ${s.name}！`, 250);
       try {
@@ -1766,7 +1769,7 @@ async function runBattle(specs, opts = {}) {
       else if (s.power) { aliveP().forEach(t => markTgt(t)); await castFly(f, el, aliveP()); for (const t of aliveP()) await hit(f, t, s.power, { noMiss: true, type: s.type, el }); }
       else if (el === 'debuff' || el === 'song' || el === 'dark') await castFly(f, el, aliveP());
       } finally { actorOff(f); }
-      if (s.drain) { aliveP().forEach(m => { m.mp = Math.max(0, m.mp - s.drain); mpFx(m, s.drain); }); redraw(); await bmsg('みんなの MPが すいとられた！'); }
+      if (s.drain) await drainMp(s);
       if (s.sleep) { let any = false; for (const m of aliveP()) if (R() < s.sleep) { m.sleep = 2; any = true; redraw(); ailFx(m, 'sleep'); await bmsg(`${nameOf(m)}は ねむってしまった！`, 300); } if (!any) await bmsg('しかし みんな もちこたえた！'); redraw(); }
       if (s.ail) { for (const t of (s.tg === 'all' ? aliveP() : [aliveP()[Math.floor(R() * aliveP().length)]])) await setAil(t, s.ail[0], s.ail[1]); }
       return; }

@@ -110,6 +110,15 @@
     j.tree = [...j.sk.map(([l, s], i) => ({ id: `${j.id}_${i}`, jl: l, cost: SKC[l] || 2, skill: s })), ...P.map(([name, desc, eff], i) => ({ id: `${j.id}_p${i}`, jl: i ? 7 : 3, cost: i ? 2 : 1, name, desc, eff }))].sort((a, b) => a.jl - b.jl);
     j.eqW = (EQ[j.id] || [[], []])[0]; j.eqA = (EQ[j.id] || [[], []])[1]; j.wpn = WPN[j.id]; }
   const JOB = Object.fromEntries(DATA.jobs.map(j => [j.id, j]));
+  // v10：武器の 相性（キャラの 専用武器 × 職業）。得意 ×1.15・ふつう ×1・苦手 ×0.9（武器の こうげき力に かける）。装備は 制限しない
+  const AFF = { minarai: {}, senshi: { sora: 1.15, mio: .9, riku: 1.15, sana: .9, haru: .9, kaito: 1.15 }, mahou: { sora: .9, riku: .9, sana: 1.15, kaito: .9 },
+    souryo: { sora: .9, riku: .9, sana: 1.15, haru: .9 }, touzoku: { sora: 1.15, mio: .9, sana: .9, haru: 1.15, kaito: .9 }, butouka: { mio: .9, sana: .9, kaito: .9 },
+    ginyuu: { sora: .9, mio: 1.15, riku: .9, haru: 1.15, kaito: .9 }, yuutou: { sora: 1.15, riku: 1.15, kaito: 1.15 } };
+  const affOf = (id, jid) => (AFF[jid] || {})[id] || 1;
+  const affTxt = v => v > 1 ? '◎ 得意（武器の こうげき ×1.15）' : v < 1 ? '△ 苦手（武器の こうげき ×0.9）' : '○ ふつう';
+  K.weaponAff = (m, jid) => affOf(m.id, jid || (rec(m.id).cur));
+  if (!H.gearFlat) H.gearFlat = (m, st, e) => { const w = (DATA.gear[m.id] && DATA.gear[m.id][e.w]) || { atk: 0 }; const jid = m.__job || (HUMANS.includes(m.id) ? rec(m.id).cur : null);
+    st.atk += Math.round(w.atk * (jid ? affOf(m.id, jid) : 1)); st.def += (DATA.armor[e.a] || { def: 0 }).def; };
   const nodeName = n => n.skill ? DATA.skills[n.skill].name : n.name, nodeDesc = n => n.skill ? DATA.skills[n.skill].desc : n.desc;
   const treeCost = (r, jid) => ((r.tree && r.tree[jid]) || []).reduce((a, id) => { const n = JOB[jid] && JOB[jid].tree.find(x => x.id === id); return a + (n ? n.cost : 0); }, 0);
   const SP_MASTER = 2; // マスター時の ボーナスSP
@@ -229,6 +238,7 @@
   // ---------- 画面 ----------
   const SN = { hp: 'HP', mp: 'MP', atk: 'こうげき', def: 'ぼうぎょ', spd: 'すばやさ' };
   const PN = { crit: '会心', regen: '毎ターン回復', mpSave: '消費MP', healUp: '回復量', aura: '味方全員 毎ターン回復', first: '先制' };
+  const esc0 = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
   const pct = v => `${v > 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)}%`;
   const effTxt = j => [...Object.entries(j.mul).map(([k, v]) => `${SN[k]}${pct(v)}`), ...Object.entries(j.pas).map(([k, v]) => k === 'mpSave' ? `${PN[k]}${pct(-v)}` : `${PN[k]}${pct(v)}`)].join('　') || '補正なし（バランス型）';
   const mbTxt = j => Object.entries(j.mb).map(([k, v]) => `${SN[k] || PN[k]}${pct(v)}`).join('・');
@@ -270,7 +280,7 @@
         <div class="shop-body"><div class="slist">${DATA.jobs.map((jj, i) => { const l = jlv(r, jj.id), u = unlocked(r, jj), c = r.cur === jj.id;
           return `<button class="srow jrow${i === sel ? ' on' : ''}${u ? '' : ' dis'}" data-i="${i}"><span class="ji">${u ? jj.icon : '🔒'}</span><span>${jj.name}${c ? '<i class="now">いま</i>' : ''}<small>${u ? (l >= MAXLV ? '★マスター' : `JP ${r.jp[jj.id] || 0}/${NEED[l + 1]}`) : `${jj.adv}職 マスターで 解放`}</small><div class="xp"><i style="width:${bar(jj)}%"></i></div></span><span class="pr">Lv${l}</span></button>`; }).join('')}</div>
         <div class="sdet"><h4>${j.icon} ${j.name}　<small class="xpn">Lv${lvj}${lvj >= MAXLV ? '（マスター）' : `　つぎまで ${NEED[lvj + 1] - jp}JP`}</small>${btn}</h4>
-          <div>${j.desc}</div>${!ok ? `<div class="jlock">${lockTxt}</div>` : ''}<div class="jeff">職業の 効果：${effTxt(j)}</div><div class="st-eq" style="margin-top:0">マスター特典（ずっと）：${mbTxt(j)}${lvj >= MAXLV ? ' ✓' : ''}</div>${eqCats}${planHtml}
+          <div>${j.desc}</div>${!ok ? `<div class="jlock">${lockTxt}</div>` : ''}<div class="jeff">職業の 効果：${effTxt(j)}</div><div class="jeff">${esc0(DATA.gear[m.id] ? '武器の 相性：' + affTxt(affOf(m.id, j.id)) : '')}</div><div class="st-eq" style="margin-top:0">マスター特典（ずっと）：${mbTxt(j)}${lvj >= MAXLV ? ' ✓' : ''}</div>${eqCats}${planHtml}
           <div class="jcols"><div><div class="cmp-row">${face(m)}<span>${K.esc(K.nameOf(m))}　Lv${m.lv}<br><small class="xpn">いま：${JOB[r.cur].name} Lv${jlv(r, r.cur)}　SP ${g.sp[m.id] || 0}</small></span><span></span></div><table class="jst">${stRows}</table></div>
           <div><div class="st-eq" style="margin:0 0 2px">${isCur ? `職業ツリー（SPで 覚える・のこり <b>${g.sp[m.id] || 0}</b>SP）` : '職業ツリー（転職すると SPで 覚えられる）'}</div><ul class="jsk jtree">${skl}</ul></div></div>
           </div></div>`;

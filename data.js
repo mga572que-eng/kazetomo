@@ -540,8 +540,8 @@ Object.assign(DATA.skills, {
   hasami: { name: 'きょだいばさみ', tg: 'one', power: 2.0 },
   denkou: { type: 'light', name: 'でんこう', tg: 'all', power: 1.05, ail: ['para', .25] },
   kurasumi: { type: 'dark', name: 'やみの すみ', tg: 'all', power: 1.0, ail: ['poison', .3] },
-  fukamikui: { type: 'dark', name: '深み喰らい', tg: 'all', power: 1.95, drain: 20 },
-  shinkai: { type: 'water', name: '深海の 圧', tg: 'all', power: 2.05 },
+  fukamikui: { type: 'dark', name: '深み喰らい', tg: 'all', power: 1.7, drain: 10, drainOne: true }, // v10：1.95・全員MP20 → 1.7・1人MP10（立て直せるように）
+  shinkai: { type: 'water', name: '深海の 圧', tg: 'all', power: 1.65 }, // v10：2.05 → 1.65
   kaiko: { type: 'water', name: '大渦の 咆哮', tg: 'all', power: 1.9 },
 });
 Object.assign(DATA.species, {
