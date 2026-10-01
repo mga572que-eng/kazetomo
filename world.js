@@ -904,7 +904,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
 
     const PlV = planesOf(VP, plV);
     // blocks: 16m バケツ順に 並べ替えて アップロード（描画は 可視バケツの 連続区間ごと）
-    if (blocksDirty) { const L = []; for (const [k, t] of blocks) { if (L.length >= 9000) break; const [x, y, z] = k.split(',').map(Number); L.push([((Math.floor(x / 16) + 64) << 8) | (Math.floor(z / 16) + 64), x, y, z, t]); }
+    if (blocksDirty) { const L = []; for (const [k, t] of blocks) { if (t === 19) continue; /* 19＝見えない 当たり判定（家具など） */ if (L.length >= 9000) break; const [x, y, z] = k.split(',').map(Number); L.push([((Math.floor(x / 16) + 64) << 8) | (Math.floor(z / 16) + 64), x, y, z, t]); }
       L.sort((a, b) => a[0] - b[0]); blockN = L.length; bkts = [];
       L.forEach((e, i) => { blockData[i * 4] = e[1]; blockData[i * 4 + 1] = e[2]; blockData[i * 4 + 2] = e[3]; blockData[i * 4 + 3] = e[4]; let b = bkts[bkts.length - 1];
         if (!b || b.k !== e[0]) bkts.push(b = { k: e[0], s: i, n: 0, x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9 });

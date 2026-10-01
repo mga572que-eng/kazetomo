@@ -63,7 +63,7 @@
   const M = { lampOn: W.makeMesh(lampGeo(true), 40), lampOff: W.makeMesh(lampGeo(false), 40), lineW: W.makeMesh(lineGeo(true), 16), line0: W.makeMesh(lineGeo(false), 16), hen: W.makeMesh(henGeo, 24), goat: W.makeMesh(goatGeo, 8), stall: W.makeMesh(stallGeo, 8), board: W.makeMesh(boardGeo, 4), bench: W.makeMesh(benchGeo, 16) };
   // ---------- 場所づくり ----------
   const thr = r => r === 2 ? 4 : .3;
-  const houseHit = (r, x, z) => K.REG[r].houses.some(h => Math.abs(x - h.x) < 3.6 && Math.abs(z - h.z) < 3.6);
+  const houseHit = (r, x, z) => [...K.REG[r].houses, ...(K.extraHouses || []).filter(h => h.r === r)].some(h => Math.abs(x - h.x) < 3.6 && Math.abs(z - h.z) < 3.6);
   const okSpot = (r, x, z) => { const g = K.hAt(x, z), y = K.surfaceAt(x, z, 99); return Number.isFinite(y) && g >= thr(r) && Math.abs(y - g) < .4 && !K.blocked(x, z, y) && !houseHit(r, x, z) && [[.8, 0], [-.8, 0], [0, .8], [0, -.8]].every(([a, b]) => !K.blocked(x + a, z + b, y) && Math.abs(K.hAt(x + a, z + b) - g) < .7); };
   const near = (r, c, r0, r1, seed, n = 1, avoid = []) => { const out = []; let s = seed * 9301 + 49297; const rn = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
     for (let k = 0; k < 400 && out.length < n; k++) { const a = rn() * 6.283, d = r0 + rn() * (r1 - r0), x = c.x + Math.cos(a) * d, z = c.z + Math.sin(a) * d; if (okSpot(r, x, z) && ![...out, ...avoid].some(p => dist(p, { x, z }) < 2.2)) out.push({ x, z }); } return out; };
@@ -73,7 +73,7 @@
   function setupTown(T) { if (towns[T.key]) return towns[T.key]; const c = T.at(); if (!c) return null; const r = T.r; const prev = W.region; W.setRegion(r);
     try {
       const S = { T, c, r, seed: T.key.length * 131 + T.r * 17 };
-      const hs = K.REG[r].houses.filter(h => dist(h, c) < 42);
+      const hs = [...K.REG[r].houses, ...(K.extraHouses || []).filter(h => h.r === r && !/^ruin/.test(h.id))].filter(h => dist(h, c) < 42);
       S.homes = hs.map(door).filter(p => p && okSpot(r, p.x, p.z)); if (S.homes.length < 3) S.homes.push(...near(r, c, 18, 30, S.seed + 1, 4 - S.homes.length));
       S.plaza = near(r, c, 3, 9, S.seed + 2, 6, S.homes);
       const shop = hs.filter(h => /item|weapon|sitem/.test(h.id)).map(door).filter(Boolean); S.market = shop.length ? shop : S.plaza.slice(0, 2);
@@ -155,5 +155,5 @@
   // ---------- 物価（宿・道具屋の 買値に かける） ----------
   K.townHere = () => { const r = K.G.region, pl = K.player; return TOWNS.find(t => t.r === r && t.at() && dist(t.at(), pl) < 45) || null; };
   H.priceK = () => { const t = K.townHere(); return t ? t.price : 1; };
-  K.townLife = { on: true, TOWNS, towns, people, plan, setupTown };
+  K.townLife = { on: true, TOWNS, towns, people, plan, setupTown, near, okSpot };
 })();
