@@ -7,8 +7,8 @@
 
   // ---------------- 1. セーブデータのしょきかとごかんせいかくほ ----------------
   const initialize = g => {
-    g.monEq = g.monEq || {};       // { [uid]: 'm_collar_wata' } なかまモンスターのそうびひん
-    g.monAwake = g.monAwake || {}; // { [uid]: 1 } なつきど100かくせいフラグ
+    g.monEq = g.monEq && typeof g.monEq === 'object' && !Array.isArray(g.monEq) ? g.monEq : {};       // { [uid]: 'm_collar_wata' } なかまモンスターのそうびひん
+    g.monAwake = g.monAwake && typeof g.monAwake === 'object' && !Array.isArray(g.monAwake) ? g.monAwake : {}; // { [uid]: 1 } なつきど100かくせいフラグ
     g.inv = g.inv || {};
   };
   H.load.push(initialize); H.init.push(initialize); initialize(G());
@@ -242,7 +242,8 @@
   // そうびへんこうダイアログ
   async function changeMonGearMenu(m) {
     const g = G();
-    const eqKey = g.monEq && g.monEq[m.uid];
+    const storedKey = g.monEq && g.monEq[m.uid];
+    const eqKey = DATA.monGear[storedKey] ? storedKey : null;
     const usableGears = Object.keys(g.inv).filter(k => DATA.monGear[k] && g.inv[k] > 0 && canEquipMon(m, k));
 
     const items = [
@@ -265,6 +266,7 @@
       K.toast('そうびを はずした', 1200);
     } else {
       const pickKey = usableGears[eqKey ? sel - 1 : sel];
+      if (!pickKey || !(g.inv[pickKey] > 0) || !canEquipMon(m, pickKey)) return;
       if (eqKey) g.inv[eqKey] = (g.inv[eqKey] || 0) + 1; // つけかえときはきゅうそうびをインベントリへ
       g.inv[pickKey]--;
       g.monEq[m.uid] = pickKey;
@@ -272,28 +274,35 @@
       K.toast(`${DATA.monGear[pickKey].name}を そうびした！`, 1400);
     }
 
-    const hr = m.st.hp ? m.hp / m.st.hp : 1;
-    K.calc(m);
-    m.hp = Math.max(1, Math.round(m.st.hp * hr));
-    K.save();
+    refitVitals(m);
+    if (!K.save()) K.toast('そうびの きろくを ほぞんできませんでした');
     K.hud();
+  }
+
+  // HP0を保ち、最大値の変化でHP/MPがあふれないようにする。
+  function refitVitals(m) {
+    const alive = m.hp > 0, hr = m.st.hp > 0 ? m.hp / m.st.hp : 0;
+    const mr = m.st.mp > 0 ? m.mp / m.st.mp : 0;
+    K.calc(m);
+    m.hp = alive ? Math.min(m.st.hp, Math.max(1, Math.round(m.st.hp * hr))) : 0;
+    m.mp = Math.min(m.st.mp, Math.max(0, Math.round(m.st.mp * mr)));
   }
 
   // かくせいイベント
   async function awakeEvent(m) {
     const g = G();
+    if (g.monAwake[m.uid] || (m.bond || 0) < 100) return;
+    const soraPresent = g.team.includes('sora');
     Music.jingle('light', K.fieldSong());
     await K.say([
       `${K.nameOf(m)}と ${G().name}の ふかい きずなが、 まばゆい ひかりを はなった！`,
-      who('sora', 'joy', `${K.nameOf(m)}！ からだから ひかりが あふれてるよ！`),
+      ...(soraPresent ? [who('sora', 'joy', `${K.nameOf(m)}！ からだから ひかりが あふれてるよ！`)] : []),
       `${K.nameOf(m)}は「きずなかくせい」を とげた！`,
-      '（ぜんのうりょくが おおはばに じょうしょうし、 まいターン HPが じどうかいふくするように なった！）'
+      '（さいだいHP・MPと こうげき・ぼうぎょが あがり、 まいターン HPが じどうかいふくする！）'
     ]);
     g.monAwake[m.uid] = 1;
-    const hr = m.st.hp ? m.hp / m.st.hp : 1;
-    K.calc(m);
-    m.hp = Math.round(m.st.hp * hr);
-    K.save();
+    refitVitals(m);
+    if (!K.save()) K.toast('かくせいの きろくを ほぞんできませんでした');
     K.hud();
   }
 
