@@ -1,0 +1,12 @@
+{
+  "name": "kazetomo",
+  "private": true,
+  "scripts": {
+    "dev": "node dev-server.mjs",
+    "check": "node check.mjs",
+    "backup": "node backup.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
