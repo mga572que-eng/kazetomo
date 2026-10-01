@@ -33,3 +33,37 @@
   H.load.push(g => { if (g.jobLog && typeof g.jobLog !== 'object') g.jobLog = null; log(); });
   K.jobField = { log, TABLE, MAX_PER_BATTLE };
 })();
+
+// ---------- 職業の 支援（パーティの だれかが その 職業なら 効く） ----------
+(() => {
+  const K = window.KZ; if (!K || !K.HOOK) return; const H = K.HOOK, G = () => K.G;
+  const PERK = {
+    minarai: '地図に まだ 開けていない 宝箱が 出る', senshi: '岩を 少ない 回数で こわせる', mahou: '夜の 灯りが 広くなる', souryo: '歩くと 少しずつ HPが 回復',
+    touzoku: '戦闘で「ぬすむ」・ときどき 戦利品', butouka: 'がんばりの 回復が はやい', ginyuu: '敵に 追いかけられにくい', yuutou: '歩くと 少し 回復・戦いの 稼ぎ +10%',
+    shounin: '売値が 5割に・戦いの 稼ぎ +25%', kariudo: '採取で 1つ 多く 手に入る' };
+  for (const j of DATA.jobs || []) if (PERK[j.id] && !j.desc.includes('【仲間に いると】')) j.desc += `　【仲間に いると】${PERK[j.id]}`;
+  const jobPerk = id => { const g = G(); if (!g || !g.party || !g.job) return false; return g.party.some(m => m.kind === 'human' && g.job[m.id] && g.job[m.id].cur === id); };
+  K.jobPerk = jobPerk; K.jobPerkText = PERK;
+  // 歩くと 回復（4m ごとに 僧侶 2%・勇灯 1%）・がんばり（武闘家）
+  let walkAcc = 0, lastX = null, lastZ = null, wasBattle = false, g0 = 0;
+  H.frame.push(dt => { const g = G(), P = K.player; if (!g || !P) return;
+    // 戦いの 稼ぎ（開始時の 所持金を おぼえる）
+    if (K.B && K.B.active && !wasBattle) { wasBattle = true; g0 = g.gold; g.goldSpentB = 0; } else if (!(K.B && K.B.active)) wasBattle = false;
+    if (K.phase !== 'field' || K.busy || (K.B && K.B.active)) { lastX = null; return; }
+    if (jobPerk('butouka') && g.stam < g.stamMax) g.stam = Math.min(g.stamMax, g.stam + dt * 8);
+    const moved = lastX == null ? 0 : Math.hypot(P.x - lastX, P.z - lastZ); lastX = P.x; lastZ = P.z;
+    const rate = jobPerk('souryo') ? .02 : jobPerk('yuutou') ? .01 : 0; if (!rate || moved > 3) return; // ワープ等の 大きな 移動は 数えない
+    walkAcc += moved; if (walkAcc < 4) return; walkAcc = 0;
+    for (const m of K.allMembers()) if (m.hp > 0 && m.st && m.hp < m.st.hp) m.hp = Math.min(m.st.hp, m.hp + Math.max(1, Math.round(m.st.hp * rate))); });
+  H.battleEnd.push(result => { const g = G(); if (result !== 'win' || !g) return; const earned = g.gold - g0 + (g.goldSpentB || 0); g.goldSpentB = 0; if (earned <= 0) return;
+    const r = jobPerk('shounin') ? .25 : jobPerk('yuutou') ? .1 : 0; if (!r) return; const b = Math.max(1, Math.round(earned * r)); g.gold += b;
+    const L = K.jobField.log(); L.gold = (L.gold || 0) + b; K.toast(`${jobPerk('shounin') ? '商人' : '勇灯'}の おかげで ＋${b}G`, 1400); K.hud(); });
+  // 採取 +1（狩人）：フィールドで 素材を 拾ったとき
+  const GATHER = ['maki', 'ishi', 'ha', 'kinoko', 'mi', 'suna', 'kumowata'];
+  let adding = false;
+  H.gain.push((k, n) => { if (adding || !GATHER.includes(k) || K.phase !== 'field' || K.busy || K.MENUS.length || (K.B && K.B.active) || !jobPerk('kariudo')) return;
+    adding = true; try { G().inv[k] = (G().inv[k] || 0) + 1; const L = K.jobField.log(); L.gather = (L.gather || 0) + 1; } finally { adding = false; } });
+  // 地図に 宝箱（見習い）
+  H.mapMarks.push((r, pos) => { if (!jobPerk('minarai')) return []; const R = K.REG[r]; if (!R || !R.chests) return [];
+    return R.chests.filter(c => !G().chests[c.id]).map(c => `<span class="mk" style="${pos(c.x, c.z)}" title="宝箱">🎁</span>`); });
+})();

@@ -312,6 +312,7 @@ let G = { v: 3, name: 'ソラ', region: 0, party: [], mons: [], team: [], inv: {
   dex: { seen: {}, got: {} }, stam: 100, stamMax: 100, hpBonus: 0, seeds: 0, seedGot: {}, chests: {}, bounties: [], bountyDone: 0, rewards: {}, mat: 0, lit: [0, 0, 0, 0, 0], guard: [0, 0, 0, 0, 0], placed: [[], [], [], []], pos: null, wtrial: [{}, {}, {}], wind: [0, 0, 0],
   sp: { sora: 0, mio: 0, riku: 0, sana: 0, haru: 0, kaito: 0 }, board: { sora: [], mio: [], riku: [], sana: [], haru: [], kaito: [] }, hpPct: 0, trial: [{}, {}, {}, {}, {}], itemSeen: {}, tips: {}, speed: 1, auto: false, rankClaimed: {}, bosses: 0 };
 const HUMAN_IDS = ['sora', 'mio', 'riku', 'sana', 'haru', 'kaito'];
+const goldOf = s => s && s.gold ? Math.round(s.gold * (1 + G.region)) : 0; // 商人の わざの 値段
 function calc(m) {
   const st = {};
   if (m.kind === 'human') { const d = DATA.party[m.id]; for (const k of ['hp', 'mp', 'atk', 'def', 'spd']) st[k] = d.base[k] + d.grow[k] * (m.lv - 1);
@@ -625,7 +626,7 @@ function act() {
   if (t.type === 'npc') return run(() => talk(t.o));
   if (t.type === 'tree') { t.o.hits++; t.o.shake = 1; Music.sfx('chop');
     if (t.o.hits >= 3) { t.o.state = 'fall'; t.o.t = 0; t.o.hits = 0; gain('maki', 2); let msg = '薪 +2'; if (R() < .5) { gain('ha'); msg += '  葉っぱ +1'; } floatText([t.o.x, t.o.y + 2.5, t.o.z], msg); } else floatText([t.o.x, t.o.y + 2, t.o.z], '●'.repeat(t.o.hits) + '○'.repeat(3 - t.o.hits)); return; }
-  if (t.type === 'rock') { t.o.hits++; t.o.shake = 1; Music.sfx('mine'); const iw = G.mons.some(m => SPC[m.id].type === 'earth'); const needH = iw ? 2 : 3;
+  if (t.type === 'rock') { t.o.hits++; t.o.shake = 1; Music.sfx('mine'); const iw = G.mons.some(m => SPC[m.id].type === 'earth'); const needH = Math.max(1, (iw ? 2 : 3) - (window.KZ && KZ.jobPerk && KZ.jobPerk('senshi') ? 1 : 0)); // 戦士：岩を 少ない 回数で
     if (t.o.hits >= needH) { t.o.state = 'fall'; t.o.t = 0; t.o.hits = 0; const g = iw ? 3 : 2; gain('ishi', g); let msg = `石 +${g}`; if (G.region === 1 && R() < .08) { gain('hoshikake'); msg += '  星のかけら！'; } floatText([t.o.x, t.o.y + 1.6, t.o.z], msg); } else floatText([t.o.x, t.o.y + 1.4, t.o.z], '●'.repeat(t.o.hits) + '○'.repeat(needH - t.o.hits)); return; }
   if (t.type === 'bush') { t.o.has = false; t.o.t = 0; gain('mi', 2); Music.sfx('pick'); floatText([t.o.x, t.o.y + 1.2, t.o.z], '木の実 +2'); return; }
   if (t.type === 'shroom') { t.o.has = false; t.o.t = 0; gain('kinoko'); Music.sfx('pick'); floatText([t.o.x, t.o.y + .8, t.o.z], 'キノコ +1'); return; }
@@ -1651,7 +1652,7 @@ async function runBattle(specs, opts = {}) {
   const combosFor = m => (DATA.combos || []).filter(c => (c.a === m.id || c.b === m.id || c.b === m.uid)).map(c => ({ c, partner: P.find(x => (x.id === (c.a === m.id ? c.b : c.a) || x.uid === (c.a === m.id ? c.b : c.a))) })).filter(o => o.partner && o.partner.hp > 0 && !(o.partner.sleep > 0) && m.mp >= o.c.mp && o.partner.mp >= o.c.mp);
   let turnN = 0;
   function aiPlan(m) {
-    const A = aliveP(), Fs = aliveF(); const can = sid => m.mp >= costOf(m, sid);
+    const A = aliveP(), Fs = aliveF(); const can = sid => m.mp >= costOf(m, sid) && !DATA.skills[sid].gold && !DATA.skills[sid].steal; // おまかせでは お金・ぬすむを つかわない
     if (Fs.some(f => f.charging) && m.hp < m.st.hp * .7 && !m.skills.some(sid => DATA.skills[sid].heal && can(sid))) return { type: 'guard' };
     if (Fs.some(f => f.boss) && turnN % 3 === 2) { const cb = combosFor(m).find(o => o.c.power); if (cb) return { type: 'combo', c: cb.c, partner: cb.partner, t: Fs[0] }; }
     if (A.some(a => a.ail === 'poison' || a.ail === 'burn') && !A.some(a => a.hp < a.st.hp * .45)) { const cs = m.skills.find(sid => DATA.skills[sid].cure && can(sid)); if (cs) return { type: 'skill', s: cs, t: null }; }
@@ -1678,7 +1679,7 @@ async function runBattle(specs, opts = {}) {
       if (c === 'auto') return aiPlan(m);
       if (c === -1) { if (canBack) return { type: 'back' }; continue; }
       if (c === 0) { const t = await pickFoe(null, nm0); if (t === 'auto') return aiPlan(m); if (t) return { type: 'atk', t }; continue; }
-      if (c === 1) { const i = await bmenu(sk.map(sid => { const d = DATA.skills[sid]; return { label: d.name + (d.type && d.type !== 'normal' ? ` ${typeTag(d.type)}` : ''), sub: `MP${costOf(m, sid)}`, hint: d.desc, disabled: m.mp < costOf(m, sid) }; }), `${nm0} ▸ <b>とくぎ</b>`);
+      if (c === 1) { const i = await bmenu(sk.map(sid => { const d = DATA.skills[sid]; return { label: d.name + (d.type && d.type !== 'normal' ? ` ${typeTag(d.type)}` : ''), sub: d.gold ? `${goldOf(d)}G` : `MP${costOf(m, sid)}`, hint: d.desc, disabled: m.mp < costOf(m, sid) || G.gold < goldOf(d) }; }), `${nm0} ▸ <b>とくぎ</b>`);
         if (i === 'auto') return aiPlan(m); if (i < 0) continue; const d = DATA.skills[sk[i]]; let t = null;
         if (d.tg === 'enemy') { t = await pickFoe(d.type, nm0); if (t === 'auto') return aiPlan(m); if (!t) continue; } else if (d.tg === 'ally') { t = await pickAlly(nm0); if (t === 'auto') return aiPlan(m); if (!t) continue; }
         return { type: 'skill', s: sk[i], t }; }
@@ -1716,6 +1717,7 @@ async function runBattle(specs, opts = {}) {
   }
   async function useSkill(a, id, tgt, isFoe, costPaid = false) {
     const s = DATA.skills[id];
+    if (!isFoe && !costPaid && s.gold) { const gc = goldOf(s); if (G.gold < gc) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし おかねが たりない！`); return; } G.gold -= gc; G.goldSpentB = (G.goldSpentB || 0) + gc; hud(); }
     if (!isFoe && !costPaid) { const cst = costOf(a, id); if (a.mp < cst) { await bmsg(`${nameOf(a)}は ${s.name}を つかおうとした。 しかし MPが たりない！`); return; } a.mp -= cst; redraw(); mpFx(a, cst); }
     const el = elemOf(s, a), big = s.tg === 'enemies' || s.tg === 'all' || s.tg === 'party' || !!a.boss;
     redraw(); actorOn(a, `${nameOr(a)}の ${s.name}！`); castStart(a, el, big); if (isFoe) cryOf(a, { vol: .8 }); if (big) screenFx(s.fx || (el === 'heal' ? 'heal' : 'light'));
@@ -2385,7 +2387,7 @@ function frameBody(now) {
     shinyFx = [];
     for (const e of enemies) { const d = Math.hypot(player.x - e.x, player.z - e.z);
       if (md === 'field') { const ox = e.x, oz = e.z;
-        if (d < (e.tut ? 5 : 12) && cool <= 0 && !player.glide) moveEntity(e, player.x, player.z, (night > .5 ? 5.2 : 4.3) * (e.legend ? .6 : 1), dt);
+        if (d < (e.tut ? 5 : (window.KZ && KZ.jobPerk && KZ.jobPerk('ginyuu') ? 7 : 12)) && cool <= 0 && !player.glide) moveEntity(e, player.x, player.z, (night > .5 ? 5.2 : 4.3) * (e.legend ? .6 : 1), dt);
         else { e.wt -= dt; if (e.wt <= 0) { e.tx = e.hx + (R() - .5) * 16; e.tz = e.hz + (R() - .5) * 16; e.wt = 3 + R() * 4; } moveEntity(e, e.tx, e.tz, 1.4, dt); }
         if (G.region === 2 && !e.fixedY && hAt(e.x, e.z) < 4) { e.x = e.px ?? e.hx; e.z = e.pz ?? e.hz; e.wt = 0; }
         if (!e.fixedY && blocked(e.x, e.z, e.y) && !blocked(ox, oz, e.y)) { e.x = ox; e.z = oz; e.wt = 0; } // 魔物も かべを すりぬけない
@@ -2455,7 +2457,7 @@ function frameBody(now) {
     for (let k = streaks.length - 1; k >= 0; k--) { const q = streaks[k]; q.t += dt; if (q.t > .45) { streaks.splice(k, 1); continue; } fx.push({ type: 1, p: [q.x, q.y, q.z], size: [.35, .35], grow: (1 - q.t / .45) * 2.5, tint: [.9, 1, 1] }); }
     if (puffs.length > 40) puffs.splice(0, puffs.length - 40); if (streaks.length > 30) streaks.splice(0, streaks.length - 30); }
   const lightMon = battleParty().some(m => m.kind === 'mon' && SPC[m.id].type === 'light');
-  const lan = [player.x + Math.cos(player.yaw) * .44 + Math.sin(player.yaw) * .14, player.y + .85, player.z - Math.sin(player.yaw) * .44 + Math.cos(player.yaw) * .14, lightMon ? 2.6 : 1.6];
+  const lan = [player.x + Math.cos(player.yaw) * .44 + Math.sin(player.yaw) * .14, player.y + .85, player.z - Math.sin(player.yaw) * .44 + Math.cos(player.yaw) * .14, (lightMon ? 2.6 : 1.6) * (window.KZ && KZ.jobPerk && KZ.jobPerk('mahou') ? 1.5 : 1)]; // 魔法使い：灯りが 広い
   fx.push({ type: 1, p: lan.slice(0, 3), size: [.9, .9], grow: night * .5 });
   const beaconU = new Float32Array(20); if (G.region === 0) r.beacons.forEach((b, i) => beaconU.set([b.fireAt[0], b.fireAt[1] + .25, b.fireAt[2], b.lit ? 1 : 0], i * 4));
   if (G.region === 0 && phase === 'field') { const b0 = r.beacons[0]; if (!b0.lit) b0.shards.forEach((sh, k) => { if (!(G.trial[0].got || []).includes(k)) fx.push({ type: 1, p: [sh.x, sh.y + .7, sh.z], size: [1.6, 1.6], grow: 1.5, tint: [1, .8, .35] }); }); }
