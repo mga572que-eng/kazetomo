@@ -40,3 +40,9 @@ PWA版番号はindex/pwa/sw/versionで同期（ch4.jsの?v欠落はwork/qa-audit
 - GitHub Game checksと取得したmainの構文・参照・PWA検査は成功。mainバックアップのbundle復元も確認。
 - クラウドバックアップ初回はupload-artifact v7の相対パス制限で失敗。runner.tempへコピーする修正を反映し、再実行：https://github.com/mga572que-eng/kazetomo/actions/runs/36805603525
 - SETUP_REPORT.mdの初期リモート未反映記録は過去の状態。この節を最新の進捗として扱う。
+
+## 会話と住人（2026-10-01追加）
+- talk.js: 既存APIと会話登録Lを残し、999件の追加データ・隊列/個体に基づく選択・既読保存を拡張。
+- mobs.js: 4地域各12名。HOOKで登録・描画。既存NPC/住居のIDを変更せず、障害物や入口と重ならない場所を選ぶ。配置不能なら表示を省略する。
+- 読込順は既存talk.jsの直後にmobs.js。版番号はindex/pwa/sw/versionを同期。
+- 人物の新しい過去を追加せず、ハルの物語会話はc3done/c3reunion、第4章はc4doneとsuperDoneを分離する。
