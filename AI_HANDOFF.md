@@ -11,7 +11,7 @@
 
 ## 今回の変更
 共通ルール、Claude/Gemini入口、運用手順、Node起動・構文/参照検査・Gitバックアップを追加。既存ゲームファイルは変更しない。
-GitHubのmainは初回基準のまま。環境追加は ai/codex/handoff-setup ブランチ。
+開発環境はPR #1でmainへ統合済み。作業開始は最新mainから担当別ブランチを作る。
 
 ## 構成と壊しやすい箇所
 ビルド不要のHTMLと通常スクリプト。index.htmlの順序：pwa → music → art → data → art_mon → art_face → world → game → settings → life → shrines → base → ch4 → jobs → quests → deco → ux → onboard → unstuck。
@@ -30,4 +30,11 @@ PWA版番号はindex/pwa/sw/versionで同期。現状ch4.jsだけ?vなし。既�
 担当 / 開始コミット / 終了コミット（文書更新時点の直前コミット可） / 変更ファイル / 実施した検証と結果 / 未解決 / 次の一手。
 
 ## PCに依存しない設定の追加
-.devcontainer（Node 22）、.nvmrc、GitHub検査と手動バックアップワークフロー、CLOUD_DEVELOPMENT.mdを追加。クラウド実行・リモート反映は未確認。保存はGitHubへのcommit/pushを完了条件とする。セーブはブラウザー単位で自動同期されない。
+.devcontainer（Node 22）、.nvmrc、GitHub検査と手動バックアップワークフロー、CLOUD_DEVELOPMENT.mdを追加。リモート反映・main統合とGame checks成功を確認済み。Codespacesの初回起動は未実施。保存はGitHubへのcommit/pushを完了条件とする。セーブはブラウザー単位で自動同期されない。
+
+## リモート最終確認（2026-10-01）
+- PR #1統合後、設定ファイルを所定の場所へ配置。ゲーム実行ファイルは初回基準から差分なし。
+- 確認コミット：7ddca17bbfe2d9bcdae2f4fedb18cb65b928767f（この文書更新直前）。
+- GitHub Game checksと取得したmainの構文・参照・PWA検査は成功。mainバックアップのbundle復元も確認。
+- クラウドバックアップ初回はupload-artifact v7の相対パス制限で失敗。runner.tempへコピーする修正を反映し、再実行：https://github.com/mga572que-eng/kazetomo/actions/runs/36805603525
+- SETUP_REPORT.mdの初期リモート未反映記録は過去の状態。この節を最新の進捗として扱う。
