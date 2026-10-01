@@ -1,0 +1,6 @@
+# 改行は LF にそろえる（Windows の .cmd だけ CRLF）
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.png binary
+*.jpg binary
+*.ico binary
