@@ -102,6 +102,17 @@ test('風見の村→野原の灯台の 道：歩ける・木が ない・道し
   act(page, `() => KZ.HOOK.acts.road0Sign()`); await idle(page);
 });
 
+test('道の 見晴らし：灯台を 向く・ごほうびは 1回だけ', async ({ page }) => {
+  await page.evaluate(async () => { const v = KZ.road0.viewAt(); KZ.G.flags.road0View = 0; await KZ.travel(0, v.x - 1, v.z + 1); }); await idle(page);
+  ok(await page.evaluate(() => { const v = KZ.road0.viewAt(), P = KZ.player; P.x = v.x - 1; P.z = v.z + 1; P.y = KZ.surfaceAt(P.x, P.z, 99); __dbg.sim(3); return document.getElementById('btnActLabel').textContent; }) === 'あたりを 見わたす', '見晴らしを しらべられない');
+  const m0 = await page.evaluate(() => KZ.G.inv.mi || 0);
+  act(page, `() => KZ.HOOK.acts.road0View()`); await idle(page);
+  const r = await page.evaluate(m0 => { const b = KZ.REG[0].beacons[0], P = KZ.player, want = Math.atan2(P.x - b.x, P.z - b.z), d = Math.abs(((KZ.cam.yaw - want) % 6.283 + 9.42) % 6.283 - 3.14); return { got: (KZ.G.inv.mi || 0) - m0, flag: KZ.G.flags.road0View, d }; }, m0);
+  ok(r.got === 2 && r.flag === 1, '1回めの ごほうびが ちがう：' + r.got); ok(r.d < .3, 'カメラが 灯台を 向いていない');
+  const m1 = await page.evaluate(() => KZ.G.inv.mi || 0); act(page, `() => KZ.HOOK.acts.road0View()`); await idle(page);
+  ok(await page.evaluate(m1 => (KZ.G.inv.mi || 0) === m1, m1), '2回めも ごほうびが でる');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
