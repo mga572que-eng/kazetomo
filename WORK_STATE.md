@@ -1,31 +1,28 @@
 # 作業の再開
 
-更新: 2026-10-01T23:52:13.558Z
-ブランチ: work/new-towns
-直前コミット: 642d0dce0fdbe278221bcb62eac890395cdc6c67
+更新: 2026-10-02T05:57:29.372Z
+ブランチ: work/fun-audit
+直前コミット: 452c8ebbeb6ae736acb67959a7d817d4d1414254
 
 ## 目的
-町のくらし 第3段：新しい町
+面白さ部署①カジノの作りなおし
 
 ## 完了・途中の内容
-newtowns.js：王都ルミナリア（城・世界会議）、黄金の都ラッキーナ（カジノ・劇場）、はじまりの町ブレイブ（勇者の像・道場）。townlife に町ごとの人・店番を足せる形。ブロック上限 14000。版 20261002084913
+docs/design/fun-audit.md（面白さ部署の点検）。casino.js：コイン制・景品交換所・スロット（目押し・リーチ・ジャックポット）・ハイ＆ロー（ダブルアップ）・丁半。版 20261002145533
 
 ## 次の一手
-iPhone 実機で重さとカメラ。全章通し
+②宝箱のわくわく ③ボスの怖さ ④ダンジョン
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- newtowns.js
-- townlife.js
-- interiors.js
-- world.js
-- index.html
-- sw.js
-- pwa.js
+- casino.js
+- docs/design/fun-audit.md
 - version.json
-- docs/design/town-life.md
+- index.html
+- pwa.js
+- sw.js
 
 このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
