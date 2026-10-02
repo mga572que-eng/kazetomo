@@ -142,6 +142,17 @@ test('最初の町：入口の 目じるし（食堂・工房・家）と 通り
   ok(r.length === 5 && ['cook', 'smith', 'home', 'inn', 'shop'].every(k => r.some(([kk]) => kk === k)), '目じるしが 5軒に ない：' + JSON.stringify(r)); ok(r.every(([, b]) => !b), '入口の 前が ふさがれている');
 });
 
+test('戦闘：2Dの 絵＋3Dの けしき（標準）・HPバーが 1体ずつ 分かれる', async ({ page }) => {
+  await page.evaluate(async () => { await KZ.travel(0, 30, 40); }); await idle(page);
+  await page.evaluate(() => { KZ.G.auto = false; window.__r = null; KZ.runBattle([{ sp: 'watapoko', lv: 3 }, { sp: 'iwanoko', lv: 3 }, { sp: 'mizumochi', lv: 3 }]).then(r => window.__r = r); });
+  await page.waitForSelector('#bCmd .m-battle:not(.one) .m-item', { timeout: 90000 }); await page.waitForTimeout(3500);
+  const r = await page.evaluate(() => { const b = document.getElementById('battle'), bars = [...document.querySelectorAll('.foe .bar')].map(e => e.getBoundingClientRect()).sort((a, c) => a.left - c.left);
+    return { mix: KZ.HOOK.OPT.mix, bg: b.classList.contains('bg3d'), shown: !b.hidden, stage: !!KZ.B.stage, d3: !!KZ.B.d3, gaps: bars.slice(1).map((q, i) => q.left - bars[i].right) }; });
+  ok(r.mix && r.bg && r.shown && !r.stage && !r.d3, '2D＋3Dの けしきに なっていない：' + JSON.stringify(r)); ok(r.gaps.length === 2 && r.gaps.every(g => g >= 8), 'HPバーが つながっている：' + r.gaps);
+  await page.evaluate(() => { KZ.G.auto = true; }); for (let i = 0; i < 80 && !(await page.evaluate(() => window.__r)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(250); } await idle(page);
+  ok(await page.evaluate(() => !document.getElementById('battle').classList.contains('bg3d')), '戦闘の あとに 3Dの けしきの 設定が のこる');
+}, { render: true });
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }

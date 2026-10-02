@@ -3,14 +3,15 @@
 (() => {
   const K = window.KZ; if (!K) return;
   const KEY = 'kazetomo-opt';
-  const DEF = { bgm: 75, se: 70, text: 1, quality: 'auto', lefty: false, look: 1, calm: false, ratio: 'auto', b3d: true, fall: true, fpv: false };
+  const DEF = { bgm: 75, se: 70, text: 1, quality: 'auto', lefty: false, look: 1, calm: false, ratio: 'auto', b3d: 'mix', fall: true, fpv: false };
   let O = { ...DEF }; try { Object.assign(O, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   if (O.rv !== 2) { O.ratio = 'auto'; O.rv = 2; try { localStorage.setItem(KEY, JSON.stringify(O)); } catch (e) {} } // 旧版の 比率バグ対策：一度 自動に もどす
+  if ((O.rv | 0) < 3) { if (O.b3d === true) O.b3d = 'mix'; O.rv = 3; try { localStorage.setItem(KEY, JSON.stringify(O)); } catch (e) {} } // 2026-10-03：戦闘は 2Dの 絵＋3Dの けしき を 標準に（1回だけ）
   const store = () => { try { localStorage.setItem(KEY, JSON.stringify(O)); } catch (e) {} };
   let autoMax = 2, autoQ = null;
   function apply() {
     Music.setVol(O.bgm / 100, O.se / 100);
-    K.HOOK.OPT.text = O.text; K.HOOK.OPT.look = O.look; K.HOOK.OPT.lefty = O.lefty; K.HOOK.OPT.calm = O.calm; K.HOOK.OPT.b3d = O.b3d !== false; K.HOOK.OPT.fall = O.fall !== false; K.HOOK.OPT.fpv = !!O.fpv;
+    K.HOOK.OPT.text = O.text; K.HOOK.OPT.look = O.look; K.HOOK.OPT.lefty = O.lefty; K.HOOK.OPT.calm = O.calm; K.HOOK.OPT.b3d = O.b3d === true; K.HOOK.OPT.mix = O.b3d === 'mix'; K.HOOK.OPT.fall = O.fall !== false; K.HOOK.OPT.fpv = !!O.fpv;
     document.body.classList.toggle('lefty', !!O.lefty); document.body.classList.toggle('calm', !!O.calm);
     if (O.quality === 'auto') { if (autoQ == null) autoQ = World.quality; World.setQuality(autoQ); } else World.setQuality({ low: 0, mid: 1, high: 2 }[O.quality]);
   }
@@ -54,7 +55,7 @@
           ${seg('操作の 左右', 'lefty', [[false, 'スティック左'], [true, 'スティック右']])}
           ${seg('視点', 'fpv', [[false, '三人称（うしろから）'], [true, '一人称（目線）']])}
           ${seg('落下ダメージ', 'fall', [[true, 'あり'], [false, 'なし']])}
-          ${seg('戦闘の 表示', 'b3d', [[true, '立体（3D）'], [false, '平面（2D・軽い）']])}
+          ${seg('戦闘の 表示', 'b3d', [['mix', '2Dの 絵＋3Dの けしき'], [true, '立体（3D）'], [false, '平面（2D・軽い）']])}
           ${seg('画面の ゆれ', 'calm', [[false, 'あり'], [true, 'へらす']])}
           ${seg('画面の 比率', 'ratio', [['auto', 'じどう（おすすめ）'], ['19.5:9', 'iPhone（ノッチあり）'], ['16:9', 'iPhone SE・16:9'], ['3:2', '3:2'], ['4:3', 'iPad・4:3']])}
           <p class="st-eq">いまの 画質：${['低', '中', '高'][World.quality]}（${O.quality === 'auto' ? 'じどう調整中' : '固定'}）</p>`;
