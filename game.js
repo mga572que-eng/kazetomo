@@ -704,7 +704,7 @@ function regionSpecies(r) { return DATA.speciesOrder.filter(k => SPC[k].hab && (
 function newBounty() {
   const r = R(); const pool = regionSpecies(G.region === 2 ? 2 : 1).filter(k => !SPC[k].rare && !SPC[k].legend);
   if (r < .35) { const n = [5, 8, 12][Math.floor(R() * 3)]; return { kind: 'hunt', n, c: 0, text: `かげものを ${n}体 しずめる`, gold: n * 22 }; }
-  if (r < .6) { const sp = pool[Math.floor(R() * pool.length)]; const n = 2 + Math.floor(R() * 2); return { kind: 'huntSp', sp, n, c: 0, text: `かげ${SPC[sp].name}を ${n}体 しずめる`, gold: 90 * n }; }
+  if (r < .6) { const sp = pool[Math.floor(R() * pool.length)]; const n = 2 + Math.floor(R() * 2); return { kind: 'huntSp', sp, n, c: 0, text: `${SPC[sp].name}を ${n}体 しずめる`, gold: 90 * n }; }
   if (r < .82) { const it = ['maki', 'ishi', 'suna', 'kinoko', 'mi'][Math.floor(R() * 5)]; const n = 5 + Math.floor(R() * 6); return { kind: 'give', it, n, text: `${DATA.items[it].name}を ${n}こ とどける`, gold: n * 14 }; }
   const cand = pool.filter(k => !G.dex.got[k]); const sp = cand.length ? cand[Math.floor(R() * cand.length)] : pool[0];
   return { kind: 'friend', sp, text: `${SPC[sp].name}を なかまにする`, gold: 260, give: { nakayoshi: 1 } };
@@ -1249,7 +1249,7 @@ function bAdd(cls, html, host = $('battle')) { const el = document.createElement
 const CONF = ['#ffd36a', '#ff7fb0', '#8fe06a', '#7fd0ff', '#fff6c9', '#b98cff', '#ff9a4a'];
 function confetti(n, o = {}) { let h = ''; for (let i = 0; i < n; i++) { const a = (o.a0 ?? -Math.PI) + R() * (o.arc ?? Math.PI), d = (o.d || 160) * (.4 + R() * .8);
   h += `<i class="${o.cls || 'cf'}" style="--x:${Math.cos(a) * d * 1.6}px;--y:${Math.sin(a) * d}px;--fall:${60 + R() * 120}px;--r:${Math.round(R() * 720 - 360)}deg;--c:${CONF[i % CONF.length]};--dl:${(R() * .25).toFixed(2)}s;--sz:${4 + R() * 6}px">${o.ch || ''}</i>`; } return h; }
-function cryOf(f, o = {}) { try { if (f.sp) return Music.cry(f.sp, { shadow: !SPC[f.sp].legend, ...o }); if (f.bid) return Music.cry(f.bid, { boss: true, ...o }); } catch (e) { console.error(e); } return 0; }
+function cryOf(f, o = {}) { try { if (f.sp) return Music.cry(f.sp, o); if (f.bid) return Music.cry(f.bid, { boss: true, ...o }); } catch (e) { console.error(e); } return 0; }
 $('bAuto').addEventListener('click', () => { G.auto = !G.auto; $('bStrategy').textContent = `さくせん：${strategy().name}`; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF';
   if (G.auto) for (const M of MENUS.slice().reverse()) if (M.el.classList.contains('m-battle')) closeMenu(M, 'auto'); });
 function wildLevel(x, z) { if (G.region === 0) return Math.max(1, 1 + G.order * 3 + (G.flags.cleared ? 4 : 0) + Math.floor(R() * 2));
@@ -1263,9 +1263,9 @@ function mkFoe(spec) {
       art: d.portrait ? Art.portrait(d.portrait, 'angry') : d.spArt ? Art.species(d.spArt, { shadow: true }) : Art.monster(d.art[0], d.art[1]) }; }
   const RM = G.region === 2 && !S0(spec).legend ? [1.6, 1.2, 1.1] : [1, 1, 1];
   const S = SPC[spec.sp], L = spec.lv; const st = S.base.map((b, i) => Math.round(b + S.grow[i] * (L - 1)));
-  return { foe: true, sp: spec.sp, lv: L, shiny: spec.shiny, d: {}, name: (S.legend ? '' : 'かげ') + S.name + (spec.shiny ? '★' : ''), type: S.type, hp: Math.round(st[0] * .9 * RM[0]), max: Math.round(st[0] * .9 * RM[0]), atk: Math.round(st[2] * .74 * RM[1]), def: Math.round(st[3] * .8 * RM[2]), spd: st[4],
+  return { foe: true, sp: spec.sp, lv: L, shiny: spec.shiny, d: {}, name: S.name + (spec.shiny ? '★' : ''), type: S.type, hp: Math.round(st[0] * .9 * RM[0]), max: Math.round(st[0] * .9 * RM[0]), atk: Math.round(st[2] * .74 * RM[1]), def: Math.round(st[3] * .8 * RM[2]), spd: st[4],
     skills: S.sk.filter(([, l]) => l <= L).map(([s]) => s), exp: Math.round((6 + L * 2.8) * (S.rare ? 3 : S.legend ? 6 : 1) * (S.evo ? 1 : 1.25) * (G.region === 2 ? 1.8 : 1)), gold: Math.round((4 + L * 2.3) * (G.region === 2 ? 1.8 : 1)), sleep: 0, slow: 0,
-    art: Art.species(spec.sp, { shadow: !S.legend, shiny: spec.shiny }) }; }
+    art: Art.species(spec.sp, { shiny: spec.shiny }) }; } // 敵も 本来の 色（「かげ」の 暗い 色は やめた 2026-10-03）
 async function bmsg(t, hold = 520) {
   const box = $('bMsg'); const line = document.createElement('div'); box.appendChild(line); while (box.children.length > 3) box.firstChild.remove();
   const full = t.replace(/{name}/g, G.name); bSkip = false;
@@ -2553,7 +2553,7 @@ function frameBody(now) {
           if (res === 'win') enemies = enemies.filter(x => x !== ee); else if (res === 'flee') cool = 3; else await defeated(); if (res !== 'lose') Music.play(fieldSong()); }); }
       }
       e.y = e.fixedY ?? Math.max(surfaceAt(e.x, e.z, (e.y ?? hAt(e.x, e.z)) + .5), -.5); const lead = e.group[0]; const S = SPC[lead.sp]; const ms = mSp[lead.sp];
-      if (ms.n < 14) ms.set(ms.n++, e.x, e.y + (S.arch === 'sprite' || S.arch === 'bird' || S.arch === 'fish' ? .6 + Math.sin(T * 2 + e.hx) * .2 : Math.abs(Math.sin(T * 3 + e.hx)) * .15), e.z, (e.legend ? 1 : -1) * (S.size || 1) * (1.05 + e.group.length * .08), e.yaw);
+      if (ms.n < 14) ms.set(ms.n++, e.x, e.y + (S.arch === 'sprite' || S.arch === 'bird' || S.arch === 'fish' ? .6 + Math.sin(T * 2 + e.hx) * .2 : Math.abs(Math.sin(T * 3 + e.hx)) * .15), e.z, (S.size || 1) * (1.05 + e.group.length * .08), e.yaw);
       if (e.group.some(g => g.shiny) && d < 40) shinyFx.push([e.x, e.y + 1.6, e.z]); }
     let gi = 0; if (G.region === 0) for (const b of r.beacons) if (!b.guard) { const a = Math.atan2(-b.x, -b.z); mGuard.set(gi++, b.x + Math.sin(a) * 3.2, b.y + .3 + Math.sin(T * 1.5 + b.i) * .15, b.z + Math.cos(a) * 3.2, .8 + G.order * .12, a); }
     if (G.region === 1 && G.flags.c2rumor && !G.flags.c2mid) mGuard.set(gi++, r.midboss.x, r.midboss.y + .2, r.midboss.z, 1, 0);
