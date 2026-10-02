@@ -211,7 +211,7 @@ Object.assign(DATA.enemies, {
 Object.assign(DATA.items, {
   mi: { name: '木の実', heal: 25, price: 10, sell: 4, desc: 'HPを 25 かいふく' },
   pan: { name: '実のパン', heal: 80, price: 40, sell: 15, desc: 'HPを 80 かいふく' },
-  shizuku: { name: '夜露のしずく', mp: 15, price: 60, sell: 20, desc: 'MPを 15 かいふく' },
+  shizuku: { name: '夜露のしずく', mp: 30, price: 40, sell: 20, desc: 'MPを 30 かいふく' },
   nakayoshi: { name: 'なかよしの実', battle: 'friend', price: 80, sell: 25, desc: 'せんとうで つかうと、いきものが なかまに なりやすくなる' },
   hane: { name: '帰りの羽', warp: true, price: 30, sell: 10, desc: 'いまいる 地方の 町へ 一瞬で もどる' },
   maki: { name: '薪', mat: true, sell: 3, desc: '木を 切ると 手に入る。クラフトの 材料' },

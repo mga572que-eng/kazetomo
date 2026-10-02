@@ -972,8 +972,61 @@
 #stam{left:18px!important;top:auto!important;bottom:calc(92px + env(safe-area-inset-bottom));z-index:30;width:220px;height:36px;mask:none;-webkit-mask:none;background:#13251fe8;border-radius:8px;padding:6px 10px;pointer-events:none;opacity:1}
 #stam span{display:block;font-size:11px;color:#fff;white-space:nowrap}#stam i{display:block;height:9px;background:#314538;max-width:100%;border-radius:3px;margin-top:4px}#stam i b{display:block;height:100%;background:#82e568;border-radius:3px}#stam.low{background:#3a1e17}#stam.low i b{background:#ff8156}
 @media(max-width:600px){#stam{left:12px!important;bottom:calc(135px + env(safe-area-inset-bottom));width:175px}}
+
+#orientationNotice{display:none;position:fixed;inset:0;z-index:10000;background:#0b1016;color:#fff;padding:24px;text-align:center;align-items:center;justify-content:center;flex-direction:column;gap:18px;font:18px/1.7 var(--ui);touch-action:none}
+#orientationNotice .rotate-icon{font-size:64px;line-height:1}
+#btnLandscape{min-height:44px;min-width:180px;padding:10px 18px;font:inherit}
+@media(orientation:portrait){#orientationNotice{display:flex}}
+
+/* 牧場：絵と役割を並べたカード。横画面で一覧をスクロールする。 */
+.win.menu.ranch-menu{width:min(920px,calc(100vw - 32px));max-height:calc(100dvh - 24px);overflow:auto}
+.ranch-menu .m-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ranch-pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;font:13px var(--ui)}
+.ranch-pager button{min-height:44px;padding:6px 18px}.ranch-pager button:disabled{opacity:.4}
+.ranch-filters{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.ranch-filters button{min-height:44px;padding:6px 12px;font:14px var(--ui)}
+.ranch-filters button[aria-pressed="true"]{background:var(--gold);color:#211c12}
+.ranch-menu .m-item.ranch-card{display:block;position:relative;padding:12px;text-align:left;min-height:174px;white-space:normal}
+.ranch-menu .ranch-card .m-l{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:start;white-space:normal}
+.ranch-card .m-cur{position:absolute;left:2px;top:12px}
+.ranch-art{display:grid;place-items:center;min-height:96px;background:radial-gradient(ellipse,#30476b,#131c30);border-radius:12px}
+.ranch-art svg{width:84px;height:96px;max-width:100%}
+.ranch-info{display:flex;flex-direction:column;gap:5px;font:13px/1.45 var(--ui);min-width:0;overflow-wrap:anywhere}
+.ranch-name{font-size:17px;font-weight:700;color:#fff}.ranch-name small{font-size:14px;color:var(--gold)}
+.ranch-badges{display:flex;flex-wrap:wrap;gap:4px}.ranch-badges>span{padding:3px 7px;border-radius:6px;font-size:12px;background:#314665;color:#fff}
+.ranch-badges .role-heal{background:#185d4a}.ranch-badges .role-attack{background:#793c37}.ranch-badges .role-guard{background:#355a83}.ranch-badges .role-speed{background:#514182}.ranch-badges .role-support{background:#725328}
+.ranch-badges .ranch-rec{background:#f3c15a;color:#261e0c}.ranch-badges .ranch-team{background:#486436}
+.ranch-count,.ranch-future{color:#c3cedf;font-size:12px}.ranch-strength{color:#ffe0a0}.ranch-advice{color:#b5ddcf;font-size:12px}
+@media(max-width:680px){.ranch-menu .ranch-card .m-l{grid-template-columns:58px minmax(0,1fr);gap:7px}.ranch-art svg{width:58px;height:76px}.ranch-art{min-height:76px}.ranch-menu .m-item.ranch-card{padding:9px}.ranch-name{font-size:15px}}
+
+
+  /* 横画面：HP/MPとコマンドの読みやすさを優先 */
+  #battle .pc-num{font:13px/1.35 var(--ui);color:#fff;white-space:normal}
+  #battle .pc-num b{font-weight:800;color:#fff}#battle .pc-name{font:700 15px/1.3 var(--ui)}
+  #battle .pc.act{border-color:#ffe38a;background:#243653;box-shadow:0 0 0 2px #ffe38a}
+  #battle .pc .bar{height:7px}#battle .pc .bar.mp i{background:#65b9ff}
+  #battle #bMsg{background:rgba(9,16,34,.96);font:15px/1.55 var(--ui)}
+  #battle .m-battle .m-item{min-height:44px}#battle .m-battle .m-h{white-space:normal;font:12px/1.35 var(--ui);color:#e5edff}
+  #battle .bctl .chip-btn{min-width:0;font:13px var(--ui);padding:0 9px}
+  #battle .bctl{flex-wrap:wrap;max-width:70vw}
+  #battle .b-join{position:absolute;z-index:60;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,90vw);display:grid;grid-template-columns:110px 1fr;gap:14px;padding:16px;background:#101e36;border:3px solid #ffe38a;pointer-events:none}
+  .b-join svg{width:110px;height:110px}.b-join h3{font:700 18px var(--ui);color:#ffe38a}.b-join p{font:14px/1.5 var(--ui)}
+  .map .mk.me,.map .mk.goal{z-index:8;font:700 13px var(--ui);padding:4px 6px;border:2px solid #fff;border-radius:8px;background:#0d3152;text-shadow:none;animation:none;box-shadow:0 2px 6px #000}
+  .map .mk.goal{background:#583d00;color:#ffec91}.map .mk.me{color:#fff}.map .mk i{font-style:normal}
+  #mapGoalText{position:absolute;right:calc(24px + clamp(92px,24vh,132px) + var(--sr));top:calc(56px + var(--st));max-width:160px;background:#0e2039eF;color:#ffe38a;border-radius:6px;padding:4px 7px;font:700 12px/1.35 var(--ui);pointer-events:none}
+  @media(orientation:landscape) and (max-height:500px){
+    #battle .pc-face{width:32px;height:32px}#battle .pc{padding:4px;gap:4px}#battle .pc-wpn{display:none}
+    #battle .pc-name{font-size:13px}#battle .pc-num{font-size:12px}
+    #battle #bBottom{height:clamp(150px,39vh,190px)}
+    #battle .bctl{bottom:calc(clamp(150px,39vh,190px) + 14px + env(safe-area-inset-bottom,0px))}
+    #battle .m-battle .m-h{display:block;max-height:3em;overflow:auto}
+    #battle .m-battle .m-s{font-size:13px;color:#ffe38a}
+    #battle .b-join{grid-template-columns:80px 1fr;padding:10px}.b-join svg{width:80px;height:80px}
+  }
+
 </style>
 
+<div id="orientationNotice" role="alert" aria-live="polite"><span class="rotate-icon" aria-hidden="true">↻</span><strong>スマホを よこむきに してください</strong><button id="btnLandscape" type="button">よこむきにする</button><span id="orientationHelp">このゲームは よこむきで あそびます。<br>よこむきにすると、つづきから あそべます。</span></div>
 <canvas id="game" aria-label="ともしびアイランド ゲーム画面"></canvas>
 <div class="fallback" id="fallback" hidden>このブラウザは WebGL2 に対応していないため、遊べません。</div>
 
@@ -997,7 +1050,7 @@
   <div id="bParty"></div>
   <div id="bFoes"></div>
   <div id="bBottom"><div id="bCmd"></div><div class="win" id="bMsg"></div></div>
-  <div class="bctl"><button class="chip-btn" id="bSpd" type="button">はやさ ×1</button><button class="chip-btn" id="bAuto" type="button">おまかせ OFF</button></div>
+  <div class="bctl"><button class="chip-btn" id="bSpd" type="button">はやさ ×1</button><button class="chip-btn" id="bStrategy" type="button">さくせん：バランス</button><button class="chip-btn" id="bAuto" type="button">おまかせ OFF</button></div>
 </div>
 <div class="bflash" id="bFlash"></div><div id="bfx" style="position:fixed;inset:0;pointer-events:none;z-index:32"></div>
 <div id="swipe"></div>
@@ -1017,49 +1070,44 @@
 <button class="chip-btn" id="btnMute" type="button">♪ ON</button>
 <div id="rotate"><div><svg width="64" height="64" viewBox="0 0 64 64"><rect x="18" y="6" width="28" height="52" rx="5" fill="none" stroke="#f4f0e6" stroke-width="3"/><circle cx="32" cy="51" r="2.5" fill="#f4f0e6"/></svg><p>端末を 横に してあそんでね</p></div></div>
 
-<script src="pwa.js?v=20261002152829"></script>
-<script src="music.js?v=20261002152829"></script>
-<script src="art.js?v=20261002152829"></script>
-<script src="data.js?v=20261002152829"></script>
-<script src="art_mon.js?v=20261002152829"></script>
-<script src="art_face.js?v=20261002152829"></script>
-<script src="world.js?v=20261002152829"></script>
-<script src="game.js?v=20261002152829"></script>
-<script src="settings.js?v=20261002152829"></script>
-<script src="life.js?v=20261002152829"></script>
-<script src="shrines.js?v=20261002152829"></script>
-<script src="base.js?v=20261002152829"></script>
-<script src="ch4.js?v=20261002152829"></script>
-<script src="jobs.js?v=20261002152829"></script>
-<script src="quests.js?v=20261002152829"></script>
-<script src="deco.js?v=20261002152829"></script>
-<script src="ux.js?v=20261002152829"></script>
-<script src="onboard.js?v=20261002152829"></script>
-<script src="unstuck.js?v=20261002152829"></script>
-<script src="names.js?v=20261002152829"></script>
-<script src="balance.js?v=20261002152829"></script>
-<script src="battle3d.js?v=20261002152829"></script>
-<script src="talk.js?v=20261002152829"></script>
-<script src="town.js?v=20261002152829"></script>
-<script src="mobs.js?v=20261002152829"></script>
-<script src="monplus.js?v=20261002152829"></script>
-<script src="gemini-talk.js?v=20261002152829"></script>
-<script src="jobfield.js?v=20261002152829"></script>
-<script src="lighthouses.js?v=20261002152829"></script>
-<script src="townlife.js?v=20261002152829"></script>
-<script src="interiors.js?v=20261002152829"></script>
-<script src="newtowns.js?v=20261002152829"></script>
-<script src="recipes.js?v=20261002152829"></script>
-<script src="payoff.js?v=20261002152829"></script>
-<script src="titles2.js?v=20261002152829"></script>
-<script src="weather.js?v=20261002152829"></script>
-<script src="townbuildings.js?v=20261002152829"></script>
-<script src="fieldexplore.js?v=20261002152829"></script>
-<script src="fieldtravel.js?v=20261002152829"></script>
-<script src="adventurelife.js?v=20261002152829"></script>
-<script src="casino.js?v=20261002152829"></script>
-<script src="chestfx.js?v=20261002152829"></script>
-<script src="bossfx.js?v=20261002152829"></script>
-<script src="dungeonfx.js?v=20261002152829"></script>
-<script src="perf.js?v=20261002152829"></script>
+<script src="pwa.js?v=20261002164000"></script>
+<script src="music.js?v=20261002164000"></script>
+<script src="art.js?v=20261002164000"></script>
+<script src="data.js?v=20261002164000"></script>
+<script src="art_mon.js?v=20261002164000"></script>
+<script src="art_face.js?v=20261002164000"></script>
+<script src="world.js?v=20261002164000"></script>
+<script src="game.js?v=20261002164000"></script>
+<script src="settings.js?v=20261002164000"></script>
+<script src="life.js?v=20261002164000"></script>
+<script src="shrines.js?v=20261002164000"></script>
+<script src="base.js?v=20261002164000"></script>
+<script src="ch4.js?v=20261002164000"></script>
+<script src="jobs.js?v=20261002164000"></script>
+<script src="quests.js?v=20261002164000"></script>
+<script src="deco.js?v=20261002164000"></script>
+<script src="ux.js?v=20261002164000"></script>
+<script src="onboard.js?v=20261002164000"></script>
+<script src="unstuck.js?v=20261002164000"></script>
+<script src="names.js?v=20261002164000"></script>
+<script src="balance.js?v=20261002164000"></script>
+<script src="battle3d.js?v=20261002164000"></script>
+<script src="talk.js?v=20261002164000"></script>
+<script src="town.js?v=20261002164000"></script>
+<script src="mobs.js?v=20261002164000"></script>
+<script src="monplus.js?v=20261002164000"></script>
+<script src="gemini-talk.js?v=20261002164000"></script>
+<script src="jobfield.js?v=20261002164000"></script>
+<script src="lighthouses.js?v=20261002164000"></script>
+<script src="townlife.js?v=20261002164000"></script>
+<script src="interiors.js?v=20261002164000"></script>
+<script src="newtowns.js?v=20261002164000"></script>
+<script src="recipes.js?v=20261002164000"></script>
+<script src="payoff.js?v=20261002164000"></script>
+<script src="titles2.js?v=20261002164000"></script>
+<script src="weather.js?v=20261002164000"></script>
+<script src="townbuildings.js?v=20261002164000"></script>
+<script src="fieldexplore.js?v=20261002164000"></script>
+<script src="fieldtravel.js?v=20261002164000"></script>
+<script src="adventurelife.js?v=20261002164000"></script>
 </html>

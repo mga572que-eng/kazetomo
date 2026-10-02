@@ -83,7 +83,7 @@
   };
   const prevSpeed=H.travelSpeed;H.travelSpeed=base=>{base=prevSpeed?prevSpeed(base):base;if(!mounted())return base;if(ride.kind==='boat')return water()?8.5:base;return Math.min(12,base*(ride.kind==='horse'?1.65:1.4));};
   const prevSurface=H.travelSurface;H.travelSurface=ground=>{ground=prevSurface?prevSurface(ground):ground;return mounted()&&ride.kind==='boat'&&water()?Math.max(.05,ground):ground;};
-  const prevStamina=H.travelStamina;H.travelStamina=amount=>mounted()&&ride.kind==='boat'?0:prevStamina?prevStamina(amount):amount;
+  const prevStamina=H.travelStamina;H.travelStamina=amount=>mounted()?0:prevStamina?prevStamina(amount):amount;
   async function rideMenu(){const items=[{label:'あるく',kind:'walk'},{label:'うまに のる',kind:'horse',disabled:!K.G.travel.horse||K.G.region>1},{label:'ふねに のる（水のうえ）',kind:'boat',disabled:!K.G.travel.boat||!water()}];
     for(const ref of K.G.team){const m=K.member(ref);if(m?.kind==='mon'&&m.hp>0)items.push({label:`${DATA.species[m.id].name}に のる`,kind:'mon',ref});}
     const n=await K.menu({title:'のりもの',items});if(n<0)return;const a=items[n];if(a.kind==='walk'){ride=null;return;}if(!board(a.kind,a.ref))K.toast('ここでは のれない。 そとで ためしてみよう。',1800);

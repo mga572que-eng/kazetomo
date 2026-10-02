@@ -110,11 +110,12 @@
 
   // ---------- 6. ミニマップ（方角つき） ----------
   const mm = document.createElement('canvas'); mm.id = 'mmap'; mm.width = mm.height = 200; mm.setAttribute('aria-label', 'ミニマップ（タップで 地図）');
-  const hud = $('hud'); if (hud) hud.appendChild(mm);
+  const goalText=document.createElement('div'); goalText.id='mapGoalText';
+  const hud = $('hud'); if (hud) { hud.appendChild(mm); hud.appendChild(goalText); }
   mm.addEventListener('click', e => { e.stopPropagation(); if (K.phase === 'field' && !K.busy) K.run(K.mapPanel); });
   const imgs = {}; const mapImg = rg => { if (imgs[rg]) return imgs[rg]; const i = new Image(); i.src = K.mapImage(); imgs[rg] = i; return i; };
   let mT = 0;
-  H.frame.push(dt => { mT -= dt; if (mT > 0 || K.phase !== 'field' || hud.hidden) return; mT = .1; const c = mm.getContext('2d'), S = 200, P = K.player, rg = G().region; const img = mapImg(rg);
+  H.frame.push(dt => { mT -= dt; if (mT > 0 || K.phase !== 'field' || hud.hidden) return; mT = .1; const c = mm.getContext('2d'), S = 200, P = K.interior && K.interior.cur ? {...K.player,...K.interior.cur.back} : K.player, rg = G().region; const img = mapImg(rg);
     const yaw = K.cam2.yaw; const zoom = 2.6; const ppu = 180 / 540 * zoom; // 地図1ワールド単位あたりの px（画像 180px=540）
     const th = yaw - Math.PI, cs = Math.cos(th), sn = Math.sin(th), rot = (x, z) => [x * cs - z * sn, x * sn + z * cs];
     c.save(); c.clearRect(0, 0, S, S); c.beginPath(); c.arc(100, 100, 98, 0, 7); c.clip(); c.fillStyle = '#0b1016'; c.fillRect(0, 0, S, S);
@@ -122,7 +123,8 @@
     const dot = (x, z, col, r = 4) => { c.beginPath(); c.arc((x - P.x) * ppu, (z - P.z) * ppu, r, 0, 7); c.fillStyle = col; c.fill(); };
     for (const e of K.enemies) if (Math.hypot(e.x - P.x, e.z - P.z) < 60) dot(e.x, e.z, e.legend ? '#ffd24a' : '#ff5b5b', 3.2);
     for (const n of K.NPCS) if (n.r === rg && (!n.show || n.show()) && Math.hypot(n.x - P.x, n.z - P.z) < 70) dot(n.x, n.z, '#8fd8ff', 3);
-    const ob = (H.track && H.track()) || K.objective(); if (ob && ob.p) { const dx = (ob.p.x - P.x) * ppu, dz = (ob.p.z - P.z) * ppu, d = Math.hypot(dx, dz), mx = 86; const k = d > mx ? mx / d : 1;
+    const ob = (H.track && H.track()) || K.objective(); mm.title = ob.t + (ob.p ? ` ・あと ${Math.round(Math.hypot(ob.p.x-P.x,ob.p.z-P.z))}m` : ''); mm.setAttribute('aria-label',mm.title+'（タップで 地図）'); goalText.textContent = ob.p ? `★ あと ${Math.round(Math.hypot(ob.p.x-P.x,ob.p.z-P.z))}m` : ob.t; if (ob && ob.p) { const dx = (ob.p.x - P.x) * ppu, dz = (ob.p.z - P.z) * ppu, d = Math.hypot(dx, dz), mx = 86; const k = d > mx ? mx / d : 1;
+      c.beginPath(); c.moveTo(0,0); c.lineTo(dx*k,dz*k); c.strokeStyle='#ffe38a'; c.lineWidth=3; c.setLineDash([6,4]); c.stroke(); c.setLineDash([]);
       c.save(); c.translate(dx * k, dz * k); c.rotate(-th); c.font = 'bold 22px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#ffd24a'; c.strokeStyle = '#3a2208'; c.lineWidth = 4; c.strokeText('★', 0, 0); c.fillText('★', 0, 0); c.restore(); }
     c.restore();
     { const [vx, vy] = rot(Math.sin(P.yaw), Math.cos(P.yaw)); c.save(); c.translate(100, 100); c.rotate(Math.atan2(vy, vx) + Math.PI / 2); c.beginPath(); c.moveTo(0, -11); c.lineTo(8, 9); c.lineTo(0, 4); c.lineTo(-8, 9); c.closePath(); c.fillStyle = '#fff'; c.strokeStyle = '#1a1208'; c.lineWidth = 3; c.stroke(); c.fill(); c.restore(); }
@@ -153,7 +155,7 @@
       el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button><h3>ストーリーと クエスト</h3><div class="qtabs"><button type="button" data-tab="q" class="${tab === 'q' ? 'on' : ''}">クエスト（追跡）</button><button type="button" data-tab="s" class="${tab === 's' ? 'on' : ''}">これまでの あらすじ</button><button type="button" data-tab="l">くわしい 一覧</button></div>${body}`;
       el.querySelector('.m-x').onclick = () => { Music.sfx('cancel'); K.closeMenu(M, -1); };
       el.querySelectorAll('[data-tab]').forEach(b => b.onclick = async () => { if (b.dataset.tab === 'l') { K.closeMenu(M, -1); await K.questLog(); return; } tab = b.dataset.tab; Music.sfx('cursor'); paint(); });
-      el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { G().track = b.dataset.t; Music.sfx('ok'); K.toast(b.dataset.t === 'main' ? 'メインストーリーを 追跡' : '追跡を 切りかえた', 1000); paint(); }); };
+      el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { G().track = b.dataset.t; K.save(); Music.sfx('ok'); K.toast(b.dataset.t === 'main' ? 'メインストーリーを 追跡' : '追跡を 切りかえた', 1000); paint(); }); };
     paint(); $('ui').appendChild(el); K.MENUS.push(M); }); }
   K.storyUI = storyUI;
   H.menu.push(() => ({ label: 'ストーリー／クエスト', sub: '追跡・あらすじ', fn: storyUI }));
