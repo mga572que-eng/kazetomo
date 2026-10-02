@@ -187,3 +187,6 @@
 // ---------------- 家の 中では かべを 登らない（灯台の 中と 同じ しくみ。interiors.js は さわらない） ----------------
 (() => { const K = window.KZ; if (!K) return; const H = K.HOOK; const prev = H.noClimb;
   H.noClimb = () => !!(K.interior && K.interior.cur) || !!(prev && prev()); })();
+
+// ---------------- いきもの（敵・仲間モンスター）に 輪郭線（A案：太い 線の アニメ調）。描画は world.js の m.outline ----------------
+(() => { const K = window.KZ; if (!K || !K.mSp) return; for (const k in K.mSp) K.mSp[k].outline = .035; })();
