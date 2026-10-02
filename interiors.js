@@ -76,7 +76,7 @@
     g.searched[spot.key] = 1; Music.sfx('pick'); const L = loot(spot); await K.say([`${nm}を しらべた！`, ...L]); K.hud(); K.save(); }
   // ---------- 花の 水やり・つみとり ----------
   const BLOOM = 45; // 水を やってから さくまで（秒）
-  const gstate = id => { const g = G(); g.garden = g.garden || {}; const s = g.garden[id]; if (!s) return 0; if (s.w && (g.play || 0) - s.w >= BLOOM) return 2; return s.w ? 1 : 0; };
+  const gstate = id => { const g = G(); g.garden = g.garden || {}; const s = g.garden[id]; if (!s || !Number.isFinite(s.w)) return 0; return (g.play || 0) - s.w >= BLOOM ? 2 : 1; };
   async function garden(spot) { const g = G(); g.garden = g.garden || {}; const st = gstate(spot.key);
     if (st === 0) { g.garden[spot.key] = { w: g.play || 0 }; Music.sfx('heal'); K.toast('じょうろで 水を やった。 しばらく したら さきそうだ', 1800); K.save(); return; }
     if (st === 1) { K.toast('土が しっとり している。 もうすこし まとう', 1400); return; }
@@ -155,6 +155,6 @@
   H.labels.inSearch = t => `${NAME[t.o.kind] || 'もの'}を しらべる${searched(t.o.key) ? '（しらべた）' : ''}`;
   H.labels.garden = t => ['花に 水を やる', '花が そだっている', '花を つみとる'][gstate(t.o.key)];
   H.acts.inEnter = async h => enter(h); H.acts.inExit = async () => leave(); H.acts.inSearch = async o => search(o); H.acts.garden = async o => garden(o);
-  H.load.push(g => { g.searched = g.searched || {}; g.garden = g.garden || {}; cur = null; });
+  H.load.push(g => { g.searched = g.searched || {}; g.garden = g.garden || {}; cur = null; checked = false; });
   K.interior = { KIND, NAMEH, houses, enter, leave, get cur() { return cur; }, outdoor, outside, search, garden, gstate, ROOM };
 })();

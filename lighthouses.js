@@ -99,7 +99,7 @@
     const G = K.G; G.lhDun = G.lhDun || {}; G.lhDun[d.i] = 1; const w = d.reward, L = [`${d.name}の 最上階に たどりついた！`, '火皿の 灯が、ひときわ 明るく なった。'];
     if (w.gold) { G.gold += w.gold; L.push(`${w.gold}ゴールドを 手に入れた！`); } for (const [k, v] of Object.entries(w.give || {})) { K.gain(k, v); L.push(`${DATA.items[k].name}を ${v}こ 手に入れた！`); }
     Music.jingle('light', K.fieldSong()); await K.say(L); K.save(); K.hud(); if (await K.confirm('外へ 出ますか？')) await leave(d); };
-  H.load.push(G => { G.lhDun = G.lhDun || {}; });
+  H.load.push(G => { G.lhDun = G.lhDun || {}; checked = false; });
   // 回廊の 中で ロードしたら、灯台の 足もとへ もどす（しかけは セーブしない ため）
   let checked = false; H.frame.push(() => { if (checked || K.phase !== 'field') return; checked = true; const d = here(); if (d) { const b = K.REG[d.r].beacons[d.i]; const p = K.player; p.x = b.x + 3; p.z = b.z + 3; p.y = K.surfaceAt(p.x, p.z, 99); K.trail.length = 0; } });
   H.mapMarks.push((r, pos) => DUNS.filter(d => d.r === r && K.REG[r].beacons[d.i] && K.REG[r].beacons[d.i].lit).map(d => { const b = K.REG[r].beacons[d.i]; return `<span class="mk${done(d) ? ' lit' : ''}" style="${pos(b.x + 6, b.z + 6)}" title="${d.name}">${done(d) ? '✦' : '▣'}</span>`; }));
