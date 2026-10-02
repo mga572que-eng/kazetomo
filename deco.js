@@ -94,7 +94,7 @@
       const ex = sx + dx * 15 + .5, ez = sz + dz * 15 + .5, yaw = Math.atan2(dx, dz);
       o.boats.push([ex + px * 3.2 - dx * 3, ez + pz * 3.2 - dz * 3, yaw + .15], [ex - px * 3.4 - dx * 6, ez - pz * 3.4 - dz * 6, yaw - .2], [ex + px * 2.5 + dx * 4, ez + pz * 2.5 + dz * 4, yaw + 1.2]);
       segs.push([S.x, S.z, sx + .5 - dx * 1, sz + .5 - dz * 1, 1.05]); }
-    W.setPaths(0, segs); return o; }
+    W.setPaths(0, [...segs.slice(0, 8), ...(K.road0 ? K.road0.segs() : [])]); return o; } // シオミは これまでどおり 先頭8本、残りに 風見の村→野原の灯台の 道
   const PLACE = [place0, null, place2, place3];
 
   // ---------------- 毎フレーム ----------------
@@ -122,4 +122,36 @@
       o.posts.forEach(p => add(m.post, p[0], 0, p[1], 1, 0));
     }
   });
+})();
+
+// ---------------- 風見の村 → 野原の灯台の 道（品質の基準区間） ----------------
+// 道を 1本（地形シェーダの 道）＋ 分かれ道の 道しるべ ＋ 灯の 石（2つ）。道ぞいの 木と 岩は 消して 灯台への 見通しを つくる。
+// 灯台・村の 位置、セーブ、進行は かえない（木は 他の 町と 同じく state='gone'。保存されない）。
+(() => {
+  const K = window.KZ; if (!K || typeof World === 'undefined') return; const W = World, H = K.HOOK;
+  let P = null, cleared = false;
+  function pts() { if (P) return P; const R = K.REG && K.REG[0], T = R && R.town, b = R && R.beacons && R.beacons[0]; if (!T || !b) return null;
+    const dx = b.x - T.x, dz = b.z - T.z, L = Math.hypot(dx, dz); if (L < 30) return null; const px = -dz / L, pz = dx / L;
+    const at = (t, off) => [T.x + dx * t + px * off, T.z + dz * t + pz * off];
+    return (P = [at(10 / L, 0), at(.33, 4), at(.62, -3), at(1 - 8 / L, 0)]); }
+  const segs = () => { const p = pts(); if (!p) return []; const o = []; for (let i = 0; i < p.length - 1; i++) o.push([p[i][0], p[i][1], p[i + 1][0], p[i + 1][1], 1.1]); return o; };
+  const dSeg = (x, z, s) => { const ax = s[2] - s[0], az = s[3] - s[1], t = Math.max(0, Math.min(1, ((x - s[0]) * ax + (z - s[1]) * az) / (ax * ax + az * az || 1))); return Math.hypot(x - s[0] - ax * t, z - s[1] - az * t); };
+  const onRoad = (x, z, w = 0) => segs().some(s => dSeg(x, z, s) < 1.1 + w);
+  // 形：道しるべ（柱と 矢じるしの 板）、灯の 石
+  const sg = W.Geo(); W.prism(sg, .08, .08, 0, 1.7, 4, W.hex('#6a4a2e')); W.prism(sg, .55, .55, 1.28, 1.5, 4, W.hex('#d8b47a'), .32, 0, 1, .18); W.prism(sg, .42, .42, .98, 1.16, 4, W.hex('#b8925a'), -.24, 0, 1, .18);
+  const lg = W.Geo(); W.prism(lg, .26, .18, 0, .75, 6, W.shade([.62, .6, .56], .08)); W.ico(lg, .13, [0, .88, 0], W.solid([1, .86, .5], 1), 0, 1, 1);
+  const mSign = W.makeMesh(sg, 1), mLamp = W.makeMesh(lg, 2);
+  function clear() { const R = K.REG && K.REG[0]; if (!R || !R.trees || !R.trees.length || !pts()) return; cleared = true; for (const t of [...R.trees, ...(R.rocks || [])]) if (onRoad(t.x, t.z, 1.6)) { t.state = 'gone'; t.t = -1e9; } }
+  clear(); // 起動時に 1回（quests.js の シオミと 同じ やり方）
+  const signAt = () => { const p = pts(); return p && { x: p[1][0] + 1.6, z: p[1][1] + 1.6 }; };
+  H.frame.push(() => { mSign.n = 0; mLamp.n = 0; if (K.phase !== 'field' || K.G.region !== 0) return; const p = pts(); if (!p) return; const R = K.REG[0], pl = K.player;
+    if (!cleared) clear();
+    if (Math.hypot(pl.x - p[2][0], pl.z - p[2][1]) > 160) return; const b = R.beacons[0], s = signAt();
+    mSign.set(0, s.x, K.hAt(s.x, s.z) - .05, s.z, 1.4, Math.atan2(b.z - s.z, b.x - s.x) * -1); mSign.n = 1;
+    [p[2], [(p[2][0] + p[3][0]) / 2, (p[2][1] + p[3][1]) / 2]].forEach(([x, z], i) => { const ox = x + 1.7, oz = z - 1.7; mLamp.set(i, ox, K.hAt(ox, oz) - .05, oz, 1, 0); }); mLamp.n = 2; });
+  H.target.push(cand => { if (K.G.region !== 0) return; const s = signAt(); if (s) cand({}, 'road0Sign', s.x, s.z, 2); });
+  H.labels.road0Sign = '道しるべを 読む';
+  H.acts.road0Sign = async () => { const b = K.REG[0].beacons[0], s = signAt(), d = Math.round(Math.hypot(b.x - s.x, b.z - s.z));
+    await K.say([`道しるべ：「→ 野原の灯台（${d}m）　← 風見の村」`, b.lit ? '灯台の 灯が、ここからでも 見える。' : 'この道を まっすぐ 行けば、灯台の ふもとに 出る。']); };
+  K.road0 = { pts, segs, onRoad, signAt, get drawn() { return mSign.n + mLamp.n; } };
 })();

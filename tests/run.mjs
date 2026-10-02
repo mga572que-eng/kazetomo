@@ -92,6 +92,16 @@ test('ひとくいばこ：びっくり戦闘と ごほうび', async ({ page })
   ok(await page.evaluate(id => !!KZ.G.mimic[id], s.id), 'ひとくいばこを たおしても 記録されない'); ok(await page.evaluate(() => (KZ.G.inv.hoshikake || 0) > window.__h0), '星のかけらが もらえない');
 });
 
+test('風見の村→野原の灯台の 道：歩ける・木が ない・道しるべ', async ({ page }) => {
+  await page.evaluate(async () => { const p = KZ.road0.pts(); await KZ.travel(0, p[1][0] - 3, p[1][1] - 4); }); await idle(page);
+  const r = await page.evaluate(() => { const S = KZ.road0.segs(); let bad = 0, step = 0, prev = null; for (const s of S) for (let i = 0; i <= 40; i++) { const t = i / 40, x = s[0] + (s[2] - s[0]) * t, z = s[1] + (s[3] - s[1]) * t, h = KZ.surfaceAt(x, z, 99); if (KZ.blocked(x, z, h + .1)) bad++; if (h - KZ.hAt(x, z) < .05) step = Math.max(step, 1 - World.nAt(x, z)[1]); prev = h; }
+    const trees = [...KZ.REG[0].trees, ...KZ.REG[0].rocks].filter(t => t.state === 'ok' && KZ.road0.onRoad(t.x, t.z, 1)).length; return { n: S.length, bad, step, trees }; });
+  ok(r.n === 3, '道の 本数が ちがう：' + r.n); ok(!r.bad, `道の 上で ぶつかる 場所が ${r.bad}か所`); ok(r.step < .38, '道が 急すぎて すべる（法線y ' + (1 - r.step).toFixed(2) + '。すべるのは 0.56 未満）'); ok(!r.trees, `道の 上に 木・岩が ${r.trees}本`);
+  await page.evaluate(() => { const s = KZ.road0.signAt(), P = KZ.player; P.x = s.x - 1; P.z = s.z - 1; P.y = KZ.surfaceAt(P.x, P.z, 99); __dbg.sim(3); });
+  ok(await page.evaluate(() => document.getElementById('btnActLabel').textContent) === '道しるべを 読む', '道しるべを 読めない');
+  act(page, `() => KZ.HOOK.acts.road0Sign()`); await idle(page);
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
