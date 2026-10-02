@@ -1,17 +1,17 @@
 # 作業の再開
 
-更新: 2026-10-02T01:02:42.335Z
-ブランチ: work/weather
-直前コミット: f30ae47a940ee35acfda48f0a652b5a5f58349ae
+更新: 2026-10-02T01:08:05.882Z
+ブランチ: work/rain-lines
+直前コミット: be52448245c0f64ba5f94363c08e804845e5f92d
 
 ## 目的
-天気（雨・霧）
+雨の日の台詞
 
 ## 完了・途中の内容
-weather.js：地方ごとの雨・霧、雨すじと霧の画面、町の人の雨宿りと傘、雨で花だんに水。雨の日の台詞の入れ口。版 20261002100039
+weather.js：Gemini G-F の 9町×6つを照合し採用（町に無いものを言う4つを修正）。版 20261002100641
 
 ## 次の一手
-Gemini G-F（雨の日の台詞）を受けて LINES に入れる
+実機テストの結果待ち／灯台の残り・建物の形
 
 ## 検証
 構文・参照・PWA検査: PASS
@@ -19,7 +19,6 @@ Gemini G-F（雨の日の台詞）を受けて LINES に入れる
 
 ## 保存対象
 - weather.js
-- townlife.js
 - docs/design/town-life.md
 - version.json
 - index.html
