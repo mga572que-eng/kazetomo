@@ -1,31 +1,29 @@
 # 作業の再開
 
-更新: 2026-10-01T23:52:13.558Z
-ブランチ: work/new-towns
-直前コミット: 642d0dce0fdbe278221bcb62eac890395cdc6c67
+更新: 2026-10-02T00:10:00.125Z
+ブランチ: work/party-anim
+直前コミット: 47b445fe8c076c302dfd10b2a8764ec0d3119d87
 
 ## 目的
-町のくらし 第3段：新しい町
+第3期：主人公と仲間の関節アニメ＋分担表
 
 ## 完了・途中の内容
-newtowns.js：王都ルミナリア（城・世界会議）、黄金の都ラッキーナ（カジノ・劇場）、はじまりの町ブレイブ（勇者の像・道場）。townlife に町ごとの人・店番を足せる形。ブロック上限 14000。版 20261002084913
+game.js：歩く・走る・跳ぶ・登る・泳ぐ・滑空の関節ポーズ（使うときに作る）。一人称・戦闘では隠す。docs/plan/split-r3.md。版 20261002090728
 
 ## 次の一手
-iPhone 実機で重さとカメラ。全章通し
+Gemini G-A（敵の動き割り当て）を受けて、敵の新しい動きを実装
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- newtowns.js
-- townlife.js
-- interiors.js
-- world.js
-- index.html
-- sw.js
-- pwa.js
+- game.js
+- battle3d.js
+- docs/plan/split-r3.md
 - version.json
-- docs/design/town-life.md
+- index.html
+- pwa.js
+- sw.js
 
 このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。

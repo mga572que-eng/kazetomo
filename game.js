@@ -299,6 +299,14 @@ const HUMANS = {
   statue: { stone: true, skin: '#9a968e', hair: '#8a867e', hairStyle: 'short', top: '#9a968e', bottom: '#8a867e', robe: true, hat: true, accent: '#8a867e', boot: '#8a867e', eye: [.55, .53, .5] },
 };
 const mH = {}; for (const k in HUMANS) mH[k] = World.makeMesh(World.human(HUMANS[k]), 1);
+// 主人公と 仲間の 関節アニメ：腰と 肩で 腕・足を ふる 形を、使う ときに 作る（立ち姿は これまでの mH）
+const POSES = { walkA: { legL: .5, legR: -.5, armL: -.45, armR: .45 }, walkB: { legL: -.5, legR: .5, armL: .45, armR: -.45 }, runA: { legL: .9, legR: -.8, armL: -1, armR: .9 }, runB: { legL: -.8, legR: .9, armL: .9, armR: -1 },
+  jump: { legL: .75, legR: -.3, armL: 1.3, armR: 1.1 }, climbA: { armL: 2.9, armR: 1.7, legL: .55, legR: -.1 }, climbB: { armL: 1.7, armR: 2.9, legL: -.1, legR: .55 }, swimA: { armL: 2.7, armR: 1.1, legL: -.35, legR: .35 }, swimB: { armL: 1.1, armR: 2.7, legL: .35, legR: -.35 }, glide: { armL: 2.9, armR: 2.9, legL: -.25, legR: -.15 } };
+const mHP = {}; const poseMesh = (k, p) => { const o = mHP[k] || (mHP[k] = {}); return o[p] || (o[p] = World.makeMesh(World.human({ ...HUMANS[k], pose: POSES[p] }), 1)); };
+const poseHide = k => { for (const p in (mHP[k] || {})) mHP[k][p].n = 0; };
+function drawHuman(k, pose, x, y, z, s, yaw) { poseHide(k); if (!pose || !POSES[pose] || HOOK.OPT.anim === false) { mH[k].set(0, x, y, z, s, yaw); mH[k].n = 1; return; } mH[k].n = 0; const m = poseMesh(k, pose); m.set(0, x, y, z, s, yaw); m.n = 1; }
+const gaitOf = (ph, run) => { const sn = Math.sin(ph); return Math.abs(sn) < .38 ? null : (sn > 0 ? (run ? 'runA' : 'walkA') : (run ? 'runB' : 'walkB')); };
+const folGait = {};
 const mSp = {}; for (const k of DATA.speciesOrder) mSp[k] = World.makeMesh(World.speciesGeo(SPC[k]), 14);
 const mGuard = World.makeMesh(World.shadowGeo('guardian'), 6);
 const mKing = World.makeMesh(World.shadowGeo('king'), 1);
@@ -2321,7 +2329,7 @@ function frameBody(now) {
     player.climb = climbing || wallClimb;
     const hsp = Math.hypot(player.vx, player.vz);
     if (hsp > .3 && md === 'field') { let d = Math.atan2(player.vx, player.vz) - player.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); player.yaw += d * Math.min(1, dt * 10); }
-    player.phase += hsp * dt * 2.1;
+    player.phase += hsp * dt * 2.1; player.hsp = hsp;
     trailAcc += moved; if (trailAcc > .35 || !trail.length) { trail.unshift({ x: player.x, z: player.z, y: player.y, yaw: player.yaw }); trailAcc = 0; if (trail.length > 40) trail.pop(); }
 
     // ---- resources ----
@@ -2358,17 +2366,20 @@ function frameBody(now) {
     for (const f of HOOK.frame) f(dt, T, r, md, night);
     // ---- characters ----
     const walkBob = player.ground ? Math.abs(Math.sin(player.phase)) * .07 : 0;
-    const sq = player.sq || 0; mH.sora.set(0, player.x, player.swim ? player.y - .1 + Math.sin(T * 2.2) * .06 : player.y + walkBob, player.z, 1 - sq * .09, player.yaw); mH.sora.n = 1; // 着地で ぐっと しずむ・水面で ゆれる
+    const sq = player.sq || 0, run = (player.hsp || 0) > 7.2;
+    const sPose = player.swim ? (Math.sin(T * 3) > 0 ? 'swimA' : 'swimB') : player.glide ? 'glide' : player.climb ? (Math.sin(player.y * 2.4) > 0 ? 'climbA' : 'climbB') : !player.ground && Math.abs(player.vy || 0) > 1.5 ? 'jump' : (player.hsp || 0) > .4 ? gaitOf(player.phase, run) : null;
+    drawHuman('sora', sPose, player.x, player.swim ? player.y - .1 + Math.sin(T * 2.2) * .06 : player.y + walkBob, player.z, 1 - sq * .09, player.yaw); // 着地で ぐっと しずむ・水面で ゆれる
     if (player.glide) { player.fold = 1; const d = player.deploy || 0, e = d < 1 ? 1 + 2.2 * Math.pow(d - 1, 3) + 1.2 * Math.pow(d - 1, 2) : 1; const sw = Math.sin(T * 1.7) * .03 + Math.sin(T * 3.1) * .015;
       mGlider.set(0, player.x, player.y - (1 - d) * .6, player.z, Math.max(.15, e), player.yaw, (player.bank || 0) + sw); }
     else if (player.fold > 0) { player.fold = Math.max(0, player.fold - dt * 2.6); const f = player.fold; mGlider.set(0, player.x - Math.sin(player.yaw) * (1 - f) * 1.2, player.y - (1 - f) * 1.4, player.z - Math.cos(player.yaw) * (1 - f) * 1.2, .3 + f * .7, player.yaw, (player.bank || 0) * f); if (!f) mGlider.n = 0; }
     else mGlider.n = 0;
     for (const k in mSp) mSp[k].n = 0;
-    for (const k in mH) if (k !== 'sora' && k !== 'statue') mH[k].n = 0;
+    for (const k in mH) if (k !== 'sora' && k !== 'statue') { mH[k].n = 0; poseHide(k); }
     const team = battleParty(); const followers = team.filter(m => m.id !== 'sora');
     followers.forEach((m, i) => { const tp = followPos(m, i, dt); if (tp.hide) return;
       const y = tp.y;
-      if (m.kind === 'human') { mH[m.id].set(0, tp.x, y + walkBob, tp.z, 1, tp.yaw); mH[m.id].n = 1; }
+      if (m.kind === 'human') { const g = folGait[m.id] || (folGait[m.id] = { x: tp.x, z: tp.z, ph: 0 }); const d = Math.hypot(tp.x - g.x, tp.z - g.z); g.x = tp.x; g.z = tp.z; g.ph += d * 2.1; g.v = d / Math.max(dt, 1e-3);
+        drawHuman(m.id, player.swim ? (Math.sin(T * 3 + i) > 0 ? 'swimA' : 'swimB') : g.v > .4 ? gaitOf(g.ph, g.v > 7.2) : null, tp.x, y + walkBob, tp.z, 1, tp.yaw); }
       else { const ms = mSp[m.id]; const S = SPC[m.id]; ms.set(ms.n++, tp.x, y + Math.abs(Math.sin(T * 6 + i)) * .12 + (S.arch === 'sprite' || S.arch === 'bird' ? .4 : 0), tp.z, (S.size || 1) * .9, tp.yaw + (m.shiny ? 100 : 0)); } });
     for (const n of npcNow()) { const m = mH[n.id]; if (!m || followers.some(f => f.id === n.id)) continue; const d = Math.hypot(player.x - n.x, player.z - n.z); const ty = d < 6 ? Math.atan2(player.x - n.x, player.z - n.z) : n.baseYaw;
       let yd = ty - n.yaw; yd = Math.atan2(Math.sin(yd), Math.cos(yd)); n.yaw += yd * Math.min(1, dt * 4);
@@ -2420,7 +2431,7 @@ function frameBody(now) {
 
   // ---- camera ----（臨界減衰の 追従・壁/地形の 遮蔽・最短2.2は 見下ろしで かわす・ゆっくり 戻る）
   const tgt = camFollow(dt); let eye = camSolve(tgt, dt, md);
-  if (phase === 'field') { const hd = Math.hypot(eye[0] - player.x, eye[1] - player.y - 1.6, eye[2] - player.z); if (hd < 1.2) { mH.sora.n = 0; mGlider.n = 0; } }
+  if (phase === 'field') { const hd = Math.hypot(eye[0] - player.x, eye[1] - player.y - 1.6, eye[2] - player.z); if (hd < 1.2) { mH.sora.n = 0; poseHide('sora'); mGlider.n = 0; } }
   cam.eye = eye;
   if (phase === 'title' || phase === 'splash') { const a = T * .03; eye = [Math.cos(a) * 60, 32, Math.sin(a) * 60]; tgt[0] = 0; tgt[1] = 8; tgt[2] = 0; }
 
@@ -2461,7 +2472,7 @@ function frameBody(now) {
   let rEye = eye, rTgt = tgt; if (B.active && B.d3 && HOOK.b3dFrame) { const c = HOOK.b3dFrame(dt, T); if (c) { rEye = c.eye; rTgt = c.tgt; } }
   // v15：一人称（部署9）。目の 高さから カメラの 向きを 見る（ドラッグで 見回し、移動は 見ている 方向が 前）。 自分の 体と 風布は 描かない
   else if (HOOK.OPT.fpv && phase === 'field' && !B.active) { const p = (cam.pitch ?? .3) - .3, y = cam.yaw, h = [player.x, player.y + (player.swim ? 1.0 : 1.55), player.z];
-    rEye = h; rTgt = [h[0] + Math.sin(y) * Math.cos(p) * 4, h[1] - Math.sin(p) * 4, h[2] + Math.cos(y) * Math.cos(p) * 4]; mH.sora.n = 0; mGlider.n = 0; for (const m of battleParty()) if (m.kind === 'human' && mH[m.id]) mH[m.id].n = 0; } // 目の 前を ふさがないよう、ついてくる 仲間も かくす
+    rEye = h; rTgt = [h[0] + Math.sin(y) * Math.cos(p) * 4, h[1] - Math.sin(p) * 4, h[2] + Math.cos(y) * Math.cos(p) * 4]; mH.sora.n = 0; poseHide('sora'); mGlider.n = 0; for (const m of battleParty()) if (m.kind === 'human' && mH[m.id]) { mH[m.id].n = 0; poseHide(m.id); } } // 目の 前を ふさがないよう、ついてくる 仲間も かくす
   if (!(DEBUG && window.__norender) && !B.stage) World.render({ eye: rEye, tgt: rTgt, tod: G.tod, T, player: [player.x, player.y, player.z], lantern: lan, beaconU, fx, ghost, darkness, stars: G.flags.c3done ? 1.7 : G.flags.c3start ? .35 : 1 });
   if (B.active && B.d3 && HOOK.b3dAnchors) HOOK.b3dAnchors();
   dlgUpdate(dt); Music.tick();
@@ -2525,7 +2536,7 @@ async function opening() {
 }
 function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() => run(async () => { await reunion(); save(); }), 600); phase = 'field'; $('hud').hidden = false; document.body.classList.add('infield'); cam.yaw = Math.atan2(REGr().town.x - player.x, REGr().town.z - player.z); camFrame(cam.yaw); player.yaw = cam.yaw; hud(); Music.play(fieldSong(), { restart: true });
   if (G.region === 0 && G.flags.shrineOpen && !G.flags.cleared) { darkTarget = 1; darkness = 1; } if (!G.blk[G.mat]) cycleMat(true); }
-window.KZ = { HOOK, get G() { return G; }, shopUI0, ICON, B, mH, mSp, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
+window.KZ = { HOOK, get G() { return G; }, shopUI0, ICON, B, mH, mHP, poseHide, mSp, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
   say, who, nm, menu, panel, confirm, run, toast, tip, gain, save, load, hud, fade, wait, R, esc, $, floatText, runBattle, titleCard, cinematic, mkMon, mkHuman, calc, fixTeam, battleParty, allMembers, member, nameOf, inParty,
   defeated, fieldSong, warpTo, credits, rest, objective, need, regionName: r => REGION_NAME[r], townName: r => TOWN_NAME[r], get enemies() { return enemies; }, set enemies(v) { enemies = v; },
   surfaceAt, hAt, Blocks, blocked, footAt, depen, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, buildHouse, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };

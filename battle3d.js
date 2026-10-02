@@ -86,7 +86,7 @@
     return a === 'fluff' || a === 'blob' || a === 'sprite' || a === 'plant' ? 'hop' : a === 'bird' || a === 'fish' ? 'swoop' : a === 'golem' ? 'slam' : a === 'quad' ? 'charge' : x.boss ? 'slam' : 'normal'; }
   function quake() { try { if (K.HOOK.OPT.calm) return; const b = $('battle'); b.classList.remove('quake'); void b.offsetWidth; b.classList.add('quake'); Music.sfx('stamp'); } catch (e) {} }
   H.b3dFrame = (dt, T) => { if (!A) return null; const P = B.P || [], F = B.F || [];
-    for (const k in K.mSp) K.mSp[k].n = 0; for (const k in K.mH) if (k !== 'statue') K.mH[k].n = 0;
+    for (const k in K.mSp) K.mSp[k].n = 0; for (const k in K.mH) if (k !== 'statue') { K.mH[k].n = 0; if (K.poseHide) K.poseHide(k); }
     const fc = center(F), pc = center(P);
     const put = (x, el) => { const st = S.get(x); if (!st) return; animate(x, st, el, dt, T); const me = meshOf(x); const px = st.bx + st.ox, pz = st.bz + st.oz, py = st.by + st.oy + (st.oyy || 0);
       const c = x.foe ? pc : fc; const yaw = yawTo(px, pz, c[0], c[2]) + (st.yo || 0); const sc = sizeOf(x) * (st.sq || 1) * (x.foe ? 1 - (st.gone || 0) : 1);
