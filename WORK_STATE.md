@@ -1,27 +1,26 @@
 # 作業の再開
 
-更新: 2026-10-02T00:44:26.326Z
-ブランチ: work/titles2
-直前コミット: 0f5321f6e0c1fc32bef27a948bd0bd01af660328
+更新: 2026-10-02T01:02:42.335Z
+ブランチ: work/weather
+直前コミット: f30ae47a940ee35acfda48f0a652b5a5f58349ae
 
 ## 目的
-称号の追加
+天気（雨・霧）
 
 ## 完了・途中の内容
-titles2.js：Gemini G-D の案を照合し14件採用（1件見送り・3件修正）。数える仕組み（花・家・スロット・ハイ＆ロー・道場）。版 20261002094219
+weather.js：地方ごとの雨・霧、雨すじと霧の画面、町の人の雨宿りと傘、雨で花だんに水。雨の日の台詞の入れ口。版 20261002100039
 
 ## 次の一手
-Gemini G-F（雨の日の台詞）/ Claude 天気の仕組み
+Gemini G-F（雨の日の台詞）を受けて LINES に入れる
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- titles2.js
-- newtowns.js
-- interiors.js
-- docs/design/titles2.md
+- weather.js
+- townlife.js
+- docs/design/town-life.md
 - version.json
 - index.html
 - pwa.js
