@@ -92,6 +92,14 @@ test('ひとくいばこ：びっくり戦闘と ごほうび', async ({ page })
   ok(await page.evaluate(id => !!KZ.G.mimic[id], s.id), 'ひとくいばこを たおしても 記録されない'); ok(await page.evaluate(() => (KZ.G.inv.hoshikake || 0) > window.__h0), '星のかけらが もらえない');
 });
 
+test('最初の灯台の 案内：野原の灯台（方角の 食いちがい なし）', async ({ page }) => {
+  const r = await page.evaluate(() => { const K = KZ, G = K.G, b0 = K.REG[0].beacons[0]; const save = JSON.stringify({ order: G.order, req: G.req, t0: G.trial[0] });
+    G.order = 0; G.req = G.req || {}; G.req.k0 = { s: 'a', step: 0 }; G.trial[0].shards = 0; G.trial[0].got = []; const a = K.HOOK.beaconObj();
+    G.trial[0].shards = 3; const b = K.HOOK.beaconObj(); const o = JSON.parse(save); G.order = o.order; G.req = o.req; G.trial[0] = o.t0;
+    return { a: a && a.t, b: b && b.t, bAt: !!(b && b.p === b0), name: DATA.trials[0].name, sw: b0.x > 0 && b0.z > 0 }; });
+  ok(/野原の灯台/.test(r.a), '欠片の 案内に 野原の灯台が ない：' + r.a); ok(/野原の灯台の 扉/.test(r.b) && r.bAt, '扉の 案内が 野原の灯台を さしていない：' + r.b); ok(r.name === '野原の灯台', '灯台の 名前が ちがう');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
