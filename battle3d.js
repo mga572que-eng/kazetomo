@@ -15,6 +15,7 @@
   const groundY = (x, z) => { const y = K.surfaceAt(x, z, A.y + 2.5); return Math.abs(y - A.y) > 2.6 || !isFinite(y) ? A.y : y; };
   const at = (base, df, dr) => [base[0] + A.f[0] * df + A.r[0] * dr, base[2] + A.f[1] * df + A.r[1] * dr];
   const yawTo = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
+  const spIdOf = x => x.foe ? (x.sp || (x.d && x.d.spArt) || null) : x.kind === 'mon' ? x.id : null;
   const spcOf = x => x.foe ? (x.sp ? K.SPC[x.sp] : (x.d && x.d.spArt && K.SPC[x.d.spArt]) || null) : x.kind === 'mon' ? K.SPC[x.id] : null;
   const meshOf = x => { if (!x.foe && x.kind === 'human') return K.mH[x.id] ? { h: K.mH[x.id] } : null; const sp = x.foe ? (x.sp || (x.d && x.d.spArt)) : x.id; return sp && K.mSp[sp] ? { m: K.mSp[sp], sp } : null; };
   const sizeOf = x => { const s = spcOf(x); const base = s ? (s.size || 1) : 1; return x.foe ? (x.boss ? 2.6 : 1.6) * base : x.kind === 'human' ? 1 : base * .95; };
@@ -70,23 +71,41 @@
       else if (style === 'swoop') { df += s1 * 2.3; up += Math.sin(k * Math.PI * 2) * .9; yo = k * Math.PI * 2; }
       else if (style === 'slam') { const r = k < .55 ? k / .55 : 1, fall = k < .55 ? 0 : (k - .55) / .45; df += Math.sin(r * Math.PI / 2) * 1.6 * (1 - fall * .4); up += k < .55 ? Math.sin(r * Math.PI / 2) * 1.4 : (1 - fall) * 1.4; sq = k > .9 ? 1.18 - (k - .9) * 1.8 : 1; if (k > .55 && !st.slammed) { st.slammed = 1; quake(); } }
       else if (style === 'charge') { df += (k < .7 ? Math.sin(k / .7 * Math.PI / 2) * 2.8 : (1 - (k - .7) / .3) * 2.8); up -= s1 * .12; }
+      else if (style === 'spin') { df += s1 * 2.0; up += s1 * .35; yo = k * Math.PI * 4; } // 2回 まわって 体当たり
+      else if (style === 'lunge') { df += k < .3 ? Math.sin(k / .3 * Math.PI / 2) * 2.6 : (1 - (k - .3) / .7) * 2.6; up += s1 * .1; } // 一瞬で 突いて もどる
+      else if (style === 'breath') { df += k < .35 ? -k / .35 * .45 : -.45 + (k - .35) / .65 * .9; sq = k > .35 && k < .7 ? 1.12 : 1; up += k < .35 ? k / .35 * .2 : .2 * (1 - k); } // のけぞって 吸い、前へ 吐く
+      else if (style === 'burrow') { const a = .4, b = .75; df += k < a ? 0 : k < b ? (k - a) / (b - a) * 2.6 : 2.6 * (1 - (k - b) / (1 - b)); up += k < a ? -1.5 * k / a : k < b ? -1.5 : -1.5 + (k - b) / (1 - b) * 1.5 + Math.sin((k - b) / (1 - b) * Math.PI) * .9; } // もぐって 下から
+      else if (style === 'tail') { df += s1 * 1.3; yo = k < .5 ? k / .5 * Math.PI : Math.PI * (1 - (k - .5) / .5); } // ふりむいて しっぽで 払う
       else df += s1 * 1.9; } } else st.slammed = 0;
     // 技を となえる（行動中で 攻撃以外）：すこし 浮いて ゆっくり まわる
     if (actor && st.lt == null && x.foe) { up += .25 + Math.sin(T * 6) * .05; yo += Math.sin(T * 3) * .35; }
-    let shake = 0; if (st.ht != null) { st.ht += dt; const k = st.ht / .4; if (k >= 1) st.ht = null; else { df -= Math.sin(k * Math.PI) * .45; shake = Math.sin(st.ht * 70) * .08 * (1 - k); yo += Math.sin(st.ht * 40) * .25 * (1 - k); sq *= 1 - Math.sin(k * Math.PI) * .08; } }
+    const mo = x.foe || x.kind === 'mon' ? motionOf(x) : null, hitS = mo ? mo.hit : 'recoil';
+    let shake = 0; if (st.ht != null) { st.ht += dt; const k = st.ht / .4; if (k >= 1) st.ht = null; else {
+      if (hitS === 'squash') { df -= Math.sin(k * Math.PI) * .2; sq *= 1 - Math.sin(k * Math.PI) * .3; } // ぺしゃんと つぶれる
+      else if (hitS === 'spin') { df -= Math.sin(k * Math.PI) * .3; yo += k * Math.PI * 2; } // くるっと 回る
+      else { df -= Math.sin(k * Math.PI) * .45; shake = Math.sin(st.ht * 70) * .08 * (1 - k); yo += Math.sin(st.ht * 40) * .25 * (1 - k); sq *= 1 - Math.sin(k * Math.PI) * .08; } } }
+    // 待っている あいだ（種族ごと）
+    const idle = mo && !actor && st.lt == null && !down ? mo.idle : null;
+    if (idle === 'sway') yo += Math.sin(T * 1.6 + st.t0) * .25; else if (idle === 'wiggle') sq *= 1 + Math.sin(T * 9 + st.t0) * .05;
     st.yo = lerp(st.yo || 0, yo, Math.min(1, dt * 18)); st.sq = lerp(st.sq || 1, sq, Math.min(1, dt * 20)); st.up = lerp(st.up || 0, up, Math.min(1, dt * 16));
     const tx = df * fw[0] * foeSide + shake * A.r[0], tz = df * fw[1] * foeSide + shake * A.r[1];
     st.ox = lerp(st.ox, tx, Math.min(1, dt * 14)); st.oz = lerp(st.oz, tz, Math.min(1, dt * 14));
     const sp = spcOf(x), fly = sp && (sp.arch === 'sprite' || sp.arch === 'bird' || sp.arch === 'fish');
-    const bob = down ? 0 : fly ? .55 + Math.sin(T * 2.2 + st.t0) * .18 : x.kind === 'human' && !x.foe ? Math.abs(Math.sin(T * 2.4 + st.t0)) * .04 : Math.abs(Math.sin(T * 3 + st.t0)) * .1;
+    const idl = mo ? mo.idle : null;
+    const bob = down ? 0 : fly ? .55 + Math.sin(T * 2.2 + st.t0) * .18 : x.kind === 'human' && !x.foe ? Math.abs(Math.sin(T * 2.4 + st.t0)) * .04
+      : idl === 'hover' ? .4 + Math.sin(T * 2.2 + st.t0) * .15 : idl === 'still' ? 0 : idl === 'sway' || idl === 'wiggle' ? Math.abs(Math.sin(T * 2 + st.t0)) * .04 : Math.abs(Math.sin(T * 3 + st.t0)) * .1;
     st.oy = lerp(st.oy, (down ? -.55 : 0) + bob + (actor && !x.foe ? .08 : 0), Math.min(1, dt * 10)) ; st.oyy = st.up || 0;
     if (x.foe && down) { st.gone = Math.min(1, (st.gone || 0) + dt * 1.6); st.yo = (st.yo || 0) + dt * 9 * st.gone; } }
-  const DUR = { hop: .6, swoop: .7, slam: .75, charge: .55 };
-  function styleOf(x) { if (!x.foe && x.kind === 'human') return 'normal'; const s = spcOf(x); const a = s && s.arch;
+  const DUR = { hop: .6, swoop: .7, slam: .75, charge: .55, spin: .6, lunge: .45, breath: .7, burrow: .95, tail: .65 };
+  // 種族ごとの 動き（docs/design/enemy-motion.md：Gemini G-A の 割り当て表を 照合して 採用）。種族:攻撃・待機・被弾の 1文字ずつ
+  const MOTION = (() => { const A = { c: 'charge', h: 'hop', w: 'swoop', s: 'slam', p: 'spin', l: 'lunge', b: 'breath', u: 'burrow', t: 'tail' }, I = { b: 'bob', s: 'sway', h: 'hover', w: 'wiggle', n: 'still' }, R = { r: 'recoil', q: 'squash', p: 'spin' }, o = {};
+    for (const e of 'watapoko:hbq watafuwari:php iwanoko:cnr iwagoron:snr mizumochi:hwq mizudaifuku:swq hoshikage:lhp hoshimikage:bhr yorukoumori:whp yoibasa:lbr tsuchimogu:usq hanapokke:hsq hanakanmuri:psp sunawani:unr sunawaniking:tnr sabotenbo:cnr yukiusa:hbp yukinomiko:lsr kooridori:whr kazetaka:whp arashitaka:pbr morinoko:hbq hibana:lhp homura:bhr umiushu:twq ishigaki:snr nijikujira:csr hoshikujira:bhr kumomo:hhq raikumo:chp soramedaka:lsp soramanta:phr fuurin:php hoshikakera:cnr seishou:snr tsukimiusa:hbp amatsubame:whp hoshimori:bhr pukuawa:hbq oopuku:cbq hitoden:pbp takosumi:bhq oodako:thr sangoron:snr chouchinan:lsr uminokami:tsr'.split(' ')) { const [k, v] = e.split(':'); o[k] = { attack: A[v[0]], idle: I[v[1]], hit: R[v[2]] }; } return o; })();
+  const motionOf = x => MOTION[spIdOf(x)] || null;
+  function styleOf(x) { if (!x.foe && x.kind === 'human') return 'normal'; const m = motionOf(x); if (m) return m.attack; const s = spcOf(x); const a = s && s.arch;
     return a === 'fluff' || a === 'blob' || a === 'sprite' || a === 'plant' ? 'hop' : a === 'bird' || a === 'fish' ? 'swoop' : a === 'golem' ? 'slam' : a === 'quad' ? 'charge' : x.boss ? 'slam' : 'normal'; }
   function quake() { try { if (K.HOOK.OPT.calm) return; const b = $('battle'); b.classList.remove('quake'); void b.offsetWidth; b.classList.add('quake'); Music.sfx('stamp'); } catch (e) {} }
   H.b3dFrame = (dt, T) => { if (!A) return null; const P = B.P || [], F = B.F || [];
-    for (const k in K.mSp) K.mSp[k].n = 0; for (const k in K.mH) if (k !== 'statue') K.mH[k].n = 0;
+    for (const k in K.mSp) K.mSp[k].n = 0; for (const k in K.mH) if (k !== 'statue') { K.mH[k].n = 0; if (K.poseHide) K.poseHide(k); }
     const fc = center(F), pc = center(P);
     const put = (x, el) => { const st = S.get(x); if (!st) return; animate(x, st, el, dt, T); const me = meshOf(x); const px = st.bx + st.ox, pz = st.bz + st.oz, py = st.by + st.oy + (st.oyy || 0);
       const c = x.foe ? pc : fc; const yaw = yawTo(px, pz, c[0], c[2]) + (st.yo || 0); const sc = sizeOf(x) * (st.sq || 1) * (x.foe ? 1 - (st.gone || 0) : 1);

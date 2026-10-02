@@ -60,7 +60,8 @@
     for (let k = 0; k < 6; k++) prism(G, .2, .2, 1.95, 2.15, 4, hex(k % 2 ? '#f4f0e6' : '#d84a3a'), -1 + k * .4, 0, 1, 3.4); for (let k = 0; k < 5; k++) ico(G, .1, [-.8 + k * .4, 1, 0], hex(['#e04a3a', '#f0c040', '#7ac04a', '#f08a3a', '#a04ac0'][k]), .05); });
   const boardGeo = geo(G => { for (const x of [-1, 1]) seg(G, [x, 0, 0], [x, 1.9, 0], .05, .05, 5, hex('#6a4a2e')); prism(G, 1.0, 1.0, .8, 1.8, 4, hex('#2e4a3a'), 0, 0, 1.05, .05); prism(G, 1.05, 1.05, 1.78, 1.86, 4, hex('#6a4a2e'), 0, 0, 1.05, .07); });
   const benchGeo = geo(G => { prism(G, .8, .8, .38, .45, 4, hex('#9a7048'), 0, 0, 1.1, .3); for (const x of [-.6, .6]) prism(G, .06, .06, 0, .4, 4, hex('#6a4a2e'), x, 0); });
-  const M = { lampOn: W.makeMesh(lampGeo(true), 40), lampOff: W.makeMesh(lampGeo(false), 40), lineW: W.makeMesh(lineGeo(true), 16), line0: W.makeMesh(lineGeo(false), 16), hen: W.makeMesh(henGeo, 24), goat: W.makeMesh(goatGeo, 8), stall: W.makeMesh(stallGeo, 8), board: W.makeMesh(boardGeo, 4), bench: W.makeMesh(benchGeo, 16) };
+  const umbGeo = c => geo(G => { seg(G, [0, 0, 0], [0, .55, 0], .02, .02, 4, hex('#5a4030')); prism(G, .62, .02, .45, .72, 8, hex(c)); });
+  const M = { umb0: W.makeMesh(umbGeo('#e85a6a'), 24), umb1: W.makeMesh(umbGeo('#4a8ad8'), 24), umb2: W.makeMesh(umbGeo('#f0c040'), 24), lampOn: W.makeMesh(lampGeo(true), 40), lampOff: W.makeMesh(lampGeo(false), 40), lineW: W.makeMesh(lineGeo(true), 16), line0: W.makeMesh(lineGeo(false), 16), hen: W.makeMesh(henGeo, 24), goat: W.makeMesh(goatGeo, 8), stall: W.makeMesh(stallGeo, 8), board: W.makeMesh(boardGeo, 4), bench: W.makeMesh(benchGeo, 16) };
   // ---------- 場所づくり ----------
   const thr = r => r === 2 ? 4 : .3;
   const houseHit = (r, x, z) => [...K.REG[r].houses, ...(K.extraHouses || []).filter(h => h.r === r)].some(h => Math.abs(x - h.x) < 3.6 && Math.abs(z - h.z) < 3.6);
@@ -107,6 +108,9 @@
   function plan(p, h, S) { const i = p.i, home = pick(S.homes, i), work = p.work || pick(S.market, i) || pick(S.plaza, i), plaza = pick(S.plaza, i + Math.floor(h / 2)), market = pick(S.market, i + 1), food = pick(S.food, i), bar = pick(S.bar, i);
     const R = p.role, night = h < 5.5 || h >= 21.5;
     if (R === 'fixed') return { to: p.work, act: p.fact || 'stand', yaw: p.fyaw };
+    // 雨：子どもと お年寄りは 家へ。ほかの 人は 半分が 雨宿り（宿・酒場の 軒下）、のこりは 傘を さして いつもどおり
+    p.umb = false; const rain = K.weather && K.weather.rain(S.r);
+    if (rain && !['guard', 'shop', 'teacher'].includes(R) && !night) { if (R === 'kid' || R === 'elder') return { to: home, act: h < 20 ? 'stand' : 'home' }; if (i % 2) return { to: pick(S.food, i) || home, act: 'stand' }; p.umb = true; }
     if (R === 'guard') { const k = Math.floor(h * 1.5 + i) % S.walk.length; return { to: S.walk[k] || plaza, act: 'stand' }; }
     if (R === 'mail') { if (h < 8 || h >= 17) return { to: home, act: 'home' }; return { to: pick([...S.homes, ...S.market, ...S.food], Math.floor(h * 2) + i), act: 'stand' }; }
     if (R === 'teacher') { if (S.school && h >= 8 && h < 15 && !(h >= 12 && h < 13)) return { to: S.school, act: 'stand', yaw: S.schoolYaw + Math.PI }; if (h >= 15 && h < 18) return { to: market, act: 'stand' }; return { to: home, act: h < 20 ? 'stand' : 'home' }; }
@@ -152,7 +156,8 @@
         const m = e.goat ? M.goat : M.hen; if (m.n < m.maxN) m.set(m.n++, e.x, K.surfaceAt(e.x, e.z, 99) + (night ? 0 : Math.abs(Math.sin(T * 6 + e.x)) * .03), e.z, 1, e.yaw); } }
     // 住人を 描く
     for (const p of people) { if (p.town.r !== r) continue; const n = npcOf(p); if (!n || !n.placed || n.indoor || (p.row && n.mobVisible === false) || dist(n, pl) > 85) continue;
-      const m = meshOf(p.type, p.look, p.pose || 'stand'); if (m.n < m.maxN) m.set(m.n++, n.x, K.surfaceAt(n.x, n.z, 99) + (p.pose === 'sit' ? -.32 : 0), n.z, 1, n.yaw || 0); }
+      const m = meshOf(p.type, p.look, p.pose || 'stand'), py = K.surfaceAt(n.x, n.z, 99) + (p.pose === 'sit' ? -.32 : 0); if (m.n < m.maxN) m.set(m.n++, n.x, py, n.z, 1, n.yaw || 0);
+      if (p.umb) { const u = M['umb' + (p.i % 3)]; if (u.n < u.maxN) u.set(u.n++, n.x, py + (p.type === 'boy' || p.type === 'girl' ? 1.25 : 1.55), n.z, 1, n.yaw || 0); } }
     // 町に 入ったら ようすを 一言
     if (here && profileShown !== here.key) { profileShown = here.key; K.toast(`${here.name}　人口 およそ${here.pop}人・${LV[here.lv]}・物価 ${PRICE(here.price)}`, 2600); } else if (!here && profileShown && !TOWNS.some(t => t.key === profileShown && t.r === r && dist(t.at() || { x: 1e9, z: 1e9 }, pl) < 60)) profileShown = null;
   });

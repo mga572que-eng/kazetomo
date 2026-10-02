@@ -80,7 +80,7 @@
   async function garden(spot) { const g = G(); g.garden = g.garden || {}; const st = gstate(spot.key);
     if (st === 0) { g.garden[spot.key] = { w: g.play || 0 }; Music.sfx('heal'); K.toast('じょうろで 水を やった。 しばらく したら さきそうだ', 1800); K.save(); return; }
     if (st === 1) { K.toast('土が しっとり している。 もうすこし まとう', 1400); return; }
-    delete g.garden[spot.key]; const herb = spot.herb; const it = herb ? 'dokukeshi' : 'hana', n = 1 + (hash(spot.key + (g.play | 0)) < .4 ? 1 : 0); K.gain(it, n); Music.sfx('pick');
+    delete g.garden[spot.key]; if (K.stat) K.stat('harvest'); const herb = spot.herb; const it = herb ? 'dokukeshi' : 'hana', n = 1 + (hash(spot.key + (g.play | 0)) < .4 ? 1 : 0); K.gain(it, n); Music.sfx('pick');
     const L = [`${herb ? '薬草' : '花'}を つみとった！ ${DATA.items[it].name}を ${n}こ 手に入れた！`]; if (!herb && hash(spot.key + 'm' + (g.play | 0)) < .25) { K.gain('mi', 1); L.push('木の実も 1こ なっていた！'); }
     await K.say(L); K.hud(); K.save(); }
   // ---------- 家の 中（地方ごとに 1部屋を 使いまわす） ----------
@@ -120,7 +120,7 @@
   async function enter(h) { const r = G().region, d = doorOf(h); dressShell(r, KIND[h.id] || 'home'); const props = furnish(r, h); const R0 = ROOM[r];
     const nc = { r, h, kind: KIND[h.id] || 'home', props, back: d.out, pitch: K.cam.pitch };
     await K.fade(true); cur = nc; const p = K.player; p.x = R0.x + .5; p.z = R0.z + 3.5; p.y = R0.y + 1.02; p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.enemies = []; K.cam.yaw = Math.PI; p.yaw = Math.PI; K.cam.pitch = Math.max(K.cam.pitch, .62); await K.wait(150); await K.fade(false);
-    K.toast(`${NAMEH[h.id] || '家'}に おじゃました`, 1500); }
+    const g = K.G; g.housesIn = g.housesIn || {}; g.housesIn[`${r}:${h.id}`] = 1; K.toast(`${NAMEH[h.id] || '家'}に おじゃました`, 1500); }
   async function leave() { if (!cur) return; const c = cur; await K.fade(true); const p = K.player; p.x = c.back.x; p.z = c.back.z; p.y = K.surfaceAt(p.x, p.z, 99); p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.cam.pitch = c.pitch; p.yaw = c.h.yaw; K.cam.yaw = c.h.yaw; cur = null; await K.wait(150); await K.fade(false); }
   const inRoom = () => cur && G().region === cur.r && Math.abs(K.player.x - ROOM[cur.r].x - .5) < 7 && Math.abs(K.player.z - ROOM[cur.r].z - .5) < 7 && K.player.y > ROOM[cur.r].y - 3;
   // ---------- 町の 外の しらべもの（樽・ツボ・木箱）と 花だん ----------
