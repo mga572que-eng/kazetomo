@@ -9,7 +9,7 @@
   const mChest = W.makeMesh(W.propGeo('chest'), 16);
   const got = id => !!((G().secret || {})[id]);
   const dist3 = (p, x, y, z) => Math.hypot(p.x - x, p.z - z) + Math.abs(p.y - y) * .6;
-  const LOOT = r => ({ gold: [300, 600, 900, 1200][r] || 300, give: { hoshikake: r >= 2 ? 2 : 1 } });
+  const LOOT = r => ({ gold: [120, 400, 700, 1000][r] || 120, /* docs/reports/economy.md */ give: { hoshikake: r >= 2 ? 2 : 1 } });
   async function open(id, r, where) { const g = G(); g.secret = g.secret || {}; if (g.secret[id]) return; g.secret[id] = 1; const L = LOOT(r);
     if (K.fun && K.fun.reveal) await K.fun.reveal('rare', `星のかけら ×${L.give.hoshikake}`, `${where}の かくし宝箱`);
     g.gold += L.gold; for (const [k, v] of Object.entries(L.give)) K.gain(k, v);
@@ -46,5 +46,5 @@
   H.acts.secCrack = async ({ d }) => { await K.say(['かべに ほそい ひびが 入っている。 ……風が すこし ぬけてくる。']); if (!(await K.confirm('おして みる？'))) return; breakWall(d); await K.say(['ガラガラ……！ かべが くずれて、小さな へやが あらわれた！']); };
   if (DATA.titles && !DATA.titles.some(t => t.id === 't_secret5')) DATA.titles.push({ id: 't_secret5', name: 'ひみつの 発見者', desc: 'かくし宝箱を 5こ 見つける', ok: g => Object.keys(g.secret || {}).length >= 5 });
   H.load.push(g => { g.secret = g.secret || {}; broken = null; });
-  K.secrets = { open, shSpot, crack, lhChest, breakWall, get broken() { return broken; } };
+  K.secrets = { LOOT, open, shSpot, crack, lhChest, breakWall, get broken() { return broken; } };
 })();

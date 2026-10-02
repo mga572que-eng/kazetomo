@@ -53,7 +53,7 @@
       for (let k = 0; k < 8; k++) { const an = hash(c.id) * 6.28 + k * Math.PI / 4, x = c.x + Math.sin(an) * 2.6, z = c.z + Math.cos(an) * 2.6, y = W.surfaceAt(x, z, c.y + 2);
         if (Math.abs(y - c.y) < .45 && !(K.blocked && K.blocked(x, z, y + .1))) { out.push({ id: 'mm:' + r + ':' + c.id, r, x, y, z, ph: hash(c.id + 'p') * 6 }); break; } } }
     return (spots[r] = out); }
-  const LOOT = r => ({ gold: [250, 600, 1000, 1500][r] || 250, n: r >= 1 ? 3 : 2 });
+  const LOOT = r => ({ gold: [150, 500, 900, 1300][r] || 150, n: r >= 2 ? 3 : r === 1 ? 2 : 1 }); // docs/reports/economy.md
   // ---------- 描く（ときどき カタッと ゆれる） ----------
   H.frame.push((dt, T) => { mFake.n = 0; if (K.phase !== 'field') return; const r = G().region, p = K.player; let n = 0;
     for (const s of spotsOf(r)) { if (got(s.id) || n >= 8 || Math.hypot(s.x - p.x, s.z - p.z) > 90) continue; const k = (T + s.ph) % 7, jig = k < .35 ? Math.sin(k * 60) : 0;
@@ -77,5 +77,5 @@
     await K.say([`ひとくいばこの 中から ${L.gold}ゴールドと 星のかけら ${L.n}こが でてきた！`, `（ひとくいばこを たおした数：${Object.keys(g.mimic).length}）`]); K.hud(); K.save(); };
   if (DATA.titles && !DATA.titles.some(t => t.id === 't_mimic3')) DATA.titles.push({ id: 't_mimic3', name: 'ひとくいばこ ハンター', desc: 'ひとくいばこを 3体 たおす', ok: g => Object.keys(g.mimic || {}).length >= 3 });
   H.load.push(g => { g.mimic = g.mimic || {}; });
-  K.mimic = { spotsOf, tune, LOOT, get spots() { return spots; } };
+  K.mimic = { hash, count: r => Math.min(3, ((K.REG[r] || {}).chests || []).filter(c => hash('mm' + c.id) < .4).length), spotsOf, tune, LOOT, get spots() { return spots; } };
 })();

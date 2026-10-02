@@ -1,26 +1,29 @@
 # 作業の再開
 
-更新: 2026-10-02T07:14:52.484Z
-ブランチ: work/mimic
-直前コミット: d1250d48bb091ebf3d338bd517aad76dd65a261a
+更新: 2026-10-02T07:23:42.848Z
+ブランチ: work/economy-2
+直前コミット: c01d520c88353afe81c2cf5593fc2a99c09c6617
 
 ## 目的
-ひとくいばこ（面白さ部署⑥）
+お金の見直し（かくし宝箱・ひとくいばこ込み）
 
 ## 完了・途中の内容
-mimic.js 追加・回帰テスト12件すべて成功・3D戦闘の見た目を撮影で確認
+試算を章ごとに。第1〜2章 86%→69%。回帰テスト12件成功
 
 ## 次の一手
-PR #36・新PRを開発者が統合。iPhone 未確認
+PR #37 と合わせて開発者が統合。実際の遊びで所持金を記録
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
+- lighthouses.js
+- secrets.js
 - mimic.js
-- tests/run.mjs
-- docs/design/fun-audit.md
+- tests/economy.mjs
+- docs/reports/economy.md
+- docs/plan/quality-plan.md
 - index.html
 - sw.js
 - pwa.js

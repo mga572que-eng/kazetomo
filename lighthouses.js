@@ -22,7 +22,7 @@
   for (const [r, i, name, theme, controls, sequence, clue] of themes) DUNS.push({
     r, i, name, theme, controls, sequence, clue, x: 228, z: 228, y: 70,
     hint: [`【${name}の なか】`, 'ひかる あしばで あなを わたろう。', clue, 'さいごに 3つの ひかりを あつめよう。'],
-    reward: { gold: r === 3 ? 1000 : 700, give: { shizuku: 2, pan: 2 } }
+    reward: { gold: r === 3 ? 1000 : 450 /* 島は 第1章の 寄り道なので ひかえめ（docs/reports/economy.md） */, give: { shizuku: 2, pan: 2 } }
   });
   const key = d => d.r === 0 ? d.i : `sea${d.i}`;
   const source = d => (d.r === 0 ? K.REG[0].beacons : K.REG[3].lh)[d.i];
