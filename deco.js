@@ -170,9 +170,15 @@
   W.prism(FG.cook, .62, .62, 2.05, 2.75, 4, W.hex('#2c3e78'), 0, 0, 1.15, .06); W.prism(FG.cook, .08, .08, 0, 2.2, 4, W.hex('#5a3a22'), 1.25, 0); W.ico(FG.cook, .2, [1.25, 2.35, 0], W.solid([1, .55, .3], .9), 0, 1, 1.3);
   W.prism(FG.smith, .3, .22, 0, .45, 4, W.hex('#4a4a52'), 1.3, 0); W.prism(FG.smith, .34, .34, .45, .62, 4, W.hex('#6a6a74'), 1.3, 0, 1.4, .7); W.prism(FG.smith, .06, .06, 0, 2.1, 4, W.hex('#5a3a22'), -1.3, 0); W.prism(FG.smith, .36, .36, 1.6, 2.0, 4, W.hex('#9aa0a8'), -1.3, 0, 1.2, .15);
   W.prism(FG.home, .06, .06, 0, 1.0, 4, W.hex('#5a3a22'), 1.3, 0); W.prism(FG.home, .2, .2, 1.0, 1.28, 4, W.hex('#c0392b'), 1.3, 0, 1.3, .9); W.prism(FG.home, .22, .26, 0, .38, 6, W.hex('#b0643a'), -1.3, 0); W.ico(FG.home, .26, [-1.3, .6, 0], W.solid([.95, .55, .7], .15), .2, 1, 1);
-  const mFront = { cook: W.makeMesh(FG.cook, 2), smith: W.makeMesh(FG.smith, 2), home: W.makeMesh(FG.home, 2) };
-  const FRONT = { nagi: 'cook', gen: 'smith', yui: 'home' };
-  const fronts = () => (K.REG[0].houses || []).filter(h => FRONT[h.id] && h.npc && h.yaw != null).map(h => { const dx = Math.sin(h.yaw), dz = Math.cos(h.yaw), x = h.npc.x - dx * 1.6 + dx * .9, z = h.npc.z - dz * 1.6 + dz * .9; return { id: h.id, k: FRONT[h.id], x, z, yaw: h.yaw }; });
+  // シオミの 店：宿＝両わきの ちょうちんと 寝床の 看板、道具屋＝店先の 樽・木箱・ふくろ（訳ありの 家 s_pawn には つけない）
+  FG.inn = W.Geo(); for (const sx of [-1.35, 1.35]) { W.prism(FG.inn, .07, .07, 0, 2.1, 4, W.hex('#5a3a22'), sx, 0); W.ico(FG.inn, .2, [sx, 2.25, 0], W.solid([1, .6, .32], .9), 0, 1, 1.3); }
+  W.prism(FG.inn, .55, .55, 2.15, 2.6, 4, W.hex('#2f5d8a'), 0, 0, 1.2, .07); W.prism(FG.inn, .3, .3, 2.27, 2.42, 4, W.hex('#f4f0e6'), 0, .05, 1.3, .06);
+  FG.shop = W.Geo(); W.prism(FG.shop, .26, .3, 0, .6, 8, W.hex('#8a5a2a'), 1.3, 0); W.prism(FG.shop, .3, .3, 0, .45, 4, W.hex('#a67a44'), 1.35, .55, 1, 1);
+  W.ico(FG.shop, .28, [-1.3, .26, 0], W.solid([.85, .76, .55], .1), .25, 1, .85); W.ico(FG.shop, .14, [1.3, .7, 0], W.solid([.85, .3, .25], .2), .1, 1, 1);
+  const mFront = { cook: W.makeMesh(FG.cook, 2), smith: W.makeMesh(FG.smith, 2), home: W.makeMesh(FG.home, 2), inn: W.makeMesh(FG.inn, 2), shop: W.makeMesh(FG.shop, 2) };
+  const FRONT = { nagi: 'cook', gen: 'smith', yui: 'home', sinn: 'inn', sitem: 'shop' };
+  const doorAt = h => { const dx = Math.sin(h.yaw), dz = Math.cos(h.yaw); return h.npc ? { x: h.npc.x - dx * 1.6, z: h.npc.z - dz * 1.6 } : { x: h.x + dx * 4.1, z: h.z + dz * 4.1 }; }; // 店番が 戸口に いない 店は 家の 中心から 4.1m（村の 3軒と 同じ 奥行き）
+  const fronts = () => [...(K.REG[0].houses || []), ...(K.extraHouses || []).filter(h => h.r === 0)].filter(h => FRONT[h.id] && h.yaw != null).map(h => { const dx = Math.sin(h.yaw), dz = Math.cos(h.yaw), d = doorAt(h); return { id: h.id, k: FRONT[h.id], x: d.x + dx * .9, z: d.z + dz * .9, dx: d.x, dz: d.z, yaw: h.yaw }; });
   H.frame.push(() => { for (const k in mFront) mFront[k].n = 0; if (K.phase !== 'field' || K.G.region !== 0 || (K.interior && K.interior.cur)) return; const pl = K.player;
     for (const f of fronts()) { if (Math.hypot(f.x - pl.x, f.z - pl.z) > 70) continue; const m = mFront[f.k]; m.set(m.n++, f.x, K.hAt(f.x, f.z) - .02, f.z, 1, f.yaw); } });
   K.road0 = { pts, segs, onRoad, signAt, viewAt, fronts, get drawn() { return mSign.n + mLamp.n; } };
