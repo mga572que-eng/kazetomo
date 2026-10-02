@@ -659,7 +659,7 @@ function act() {
   if (HOOK.acts[t.type]) { const fn = HOOK.acts[t.type]; if (fn.instant) return fn(t.o, t); return run(() => fn(t.o, t)); }
 }
 async function openChest(c) {
-  G.chests[c.id] = 1; Music.sfx('friend'); const L = c.loot; const lines = ['宝箱を あけた！'];
+  G.chests[c.id] = 1; if (HOOK.chestFx) { try { await HOOK.chestFx(c); } catch (e) { console.error(e); } } else Music.sfx('friend'); const L = c.loot; const lines = ['宝箱を あけた！']; // 開ける 演出は chestfx.js
   if (L.gold) { G.gold += L.gold; lines.push(`${L.gold}ゴールドを 手に入れた！`); }
   if (L.give) for (const [k, v] of Object.entries(L.give)) { gain(k, v); lines.push(`${DATA.items[k].name}を ${v}こ 手に入れた！`); }
   if (L.gear && HOOK.giveGear) lines.push(...HOOK.giveGear(L.gear));
