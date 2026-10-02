@@ -1,32 +1,24 @@
 # 作業の再開
 
-更新: 2026-10-02T07:23:42.848Z
-ブランチ: work/economy-2
-直前コミット: c01d520c88353afe81c2cf5593fc2a99c09c6617
+更新: 2026-10-02T12:52:21.738Z
+ブランチ: work/ops-pr-only
+直前コミット: e86749dfd22baf3b92fa2893a8809511a3129b52
 
 ## 目的
-お金の見直し（かくし宝箱・ひとくいばこ込み）
+運用：mainへの直接アップロード禁止・実機確認を予定から外す
 
 ## 完了・途中の内容
-試算を章ごとに。第1〜2章 86%→69%。回帰テスト12件成功
+AGENTS.mdとTEAM_CONTROL.mdに追記。コード変更なし
 
 ## 次の一手
-PR #37 と合わせて開発者が統合。実際の遊びで所持金を記録
+方角の案内（野原の灯台）を別PRで
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- lighthouses.js
-- secrets.js
-- mimic.js
-- tests/economy.mjs
-- docs/reports/economy.md
-- docs/plan/quality-plan.md
-- index.html
-- sw.js
-- pwa.js
-- version.json
+- AGENTS.md
+- TEAM_CONTROL.md
 
 このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
