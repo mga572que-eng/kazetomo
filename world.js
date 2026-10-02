@@ -92,7 +92,24 @@ const World = (() => {
   const GEN = [genHeight, genHeight1, genHeight2, genHeight3];
   let REGION = 0;
   const H = new Float32Array(N * N);
-  function fillH(r) { for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) H[j * N + i] = GEN[r](-WORLD / 2 + i * SP, -WORLD / 2 + j * SP); }
+  const terrainPatches = [[], [], [], []];
+  function patchHeight(r, x, z, h) {
+    for (const p of terrainPatches[r]) {
+      const dx = x - p.x, dz = z - p.z; let w;
+      if (p.kind === 'river') {
+        const cross = Math.abs(dx - Math.sin(dz * .065) * 1.5);
+        w = (1 - smooth(p.width, p.width + 7, cross)) * (1 - smooth(p.length - 8, p.length, Math.abs(dz)));
+      } else w = 1 - smooth(p.radius - 4, p.radius, Math.hypot(dx, dz));
+      if (w > 0) h = lerp(h, p.height, w);
+    }
+    return h;
+  }
+  function setTerrainPatches(r, list) {
+    if (!Number.isInteger(r) || r < 0 || r > 3 || !Array.isArray(list) || list.some(p => !['river', 'cliff'].includes(p.kind) || ![p.x,p.z,p.height,p.kind === 'river' ? p.width : p.radius,p.kind === 'river' ? p.length : p.radius].every(Number.isFinite))) throw new Error('Invalid terrain patch');
+    terrainPatches[r] = list.map(p => ({ ...p }));
+    if (r === REGION) setRegion(r, true);
+  }
+  function fillH(r) { for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) H[j * N + i] = patchHeight(r, -WORLD / 2 + i * SP, -WORLD / 2 + j * SP, GEN[r](-WORLD / 2 + i * SP, -WORLD / 2 + j * SP)); }
   fillH(0);
   function hAt(x, z) { const fx = clamp((x + WORLD / 2) / SP, 0, N - 1.001), fz = clamp((z + WORLD / 2) / SP, 0, N - 1.001), i = fx | 0, j = fz | 0, tx = fx - i, tz = fz - j, k = j * N + i;
     return lerp(lerp(H[k], H[k + 1], tx), lerp(H[k + N], H[k + N + 1], tx), tz); }
@@ -190,7 +207,7 @@ float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
   let grsCells = new Int16Array(2 * 210 * 210), grsCB, grsN = 0;
 
   let P = {}, VAO = {}, hmTex, shTex, shFbo, SHS, GRID, GSP, terPB, terNB, grsKey = '', shValid = false;
-  function setRegion(r) { if (r === REGION && terPB) return; REGION = r; fillH(r);
+  function setRegion(r, force = false) { if (r === REGION && terPB && !force) return; REGION = r; fillH(r);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, hmTex); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, N, N, gl.RED, gl.FLOAT, H);
     const [Pp, Nn] = terrainArrays(); gl.bindBuffer(gl.ARRAY_BUFFER, terPB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, Pp); gl.bindBuffer(gl.ARRAY_BUFFER, terNB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, Nn);
     chunkBounds(); grsKey = ''; shValid = false;
@@ -369,7 +386,7 @@ float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
     if (o.cape) { const cc = hex(o.cape === true ? (o.accent || o.top) : o.cape); seg(G, [0, bodyY1 + .02 * s, -.12 * s], [0, (o.capeLen || .3) * s, -.34 * s], .26 * s * W, .36 * s * W, 6, cc); }
     if (o.kite) { const c1 = hex('#7fc8e6'), c2 = hex('#f6c64a'); const top0 = [0, bodyY1, -.2 * s]; tri(G, top0, [-.55 * s, by, -.42 * s], [0, .15 * s, -.4 * s], c1(), [0, by, 0]); tri(G, top0, [.55 * s, by, -.42 * s], [0, .15 * s, -.4 * s], c2(), [0, by, 0]); }
     if (o.mantle) for (let k = 0; k < 9; k++) { const a = Math.PI + (k - 4) * .32; seg(G, [Math.sin(a) * .25 * s, bodyY1, Math.cos(a) * .2 * s], [Math.sin(a) * .5 * s, bodyY1 - .55 * s, Math.cos(a) * .42 * s], .09 * s, 0, 4, hex('#1e1b2a')); }
-    if (o.sword) seg(G, [-.25 * s, bodyY1 + .15 * s, -.26 * s], [.25 * s, bodyY0 - .1 * s, -.28 * s], .03 * s, .02 * s, 4, hex('#c9ced6'));
+    if (o.sword) seg(G, [-.25 * s, bodyY1 + .15 * s, -.26 * s], [.25 * s, bodyY0 - .1 * s, -.28 * s], .03 * s, .02 * s, 4, hex(o.weaponTint||'#c9ced6'));
     if (o.harp) { for (let k = 0; k < 10; k++) { const a0 = k / 10 * 3.6 - .3, a1 = (k + 1) / 10 * 3.6 - .3; seg(G, [Math.cos(a0) * .2 * s, by + Math.sin(a0) * .25 * s, -.3 * s], [Math.cos(a1) * .2 * s, by + Math.sin(a1) * .25 * s, -.3 * s], .025 * s, .025 * s, 4, trim); } }
     if (o.spear) { seg(G, [.34 * s, .1, .12], [.5 * s, 2.3 * s, .2], .025, .025, 5, hex('#8a6a45')); seg(G, [.5 * s, 2.3 * s, .2], [.52 * s, 2.62 * s, .21], .06, 0, 4, hex('#dfe6ee')); }
     if (o.staff) { seg(G, [-.36 * s, .05, .12], [-.42 * s, 1.95 * s, .16], .025, .025, 5, hex('#6a4a2e')); ico(G, .09 * s, [-.42 * s, 2.05 * s, .16], solid(o.staffGlow || [1, .92, .55], 1), 0, 0); }
@@ -572,7 +589,7 @@ float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
     if (k) { gl.bindBuffer(gl.ARRAY_BUFFER, vaoIb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, o, 0, k * 5); } return k; }
 
   // ---------- init ----------
-  const BMAX = 14000; // 描く ブロックの 上限（地方ごと。霧の大陸に 新しい 町を 足したため 9000→14000）
+  const BMAX = 24000; // 描く ブロックの 上限（地方ごと。霧の大陸に 新しい 町を 足したため 大型の家と室内に合わせ24000）
   let quadVAO, triVAO, partVAO, cubeVAO, blockIB, blockN = 0, blockData = new Float32Array(4 * BMAX), ghostIB, ghostVAO;
   const PARTS = 260;
   function init(canvas, coarse) {
@@ -974,5 +991,5 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
   function project(p) { const m = lastVP; if (!m) return null; const x = m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], y = m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13], w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
     if (w <= .1) return null; return [(x / w * .5 + .5) * (window.__vw || innerWidth), (1 - (y / w * .5 + .5)) * (window.__vh || innerHeight)]; }
 
-  return { setQuality, get quality() { return QL; }, init, resize, render, project, hAt, nAt, surfaceAt, skyInfo, Blocks, setRegion, biomeAt, speciesGeo, propGeo, seg, TOWN1, RUINS1, TOWN2, TOWER2, ISL2, TOWN3, PALACE3, LH3, TRENCH3, get region() { return REGION; }, Geo, prism, ico, shade, solid, hex, human, creature, shadowGeo, makeMesh, setPaths, fbm, rnd, WORLD, V, clamp, lerp, smooth };
+  return { setQuality, get quality() { return QL; }, init, resize, render, project, hAt, nAt, surfaceAt, skyInfo, Blocks, setRegion, biomeAt, speciesGeo, propGeo, seg, TOWN1, RUINS1, TOWN2, TOWER2, ISL2, TOWN3, PALACE3, LH3, TRENCH3, get region() { return REGION; }, Geo, prism, ico, shade, solid, hex, human, creature, shadowGeo, makeMesh, setPaths, setTerrainPatches, addTerrainPatches: (r,list)=>setTerrainPatches(r,[...terrainPatches[r],...list]), fbm, rnd, WORLD, V, clamp, lerp, smooth };
 })();

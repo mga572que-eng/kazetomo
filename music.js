@@ -329,6 +329,10 @@ const Music = (() => {
     const bl = (f, dt, len, type = 'square', v = .035) => { const g = C.createGain(); g.connect(d); g.gain.setValueAtTime(v, t + dt); g.gain.exponentialRampToValueAtTime(.0001, t + dt + len); osc(type, f, t + dt, t + dt + len, g); };
     if (bsfx(kind, t, d, bl)) return;
     switch (kind) {
+      case 'cow': bl(95,0,.5,'triangle',.12);bl(125,.25,.6,'sine',.08);break;
+      case 'sheep': bl(240,0,.16,'sawtooth',.025);bl(200,.12,.18,'triangle',.08);bl(230,.25,.22,'triangle',.06);break;
+      case 'hen': bl(620,0,.06,'triangle',.07);bl(430,.07,.09,'triangle',.07);bl(750,.18,.06,'triangle',.06);break;
+      case 'goat': bl(180,0,.25,'sawtooth',.035);bl(155,.14,.25,'triangle',.07);break;
       case 'blip': bl(1250, 0, .035, 'square', .018); break;
       case 'cursor': bl(1800, 0, .04, 'square', .03); break;
       case 'ok': bl(1320, 0, .06); bl(1760, .06, .08); break;

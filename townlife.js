@@ -9,11 +9,11 @@
   const TOWNS = [
     { key: 'kazami', pre: 'k', r: 0, name: '風見の村', at: () => K.REG[0].town, pop: 40, lv: 2, price: .9, school: true, farm: true, extras: 3, note: '灯台守と 漁師の 小さな 村' },
     { key: 'shiomi', pre: 's', r: 0, name: '潮見の町 シオミ', at: () => K.shiomi, pop: 60, lv: 1, price: 1.2, school: false, farm: false, extras: 4, note: '半年前の 火事から 立ちなおり中。 物が 足りず 値が 高い' },
-    { key: 'minato', pre: 'm', r: 1, name: '港町ミナト', at: () => K.REG[1].town, pop: 320, lv: 5, price: 1.1, school: true, farm: false, extras: 14, stalls: 4, note: '霧の大陸の 玄関口。 交易で にぎわう' },
+    { key: 'minato', pre: 'm', r: 1, name: '港町ミナト', at: () => K.REG[1].town, pop: 320, lv: 5, price: 1.1, school: true, farm: false, extras: 7, stalls: 4, note: '霧の大陸の 玄関口。 交易で にぎわう' },
     { key: 'oasis', pre: 'o', r: 1, name: 'オアシスの村 サラム', at: () => K.oasis, pop: 70, lv: 2, price: 1.25, school: false, farm: true, extras: 3, stalls: 1, note: '砂漠の 水場。 品物を 運ぶのが たいへんで 値が 高い' },
-    { key: 'kukuru', pre: 'c', r: 2, name: '雲の里ククル', at: () => K.REG[2].town, pop: 110, lv: 3, price: 1.0, school: true, farm: false, extras: 6, stalls: 1, note: '雲の 上の 里。 おだやかな くらし' },
+    { key: 'kukuru', pre: 'c', r: 2, name: '雲の里ククル', at: () => K.REG[2].town, pop: 110, lv: 3, price: 1.0, school: true, farm: false, extras: 4, stalls: 1, note: '雲の 上の 里。 おだやかな くらし' },
     { key: 'hayate', pre: 'h', r: 2, name: '風車の集落 ハヤテ', at: () => K.hayate, pop: 50, lv: 2, price: .95, school: false, farm: true, extras: 3, note: '風車と 畑の 集落' },
-    { key: 'awa', pre: 'a', r: 3, name: 'アワの里', at: () => K.REG[3].town, pop: 130, lv: 3, price: 1.05, school: true, farm: false, extras: 6, stalls: 2, note: '泡に まもられた 海の底の 里' },
+    { key: 'awa', pre: 'a', r: 3, name: 'アワの里', at: () => K.REG[3].town, pop: 130, lv: 3, price: 1.05, school: true, farm: false, extras: 4, stalls: 2, note: '泡に まもられた 海の底の 里' },
   ];
   const LV = ['', 'さびれぎみ', 'ひっそり', 'ほどほど', 'にぎやか', 'とても にぎやか'];
   const PRICE = p => p >= 1.2 ? '高い' : p > 1.04 ? 'やや 高い' : p < .93 ? '安い' : 'ふつう';
@@ -54,20 +54,22 @@
   const clothCols = ['#f4f0e6', '#7ab0d8', '#e88a8a', '#f0d070', '#9ad08a'];
   const lineGeo = wash => geo(G => { for (const x of [-1.3, 1.3]) seg(G, [x, 0, 0], [x, 1.7, 0], .045, .04, 5, hex('#7a5a3a')); seg(G, [-1.3, 1.6, 0], [1.3, 1.6, 0], .012, .012, 3, hex('#e8e0d0'));
     if (wash) for (let k = 0; k < 4; k++) { const x = -.9 + k * .6; prism(G, .2, .2, 1.05 + (k % 2) * .15, 1.6, 4, hex(clothCols[(k + 1) % 5]), x, 0, 1, .12); } });
-  const henGeo = geo(G => { ico(G, .17, [0, .2, 0], hex('#f4f0e6'), .04, 1, .85); ico(G, .1, [0, .38, .12], hex('#f4f0e6'), .02); ico(G, .045, [0, .49, .12], hex('#e03a3a'), 0); prism(G, .03, .0, .36, .36, 4, hex('#f0a020'), 0, .22, 1, 1); seg(G, [0, .37, .21], [0, .35, .27], .025, 0, 4, hex('#f0a020')); for (const sx of [-1, 1]) seg(G, [sx * .06, .08, 0], [sx * .06, 0, .02], .015, .015, 3, hex('#e0a030')); });
-  const goatGeo = geo(G => { prism(G, .22, .22, .35, .7, 8, hex('#e8e0d0'), 0, 0, 1, 1.7); ico(G, .16, [0, .78, .38], hex('#e8e0d0'), .02); for (const sx of [-1, 1]) { seg(G, [sx * .07, .9, .34], [sx * .12, 1.05, .22], .03, .01, 4, hex('#8a7a6a')); for (const sz of [-1, 1]) seg(G, [sx * .12, .38, sz * .25], [sx * .12, 0, sz * .25], .04, .035, 4, hex('#d8d0c0')); } seg(G, [0, .62, .52], [0, .52, .55], .03, .01, 3, hex('#8a7a6a')); });
+  const henGeo = geo(G => { ico(G, .17, [0, .2, 0], hex('#f4f0e6'), .04, 1.2, .95); ico(G, .1, [0, .38, .12], hex('#f4f0e6'), .02); for(const sx of [-1,1]){ico(G,.012,[sx*.085,.40,.175],hex('#181b20'),0);ico(G,.07,[sx*.16,.22,0],hex('#d8cdb6'),0);seg(G,[sx*.05,.25,-.12],[sx*.09,.38,-.22],.06,.01,4,hex('#765741'));} ico(G, .045, [0, .49, .12], hex('#e03a3a'), 0); prism(G, .03, .0, .36, .36, 4, hex('#f0a020'), 0, .22, 1, 1); seg(G, [0, .37, .21], [0, .35, .27], .025, 0, 4, hex('#f0a020')); for (const sx of [-1, 1]) seg(G, [sx * .06, .08, 0], [sx * .06, 0, .02], .015, .015, 3, hex('#e0a030')); });
+  const goatGeo = geo(G => { prism(G, .22, .22, .35, .7, 8, hex('#e8e0d0'), 0, 0, 1, 1.7); ico(G, .16, [0, .78, .38], hex('#e8e0d0'), .02);for(const sx of [-1,1]){ico(G,.018,[sx*.12,.81,.49],hex('#151a20'),0);seg(G,[sx*.12,.8,.38],[sx*.27,.78,.34],.06,.025,4,hex('#baa78f'));}ico(G,.11,[0,.72,.50],hex('#a48b75'),0); for (const sx of [-1, 1]) { seg(G, [sx * .07, .9, .34], [sx * .12, 1.05, .22], .03, .01, 4, hex('#8a7a6a')); for (const sz of [-1, 1]) seg(G, [sx * .12, .38, sz * .25], [sx * .12, 0, sz * .25], .04, .035, 4, hex('#d8d0c0')); } seg(G, [0, .62, .52], [0, .52, .55], .03, .01, 3, hex('#8a7a6a')); });
+  const cowGeo=geo(G=>{ico(G,.52,[0,.75,0],hex('#eee9df'),0,1.15,.75);ico(G,.27,[0,1,.65],hex('#eee9df'),0);ico(G,.15,[0,.87,.88],hex('#d6a6a0'),0);for(const sx of [-1,1]){ico(G,.024,[sx*.21,1.04,.79],hex('#151a20'),0);seg(G,[sx*.22,1.08,.62],[sx*.34,1.3,.55],.045,.01,4,hex('#c3b69c'));seg(G,[sx*.23,1,.59],[sx*.43,1.03,.55],.07,.035,4,hex('#70645d'));for(const sz of [-1,1]){seg(G,[sx*.29,.6,sz*.32],[sx*.29,.08,sz*.32],.08,.07,4,hex('#ece5d6'));ico(G,.09,[sx*.29,.06,sz*.32],hex('#4b433e'),0);}ico(G,.16,[sx*.46,.8,-.1],hex('#554943'),0);}seg(G,[0,.9,-.48],[0,.45,-.66],.035,.02,4,hex('#554943'));});
+  const sheepGeo=geo(G=>{for(let i=0;i<12;i++){const a=i*2.399;ico(G,.19,[Math.cos(a)*.24,.55+(i%3)*.15,Math.sin(a)*.35],hex('#f0eee3'),.025);}ico(G,.16,[0,.72,.43],hex('#514b47'),0);for(const sx of [-1,1]){ico(G,.015,[sx*.11,.76,.52],hex('#151a20'),0);seg(G,[sx*.1,.74,.4],[sx*.25,.68,.42],.04,.01,4,hex('#514b47'));for(const sz of [-1,1])seg(G,[sx*.17,.48,sz*.23],[sx*.17,.03,sz*.23],.035,.028,4,hex('#514b47'));}});
   const stallGeo = geo(G => { for (const [x, z] of [[-1, -.6], [1, -.6], [-1, .6], [1, .6]]) seg(G, [x, 0, z], [x, 2, z], .05, .05, 5, hex('#7a5a3a')); prism(G, 1.2, 1.2, .8, .9, 4, hex('#9a7048'), 0, 0, 1, .55);
     for (let k = 0; k < 6; k++) prism(G, .2, .2, 1.95, 2.15, 4, hex(k % 2 ? '#f4f0e6' : '#d84a3a'), -1 + k * .4, 0, 1, 3.4); for (let k = 0; k < 5; k++) ico(G, .1, [-.8 + k * .4, 1, 0], hex(['#e04a3a', '#f0c040', '#7ac04a', '#f08a3a', '#a04ac0'][k]), .05); });
   const boardGeo = geo(G => { for (const x of [-1, 1]) seg(G, [x, 0, 0], [x, 1.9, 0], .05, .05, 5, hex('#6a4a2e')); prism(G, 1.0, 1.0, .8, 1.8, 4, hex('#2e4a3a'), 0, 0, 1.05, .05); prism(G, 1.05, 1.05, 1.78, 1.86, 4, hex('#6a4a2e'), 0, 0, 1.05, .07); });
   const benchGeo = geo(G => { prism(G, .8, .8, .38, .45, 4, hex('#9a7048'), 0, 0, 1.1, .3); for (const x of [-.6, .6]) prism(G, .06, .06, 0, .4, 4, hex('#6a4a2e'), x, 0); });
   const umbGeo = c => geo(G => { seg(G, [0, 0, 0], [0, .55, 0], .02, .02, 4, hex('#5a4030')); prism(G, .62, .02, .45, .72, 8, hex(c)); });
-  const M = { umb0: W.makeMesh(umbGeo('#e85a6a'), 24), umb1: W.makeMesh(umbGeo('#4a8ad8'), 24), umb2: W.makeMesh(umbGeo('#f0c040'), 24), lampOn: W.makeMesh(lampGeo(true), 40), lampOff: W.makeMesh(lampGeo(false), 40), lineW: W.makeMesh(lineGeo(true), 16), line0: W.makeMesh(lineGeo(false), 16), hen: W.makeMesh(henGeo, 24), goat: W.makeMesh(goatGeo, 8), stall: W.makeMesh(stallGeo, 8), board: W.makeMesh(boardGeo, 4), bench: W.makeMesh(benchGeo, 16) };
+  const M = { umb0: W.makeMesh(umbGeo('#e85a6a'), 24), umb1: W.makeMesh(umbGeo('#4a8ad8'), 24), umb2: W.makeMesh(umbGeo('#f0c040'), 24), lampOn: W.makeMesh(lampGeo(true), 40), lampOff: W.makeMesh(lampGeo(false), 40), lineW: W.makeMesh(lineGeo(true), 16), line0: W.makeMesh(lineGeo(false), 16), cow: W.makeMesh(cowGeo,8), sheep: W.makeMesh(sheepGeo,8), hen: W.makeMesh(henGeo, 24), goat: W.makeMesh(goatGeo, 8), stall: W.makeMesh(stallGeo, 8), board: W.makeMesh(boardGeo, 4), bench: W.makeMesh(benchGeo, 16) };
   // ---------- 場所づくり ----------
   const thr = r => r === 2 ? 4 : .3;
-  const houseHit = (r, x, z) => [...K.REG[r].houses, ...(K.extraHouses || []).filter(h => h.r === r)].some(h => Math.abs(x - h.x) < 3.6 && Math.abs(z - h.z) < 3.6);
+  const houseHit = (r, x, z) => [...K.REG[r].houses, ...(K.extraHouses || []).filter(h => h.r === r)].some(h => Math.abs(x - h.x) < 4.7 && Math.abs(z - h.z) < 4.7);
   const okSpot = (r, x, z) => { const g = K.hAt(x, z), y = K.surfaceAt(x, z, 99); return Number.isFinite(y) && g >= thr(r) && Math.abs(y - g) < .4 && !K.blocked(x, z, y) && !houseHit(r, x, z) && [[.8, 0], [-.8, 0], [0, .8], [0, -.8]].every(([a, b]) => !K.blocked(x + a, z + b, y) && Math.abs(K.hAt(x + a, z + b) - g) < .7); };
   const near = (r, c, r0, r1, seed, n = 1, avoid = []) => { const out = []; let s = seed * 9301 + 49297; const rn = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
-    for (let k = 0; k < 400 && out.length < n; k++) { const a = rn() * 6.283, d = r0 + rn() * (r1 - r0), x = c.x + Math.cos(a) * d, z = c.z + Math.sin(a) * d; if (okSpot(r, x, z) && ![...out, ...avoid].some(p => dist(p, { x, z }) < 2.2)) out.push({ x, z }); } return out; };
+    for (let k = 0; k < 400 && out.length < n; k++) { const a = rn() * 6.283, d = r0 + rn() * (r1 - r0), x = c.x + Math.cos(a) * d, z = c.z + Math.sin(a) * d; if (okSpot(r, x, z) && ![...out, ...avoid].some(p => dist(p, { x, z }) < 3.5)) out.push({ x, z }); } return out; };
   const door = h => { if (!h.npc) return null; const dx = h.npc.x - h.x, dz = h.npc.z - h.z, L = Math.hypot(dx, dz) || 1; return { x: h.npc.x + dx / L * 1.2 + dz / L * 1.3, z: h.npc.z + dz / L * 1.2 - dx / L * 1.3 }; };
   const people = []; // { row?, npc, town, type, look, role, spots… }
   const towns = {};
@@ -76,7 +78,7 @@
       const S = { T, c, r, seed: T.key.length * 131 + T.r * 17 };
       const hs = [...K.REG[r].houses, ...(K.extraHouses || []).filter(h => h.r === r && !/^ruin/.test(h.id))].filter(h => dist(h, c) < 42);
       S.homes = hs.map(door).filter(p => p && okSpot(r, p.x, p.z)); if (S.homes.length < 3) S.homes.push(...near(r, c, 18, 30, S.seed + 1, 4 - S.homes.length));
-      S.plaza = near(r, c, 3, 9, S.seed + 2, 6, S.homes);
+      S.plaza = near(r, c, T.key==='hayate'?2:7, T.key==='hayate'?12:16, S.seed + 2, 6, S.homes);
       const shop = hs.filter(h => /item|weapon|sitem/.test(h.id)).map(door).filter(Boolean); S.market = shop.length ? shop : S.plaza.slice(0, 2);
       const inn = hs.filter(h => /inn/.test(h.id)).map(door).filter(Boolean); const bar = (K.townFeature && K.townFeature.bars || []).filter(b => b.r === r && dist(b, c) < 50).map(b => ({ x: b.x + 1.5, z: b.z + 1.5 }));
       S.food = [...inn, ...bar].filter(p => okSpot(r, p.x, p.z)); if (!S.food.length) S.food = S.plaza.slice(0, 1); S.bar = bar.length ? bar : S.food;
@@ -85,7 +87,7 @@
       S.stalls = T.stalls ? near(r, c, 8, 16, S.seed + 5, T.stalls, [...S.homes, ...S.lamps, ...S.plaza]) : [];
       S.lines = S.homes.slice(0, 3).map((h, i) => near(r, h, 2.5, 4.5, S.seed + 10 + i, 1, S.homes)[0]).filter(Boolean);
       S.pens = T.farm ? near(r, c, 16, 26, S.seed + 6, 2, [...S.homes, ...S.lamps]) : [];
-      S.hens = S.pens.flatMap((p, i) => Array.from({ length: 3 }, (_, k) => ({ x: p.x + (k - 1) * .6, z: p.z + (i % 2 ? .4 : -.4), yaw: k * 2.1, home: p, goat: k === 0 && T.key === 'oasis' })));
+      S.hens = S.pens.flatMap((p, i) => Array.from({ length: 3 }, (_, k) => ({ x: p.x + (k - 1) * .6, z: p.z + (i % 2 ? .4 : -.4), yaw: k * 2.1, home: p, goat: k === 0 && T.key === 'oasis', cow:k===0&&T.key!=='oasis', sheep:k===1 })));
       S.walk = [...S.plaza, ...S.lamps, ...S.market];
       towns[T.key] = S; return S;
     } finally { W.setRegion(prev); } }
@@ -126,15 +128,26 @@
   const okStep = (r, x, z, y) => K.hAt(x, z) >= thr(r) && !K.blocked(x, z, y) && Math.abs(K.surfaceAt(x, z, y + 1.1) - y) < .6;
   const npcOf = p => p.npc || (p.npc = K.NPCS.find(n => n.id === p.id));
   let profileShown = null;
-  function step(p, S, h, dt, T) { const n = npcOf(p); if (!n) return; if (p.row && n.mobVisible === false) return; const P = plan(p, h, S); const to = P.to || S.c;
-    if (!p.st) { p.st = { x: to.x, z: to.z }; n.x = to.x; n.z = to.z; n.placed = true; }
+  function step(p, S, h, dt, T) { const n = npcOf(p); if (!n) return; if (p.row && n.mobVisible === false) return; if (H.talking === n.id) { p.moving=false;p.pose='stand';n.yaw=Math.atan2(K.player.x-n.x,K.player.z-n.z);return; } if(!n.placed){p.missingT=(p.missingT||0)-dt;if(p.missingT>0)return;p.missingT=2;p.goal=null;} const P = plan(p, h, S); let to = P.to || S.c;
+    const neighbours=people.filter(q=>q!==p&&q.town===p.town).map(npcOf).filter(q=>q&&q.placed&&!q.indoor);
+    const goalKey=to.x.toFixed(2)+':'+to.z.toFixed(2);p.pickT=(p.pickT||0)-dt;
+    if(!p.goal||p.goalKey!==goalKey||p.pickT<=0){
+      if (!okSpot(S.r,to.x,to.z)) to=near(S.r,to,3,12,p.i+73,1,S.homes)[0] || S.plaza[0] || S.c;
+      if(neighbours.some(q=>dist(q,to)<1.8)) to=near(S.r,to,2.5,8,p.i+301,1,neighbours)[0] || near(S.r,S.c,1,13,p.i+601,1,neighbours)[0] || (n.placed?{x:n.x,z:n.z}:null);
+      if(!to||!okSpot(S.r,to.x,to.z)){n.placed=false;n.indoor=true;p.goal=null;return;}
+      p.goal=to;p.goalKey=goalKey;p.pickT=2;
+      if (!okSpot(S.r,n.x,n.z) && n.placed) { const safe=near(S.r,n,3,12,p.i+91,1,neighbours)[0]; if(safe){n.x=safe.x;n.z=safe.z;} }
+    }else to=p.goal;
+    if (!p.st || !n.placed) { p.st = { x: to.x, z: to.z }; n.x = to.x; n.z = to.z; n.placed = true; }
     const pl = K.player, far = dist(n, pl) > 70; const d = dist(n, to);
     if (far) { n.x = to.x; n.z = to.z; n.placed = true; } // 見えない ところでは 歩かせない（軽く する）
     else if (d > .35) { const sp = (P.run ? 2.4 : P.slow ? .8 : p.role === 'kid' ? 1.6 : 1.25) * dt; const y = K.surfaceAt(n.x, n.z, 99); const a0 = Math.atan2(to.x - n.x, to.z - n.z); let moved = false;
-      for (const da of [0, .6, -.6, 1.2, -1.2, 1.9, -1.9]) { const a = a0 + da, nx = n.x + Math.sin(a) * Math.min(sp, d), nz = n.z + Math.cos(a) * Math.min(sp, d); if (okStep(S.r, nx, nz, y)) { n.x = nx; n.z = nz; n.yaw = a; moved = true; p.walk = (p.walk || 0) + Math.min(sp, d); break; } }
+      for (const da of [0, .6, -.6, 1.2, -1.2, 1.9, -1.9]) { const a = a0 + da, nx = n.x + Math.sin(a) * Math.min(sp, d), nz = n.z + Math.cos(a) * Math.min(sp, d); if (okStep(S.r, nx, nz, y) && !neighbours.some(q=>dist(q,{x:nx,z:nz})<1.6)) { n.x = nx; n.z = nz; n.yaw = a; moved = true; p.walk = (p.walk || 0) + Math.min(sp, d); break; } }
       if (p.tgt !== to) { p.tgt = to; p.tt = 0; } p.tt += dt; // 遠回りが 長すぎる ときも、見ていなければ 着いた ことに する
       p.stuck = moved ? 0 : (p.stuck || 0) + dt; if ((p.stuck > 2.5 && dist(n, pl) > 18) || (p.tt > 25 && dist(n, pl) > 12)) { n.x = to.x; n.z = to.z; p.stuck = 0; p.tt = 0; } p.moving = moved; }
     else p.moving = false;
+    if(neighbours.some(q=>dist(q,n)<1.4)){const away=near(S.r,n,1.8,5,p.i+719,1,neighbours)[0];if(away){n.x=away.x;n.z=away.z;}else{n.indoor=true;n.placed=false;p.goal=null;return;}}
+    if(!okSpot(S.r,n.x,n.z)){n.indoor=true;n.placed=false;p.goal=null;return;}
     n.indoor = P.act === 'home' && d < 1.2; if (P.act === 'home' && far) n.indoor = true;
     if (!p.moving) n.yaw = P.yaw != null ? P.yaw : (dist(n, pl) < 5 ? Math.atan2(pl.x - n.x, pl.z - n.z) : (n.baseYaw || n.yaw || 0));
     p.pose = p.moving ? ((Math.floor((p.walk || 0) / .42) % 2) ? 'walkA' : 'walkB') : P.act === 'sit' ? 'sit' : P.act === 'work' ? ((Math.floor(T * 2.2 + p.i) % 2) ? 'work' : 'stand') : 'stand'; p.act = P.act; }
@@ -153,10 +166,10 @@
       for (const s of S.stalls) if (M.stall.n < M.stall.maxN) M.stall.set(M.stall.n++, s.x, K.surfaceAt(s.x, s.z, 99), s.z, 1, Math.atan2(S.c.x - s.x, S.c.z - s.z));
       if (S.school) { M.board.set(M.board.n++, S.school.x, K.surfaceAt(S.school.x, S.school.z, 99), S.school.z, 1, S.schoolYaw); for (const s of S.seats) if (M.bench.n < M.bench.maxN) M.bench.set(M.bench.n++, s.x, K.surfaceAt(s.x, s.z, 99) - .02, s.z, 1, S.schoolYaw + Math.PI / 2); }
       for (const e of S.hens) { if (!night) { e.yaw += (Math.sin(T * .7 + e.x) * .8) * dt; const nx = e.x + Math.sin(e.yaw) * .25 * dt, nz = e.z + Math.cos(e.yaw) * .25 * dt; if (dist({ x: nx, z: nz }, e.home) < 2.2 && okSpot(S.r, nx, nz)) { e.x = nx; e.z = nz; } else e.yaw += 2; }
-        const m = e.goat ? M.goat : M.hen; if (m.n < m.maxN) m.set(m.n++, e.x, K.surfaceAt(e.x, e.z, 99) + (night ? 0 : Math.abs(Math.sin(T * 6 + e.x)) * .03), e.z, 1, e.yaw); } }
+        const m = e.cow ? M.cow : e.sheep ? M.sheep : e.goat ? M.goat : M.hen; if (m.n < m.maxN) m.set(m.n++, e.x, K.surfaceAt(e.x, e.z, 99) + (night ? 0 : Math.abs(Math.sin(T * 6 + e.x)) * .03), e.z, 1, e.yaw); } }
     // 住人を 描く
     for (const p of people) { if (p.town.r !== r) continue; const n = npcOf(p); if (!n || !n.placed || n.indoor || (p.row && n.mobVisible === false) || dist(n, pl) > 85) continue;
-      const m = meshOf(p.type, p.look, p.pose || 'stand'), py = K.surfaceAt(n.x, n.z, 99) + (p.pose === 'sit' ? -.32 : 0); if (m.n < m.maxN) m.set(m.n++, n.x, py, n.z, 1, n.yaw || 0);
+      const m = meshOf(p.type, p.look, p.pose || 'stand'), py = K.surfaceAt(n.x, n.z, K.hAt(n.x,n.z)+2) + (p.pose === 'sit' ? -.32 : 0); if (m.n < m.maxN) m.set(m.n++, n.x, py, n.z, 1, n.yaw || 0);
       if (p.umb) { const u = M['umb' + (p.i % 3)]; if (u.n < u.maxN) u.set(u.n++, n.x, py + (p.type === 'boy' || p.type === 'girl' ? 1.25 : 1.55), n.z, 1, n.yaw || 0); } }
     // 町に 入ったら ようすを 一言
     if (here && profileShown !== here.key) { profileShown = here.key; K.toast(`${here.name}　人口 およそ${here.pop}人・${LV[here.lv]}・物価 ${PRICE(here.price)}`, 2600); } else if (!here && profileShown && !TOWNS.some(t => t.key === profileShown && t.r === r && dist(t.at() || { x: 1e9, z: 1e9 }, pl) < 60)) profileShown = null;

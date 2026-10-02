@@ -264,7 +264,7 @@ for(const r of RESIDENTS){r.name=r.nm; const a=r.id.startsWith('mob_gem_s')?K.sh
     RESIDENTS.forEach((row, i) => {
       const n = npcMap.get(row.id);
       if (!n || row.r !== K.G.region || !n.mobVisible || dist(n, K.player) > 85) return;
-      const mesh = meshes[i % meshes.length], y = K.surfaceAt(n.x, n.z, 99);
+      const mesh = meshes[i % meshes.length], y = K.surfaceAt(n.x, n.z, K.hAt(n.x,n.z)+2);
       if (K.blocked(n.x, n.z, y)) { if (!n.mobHidden) { n.mobHidden = true; n.hidAt = performance.now(); } else if (performance.now() - n.hidAt > 4000) relocate(row, n); return; }
       if (n.mobHidden) { n.mobHidden = false; n.hidAt = 0; } // 障害物が なくなった → もどす
       const yaw = dist(n, K.player) < 6 ? Math.atan2(K.player.x - n.x, K.player.z - n.z) : n.baseYaw;

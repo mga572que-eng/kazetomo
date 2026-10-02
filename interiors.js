@@ -102,27 +102,27 @@
   };
   const FLOOR = { home: 0, smith: 1, cook: 0, mayor: 0, fisher: 0, scholar: 6, elder: 0, mystic: 6, mill: 0, farm: 0 }, WALL = { home: 4, smith: 6, cook: 4, mayor: 4, fisher: 5, scholar: 4, elder: 4, mystic: 6, mill: 5, farm: 5 };
   function buildShell(r) { const R0 = ROOM[r], prev = W.region; W.setRegion(r);
-    for (let a = -6; a <= 6; a++) for (let b = -6; b <= 6; b++) { B.set(R0.x + a, R0.y - 1, R0.z + b, 1, true, r); B.set(R0.x + a, R0.y, R0.z + b, 0, true, r); }
+    for (let a = -9; a <= 9; a++) for (let b = -9; b <= 9; b++) { B.set(R0.x + a, R0.y - 1, R0.z + b, 1, true, r); B.set(R0.x + a, R0.y, R0.z + b, 0, true, r); }
     W.setRegion(prev); }
   function dressShell(r, kind) { const R0 = ROOM[r], prev = W.region; W.setRegion(r); const S = (a, h, b, t) => B.set(R0.x + a, R0.y + h, R0.z + b, t, true, r);
-    for (let a = -5; a <= 5; a++) for (let b = -5; b <= 5; b++) { S(a, 0, b, FLOOR[kind] ?? 0); for (let h = 1; h <= 4; h++) B.rm(R0.x + a, R0.y + h, R0.z + b, r); }
-    for (let a = -5; a <= 5; a++) for (let b = -5; b <= 5; b++) { if (Math.abs(a) < 5 && Math.abs(b) < 5) continue; for (let h = 1; h <= (b === 5 && Math.abs(a) < 5 ? 1 : 3); h++) { /* 入口がわの 壁は 低く（カメラから 中が 見える） */ const win = h === 2 && ((Math.abs(a) === 5 && (b === -2 || b === 2)) || (b === -5 && (a === -3 || a === 3))); S(a, h, b, Math.abs(a) === 5 && Math.abs(b) === 5 ? 5 : win ? 2 : (WALL[kind] ?? 4)); } }
-    for (let a = -4; a <= 4; a++) for (let h = a === 0 ? 1 : 2; h <= 3; h++) S(a, h, 5, 19); // 戸口と 低い 壁の 上（見えない 壁：外は 空なので）
+    for (let a = -8; a <= 8; a++) for (let b = -8; b <= 8; b++) { S(a, 0, b, FLOOR[kind] ?? 0); for (let h = 1; h <= 4; h++) B.rm(R0.x + a, R0.y + h, R0.z + b, r); }
+    for (let a = -8; a <= 8; a++) for (let b = -8; b <= 8; b++) { if (Math.abs(a) < 10 && Math.abs(b) < 8) continue; for (let h = 1; h <= (b === 8 && Math.abs(a) < 8 ? 1 : 3); h++) { /* 入口がわの 壁は 低く（カメラから 中が 見える） */ const win = h === 2 && ((Math.abs(a) === 8 && (b === -2 || b === 2)) || (b === -8 && (a === -3 || a === 3))); S(a, h, b, Math.abs(a) === 8 && Math.abs(b) === 8 ? 5 : win ? 2 : (WALL[kind] ?? 4)); } }
+    for (let a = -7; a <= 7; a++) for (let h = a === 0 ? 1 : 2; h <= 3; h++) S(a, h, 8, 19); // 戸口と 低い 壁の 上（見えない 壁：外は 空なので）
     W.setRegion(prev); }
   let cur = null; // { r, h, kind, props: [{k,x,z,yaw,kind,key,...}], back, pitch }
   function furnish(r, h) { const R0 = ROOM[r], kind = KIND[h.id] || 'home', list = [...BASE, ...(EXTRA[kind] || [])];
     const used = new Set(); const props = []; for (const [k, a, b, yaw, sk, opt] of list) { const key = `${a.toFixed(1)},${b.toFixed(1)}`; if (used.has(key)) continue; used.add(key);
-      const p = { k, x: R0.x + a + .5, z: R0.z + b + .5, yaw: yaw || 0, kind: sk || null, ...(opt || {}) }; if (sk) p.key = `${r}:${h.id}:${sk}:${a},${b}`; props.push(p); }
+      const p = { k, x: R0.x + a * 1.6 + .5, z: R0.z + b * 1.6 + .5, yaw: yaw || 0, kind: sk || null, ...(opt || {}) }; if (sk) p.key = `${r}:${h.id}:${sk}:${a},${b}`; props.push(p); }
     // 当たり判定（見えない ブロック）
     const prev = W.region; W.setRegion(r); for (const p of props) if (!['rug', 'net', 'cat', 'flower0'].includes(p.k)) { const cells = [[Math.floor(p.x), Math.floor(p.z)]]; if (p.k === 'bed') cells.push([Math.floor(p.x), Math.floor(p.z + .6)]);
       for (const [cx, cz] of cells) for (let h = 1; h <= 2; h++) B.set(cx, R0.y + h, cz, 19, true, r); } W.setRegion(prev);
     return props; }
   async function enter(h) { const r = G().region, d = doorOf(h); dressShell(r, KIND[h.id] || 'home'); const props = furnish(r, h); const R0 = ROOM[r];
     const nc = { r, h, kind: KIND[h.id] || 'home', props, back: d.out, pitch: K.cam.pitch };
-    await K.fade(true); cur = nc; const p = K.player; p.x = R0.x + .5; p.z = R0.z + 3.5; p.y = R0.y + 1.02; p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.enemies = []; K.cam.yaw = Math.PI; p.yaw = Math.PI; K.cam.pitch = Math.max(K.cam.pitch, .62); await K.wait(150); await K.fade(false);
+    await K.fade(true); cur = nc; const p = K.player; p.x = R0.x + .5; p.z = R0.z + 6.5; p.y = R0.y + 1.02; p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.enemies = []; K.cam.yaw = Math.PI; p.yaw = Math.PI; K.cam.pitch = Math.max(K.cam.pitch, .62); await K.wait(150); await K.fade(false);
     const g = K.G; g.housesIn = g.housesIn || {}; g.housesIn[`${r}:${h.id}`] = 1; K.toast(`${NAMEH[h.id] || '家'}に おじゃました`, 1500); }
   async function leave() { if (!cur) return; const c = cur; await K.fade(true); const p = K.player; p.x = c.back.x; p.z = c.back.z; p.y = K.surfaceAt(p.x, p.z, 99); p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.cam.pitch = c.pitch; p.yaw = c.h.yaw; K.cam.yaw = c.h.yaw; cur = null; await K.wait(150); await K.fade(false); }
-  const inRoom = () => cur && G().region === cur.r && Math.abs(K.player.x - ROOM[cur.r].x - .5) < 7 && Math.abs(K.player.z - ROOM[cur.r].z - .5) < 7 && K.player.y > ROOM[cur.r].y - 3;
+  const inRoom = () => cur && G().region === cur.r && Math.abs(K.player.x - ROOM[cur.r].x - .5) < 10 && Math.abs(K.player.z - ROOM[cur.r].z - .5) < 10 && K.player.y > ROOM[cur.r].y - 3;
   // ---------- 町の 外の しらべもの（樽・ツボ・木箱）と 花だん ----------
   const outside = {}; // town.key -> [{k,x,z,yaw,kind,key}]
   function outdoor(T) { if (outside[T.key]) return outside[T.key]; const TL = K.townLife; if (!TL) return []; const S = TL.setupTown(T); if (!S) return []; const r = T.r, prev = W.region; W.setRegion(r);
@@ -139,7 +139,7 @@
   for (let r = 0; r < 4; r++) buildShell(r);
   let checked = false;
   H.frame.push((dt, T) => { for (const k in MESH) MESH[k].n = 0; if (K.phase !== 'field' || (K.B && K.B.active)) return; const g = G(), r = g.region, pl = K.player;
-    if (!checked) { checked = true; const R0 = ROOM[r]; if (Math.abs(pl.x - R0.x) < 8 && Math.abs(pl.z - R0.z) < 8 && pl.y > R0.y - 3) { const t = K.REG[r].town; pl.x = t.x + 2; pl.z = t.z + 4; pl.y = K.surfaceAt(pl.x, pl.z, 99); K.trail.length = 0; } }
+    if (!checked) { checked = true; const R0 = ROOM[r]; if (Math.abs(pl.x - R0.x) < 10 && Math.abs(pl.z - R0.z) < 10 && pl.y > R0.y - 3) { const t = K.REG[r].town; pl.x = t.x + 2; pl.z = t.z + 4; pl.y = K.surfaceAt(pl.x, pl.z, 99); K.trail.length = 0; } }
     const draw = (k, x, y, z, yaw) => { const m = meshOf(k); if (m.n < m.maxN) m.set(m.n++, x, y, z, 1, yaw); };
     if (cur && inRoom()) { K.enemies = []; const y0 = ROOM[r].y + 1; for (const p of cur.props) { let k = p.k; if (k === 'flower0' && p.key) k = 'flower' + gstate(p.key); let x = p.x, z = p.z, yaw = p.yaw;
         if (k === 'cat') { yaw = p.yaw + Math.sin(T * .4) * .8; x += Math.sin(T * .3) * .4; } draw(k, x, y0 + (['net'].includes(k) ? .9 : 0), z, yaw); } return; }
@@ -148,7 +148,7 @@
       for (const o of outdoor(T0)) draw(o.k === 'flower' ? 'flower' + gstate(o.key) : o.k, o.x, o.y, o.z, o.yaw); } });
   // ---------- しらべる ----------
   H.target.push(cand => { const g = G(), r = g.region, pl = K.player;
-    if (cur && inRoom()) { const R0 = ROOM[r]; cand({ exit: 1 }, 'inExit', R0.x + .5, R0.z + 4.6, 1.4); for (const p of cur.props) if (p.kind) cand(p, p.kind === 'garden' ? 'garden' : 'inSearch', p.x, p.z, 1.5); return; }
+    if (cur && inRoom()) { const R0 = ROOM[r]; cand({ exit: 1 }, 'inExit', R0.x + .5, R0.z + 7.6, 1.4); for (const p of cur.props) if (p.kind) cand(p, p.kind === 'garden' ? 'garden' : 'inSearch', p.x, p.z, 1.5); return; }
     for (const h of houses(r)) { if (dist(h, pl) > 8) continue; const d = doorOf(h); cand(h, 'inEnter', d.x, d.z, 1.3); }
     if (K.townLife) for (const T0 of K.townLife.TOWNS) { if (T0.r !== r || !outside[T0.key]) continue; for (const o of outside[T0.key]) if (dist(o, pl) < 3) cand(o, o.kind === 'garden' ? 'garden' : 'inSearch', o.x, o.z, 1.6); } });
   H.labels.inEnter = t => `${NAMEH[t.o.id] || '家'}に 入る`; H.labels.inExit = '外へ 出る';

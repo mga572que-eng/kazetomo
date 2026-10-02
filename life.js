@@ -68,13 +68,13 @@
     clean();
     if (result !== 'catch') { Music.sfx('cancel'); await K.say([result === 'snap' ? 'プツン！ 糸が 切れてしまった……（テンションに 注意）' : '魚に 逃げられてしまった……']); return; }
     const size = Math.round(f.size[0] + (f.size[1] - f.size[0]) * Math.pow(R(), bait ? .7 : 1.2)); G.fishdex = G.fishdex || {}; const rec = G.fishdex[f.id]; const isNew = !rec, isBig = rec && size > rec;
-    G.fishdex[f.id] = Math.max(size, rec || 0); const n = size > (f.size[0] + f.size[1]) / 2 ? 2 : 1; K.gain('sakana', n); if (f.id === 'uminonushi') K.gain('nushiuroko', 1);
+    G.fishStock=G.fishStock||{};G.fishStock[f.id]=(G.fishStock[f.id]||0)+1; G.fishdex[f.id] = Math.max(size, rec || 0); const n = size > (f.size[0] + f.size[1]) / 2 ? 2 : 1; K.gain('sakana', n); if (f.id === 'uminonushi') K.gain('nushiuroko', 1);
     Music.jingle('levelup', K.fieldSong()); K.floatText([K.player.x, K.player.y + 2, K.player.z], `${f.name} ${size}cm`);
     await K.say([`${f.name}を つりあげた！（${size}cm）${isNew ? '　【魚図鑑に 登録】' : isBig ? '　【自己ベスト更新！】' : ''}`, f.desc, `さかな を ${n}こ 手に入れた。`]);
     const got = Object.keys(G.fishdex).length; const rw = FISH_RW.find(x => x.n === got && !(G.fishRw || {})[x.n]);
     if (rw) { G.fishRw = G.fishRw || {}; G.fishRw[rw.n] = 1; if (rw.gold) G.gold += rw.gold; if (rw.give) for (const [k, v] of Object.entries(rw.give)) K.gain(k, v); await K.say([`【魚図鑑 ${got}種】ごほうび：${rw.text}`]); }
     K.save(); K.hud(); }
-  const FISH_RW = [{ n: 4, text: 'まきえ ×5', give: { esa: 5 } }, { n: 8, text: '3000ゴールド', gold: 3000 }, { n: 12, text: '10000ゴールド と 称号「釣り名人」', gold: 10000 }];
+  const FISH_RW = [{ n: 4, text: 'まきえ ×5', give: { esa: 5 } }, { n: 8, text: '3000ゴールド', gold: 3000 }, { n: 12, text: '10000ゴールド', gold: 10000 }, { n:24,text:'15000ゴールド と 称号「釣り名人」',gold:15000 }];
   H.acts.fish = () => fishing();
   // バルド船長が つりざおを くれる
   H.talks.baldo = async () => { const G = K.G; if (G.flags.c2arrive && !(G.inv.tsurizao > 0) && !G.flags.rodGiven) { G.flags.rodGiven = 1; G.inv.tsurizao = 1;
@@ -83,7 +83,7 @@
   // ---------------- 図鑑UI ----------------
   function fishBook() { const G = K.G, dx = G.fishdex || {};
     const rows = DATA.fish.map(f => `<div class="fb-row${dx[f.id] ? ' got' : ''}"><b>${dx[f.id] ? f.name : '？？？'}</b><span>${K.regionName(f.r)}・${{ any: 'いつでも', day: '昼', night: '夜' }[f.t]}${f.bait ? '・まきえ' : ''}</span><span>${dx[f.id] ? `最大 ${dx[f.id]}cm` : '—'}</span><small>${dx[f.id] ? f.desc : ''}</small></div>`).join('');
-    return K.panel(`<h3>魚図鑑　<small>${Object.keys(dx).length} / ${DATA.fish.length}</small></h3><div class="fbook">${rows}</div><p class="st-eq">4・8・12種で ごほうび。つりざおは 道具屋か バルド船長から。</p>`, 'wide'); }
+    return K.panel(`<h3>魚図鑑　<small>${Object.keys(dx).length} / ${DATA.fish.length}</small></h3><div class="fbook">${rows}</div><p class="st-eq">4・8・12・24種で ごほうび。つりざおは 道具屋か バルド船長から。</p>`, 'wide'); }
   function cookBook() { const G = K.G, ck = G.cooked || {};
     const rows = DATA.cook.map(c => `<div class="fb-row${ck[c.out] ? ' got' : ''}"><b>${ck[c.out] ? DATA.items[c.out].name : '？？？'}</b><span>${Object.entries(c.need).map(([k, v]) => `${DATA.items[k].name}${v}`).join('＋')}</span><span>${ck[c.out] ? `${ck[c.out]}回` : '—'}</span><small>${ck[c.out] ? DATA.items[c.out].desc : 'たき火で ためしてみよう'}</small></div>`).join('');
     return K.panel(`<h3>料理図鑑　<small>${Object.keys(ck).length} / ${DATA.cook.length}</small></h3><div class="fbook">${rows}</div>`, 'wide'); }

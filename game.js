@@ -17,16 +17,16 @@ const HOOK = { frame: [], fx: [], target: [], objective: [], menu: [], load: [],
 // ================= helpers for building =================
 function buildHouse(h, style = {}) {
   const cx = Math.round(h.x), cz = Math.round(h.z); let base = 1e9; const wallT = style.wall ?? 4, roofT = style.roof ?? 3, cornerT = style.corner ?? 5;
-  for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) base = Math.min(base, Math.floor(hAt(cx + dx + .5, cz + dz + .5)));
-  for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) { const t = Math.floor(hAt(cx + dx + .5, cz + dz + .5)); for (let y = Math.min(t, base); y <= base; y++) Blocks.set(cx + dx, y, cz + dz, 1, true); }
+  for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) base = Math.min(base, Math.floor(hAt(cx + dx + .5, cz + dz + .5)));
+  for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) { const t = Math.floor(hAt(cx + dx + .5, cz + dz + .5)); for (let y = Math.min(t, base); y <= base; y++) Blocks.set(cx + dx, y, cz + dz, 1, true); }
   const fy = base + 1; const tx = h.face ? h.face[0] : 0, tz = h.face ? h.face[1] : 0; const ddx = tx - cx, ddz = tz - cz; let door;
-  if (Math.abs(ddx) > Math.abs(ddz)) door = [cx + 2 * Math.sign(ddx), cz]; else door = [cx, cz + 2 * Math.sign(ddz)];
-  for (let k = 0; k < 3; k++) for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) {
-    if (Math.abs(dx) < 2 && Math.abs(dz) < 2) continue; const x = cx + dx, z = cz + dz;
+  if (Math.abs(ddx) > Math.abs(ddz)) door = [cx + 3 * Math.sign(ddx), cz]; else door = [cx, cz + 3 * Math.sign(ddz)];
+  for (let k = 0; k < 3; k++) for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) {
+    if (Math.abs(dx) < 3 && Math.abs(dz) < 3) continue; const x = cx + dx, z = cz + dz;
     if (x === door[0] && z === door[1] && k < 2) continue;
-    const corner = Math.abs(dx) === 2 && Math.abs(dz) === 2; const mid = (dx === 0 || dz === 0);
+    const corner = Math.abs(dx) === 3 && Math.abs(dz) === 3; const mid = (dx === 0 || dz === 0);
     Blocks.set(x, fy + k, z, corner ? cornerT : (k === 1 && mid) ? (style.window ?? 2) : wallT, true); }
-  for (let k = 0; k < 4; k++) { const hf = 3 - k; for (let dx = -hf; dx <= hf; dx++) for (let dz = -hf; dz <= hf; dz++) { if (k < 3 && Math.abs(dx) < hf && Math.abs(dz) < hf) continue; Blocks.set(cx + dx, fy + 3 + k, cz + dz, roofT, true); } }
+  for (let k = 0; k < 5; k++) { const hf = 4 - k; for (let dx = -hf; dx <= hf; dx++) for (let dz = -hf; dz <= hf; dz++) { if (k < 4 && Math.abs(dx) < hf && Math.abs(dz) < hf) continue; Blocks.set(cx + dx, fy + 3 + k, cz + dz, roofT, true); } }
   const dir = [Math.sign(door[0] - cx), Math.sign(door[1] - cz)];
   h.npc = { x: door[0] + .5 + dir[0] * 1.6, z: door[1] + .5 + dir[1] * 1.6 }; h.yaw = Math.atan2(dir[0], dir[1]);
 }
@@ -300,11 +300,11 @@ const HUMANS = {
 };
 const mH = {}; for (const k in HUMANS) mH[k] = World.makeMesh(World.human(HUMANS[k]), 1);
 // 主人公と 仲間の 関節アニメ：腰と 肩で 腕・足を ふる 形を、使う ときに 作る（立ち姿は これまでの mH）
-const POSES = { walkA: { legL: .5, legR: -.5, armL: -.45, armR: .45 }, walkB: { legL: -.5, legR: .5, armL: .45, armR: -.45 }, runA: { legL: .9, legR: -.8, armL: -1, armR: .9 }, runB: { legL: -.8, legR: .9, armL: .9, armR: -1 },
+const POSES = { ride: { legL: 1.25, legR: 1.25, armL: .7, armR: .7 }, walkA: { legL: .5, legR: -.5, armL: -.45, armR: .45 }, walkB: { legL: -.5, legR: .5, armL: .45, armR: -.45 }, runA: { legL: .9, legR: -.8, armL: -1, armR: .9 }, runB: { legL: -.8, legR: .9, armL: .9, armR: -1 },
   jump: { legL: .75, legR: -.3, armL: 1.3, armR: 1.1 }, climbA: { armL: 2.9, armR: 1.7, legL: .55, legR: -.1 }, climbB: { armL: 1.7, armR: 2.9, legL: -.1, legR: .55 }, swimA: { armL: 2.7, armR: 1.1, legL: -.35, legR: .35 }, swimB: { armL: 1.1, armR: 2.7, legL: .35, legR: -.35 }, glide: { armL: 2.9, armR: 2.9, legL: -.25, legR: -.15 } };
-const mHP = {}; const poseMesh = (k, p) => { const o = mHP[k] || (mHP[k] = {}); return o[p] || (o[p] = World.makeMesh(World.human({ ...HUMANS[k], pose: POSES[p] }), 1)); };
+const mHP = {}; const poseMesh = (k, p) => { const o = mHP[k] || (mHP[k] = {}), key=p+':'+(G.eq[k]?.a||0)+':'+(G.eq[k]?.w||0); return o[key] || (o[key] = World.makeMesh(World.human({ ...HUMANS[k], ...(HOOK.appearance ? HOOK.appearance(k) : {}), pose: POSES[p] }), 1)); };
 const poseHide = k => { for (const p in (mHP[k] || {})) mHP[k][p].n = 0; };
-function drawHuman(k, pose, x, y, z, s, yaw) { poseHide(k); if (!pose || !POSES[pose] || HOOK.OPT.anim === false) { mH[k].set(0, x, y, z, s, yaw); mH[k].n = 1; return; } mH[k].n = 0; const m = poseMesh(k, pose); m.set(0, x, y, z, s, yaw); m.n = 1; }
+function drawHuman(k, pose, x, y, z, s, yaw) { poseHide(k); if(HOOK.appearance){mH[k].n=0;const m=poseMesh(k,pose&&POSES[pose]?pose:'stand');m.set(0,x,y,z,s,yaw);m.n=1;return;} if (!pose || !POSES[pose] || HOOK.OPT.anim === false) { mH[k].set(0, x, y, z, s, yaw); mH[k].n = 1; return; } mH[k].n = 0; const m = poseMesh(k, pose); m.set(0, x, y, z, s, yaw); m.n = 1; }
 const gaitOf = (ph, run) => { const sn = Math.sin(ph); return Math.abs(sn) < .38 ? null : (sn > 0 ? (run ? 'runA' : 'walkA') : (run ? 'runB' : 'walkB')); };
 const folGait = {};
 const mSp = {}; for (const k of DATA.speciesOrder) mSp[k] = World.makeMesh(World.speciesGeo(SPC[k]), 14);
@@ -362,7 +362,8 @@ let SLOT = 1; const OLD_KEY = 'kazetomo-rpg-1'; const keyOf = n => n === 1 ? 'ka
 function slotInfo(n) { try { const raw = localStorage.getItem(keyOf(n)) || (n === 1 && localStorage.getItem(OLD_KEY)); if (!raw) return null; const d = JSON.parse(raw), g = d.G || {}; const F = g.flags || {};
   const ch = F.c4done ? '第4章クリア' : F.c3done ? (F.c4start ? '第4章' : '第3章クリア') : F.c2done ? '第3章' : F.cleared ? '第2章' : '第1章';
   const lv = Math.max(1, ...((g.party || d.party || []).map(m => m.lv || 1))); const t = Math.floor((g.play || 0) / 60); return { name: g.name || d.name || 'ソラ', ch, lv, time: `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}` }; } catch (e) { return null; } }
-function save() { try { const gp = player.ground && !player.swim && !player.glide && !blocked(player.x, player.z, player.y) ? player : (player.good && player.good.r === G.region ? player.good : player); G.pos = { x: gp.x, z: gp.z, y: gp.y }; // 空中・水中・めりこみ中は 直前の 安全な 足場を 記録 G.placed = [Blocks.placed(0), Blocks.placed(1), Blocks.placed(2), Blocks.placed(3)]; G.lit = REG[0].beacons.map(b => b.lit ? 1 : 0); G.guard = REG[0].beacons.map(b => b.guard ? 1 : 0);
+function save() { try { const gp = (HOOK.savePosition && HOOK.savePosition()) || (player.ground && !player.swim && !player.glide && !blocked(player.x, player.z, player.y) ? player : (player.good && player.good.r === G.region ? player.good : player)); G.pos = { x: gp.x, z: gp.z, y: gp.y }; // 空中・水中・めりこみ中は 直前の 安全な 足場を 記録
+  G.placed = [Blocks.placed(0), Blocks.placed(1), Blocks.placed(2), Blocks.placed(3)]; G.lit = REG[0].beacons.map(b => b.lit ? 1 : 0); G.guard = REG[0].beacons.map(b => b.guard ? 1 : 0);
   localStorage.setItem(keyOf(SLOT), JSON.stringify({ G, uidN })); for (const f of HOOK.saved) try { f(); } catch (e) {} return true; } catch (e) { return false; } }
 function hasSave() { return [1, 2, 3].some(n => slotInfo(n)); }
 function load() { try {
@@ -530,8 +531,11 @@ function hud() {
   $('hud').querySelector('.keys-hint').classList.toggle('gone', G.play > 75);
   $('btnMat').textContent = (DATA.blocks[G.mat] || '') + (G.blk[G.mat] ? `${G.blk[G.mat]}` : '');
 }
-function stamHud() { const s = $('stam'); const f = G.stam / G.stamMax; s.style.setProperty('--f', f.toFixed(3)); s.classList.toggle('low', f < .25 || player.tired); s.classList.toggle('full', f >= .999 && !player.climb && !player.glide);
-  if (phase === 'field') { const p = World.project([player.x, player.y + 1.7, player.z]); if (p) { s.style.left = Math.round(p[0] + 26) + 'px'; s.style.top = Math.round(p[1] - 30) + 'px'; } } }
+function stamHud() { const s = $('stam'), f = Math.max(0, Math.min(1,G.stam/G.stamMax));
+  s.style.setProperty('--f',f.toFixed(3)); s.classList.toggle('low',f<.25||player.tired); s.classList.remove('full');
+  s.style.left='';s.style.top='';const key=Math.ceil(G.stam)+':'+G.stamMax;if(s.dataset.value===key)return;s.dataset.value=key;s.innerHTML=`<span>がんばり ${Math.ceil(G.stam)} / ${G.stamMax}　${Math.floor(G.stamMax/20)}こ</span><i style="width:${Math.min(300,G.stamMax)/3}%"><b style="width:${f*100}%"></b></i>`;
+}
+
 
 // ================= tips / item gain =================
 // ヒントは 1件ずつ 順番に。地名バナー（ux.js #areaBn）や 暗転中は 待ってから 出す。tip(html, key) / tip(html, ms)
@@ -603,7 +607,7 @@ let target = null, sandCd = 0;
 function onSand() { const b = World.biomeAt(player.x, player.z); const h = hAt(player.x, player.z); return player.ground && (b === 'desert' || (b === 'shore' && h > .3)) && player.y - h < .3; }
 function findTarget() {
   const r = REGr(); const px = player.x, pz = player.z, fx = Math.sin(player.yaw), fz = Math.cos(player.yaw); let best = null, bs = 1e9;
-  const cand = (o, type, x, z, rng) => { if (Math.abs(x - px) > rng + 1 || Math.abs(z - pz) > rng + 1) return; const dx = x - px, dz = z - pz, d = Math.hypot(dx, dz); if (d > rng) return; const f = (dx * fx + dz * fz) / (d || 1); const sc = d - f * 1.3; if (sc < bs) { bs = sc; best = { o, type, x, z }; } };
+  const cand = (o, type, x, z, rng) => { if (Math.abs(x - px) > rng + 1 || Math.abs(z - pz) > rng + 1) return; const dx = x - px, dz = z - pz, d = Math.hypot(dx, dz); if (d > rng) return; const f = (dx * fx + dz * fz) / (d || 1); const sc = d - f * 1.3; if (type === 'npc' && (f < .25 || Math.abs(player.y - (o.y ?? surfaceAt(x, z, hAt(x,z) + 2))) > 3)) return; if (sc < bs) { bs = sc; best = { o, type, x, z }; } };
   for (const n of npcNow()) cand(n, 'npc', n.x, n.z, 3);
   for (const t of r.trees) if (t.state === 'ok') cand(t, 'tree', t.x, t.z, 2.2 + t.s * .3);
   for (const k of r.rocks) if (k.state === 'ok') cand(k, 'rock', k.x, k.z, 1.9 + k.s * .8);
@@ -670,7 +674,7 @@ function cycleMat(silent) { const have = DATA.blocks.map((_, i) => i).filter(i =
   const i = have.indexOf(G.mat); G.mat = have[(i + 1) % have.length]; hud(); }
 function buildCell() { const fx = player.x + Math.sin(player.yaw) * 1.5, fz = player.z + Math.cos(player.yaw) * 1.5; const ix = Math.floor(fx), iz = Math.floor(fz);
   const base = surfaceAt(fx, fz, player.y + 2.5); let iy = Math.floor(base + .001); while (Blocks.has(ix, iy, iz)) iy++; return [ix, iy, iz]; }
-function place() { if (mode() !== 'field' || !G.build) return; const [x, y, z] = buildCell();
+function place() { if (mode() !== 'field' || !G.build) return; if (window.KZ?.lhDungeon?.here()) { toast('ここでは ブロックを おけない', 1200); return; } const [x, y, z] = buildCell();
   if (y > player.y + 3) { toast('そこには 届かない', 1200); return; }
   if (x === Math.floor(player.x) && z === Math.floor(player.z) && y >= Math.floor(player.y) - 1 && y <= Math.floor(player.y + 1.7)) return;
   if (!(G.blk[G.mat] > 0)) { toast(`${DATA.blocks[G.mat]}ブロックが ない`, 1200); return; }
@@ -718,10 +722,13 @@ async function statueEvent() {
 
 // ================= story & NPCs =================
 async function talk(n) {
-  n.yaw = Math.atan2(player.x - n.x, player.z - n.z);
+  player.vx = player.vz = player.vy = 0; player.yaw = Math.atan2(n.x-player.x,n.z-player.z); if(HOOK.OPT.fpv)cam.yaw=player.yaw;
+  n.yaw = Math.atan2(player.x - n.x, player.z - n.z); HOOK.talking = n.id;
+  try {
   if (HOOK.talks[n.id]) { const r = await HOOK.talks[n.id](n); if (r !== 'pass') return; }
   const f = { yui: talkYui, gen: talkGen, nagi: talkNagi, mio: talkMio, kurou: talkKurou, kaito: talkKaito, baldo: talkBaldo, inn: talkInn, item: talkItem, weapon: talkWeapon, tsumugi: talkTsumugi, guild: talkGuild, soyogi: talkSoyogi, haru: talkHaruNpc }[n.id];
-  if (f) return f(n);
+  if (f) return await f(n);
+  } finally { HOOK.talking = null; }
 }
 async function rest(cost) {
   if (cost && G.gold < cost) { await say([nm('宿屋の おかみ', 'お金が たりないみたいだね……。')]); return; }
@@ -2253,10 +2260,11 @@ function frameBody(now) {
     const gn = nAt(player.x, player.z);
     const sprint = wantSprint && !player.tired && im > .1 && player.ground && !player.swim;
     let speed = sprint ? 9.5 : 5.4; let climbing = false;
-    if (im > .01 && player.ground && !player.swim) { const upH = -(gn[0] * wx + gn[2] * wz) / Math.max(im, 1e-3);
+    if (im > .01 && player.ground && !player.swim && player.y - terr < .25) { const upH = -(gn[0] * wx + gn[2] * wz) / Math.max(im, 1e-3);
       if (gn[1] < .62 && upH > .35) { climbing = true; speed = 2.6; } else speed *= clamp(1 - Math.max(upH, 0) * .9, .45, 1); }
     if (player.swim) speed = 3.2; else if (terr < -.3) speed *= .6;
     if (player.glide) { speed = G.flags.glider2 ? 10.5 : 8; if (im < .05) { wx = Math.sin(player.yaw); wz = Math.cos(player.yaw); im = 1; } }
+    if (HOOK.travelSpeed) speed = HOOK.travelSpeed(speed);
     const acc = player.swim ? (im > .05 ? 5 : 2.5) : player.ground ? (im > .05 ? 12 : 9) : player.glide ? 12 : 3; // 止まる ときは すこし すべる・水中は ゆっくり 加速
     player.vx = lerp(player.vx, wx * speed, Math.min(1, acc * dt)); player.vz = lerp(player.vz, wz * speed, Math.min(1, acc * dt));
     if (player.glide) { // 風布：慣性・旋回率の 上限・バンク・対気速度
@@ -2290,8 +2298,10 @@ function frameBody(now) {
     for (const n of npcNow()) { const dx = nx - n.x, dz = nz - n.z, d = Math.hypot(dx, dz); if (d < .7 && d > 1e-4) { const qx = n.x + dx / d * .7, qz = n.z + dz / d * .7; if (okP(qx, qz)) { nx = qx; nz = qz; } else { nx = player.x; nz = player.z; } } }
     if (G.region === 2 && !G.flags.c3bridge) { const dx = nx - r.tower.x, dz = nz - r.tower.z, d = Math.hypot(dx, dz); if (d < 88) { nx = r.tower.x + dx / d * 88; nz = r.tower.z + dz / d * 88; if (barrierT <= 0) { toast('風の 結界に はばまれた……<br><span style="font-size:.6em">三つの 風の祠を ひらこう</span>', 1800); barrierT = 3; } } }
     if ((nx !== pre[0] || nz !== pre[1]) && blocked(nx, nz, player.y) && !blocked(player.x, player.z, player.y)) { nx = player.x; nz = player.z; }
+    if(HOOK.routeMove){const pos=HOOK.routeMove(nx,nz,dt);nx=pos.x;nz=pos.z;}
     const moved = Math.hypot(nx - player.x, nz - player.z); player.x = nx; player.z = nz;
     let gh = footAt(player.x, player.z, player.y); if (gh < -1.0 && G.region !== 2) gh = -1.0;
+    if (HOOK.travelSurface) gh = HOOK.travelSurface(gh);
     let inUD = null; if (G.region === 2) for (const u of r.updrafts) if (Math.abs(player.x - u.x) < u.r && Math.abs(player.z - u.z) < u.r && Math.hypot(player.x - u.x, player.z - u.z) < u.r && player.y < u.top) { inUD = u; break; }
     if (jumpReq && md === 'field') {
       if (player.ground && !player.swim) { player.vy = 8.4; player.ground = false; }
@@ -2317,12 +2327,13 @@ function frameBody(now) {
     if (player.sq > 0) player.sq = Math.max(0, player.sq - dt * 4);
     dustT -= dt; if (sprint && player.ground && hsp0() > 6 && dustT <= 0) { dustT = .2; puffs.push({ x: player.x - Math.sin(player.yaw) * .4, y: player.y + .05, z: player.z - Math.cos(player.yaw) * .4, t: 0 }); }
     if (player.glide) { glideT -= dt; if (glideT <= 0) { glideT = .06; const rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw); for (const sx of [-1, 1]) streaks.push({ x: player.x + rx * sx * 1.3, y: player.y + 2.5, z: player.z + rz * sx * 1.3, t: 0 }); } }
-    const using = (sprint ? 14 : 0) + ((climbing && im > .1) || wallClimb ? 12 : 0) + (player.glide && !G.flags.glider3 ? (G.flags.glider2 ? 2.2 : 4.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
+    let using = (sprint ? 14 : 0) + ((climbing && im > .1) || wallClimb ? 12 : 0) + (player.glide && !G.flags.glider3 ? (G.flags.glider2 ? 2.2 : 4.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
+    if (HOOK.travelStamina) using = HOOK.travelStamina(using);
     if (using > 0) G.stam = Math.max(0, G.stam - using * dt); else if (player.ground && !player.swim) G.stam = Math.min(G.stamMax, G.stam + (moved < .01 ? 40 : 26) * dt);
     if (G.stam <= 0) { player.tired = true; player.glide = false; } if (player.tired && G.stam > G.stamMax * .35) player.tired = false;
     if (player.swim && G.stam <= 0) { toast('おぼれかけて、岸に もどった……', 1600); const s = player.safe || r.pier; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99); G.stam = G.stamMax * .5; player.tired = false; }
     if (player.ground && !player.swim && terr > (G.region === 2 ? 3 : .2) && !blocked(player.x, player.z, player.y)) player.safe = { x: player.x, z: player.z };
-    goodT -= dt; if (goodT <= 0 && player.ground && !player.swim && !wallClimb) { goodT = .4; if (!blocked(player.x, player.z, player.y) && [[.5, 0], [-.5, 0], [0, .5], [0, -.5]].filter(([a, b]) => !blocked(player.x + a, player.z + b, player.y)).length >= 2) player.good = { x: player.x, y: player.y, z: player.z, r: G.region }; }
+    goodT -= dt; if (goodT <= 0 && player.ground && !player.swim && !wallClimb && !water) { goodT = .4; if (!blocked(player.x, player.z, player.y) && [[.5, 0], [-.5, 0], [0, .5], [0, -.5]].filter(([a, b]) => !blocked(player.x + a, player.z + b, player.y)).length >= 2) player.good = { x: player.x, y: player.y, z: player.z, r: G.region }; }
     if (G.region === 2 && player.y < -22) { const s = player.safe || r.pier; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99) + .5; player.vx = player.vz = player.vy = 0; player.glide = false; trail.length = 0;
       battleParty().forEach(m => { m.hp = Math.max(1, m.hp - Math.round(m.st.hp * .1)); }); G.stam = Math.max(G.stam, G.stamMax * .5); player.tired = false; toast('雲海に 落ちた……<br><span style="font-size:.6em">みんなの HPが 少し へった</span>', 1800); }
     barrierT -= dt;
@@ -2366,16 +2377,16 @@ function frameBody(now) {
     for (const f of HOOK.frame) f(dt, T, r, md, night);
     // ---- characters ----
     const walkBob = player.ground ? Math.abs(Math.sin(player.phase)) * .07 : 0;
-    const sq = player.sq || 0, run = (player.hsp || 0) > 7.2;
-    const sPose = player.swim ? (Math.sin(T * 3) > 0 ? 'swimA' : 'swimB') : player.glide ? 'glide' : player.climb ? (Math.sin(player.y * 2.4) > 0 ? 'climbA' : 'climbB') : !player.ground && Math.abs(player.vy || 0) > 1.5 ? 'jump' : (player.hsp || 0) > .4 ? gaitOf(player.phase, run) : null;
-    drawHuman('sora', sPose, player.x, player.swim ? player.y - .1 + Math.sin(T * 2.2) * .06 : player.y + walkBob, player.z, 1 - sq * .09, player.yaw); // 着地で ぐっと しずむ・水面で ゆれる
+    const sq = player.sq || 0, running = (player.hsp || 0) > 7.2;
+    const sPose = player.swim ? (Math.sin(T * 3) > 0 ? 'swimA' : 'swimB') : player.glide ? 'glide' : player.climb ? (Math.sin(player.y * 2.4) > 0 ? 'climbA' : 'climbB') : !player.ground && Math.abs(player.vy || 0) > 1.5 ? 'jump' : (player.hsp || 0) > .4 ? gaitOf(player.phase, running) : null;
+    drawHuman('sora', window.KZ?.fieldTravel?.mounted() ? 'ride' : sPose, player.x, (player.swim ? player.y - .1 + Math.sin(T * 2.2) * .06 : player.y + walkBob) + (window.KZ?.fieldTravel?.offset() || 0), player.z, 1 - sq * .09, player.yaw); // 着地で ぐっと しずむ・水面で ゆれる
     if (player.glide) { player.fold = 1; const d = player.deploy || 0, e = d < 1 ? 1 + 2.2 * Math.pow(d - 1, 3) + 1.2 * Math.pow(d - 1, 2) : 1; const sw = Math.sin(T * 1.7) * .03 + Math.sin(T * 3.1) * .015;
       mGlider.set(0, player.x, player.y - (1 - d) * .6, player.z, Math.max(.15, e), player.yaw, (player.bank || 0) + sw); }
     else if (player.fold > 0) { player.fold = Math.max(0, player.fold - dt * 2.6); const f = player.fold; mGlider.set(0, player.x - Math.sin(player.yaw) * (1 - f) * 1.2, player.y - (1 - f) * 1.4, player.z - Math.cos(player.yaw) * (1 - f) * 1.2, .3 + f * .7, player.yaw, (player.bank || 0) * f); if (!f) mGlider.n = 0; }
     else mGlider.n = 0;
     for (const k in mSp) mSp[k].n = 0;
     for (const k in mH) if (k !== 'sora' && k !== 'statue') { mH[k].n = 0; poseHide(k); }
-    const team = battleParty(); const followers = team.filter(m => m.id !== 'sora');
+    const team = battleParty(); const followers = team.filter(m => m.id !== 'sora' && m.uid !== window.KZ?.fieldTravel?.mountRef());
     followers.forEach((m, i) => { const tp = followPos(m, i, dt); if (tp.hide) return;
       const y = tp.y;
       if (m.kind === 'human') { const g = folGait[m.id] || (folGait[m.id] = { x: tp.x, z: tp.z, ph: 0 }); const d = Math.hypot(tp.x - g.x, tp.z - g.z); g.x = tp.x; g.z = tp.z; g.ph += d * 2.1; g.v = d / Math.max(dt, 1e-3);
@@ -2383,7 +2394,7 @@ function frameBody(now) {
       else { const ms = mSp[m.id]; const S = SPC[m.id]; ms.set(ms.n++, tp.x, y + Math.abs(Math.sin(T * 6 + i)) * .12 + (S.arch === 'sprite' || S.arch === 'bird' ? .4 : 0), tp.z, (S.size || 1) * .9, tp.yaw + (m.shiny ? 100 : 0)); } });
     for (const n of npcNow()) { const m = mH[n.id]; if (!m || followers.some(f => f.id === n.id)) continue; const d = Math.hypot(player.x - n.x, player.z - n.z); const ty = d < 6 ? Math.atan2(player.x - n.x, player.z - n.z) : n.baseYaw;
       let yd = ty - n.yaw; yd = Math.atan2(Math.sin(yd), Math.cos(yd)); n.yaw += yd * Math.min(1, dt * 4);
-      m.set(0, n.x, surfaceAt(n.x, n.z, 99), n.z, 1, n.yaw); m.n = 1; }
+      m.set(0, n.x, surfaceAt(n.x, n.z, hAt(n.x,n.z)+2), n.z, 1, n.yaw); m.n = 1; }
 
     for (const f of HOOK.actors) f((sp, x, y, z, sc, yaw) => { const ms = mSp[sp]; if (ms && ms.n < 12) ms.set(ms.n++, x, y, z, sc, yaw); }, T, dt);
     if (DEBUG && window.__lineup) { let i = 0; for (const k in mH) { if (k === 'statue') continue; mH[k].set(0, player.x - 4.6 + i * .58, surfaceAt(player.x - 4.6 + i * .58, player.z + 3.2, 99), player.z + 3.2, 1, Math.PI); mH[k].n = 1; i++; } }
@@ -2416,7 +2427,7 @@ function frameBody(now) {
     // ---- target & HUD ----
     target = md === 'field' && !player.glide ? findTarget() : null;
     const lab = $('tlabel');
-    if (target) { const y = target.type === 'npc' ? surfaceAt(target.x, target.z, 99) + 2.3 : target.type === 'wshrine' || target.type === 'altar3' ? target.o.y + 2.4 : target.type === 'whale' ? player.y + 2.2 : target.type === 'beacon' ? target.o.y + 5 : target.type === 'shrine' ? r.shrine.y + 4 : (target.o.y ?? surfaceAt(target.x, target.z, 99)) + 2.2;
+    if (target) { const y = target.type === 'npc' ? surfaceAt(target.x, target.z, hAt(target.x,target.z)+2) + 2.3 : target.type === 'wshrine' || target.type === 'altar3' ? target.o.y + 2.4 : target.type === 'whale' ? player.y + 2.2 : target.type === 'beacon' ? target.o.y + 5 : target.type === 'shrine' ? r.shrine.y + 4 : (target.o.y ?? surfaceAt(target.x, target.z, 99)) + 2.2;
       const s = World.project([target.x, y, target.z]); if (s) { lab.hidden = false; lab.style.transform = `translate(${s[0]}px,${s[1]}px) translate(-50%,-100%)`; lab.innerHTML = `${COARSE ? '' : '<kbd>E</kbd> '}${actLabel(target)}`; } else lab.hidden = true; }
     else lab.hidden = true;
     $('btnAct').classList.toggle('ready', !!target); $('btnActLabel').textContent = target ? actLabel(target) : 'しらべる';
@@ -2536,10 +2547,10 @@ async function opening() {
 }
 function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() => run(async () => { await reunion(); save(); }), 600); phase = 'field'; $('hud').hidden = false; document.body.classList.add('infield'); cam.yaw = Math.atan2(REGr().town.x - player.x, REGr().town.z - player.z); camFrame(cam.yaw); player.yaw = cam.yaw; hud(); Music.play(fieldSong(), { restart: true });
   if (G.region === 0 && G.flags.shrineOpen && !G.flags.cleared) { darkTarget = 1; darkness = 1; } if (!G.blk[G.mat]) cycleMat(true); }
-window.KZ = { HOOK, get G() { return G; }, shopUI0, ICON, B, mH, mHP, poseHide, mSp, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get region() { return G.region; },
+window.KZ = { HOOK, get G() { return G; }, shopUI0, ICON, B, mH, mHP, poseHide, mSp, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get target(){return target;}, get region() { return G.region; },
   say, who, nm, menu, panel, confirm, run, toast, tip, gain, save, load, hud, fade, wait, R, esc, $, floatText, runBattle, titleCard, cinematic, mkMon, mkHuman, calc, fixTeam, battleParty, allMembers, member, nameOf, inParty,
   defeated, fieldSong, warpTo, credits, rest, objective, need, regionName: r => REGION_NAME[r], townName: r => TOWN_NAME[r], get enemies() { return enemies; }, set enemies(v) { enemies = v; },
-  surfaceAt, hAt, Blocks, blocked, footAt, depen, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, buildHouse, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
+  spawnEnemies, talk, surfaceAt, hAt, Blocks, blocked, footAt, depen, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, buildHouse, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
 if (DEBUG) window.__dbg = { shrineEvent, cam, calc, skyTravel2: () => skyTravel(2), get busy() { return busy; }, get phase() { return phase; }, setupCh3, skyTravel, fluteEvent, windEvent, towerGateEvent, finalEvent3, talkSoyogi, buildBridge, objective, credits, questLog, mapPanel, skillMenu, statusPanel, G: () => G, player, REG, runBattle, say, run, mkHuman, mkMon, setupCh2, startField, sail, talk, NPCS, beaconEvent, midbossEvent, altarEvent, openMenu, dexMenu, fixTeam, craftMenu,
   tp: (x, z) => { player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); },
   sim: (n, dtMs = 33) => { for (let i = 0; i < n; i++) { last = performance.now() - dtMs; frameBody(last + dtMs); } }, blocked, get jumpReq() { return jumpReq; }, set jumpReq(v) { jumpReq = v; } };

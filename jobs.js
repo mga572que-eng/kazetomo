@@ -262,7 +262,7 @@
       const [ok, why] = isCur ? canBuy(m, n) : [false, lvj >= n.jl ? '転職で ひらく' : `職業Lv${n.jl}`];
       const lbl = `${n.cost}SP`; const st = have ? '<b class="have">✓ 習得</b>' : inn ? '<small>固有わざで 習得ずみ</small>' : ok ? `<button class="nbuy" data-node="${n.id}" data-lbl="${lbl}">${lbl}</button>` : `<small class="${lvj >= n.jl ? '' : 'jlock'}">${why}</small>`;
       return `<li class="${have ? 'own' : ''}"><span class="l">Lv${n.jl}</span><span><span class="${have ? 'have' : ok ? 'nx' : ''}">${n.skill ? '⚔' : '◆'} ${nodeName(n)}</span>${S ? `<small>　MP${S.mp}</small>` : ''}<small>　${nodeDesc(n)}</small></span><span class="ns">${st}${have || inn ? '' : `<small class="nc">${n.cost}SP</small>`}</span></li>`; }).join(''); }
-  const nearStatue = () => { const s = K.REG[G().region] && K.REG[G().region].statue; return !!s && Math.hypot(K.player.x - s.x, K.player.z - s.z) < 9; };
+  const nearStatue = () => { const s = SPOT[G().region]; return !!s && Math.hypot(K.player.x - s.x, K.player.z - s.z) < 5; };
 
   function jobUI(o = {}) { return new Promise(res => {
     const g = G(); const party = g.party.filter(m => HUMANS.includes(m.id)); if (!party.length) { res(-1); return; }
@@ -362,8 +362,20 @@
   const spotOf = r => { const R0 = K.REG[r]; if (!R0 || !R0.statue) return null; const s = R0.statue, t = R0.town || { x: 0, z: 0 };
     let dx = t.x - s.x, dz = t.z - s.z; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d; return { x: s.x + dx * 2.4 - dz * .8, z: s.z + dz * 2.4 + dx * .8, r }; };
   const SPOT = [0, 1, 2, 3].map(spotOf);
-  H.target.push(cand => { const s = SPOT[G().region]; if (s) cand(s, 'jobstatue', s.x, s.z, 1.9); });
-  H.labels.jobstatue = () => '転職の 石像';
+  // 調べる点だけだった場所に、独立した像と台座を描く。
+  const jobMesh=World.makeMesh(World.human({skin:'#9eaeca',hair:'#d7dce8',top:'#6484bd',bottom:'#7893b9',robe:true,hat:true,accent:'#ffdc7a'}),4);
+  const baseGeo=World.Geo();World.prism(baseGeo,.95,.78,0,.4,8,World.hex('#5775a1'));World.prism(baseGeo,.70,.60,.4,.6,8,World.hex('#d8be78'));const baseMesh=World.makeMesh(baseGeo,4);
+  const prevRegion=World.region;
+  for(let r=0;r<4;r++){World.setRegion(r);const original=SPOT[r];if(!original)continue;
+    for(let i=0;i<80;i++){const a=i*2.399,d=2+Math.sqrt(i)*.6,x=original.x+Math.sin(a)*d,z=original.z+Math.cos(a)*d,y=K.hAt(x,z);const houses=[...K.REG[r].houses,...(K.extraHouses||[]).filter(h=>h.r===r)];if(houses.some(h=>Math.abs(h.x-x)<5.3&&Math.abs(h.z-z)<5.3)||K.blocked(x,z,y)||Math.abs(K.surfaceAt(x,z,y+2)-y)>.4||Math.hypot(x-K.REG[r].statue.x,z-K.REG[r].statue.z)>10)continue;SPOT[r]={x,z,r};break;}}
+  World.setRegion(prevRegion);
+  const nameTag=document.createElement('div');nameTag.style.cssText='position:fixed;z-index:24;pointer-events:none;background:#213558da;color:#ffe38b;padding:4px 8px;border-radius:5px;font-size:12px;white-space:nowrap';document.body.append(nameTag);
+  H.frame.push(()=>{jobMesh.n=baseMesh.n=0;nameTag.hidden=true;if(K.phase!=='field'||K.B.active)return;const s=SPOT[G().region];if(!s)return;const y=K.surfaceAt(s.x,s.z,K.hAt(s.x,s.z)+2);baseMesh.set(0,s.x,y,s.z,1,0);baseMesh.n=1;jobMesh.set(0,s.x,y+.6,s.z,1.35,0);jobMesh.n=1;
+    if(Math.hypot(K.player.x-s.x,K.player.z-s.z)<24){const p=World.project([s.x,y+3.1,s.z]);if(p){nameTag.hidden=false;nameTag.style.left=p[0]+'px';nameTag.style.top=p[1]+'px';nameTag.style.transform='translate(-50%,-100%)';nameTag.textContent='◆ てんしょくの ぞう';}}});
+  H.mapMarks.push((r,pos)=>SPOT[r]?[`<span class="mk lit" style="${pos(SPOT[r].x,SPOT[r].z)}" title="てんしょくの ぞう">転</span>`]:[]);
+  K.jobStatues={spots:SPOT,mesh:jobMesh,base:baseMesh};
+  H.target.push(cand => { const s = SPOT[G().region]; if (s) cand(s, 'jobstatue', s.x, s.z, 3.2); });
+  H.labels.jobstatue = () => 'てんしょくの ぞう';
   H.acts.jobstatue = async () => {
     if (!open()) { await K.say(['石像の 台座に、古い 文字が きざまれている。', '「灯の 道を ひとつ 越えし 者、ここで あらたな 道を えらべ」', '（第1章を クリアすると 転職 できるように なる）']); return; }
     const g = G(); if (!g.tips.jobIntro) { g.tips.jobIntro = 1;
