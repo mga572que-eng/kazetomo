@@ -1,25 +1,27 @@
 # 作業の再開
 
-更新: 2026-10-02T00:37:08.023Z
-ブランチ: work/foreshadow
-直前コミット: bf5bc04e96eea7b766d497893db17f6f1efee2f8
+更新: 2026-10-02T00:44:26.326Z
+ブランチ: work/titles2
+直前コミット: 0f5321f6e0c1fc32bef27a948bd0bd01af660328
 
 ## 目的
-伏線の回収場面
+称号の追加
 
 ## 完了・途中の内容
-payoff.js：Gemini G-B の台本を照合し5場面を採用（リクの謝罪は本編で回収ずみのため除外、サナの1行をぼかす、記録盤は第3章クリア後）。版 20261002093539
+titles2.js：Gemini G-D の案を照合し14件採用（1件見送り・3件修正）。数える仕組み（花・家・スロット・ハイ＆ロー・道場）。版 20261002094219
 
 ## 次の一手
-Gemini G-D（称号の追加）
+Gemini G-F（雨の日の台詞）/ Claude 天気の仕組み
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- payoff.js
-- docs/lore/foreshadow-payoff.md
+- titles2.js
+- newtowns.js
+- interiors.js
+- docs/design/titles2.md
 - version.json
 - index.html
 - pwa.js

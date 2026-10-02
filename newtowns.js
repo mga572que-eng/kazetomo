@@ -83,12 +83,12 @@
     while (true) { const BETS = [10, 50, 100]; const c = await K.menu({ title: 'スロット：いくら かける？', items: BETS.map(b => ({ label: `${b}G`, disabled: G().gold < b })), where: 'side' }); if (c < 0) return;
       const bet = BETS[c]; G().gold -= bet; K.hud(); Music.sfx('mine'); const r = [spin(), spin(), spin()]; let mul = 0;
       if (r[0] === r[1] && r[1] === r[2]) mul = r[0][2]; else if (r.filter(s => s[0] === '🍒').length === 2) mul = 1.2;
-      const won = Math.floor(bet * mul); if (won) pay(won); await K.say([NM('スロットの 係', `【 ${r.map(s => s[0]).join(' ｜ ')} 】`), won ? NM('スロットの 係', `${mul >= 50 ? 'だいあたり〜！！' : 'あたり！'} ${won}ゴールド！`) : NM('スロットの 係', 'ざんねん！ また どうぞ。')]); if (mul >= 50) Music.jingle('levelup'); K.save(); } }
+      const won = Math.floor(bet * mul); if (won) { pay(won); if (K.stat) { K.stat('slotWin'); if (mul >= 50) K.stat('slotBig'); } } await K.say([NM('スロットの 係', `【 ${r.map(s => s[0]).join(' ｜ ')} 】`), won ? NM('スロットの 係', `${mul >= 50 ? 'だいあたり〜！！' : 'あたり！'} ${won}ゴールド！`) : NM('スロットの 係', 'ざんねん！ また どうぞ。')]); if (mul >= 50) Music.jingle('levelup'); K.save(); } }
   async function hilo() { // 倍率は 当たる 確率に あわせて（期待値 0.95）。同じ 数は 負け
     while (true) { const BETS = [10, 50, 100]; const c = await K.menu({ title: 'ハイ＆ロー：いくら かける？', items: BETS.map(b => ({ label: `${b}G`, disabled: G().gold < b })), where: 'side' }); if (c < 0) return;
       const bet = BETS[c]; G().gold -= bet; K.hud(); const a = 1 + Math.floor(Math.random() * 13), hiN = 13 - a, loN = a - 1; const mHi = hiN ? Math.floor(95 * 13 / hiN) / 100 : 0, mLo = loN ? Math.floor(95 * 13 / loN) / 100 : 0;
       const ch = await K.menu({ title: `カードは【 ${a} 】。 つぎは？`, items: [{ label: `ハイ（${a}より 大きい）`, sub: hiN ? `×${mHi}` : 'ありえない', disabled: !hiN }, { label: `ロー（${a}より 小さい）`, sub: loN ? `×${mLo}` : 'ありえない', disabled: !loN }], where: 'side' });
-      if (ch < 0) { pay(bet); return; } const b2 = 1 + Math.floor(Math.random() * 13), win = ch === 0 ? b2 > a : b2 < a, got = win ? Math.floor(bet * (ch === 0 ? mHi : mLo)) : 0; if (got) pay(got);
+      if (ch < 0) { pay(bet); return; } const b2 = 1 + Math.floor(Math.random() * 13), win = ch === 0 ? b2 > a : b2 < a, got = win ? Math.floor(bet * (ch === 0 ? mHi : mLo)) : 0; if (got) pay(got); if (K.stat) { const g = K.G; g.stat = g.stat || {}; g.stat.hiloCur = win ? (g.stat.hiloCur || 0) + 1 : 0; K.stat('hiloStreak', g.stat.hiloCur, 'max'); }
       await K.say([NM('カードの ディーラー', `つぎの カードは【 ${b2} 】！`), win ? NM('カードの ディーラー', `おみごと！ ${got}ゴールド！`) : NM('カードの ディーラー', b2 === a ? 'おなじ 数…… こちらの かちです。' : 'のこねん！')]); K.save(); } }
   async function show() { const g = G(); const cost = 30; const c = await K.menu({ title: '劇場「すなの ほし」', items: [{ label: `ショーを みる`, sub: `${cost}G・HPと MPが ぜんかい` }], where: 'side' }); if (c !== 0) return;
     if (g.gold < cost) { await K.say([NM('劇場の 座長', 'おや、おだいが たりないようだ。')]); return; } g.gold -= cost; K.allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); Music.jingle('light');
@@ -99,7 +99,7 @@
     if (c === 1) { await K.say([NM('道場の 師範', '勇者は 生まれつきの ものでは ない。 毎日 少しずつ、強く なるのだ。')]); return; } if (c !== 0) return;
     const lv = Math.max(...G().party.map(m => m.lv)); const pool = DATA.speciesOrder.filter(k => { const s = DATA.species[k]; return s && s.hab && !s.boss && !s.legend; });
     for (let w = 0; w < 3; w++) { await K.say([NM('道場の 師範', `${w + 1}本め！ はじめ！`)]); const res = await K.runBattle(Array.from({ length: 2 + (w > 1 ? 1 : 0) }, () => ({ sp: pool[Math.floor(Math.random() * pool.length)], lv: lv - 1 + w, shiny: false })), { noFlee: true }); if (res !== 'win') { await K.say([NM('道場の 師範', 'よく やった。 また 来なさい。')]); return; } }
-    const gold = 300 + lv * 10; pay(gold); Music.jingle('levelup'); await K.say([NM('道場の 師範', `みごと！ 3本 とった。 ……これは 道場からの お礼だ。`), `${gold}ゴールドを 手に入れた！`]); K.save(); }
+    const gold = 300 + lv * 10; pay(gold); if (K.stat) K.stat('dojoWin'); Music.jingle('levelup'); await K.say([NM('道場の 師範', `みごと！ 3本 とった。 ……これは 道場からの お礼だ。`), `${gold}ゴールドを 手に入れた！`]); K.save(); }
   // ---------- 世界会議（本編で 起きた ことだけを 話題に） ----------
   const council = who => () => { const f = F(); const topic = f.c4done ? 'sea' : f.c3done ? 'sky' : f.c2done ? 'stars' : 'start';
     const T = { start: ['霧の 大陸の 星が、すこしずつ 消えていると いう 知らせが あります。', 'まずは 原因を しらべねば。'], stars: ['星喰いが しずまったと 聞きました。 星の 遺跡の 巫女も 無事だとか。', '空の 向こうに、まだ なにか あると いう 声も ありますな。'],
