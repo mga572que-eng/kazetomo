@@ -163,5 +163,16 @@
     await K.say(L); if (first) { K.hud(); K.save(); } };
   H.acts.road0Sign = async () => { const b = K.REG[0].beacons[0], s = signAt(), d = Math.round(Math.hypot(b.x - s.x, b.z - s.z));
     await K.say([`道しるべ：「→ 野原の灯台（${d}m）　← 風見の村」`, b.lit ? '灯台の 灯が、ここからでも 見える。' : 'この道を まっすぐ 行けば、灯台の ふもとに 出る。']); };
-  K.road0 = { pts, segs, onRoad, signAt, viewAt, get drawn() { return mSign.n + mLamp.n; } };
+  // ---------- 風見の村：入口の 目じるし（屋外の 小物だけ。家の 形・中は さわらない） ----------
+  // 食堂＝のれんと ちょうちん、工房＝金床と 金づちの 看板、家＝ポストと 植木ばち。入口の わき（外がわ 0.9m・横 1.4m）に 置き、通り道は ふさがない
+  const FG = { cook: W.Geo(), smith: W.Geo(), home: W.Geo() };
+  W.prism(FG.cook, .62, .62, 2.05, 2.75, 4, W.hex('#2c3e78'), 0, 0, 1.15, .06); W.prism(FG.cook, .08, .08, 0, 2.2, 4, W.hex('#5a3a22'), 1.25, 0); W.ico(FG.cook, .2, [1.25, 2.35, 0], W.solid([1, .55, .3], .9), 0, 1, 1.3);
+  W.prism(FG.smith, .3, .22, 0, .45, 4, W.hex('#4a4a52'), 1.3, 0); W.prism(FG.smith, .34, .34, .45, .62, 4, W.hex('#6a6a74'), 1.3, 0, 1.4, .7); W.prism(FG.smith, .06, .06, 0, 2.1, 4, W.hex('#5a3a22'), -1.3, 0); W.prism(FG.smith, .36, .36, 1.6, 2.0, 4, W.hex('#9aa0a8'), -1.3, 0, 1.2, .15);
+  W.prism(FG.home, .06, .06, 0, 1.0, 4, W.hex('#5a3a22'), 1.3, 0); W.prism(FG.home, .2, .2, 1.0, 1.28, 4, W.hex('#c0392b'), 1.3, 0, 1.3, .9); W.prism(FG.home, .22, .26, 0, .38, 6, W.hex('#b0643a'), -1.3, 0); W.ico(FG.home, .26, [-1.3, .6, 0], W.solid([.95, .55, .7], .15), .2, 1, 1);
+  const mFront = { cook: W.makeMesh(FG.cook, 2), smith: W.makeMesh(FG.smith, 2), home: W.makeMesh(FG.home, 2) };
+  const FRONT = { nagi: 'cook', gen: 'smith', yui: 'home' };
+  const fronts = () => (K.REG[0].houses || []).filter(h => FRONT[h.id] && h.npc && h.yaw != null).map(h => { const dx = Math.sin(h.yaw), dz = Math.cos(h.yaw), x = h.npc.x - dx * 1.6 + dx * .9, z = h.npc.z - dz * 1.6 + dz * .9; return { id: h.id, k: FRONT[h.id], x, z, yaw: h.yaw }; });
+  H.frame.push(() => { for (const k in mFront) mFront[k].n = 0; if (K.phase !== 'field' || K.G.region !== 0 || (K.interior && K.interior.cur)) return; const pl = K.player;
+    for (const f of fronts()) { if (Math.hypot(f.x - pl.x, f.z - pl.z) > 70) continue; const m = mFront[f.k]; m.set(m.n++, f.x, K.hAt(f.x, f.z) - .02, f.z, 1, f.yaw); } });
+  K.road0 = { pts, segs, onRoad, signAt, viewAt, fronts, get drawn() { return mSign.n + mLamp.n; } };
 })();

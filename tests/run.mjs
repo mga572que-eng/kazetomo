@@ -113,6 +113,12 @@ test('道の 見晴らし：灯台を 向く・ごほうびは 1回だけ', asyn
   ok(await page.evaluate(m1 => (KZ.G.inv.mi || 0) === m1, m1), '2回めも ごほうびが でる');
 });
 
+test('最初の町：入口の 目じるし（食堂・工房・家）と 通り道', async ({ page }) => {
+  await page.evaluate(async () => { await KZ.travel(0, 2, 2); }); await idle(page);
+  const r = await page.evaluate(() => KZ.road0.fronts().map(f => { const h = KZ.REG[0].houses.find(h => h.id === f.id), dx = Math.sin(h.yaw), dz = Math.cos(h.yaw), x = h.npc.x - dx * .4, z = h.npc.z - dz * .4; return [f.k, KZ.blocked(x, z, KZ.surfaceAt(x, z, 99) + .1)]; }));
+  ok(r.length === 3 && ['cook', 'smith', 'home'].every(k => r.some(([kk]) => kk === k)), '目じるしが 3軒に ない：' + JSON.stringify(r)); ok(r.every(([, b]) => !b), '入口の 前が ふさがれている');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
