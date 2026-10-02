@@ -18,12 +18,12 @@
   #saveChip{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:61;background:rgba(12,18,40,.88);border:1px solid rgba(143,224,106,.6);color:#bff0a8;border-radius:999px;padding:4px 12px;font-family:var(--pixel);font-size:12px;opacity:0;transition:opacity .4s;pointer-events:none}
   #saveChip.on{opacity:1}
   #mmap{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(56px + env(safe-area-inset-top,0px));width:clamp(92px,24vh,132px);height:clamp(92px,24vh,132px);border-radius:50%;pointer-events:auto;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.45);border:2px solid rgba(244,240,230,.75);background:#0b1016}
-  .qtabs{display:flex;gap:6px;margin:4px 0 10px;flex-wrap:wrap;padding-right:48px}.qtabs button{min-height:44px;border:1px solid rgba(244,240,230,.3);background:transparent;border-radius:999px;padding:5px 16px;font-family:var(--pixel);font-size:13px;color:#f4f0e6;cursor:pointer}.qtabs button.on{background:var(--gold);color:#1a1208;border-color:var(--gold)}
-  .qrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--card-line);border-radius:var(--r2);padding:7px 8px 7px 12px;margin-bottom:6px;font-size:14px;line-height:1.45}
-  .qrow small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.qrow.tr{border-color:var(--gold);background:rgba(243,193,90,.08)}
-  .qrow button{border:1px solid var(--gold);background:transparent;color:var(--gold);border-radius:999px;padding:5px 16px;font-family:var(--pixel);font-size:13px;min-height:44px;min-width:88px;white-space:nowrap;cursor:pointer}.qrow.tr button{background:var(--gold);color:#241a08}
-  .story p{line-height:1.8;font-size:14px;margin:0 0 10px}.story h4{margin:10px 0 4px;color:var(--gold);font-family:var(--pixel);font-weight:400}
-  .forge .qrow .cmp{font-family:var(--pixel);font-size:13px}.forge .fg-up{color:#8fe06a;display:inline}.forge .fg-ng{color:#e8857a;display:inline}.forge .cmp{display:inline}`;
+  .qtabs{display:flex;gap:6px;margin:4px 0 10px;flex-wrap:wrap;padding-right:48px}.qtabs button{min-height:44px;border:1px solid rgba(244,240,230,.3);background:transparent;border-radius:999px;padding:5px 16px;font-family:var(--ui);font-size:var(--text-detail);color:#f4f0e6;cursor:pointer}.qtabs button.on{background:var(--gold);color:#1a1208;border-color:var(--gold)}
+  .qrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--card-line);border-radius:var(--r2);padding:7px 8px 7px 12px;margin-bottom:6px;font-size:var(--text-body);line-height:1.5}
+  .qrow small{display:block;color:var(--muted);font-size:var(--text-detail);line-height:1.5;margin-top:2px}.qrow.tr{border-color:var(--gold);background:rgba(243,193,90,.08)}
+  .qrow button{border:1px solid var(--gold);background:transparent;color:var(--gold);border-radius:999px;padding:5px 16px;font-family:var(--ui);font-size:var(--text-detail);min-height:44px;min-width:88px;white-space:nowrap;cursor:pointer}.qrow.tr button{background:var(--gold);color:#241a08}
+  .story p{line-height:1.6;font-size:var(--text-body);margin:0 0 10px}.story h4{margin:10px 0 4px;color:var(--gold);font-family:var(--pixel);font-weight:400}
+  .forge .qrow .cmp{font-family:var(--ui);font-size:var(--text-detail)}.forge .fg-up{color:#8fe06a;display:inline}.forge .fg-ng{color:#e8857a;display:inline}.forge .cmp{display:inline}`;
   document.head.appendChild(css);
   const mk = (id, tag = 'div') => { const e = document.createElement(tag); e.id = id; document.body.appendChild(e); return e; };
   const bn = mk('areaBn'), hint = mk('matHint'), chip = mk('saveChip');

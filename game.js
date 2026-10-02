@@ -1288,7 +1288,7 @@ function drawParty(P, ai = -1) {
     const nmH = `${esc(nameOf(m))}<small>Lv${m.lv}</small>`; const stH = stBadges(m); const stEl = el.querySelector('.pc-st'); if (stEl.dataset.k !== stH) { stEl.dataset.k = stH; stEl.innerHTML = stH; }
     const nmEl = el.querySelector('.pc-name'); if (nmEl.innerHTML !== nmH) nmEl.innerHTML = nmH;
     const [hb, mb] = el.querySelectorAll('.bar'); setBar(hb, m.hp / m.st.hp * 100); setBar(mb, m.st.mp ? m.mp / m.st.mp * 100 : 0);
-    el.querySelector('.pc-num').innerHTML = `HP <b>${m.hp}</b>/${m.st.hp}　MP <b>${m.mp}</b>/${m.st.mp}`; }); }
+    el.querySelector('.pc-num').innerHTML = `HP<b>${m.hp}</b>/${m.st.hp} MP<b>${m.mp}</b>/${m.st.mp}`; }); }
 function drawFoes(F) {
   const host = $('bFoes');
   if (host.children.length !== F.length || [...host.children].some((e, i) => e.id !== 'foe' + i))
@@ -2569,7 +2569,7 @@ function frameBody(now) {
     if (target) { const y = target.type === 'npc' ? surfaceAt(target.x, target.z, hAt(target.x,target.z)+2) + 2.3 : target.type === 'wshrine' || target.type === 'altar3' ? target.o.y + 2.4 : target.type === 'whale' ? player.y + 2.2 : target.type === 'beacon' ? target.o.y + 5 : target.type === 'shrine' ? r.shrine.y + 4 : (target.o.y ?? surfaceAt(target.x, target.z, 99)) + 2.2;
       const s = World.project([target.x, y, target.z]); if (s) { lab.hidden = false; lab.style.transform = `translate(${s[0]}px,${s[1]}px) translate(-50%,-100%)`; lab.innerHTML = `${COARSE ? '' : '<kbd>E</kbd> '}${actLabel(target)}`; } else lab.hidden = true; }
     else lab.hidden = true;
-    $('btnAct').classList.toggle('ready', !!target); $('btnActLabel').textContent = target ? actLabel(target) : 'しらべる';
+    $('btnAct').classList.toggle('ready', !!target); $('btnActLabel').textContent = target ? (target.type === 'npc' ? 'はなす' : actLabel(target)) : 'しらべる';
     $('btnJump').textContent = !player.ground && G.flags.glider ? (player.glide ? 'とじる' : '滑空') : '跳ぶ';
     const ob = (HOOK.track && HOOK.track()) || objective(); if (ob.t !== frameBody.obj) { frameBody.obj = ob.t; $('obj').innerHTML = objHTML(ob.t); const o = $('obj'); o.classList.remove('fresh'); void o.offsetWidth; o.classList.add('fresh'); clearTimeout(frameBody.objT); frameBody.objT = setTimeout(() => o.classList.remove('fresh'), 6000); }
     if (ob.p) { const d = Math.hypot(ob.p.x - player.x, ob.p.z - player.z); const ang = Math.atan2(ob.p.x - player.x, ob.p.z - player.z) - cam.yaw;

@@ -122,8 +122,15 @@
   H.b3dAnchors = () => { if (!A) return; const P = B.P || [], F = B.F || [];
     const place = (x, el, art, isFoe) => { const st = S.get(x); if (!st || !el || st.sx == null || !isFinite(st.sx)) return; const h = tall(x);
       const a = World.project([st.sx, st.sy + h * .5, st.sz]), b = World.project([st.sx, st.sy + h, st.sz]); if (!a || !b || !isFinite(a[0]) || !isFinite(a[1]) || !isFinite(b[1])) { el.style.visibility = 'hidden'; return; }
-      el.style.visibility = ''; const px = Math.max(36, Math.min(260, Math.abs(a[1] - b[1]) * 2.1));
-      el.style.setProperty('--sx', a[0].toFixed(1) + 'px'); el.style.setProperty('--sy', a[1].toFixed(1) + 'px'); el.style.setProperty('--fw', px.toFixed(0) + 'px');
+      el.style.visibility = ''; let px = Math.max(36, Math.min(260, Math.abs(a[1] - b[1]) * 2.1)), sy = a[1];
+      if (isFoe) { const top = $('bParty').getBoundingClientRect().bottom + 4, bottom = $('bBottom').getBoundingClientRect().top - 4;
+        const artBox = el.querySelector('.foe-art');
+        const labelH = Math.max(0, el.getBoundingClientRect().height - (artBox ? artBox.getBoundingClientRect().height : 0));
+        px = Math.max(1, Math.min(px, bottom - top - labelH));
+        sy = Math.max(top + px / 2, Math.min(sy, bottom - px / 2 - labelH)); }
+      el.style.setProperty('--sx', a[0].toFixed(1) + 'px'); el.style.setProperty('--sy', sy.toFixed(1) + 'px'); el.style.setProperty('--fw', px.toFixed(0) + 'px');
+      if (isFoe) { const edge = $('bBottom').getBoundingClientRect().top - 4, actual = el.getBoundingClientRect().bottom;
+        if (actual > edge) el.style.setProperty('--sy', (sy - actual + edge).toFixed(1) + 'px'); }
       el.classList.toggle('m3', !!st.mesh); };
     P.forEach((m, i) => place(m, $('al' + i), null, false)); F.forEach((m, i) => place(m, $('foe' + i), null, true)); };
   const resetDom = () => document.querySelectorAll('#battle .al, #battle .foe').forEach(e => { ['--sx', '--sy', '--fw'].forEach(k => e.style.removeProperty(k)); e.style.visibility = ''; e.classList.remove('m3'); });
