@@ -9,6 +9,7 @@
   const ADV = [ // 作業台で だけ つくれる
     { out: 2, n: 4, need: { maki: 2, ishi: 2 } }, { out: 6, n: 6, need: { ishi: 4 } }, { out: 7, n: 4, need: { suna: 3 } },
     { out: 10, n: 4, need: { hoshikake: 1 } }, { out: 11, n: 6, need: { kumowata: 1 } }, { out: 3, n: 6, need: { ishi: 2, maki: 2 } }];
+  K.advRecipes = ADV; // レシピ帳（recipes.js）で 一覧に 出す
   DATA.baseLevels = [
     { lv: 1, text: 'ブロック 10こ', ok: c => c.n >= 10, perk: '地図の ワープ先に「わが家」' },
     { lv: 2, text: 'ブロック 30こ ＋ ベッド', ok: c => c.n >= 30 && c.t[15], perk: 'いきものが 1ぴき すみつく' },

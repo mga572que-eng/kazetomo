@@ -1910,7 +1910,7 @@ function checkRank() { const p = rankPts(); for (const x of DATA.ranks) if (p >=
   Music.sfx('friend'); tip(`<b>冒険者ランク ${x.r} に あがった！</b><span>ごほうび：${got.join('・')}</span>`); } }
 const expBar = m => `<div class="xp"><i style="width:${Math.min(100, m.exp / need(m.lv) * 100)}%"></i></div>`;
 // メインメニュー：9つの タイル（3列×3段）。モジュールの HOOK.menu は「ストーリー」「システム」「そのほか」に まとめる
-const MENU_IC = { 'きろく帳': '📔', 'しょくぎょう': '🎓', 'せってい': '⚙️', '視点': '👁️', 'ぬけだす': '🆘' };
+const MENU_IC = { 'レシピ帳': '📜', 'きろく帳': '📔', 'しょくぎょう': '🎓', 'せってい': '⚙️', '視点': '👁️', 'ぬけだす': '🆘' };
 const tile = (ic, label, sub, o = {}) => ({ label: `<i class="ti" aria-hidden="true">${ic}</i><b>${label}</b>`, sub: sub || '', ...o });
 const howtoPanel = () => panel(`<h3>あそびかた</h3><ul class="howto"><li><b>目標</b>：左上の「▶」が いま やること。上の 矢印が 方角。メニューの「ストーリー」と「地図」で くわしく 見られる。</li>
       <li><b>成長</b>：レベルが 上がると スキルポイント（SP）。メニューの「スキル」で 技や 能力を 覚える。</li>
