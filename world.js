@@ -991,5 +991,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
   function project(p) { const m = lastVP; if (!m) return null; const x = m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], y = m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13], w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
     if (w <= .1) return null; return [(x / w * .5 + .5) * (window.__vw || innerWidth), (1 - (y / w * .5 + .5)) * (window.__vh || innerHeight)]; }
 
-  return { setQuality, get quality() { return QL; }, init, resize, render, project, hAt, nAt, surfaceAt, skyInfo, Blocks, setRegion, biomeAt, speciesGeo, propGeo, seg, TOWN1, RUINS1, TOWN2, TOWER2, ISL2, TOWN3, PALACE3, LH3, TRENCH3, get region() { return REGION; }, Geo, prism, ico, shade, solid, hex, human, creature, shadowGeo, makeMesh, setPaths, setTerrainPatches, addTerrainPatches: (r,list)=>setTerrainPatches(r,[...terrainPatches[r],...list]), fbm, rnd, WORLD, V, clamp, lerp, smooth };
+  // 重さの 計測（perf.js）：描いた ブロック数・描いた 形の 種類と 数
+  const stats = () => { let calls = 0, inst = 0; for (const m of meshes) if (m.vn) { calls++; inst += m.vn; } return { blocks: blockN, calls, inst, meshes: meshes.length }; };
+  return { stats, setQuality, get quality() { return QL; }, init, resize, render, project, hAt, nAt, surfaceAt, skyInfo, Blocks, setRegion, biomeAt, speciesGeo, propGeo, seg, TOWN1, RUINS1, TOWN2, TOWER2, ISL2, TOWN3, PALACE3, LH3, TRENCH3, get region() { return REGION; }, Geo, prism, ico, shade, solid, hex, human, creature, shadowGeo, makeMesh, setPaths, setTerrainPatches, addTerrainPatches: (r,list)=>setTerrainPatches(r,[...terrainPatches[r],...list]), fbm, rnd, WORLD, V, clamp, lerp, smooth };
 })();

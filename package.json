@@ -6,7 +6,9 @@
     "check": "node check.mjs",
     "backup": "node backup.mjs",
     "resume": "node checkpoint.mjs --status",
-    "checkpoint": "node checkpoint.mjs"
+    "checkpoint": "node checkpoint.mjs",
+    "test": "node tests/run.mjs",
+    "economy": "node tests/economy.mjs"
   },
   "engines": {
     "node": ">=20"
