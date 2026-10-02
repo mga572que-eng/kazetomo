@@ -1,7 +1,7 @@
 // 回帰テスト（前に 動いた 機能が こわれて いないか）。使い方：npm run test（tests/README.md）
 import { boot, idle, act } from './lib.mjs';
 const T = [], only = process.argv[2];
-const test = (name, fn) => T.push({ name, fn });
+const test = (name, fn, opts) => T.push({ name, fn, opts });
 const ok = (c, m) => { if (!c) throw new Error(m); };
 
 test('起動・メニュー・戦闘・セーブ', async ({ page }) => {
@@ -110,8 +110,17 @@ test('風見の村→野原の灯台の 道：歩ける・木が ない・道し
   act(page, `() => KZ.HOOK.acts.road0Sign()`); await idle(page);
 });
 
+test('最初の町：家の 入口の 名前札', async ({ page }) => {
+  await page.evaluate(async () => { KZ.G.tod = .45; await KZ.travel(0, 2, 2); }); await idle(page);
+  const names = await page.evaluate(() => { const out = new Set(); for (const [x, z, tx, tz] of [[2, 2, 3, 15], [2, 2, 13, -9], [2, 2, -14, -6], [3, 4, 3, 15]]) { const P = KZ.player; P.x = x; P.z = z; P.y = KZ.surfaceAt(x, z, 99); KZ.cam.yaw = Math.atan2(x - tx, z - tz); __dbg.sim(4); document.querySelectorAll('.doorTag').forEach(e => { if (!e.hidden) out.add(e.textContent); }); } return [...out]; });
+  ok(names.some(t => /かざみ亭/.test(t)) && names.some(t => /工房/.test(t)) && names.some(t => /ソラの 家/.test(t)), '名前札が 出ない：' + names.join(','));
+  await page.evaluate(() => { window.__r = null; KZ.runBattle([{ sp: 'watapoko', lv: 1 }]).then(r => window.__r = r); }); await page.waitForTimeout(1500);
+  ok(await page.evaluate(() => [...document.querySelectorAll('.doorTag')].every(e => e.hidden)), '戦闘中に 名前札が 出ている');
+  await page.evaluate(() => { KZ.G.auto = true; }); for (let i = 0; i < 80 && !(await page.evaluate(() => window.__r)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(200); } await idle(page);
+}, { render: true }); // 画面への 投影が いるので 描画あり
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
-  try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
+  try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
   catch (e) { fail++; console.log(`FAIL  ${t.name}：${e.message}`); } finally { if (s) await s.browser.close(); } }
 console.log(fail ? `\n${fail}件 失敗` : '\nすべて 成功'); process.exit(fail ? 1 : 0);

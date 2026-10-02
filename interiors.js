@@ -157,5 +157,11 @@
   H.labels.garden = t => ['花に 水を やる', '花が そだっている', '花を つみとる'][gstate(t.o.key)];
   H.acts.inEnter = async h => enter(h); H.acts.inExit = async () => leave(); H.acts.inSearch = async o => search(o); H.acts.garden = async o => garden(o);
   H.load.push(g => { g.searched = g.searched || {}; g.garden = g.garden || {}; cur = null; checked = false; });
+  // ---------- 入口の 名前札（近くの 家 3軒まで。てんしょくの像と 同じ 見た目。地図・セーブは かえない） ----------
+  const PLATE = { nagi: '食堂 かざみ亭' };
+  const plates = [0, 1, 2].map(() => { const e = document.createElement('div'); e.className = 'doorTag'; e.style.cssText = 'position:fixed;z-index:24;pointer-events:none;background:#213558da;color:#ffe38b;padding:4px 8px;border-radius:5px;font:600 13px/1.3 var(--ui);white-space:nowrap;transform:translate(-50%,-100%)'; e.hidden = true; document.body.append(e); return e; });
+  H.frame.push(() => { plates.forEach(e => e.hidden = true); if (K.phase !== 'field' || (K.B && K.B.active) || cur || document.body.classList.contains('modal')) return; const r = G().region, pl = K.player;
+    const list = houses(r).map(h => ({ h, d: doorOf(h) })).map(o => ({ ...o, k: Math.hypot(o.d.x - pl.x, o.d.z - pl.z) })).filter(o => o.k < 18).sort((a, b) => a.k - b.k).slice(0, 3);
+    list.forEach((o, i) => { const y = K.surfaceAt(o.d.x, o.d.z, K.hAt(o.d.x, o.d.z) + 2) + 2.4, p = World.project([o.d.x, y, o.d.z]); if (!p || p[1] < 100 || p[0] < 60 || p[0] > innerWidth - 60 || (p[0] > innerWidth - 220 && p[1] < 200)) return; /* 上の HUD・ミニマップと 重ねない */ const e = plates[i]; e.hidden = false; e.style.left = p[0] + 'px'; e.style.top = p[1] + 'px'; const t = '⌂ ' + (PLATE[o.h.id] || NAMEH[o.h.id] || '家'); if (e.textContent !== t) e.textContent = t; }); });
   K.interior = { KIND, NAMEH, houses, enter, leave, get cur() { return cur; }, outdoor, outside, search, garden, gstate, ROOM };
 })();
