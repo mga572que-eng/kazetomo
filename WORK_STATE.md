@@ -1,31 +1,35 @@
 # 作業の再開
 
-更新: 2026-10-01T23:52:13.558Z
-ブランチ: work/new-towns
-直前コミット: 642d0dce0fdbe278221bcb62eac890395cdc6c67
+更新: 2026-10-02T06:28:32.667Z
+ブランチ: work/quality-tools
+直前コミット: 5f7c6cba0f42a8697041db46b805219fb54c669f
 
 ## 目的
-町のくらし 第3段：新しい町
+品質プランB：計測の道具
 
 ## 完了・途中の内容
-newtowns.js：王都ルミナリア（城・世界会議）、黄金の都ラッキーナ（カジノ・劇場）、はじまりの町ブレイブ（勇者の像・道場）。townlife に町ごとの人・店番を足せる形。ブロック上限 14000。版 20261002084913
+perf.js（#perf で fps 表示・場所ごとの記録）、tests/（回帰テスト8件・お金の試算）、docs/reports/economy.md。版 20261002152829
 
 ## 次の一手
-iPhone 実機で重さとカメラ。全章通し
+iPhone テスト（#perf 付き）の結果で C 段階
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- newtowns.js
-- townlife.js
-- interiors.js
+- perf.js
 - world.js
-- index.html
-- sw.js
-- pwa.js
+- tests/lib.mjs
+- tests/run.mjs
+- tests/economy.mjs
+- tests/README.md
+- package.json
+- docs/reports/economy.md
+- docs/plan/quality-plan.md
 - version.json
-- docs/design/town-life.md
+- index.html
+- pwa.js
+- sw.js
 
 このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。

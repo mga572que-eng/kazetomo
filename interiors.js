@@ -73,7 +73,8 @@
   const searched = key => !!((G().searched || {})[key]);
   async function search(spot) { const g = G(); g.searched = g.searched || {}; const nm = NAME[spot.kind] || 'もの';
     if (searched(spot.key)) { await K.say([`${nm}を しらべた。 ……もう なにも ない。`]); return; }
-    g.searched[spot.key] = 1; Music.sfx('pick'); const L = loot(spot); await K.say([`${nm}を しらべた！`, ...L]); K.hud(); K.save(); }
+    g.searched[spot.key] = 1; Music.sfx('pick'); const L = loot(spot); const eq = L.find(s => /そうびの 袋へ/.test(s)); // 武器・防具は 宝箱と 同じ 演出
+    if (eq && K.fun && K.fun.reveal) await K.fun.reveal('legend', eq.replace(/を 手に入れた！.*$/, '').replace(/^.*「|」$/g, ''), `${nm}の 中から`); await K.say([`${nm}を しらべた！`, ...L]); K.hud(); K.save(); }
   // ---------- 花の 水やり・つみとり ----------
   const BLOOM = 45; // 水を やってから さくまで（秒）
   const gstate = id => { const g = G(); g.garden = g.garden || {}; const s = g.garden[id]; if (!s || !Number.isFinite(s.w)) return 0; return (g.play || 0) - s.w >= BLOOM ? 2 : 1; };

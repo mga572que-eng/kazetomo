@@ -659,7 +659,7 @@ function act() {
   if (HOOK.acts[t.type]) { const fn = HOOK.acts[t.type]; if (fn.instant) return fn(t.o, t); return run(() => fn(t.o, t)); }
 }
 async function openChest(c) {
-  G.chests[c.id] = 1; Music.sfx('friend'); const L = c.loot; const lines = ['宝箱を あけた！'];
+  G.chests[c.id] = 1; if (HOOK.chestFx) { try { await HOOK.chestFx(c); } catch (e) { console.error(e); } } else Music.sfx('friend'); const L = c.loot; const lines = ['宝箱を あけた！']; // 開ける 演出は chestfx.js
   if (L.gold) { G.gold += L.gold; lines.push(`${L.gold}ゴールドを 手に入れた！`); }
   if (L.give) for (const [k, v] of Object.entries(L.give)) { gain(k, v); lines.push(`${DATA.items[k].name}を ${v}こ 手に入れた！`); }
   if (L.gear && HOOK.giveGear) lines.push(...HOOK.giveGear(L.gear));
@@ -1639,6 +1639,7 @@ async function runBattle(specs, opts = {}) {
   F.forEach((f, i) => { const el = $('foe' + i); if (el) { el.style.setProperty('--i', i); el.classList.add('enter'); }
     setTimeout(() => { Music.sfx('drop'); cryOf(f); }, (opts.boss ? 420 : 300 + i * 150) / sp0); });
   enc.classList.add('out'); setTimeout(() => enc.remove(), 700 / sp0);
+  if (opts.boss && HOOK.bossIntro) { try { await HOOK.bossIntro(F, opts); } catch (e) { console.error(e); } } // ボスの 登場演出（bossfx.js）
   const appear = opts.boss ? `${F[0].name}が 立ちはだかった！` : F.length > 1 ? `${F[0].name.replace(/[A-D]$/, '')}たちが あらわれた！` : `${F[0].name}が あらわれた！`;
   if (opts.boss) { await bwait(380); $('battle').classList.remove('quake'); void $('battle').offsetWidth; $('battle').classList.add('quake');
     const bc = bAdd('bosscard', `<div class="bc-bar t"></div><div class="bc-bar b"></div><div class="bc-band"><small class="bc-sub">— ぬし —</small><div class="bc-name">${esc(F[0].name)}</div>
