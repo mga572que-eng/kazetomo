@@ -1639,6 +1639,7 @@ async function runBattle(specs, opts = {}) {
   F.forEach((f, i) => { const el = $('foe' + i); if (el) { el.style.setProperty('--i', i); el.classList.add('enter'); }
     setTimeout(() => { Music.sfx('drop'); cryOf(f); }, (opts.boss ? 420 : 300 + i * 150) / sp0); });
   enc.classList.add('out'); setTimeout(() => enc.remove(), 700 / sp0);
+  if (opts.boss && HOOK.bossIntro) { try { await HOOK.bossIntro(F, opts); } catch (e) { console.error(e); } } // ボスの 登場演出（bossfx.js）
   const appear = opts.boss ? `${F[0].name}が 立ちはだかった！` : F.length > 1 ? `${F[0].name.replace(/[A-D]$/, '')}たちが あらわれた！` : `${F[0].name}が あらわれた！`;
   if (opts.boss) { await bwait(380); $('battle').classList.remove('quake'); void $('battle').offsetWidth; $('battle').classList.add('quake');
     const bc = bAdd('bosscard', `<div class="bc-bar t"></div><div class="bc-bar b"></div><div class="bc-band"><small class="bc-sub">— ぬし —</small><div class="bc-name">${esc(F[0].name)}</div>
