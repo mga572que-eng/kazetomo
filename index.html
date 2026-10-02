@@ -1012,9 +1012,22 @@
   .map .mk.goal{background:#583d00;color:#ffec91}.map .mk.me{color:#fff}.map .mk i{font-style:normal}
   #mapGoalText{position:absolute;right:calc(24px + clamp(92px,24vh,132px) + var(--sr));top:calc(56px + var(--st));max-width:160px;background:#0e2039eF;color:#ffe38a;border-radius:6px;padding:4px 7px;font:700 12px/1.35 var(--ui);pointer-events:none}
   @media(orientation:landscape) and (max-height:500px){
-    #battle .pc-face{width:32px;height:32px}#battle .pc{padding:4px 4px 28px;gap:4px}#battle .pc-wpn{display:none}
-    #battle{--bb-h:clamp(150px,39vh,190px)}
+    /* 戦場を 広く（横の 短い 画面）：味方カードは 1段（名前と Lv を 横に）、下段は 画面の 約3割、メッセージは 半透明 */
+    #battle .pc-face{width:28px;height:28px}#battle .pc{padding:3px 6px 22px 3px;gap:5px}#battle .pc-wpn{display:none}
+    #battle .pc-name{font-size:14px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#battle .pc-name small{display:inline;margin-left:5px;font-size:12px}
+    #battle .pc .bar{height:5px}#battle .pc-num{bottom:4px;font-size:12px}
+    #battle{--bb-h:clamp(108px,29vh,124px)}
     #battle #bBottom{height:var(--bb-h)}
+    #battle #bMsg{padding:calc(var(--control-h) + 4px) var(--s3) var(--s1);background:rgba(10,15,34,.74);font-size:15px;line-height:1.45}
+    #battle .m-battle:not(.one) .m-item{min-height:var(--control-h);padding:2px var(--s1);font-size:15px;white-space:nowrap}
+    /* 敵が 3体 いるときは、弱点の 札を 選んでいる 敵だけに（重なって 読めなく なるため） */
+    #bFoes:has(> .foe:nth-child(3)) .foe:not(.tgt) .foe-weak{display:none}
+    /* 3体の ときは まん中の 名札を 1段 上へ ずらして 重ならないように */
+    #bFoes:has(> .foe:nth-child(3)) .foe:nth-child(3n+2) .foe-name{transform:translateY(-118%)}
+    #bFoes:has(> .foe:nth-child(3)) .foe-name{font-size:12px;padding:2px 6px}
+    /* とくぎの 一覧：下段より 少し 高く 広げ、選んでいない 技の 説明は 1行に（選んだ 技は 全文） */
+    #bCmd{--skh:calc(var(--bb-h) + 84px)}
+    #bCmd > .m-battle.one .m-item:not(.on) .m-h{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #battle .b-join{grid-template-columns:80px 1fr;padding:10px}.b-join svg{width:80px;height:80px}
   }
 
