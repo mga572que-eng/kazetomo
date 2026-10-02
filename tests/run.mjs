@@ -73,6 +73,17 @@ test('かくし宝箱：祠と 灯台', async ({ page }) => {
   ok(await page.evaluate(() => !!KZ.secrets.broken), 'かくし部屋で 灯台を わすれる'); act(page, `() => KZ.HOOK.acts.secLh({ d: KZ.secrets.broken })`); await idle(page); ok(await page.evaluate(() => Object.keys(KZ.G.secret).length === 2), '灯台の かくし宝箱が 開かない');
 });
 
+test('ひとくいばこ：びっくり戦闘と ごほうび', async ({ page }) => {
+  await page.evaluate(async () => { const c = KZ.REG[0].chests[0]; await KZ.travel(0, c.x + 1, c.z + 1); }); await idle(page);
+  const s = await page.evaluate(() => { const L = KZ.mimic.spotsOf(0); return L.length ? L[0] : null; }); ok(s, 'ひとくいばこが 置かれない');
+  await page.evaluate(s => { const K = KZ; K.G.auto = true; K.G.party.forEach(m => { m.lv = 45; K.calc(m); m.hp = m.st.hp; m.mp = m.st.mp; }); const P = K.player; P.x = s.x; P.z = s.z + 1.2; P.y = s.y; window.__h0 = K.G.inv.hoshikake || 0; }, s);
+  const d = await page.evaluate(() => { KZ.mimic.tune(); return DATA.enemies.hitokui; }); ok(d.lv === 45 && d.hp > 1000, 'ひとくいばこの 強さが 仲間に あわない');
+  act(page, `s => KZ.HOOK.acts.mimic(s)`, s); await page.waitForTimeout(500);
+  for (let i = 0; i < 160 && !(await page.evaluate(id => !!(KZ.G.mimic || {})[id], s.id)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(250); }
+  await idle(page);
+  ok(await page.evaluate(id => !!KZ.G.mimic[id], s.id), 'ひとくいばこを たおしても 記録されない'); ok(await page.evaluate(() => (KZ.G.inv.hoshikake || 0) > window.__h0), '星のかけらが もらえない');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
