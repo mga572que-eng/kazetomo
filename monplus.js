@@ -103,7 +103,7 @@
     },
     {
       id: 'cb_riku_iwa', hu: 'riku', arch: 'quad',
-      name: 'イワネたいらんつき', mp: 9, tg: 'enemy', power: 4.4, type: 'earth',
+      name: 'イワネたいらんつき', mp: 9, tg: 'enemy', power: 3.2, type: 'earth',
       desc: 'リク＋よつあし/がんせきぞく：だいちをわりきょがんとともにてき1からだをつらぬくごうげき'
     },
     {
@@ -118,7 +118,7 @@
     },
     {
       id: 'cb_kaito_puku', hu: 'kaito', arch: 'fish',
-      name: 'だいうずミナモうち', mp: 11, tg: 'enemy', power: 4.8, type: 'water',
+      name: 'だいうずミナモうち', mp: 11, tg: 'enemy', power: 3.5, type: 'water',
       desc: 'カイト＋ぎょぞく：きょだいいかりとおおなみをたたきこむたんたいちょうぜつはかいだげき'
     }
   ];

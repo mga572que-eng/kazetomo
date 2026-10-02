@@ -1,7 +1,7 @@
 // ともしびアイランド — アプリ化（ホーム画面に追加の案内・全画面・自動アップデート・画面スリープ防止）
 'use strict';
 (() => {
-  const BUILD = '20261002161909';
+  const BUILD = '20261002195203';
   const ua = navigator.userAgent;
   const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isAndroid = /Android/.test(ua);
@@ -78,10 +78,34 @@
     const b = document.createElement('button'); b.className = 't-btn'; b.type = 'button'; b.textContent = '📲 アプリにする'; b.onclick = () => open(true); tm.appendChild(b); });
 
   // ---------- ブラウザで あそぶときは 最初の タップで 全画面＋横向き ----------
-  function goFull() { if (standalone() || inFrame || !touch) return; const d = document.documentElement; const rq = d.requestFullscreen || d.webkitRequestFullscreen;
-    if (rq && !document.fullscreenElement) { try { const p = rq.call(d, { navigationUI: 'hide' }); if (p && p.then) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {}); } catch (e) {} } }
-  addEventListener('DOMContentLoaded', () => { const sp = document.getElementById('splash'); if (sp) sp.addEventListener('click', goFull); });
-  if (standalone() && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {});
+  async function goFull() {
+    if (inFrame || !touch) return false;
+    const d = document.documentElement;
+    const rq = d.requestFullscreen || d.webkitRequestFullscreen;
+    if (!standalone() && !document.fullscreenElement && !document.webkitFullscreenElement && rq) {
+      try { await rq.call(d, { navigationUI: 'hide' }); } catch (e) {}
+    }
+    try {
+      if (screen.orientation && typeof screen.orientation.lock === 'function') {
+        await screen.orientation.lock('landscape');
+      }
+    } catch (e) {}
+    return innerWidth >= innerHeight;
+  }
+  addEventListener('DOMContentLoaded', () => {
+    const sp = document.getElementById('splash');
+    if (sp) sp.addEventListener('click', goFull);
+    const button = document.getElementById('btnLandscape');
+    if (button) button.addEventListener('click', async () => {
+      button.disabled = true;
+      try {
+        if (!await goFull()) {
+          document.getElementById('orientationHelp').textContent = 'スマホの かいてんロックを はずして、よこむきに してください。';
+        }
+      } finally { button.disabled = false; }
+    });
+  });
+  if (standalone()) goFull();
 
   // ---------- 拡大・ダブルタップズームを 止める（iOS） ----------
   document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });

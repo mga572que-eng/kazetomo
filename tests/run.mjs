@@ -12,6 +12,14 @@ test('起動・メニュー・戦闘・セーブ', async ({ page }) => {
   ok(await page.evaluate(() => window.__r) === 'win', '戦闘に 勝てない'); await idle(page);
   const k = await page.evaluate(() => { KZ.save(); const key = Object.keys(localStorage).find(k => /^kazetomo-rpg-3/.test(k)); return key && Object.keys(JSON.parse(localStorage.getItem(key)).G).length; }); ok(k > 30, 'セーブが 空');
 });
+test('モジュールと つなぎ目（古い版の アップロードで 消えていないか）', async ({ page }) => {
+  const r = await page.evaluate(() => { const K = KZ; return { miss: ['casino', 'fun', 'secrets', 'mimic', 'lhDungeon', 'townLife', 'interior', 'weather'].filter(k => !K[k]), hook: ['chestFx', 'bossIntro'].filter(k => !K.HOOK[k]), boss: K.runBattle.toString().includes('bossIntro') }; });
+  ok(!r.miss.length, '読みこまれていない モジュール：' + r.miss.join(',')); ok(!r.hook.length, 'ない つなぎ目：' + r.hook.join(',')); ok(r.boss, 'runBattle が ボスの 登場演出を 呼ばない');
+  // 宝箱を 本当に あけて、演出（chestfx）が 呼ばれるか
+  const c = await page.evaluate(async () => { const c = KZ.REG[0].chests.find(c => !KZ.G.chests[c.id]); await KZ.travel(0, c.x, c.z + 1); const f = KZ.HOOK.chestFx; window.__cfx = 0; KZ.HOOK.chestFx = async x => { window.__cfx++; }; return c.id; }); await idle(page);
+  await page.evaluate(id => { const c = KZ.REG[0].chests.find(c => c.id === id), P = KZ.player; P.x = c.x; P.z = c.z + 1.2; P.y = c.y; __dbg.sim(3); }, c);
+  await page.keyboard.press('KeyE'); await idle(page); ok(await page.evaluate(() => window.__cfx > 0), '宝箱を あけても 演出（chestfx）が 呼ばれない');
+});
 test('町のくらし：昼と夜', async ({ page }) => {
   await page.evaluate(async () => { const t = KZ.REG[0].town; await KZ.travel(0, t.x + 2, t.z + 6); KZ.G.tod = 23 / 24; }); await idle(page); await page.evaluate(() => __dbg.sim(1500));
   const r = await page.evaluate(() => { const P = KZ.townLife.people.filter(q => q.town.key === 'kazami'); return { n: P.length, inside: P.filter(q => q.npc && q.npc.indoor).length }; });

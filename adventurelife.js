@@ -36,7 +36,7 @@
     return null;}
   const previousMove=H.routeMove;H.routeMove=(x,z,dt)=>{if(previousMove){const a=previousMove(x,z,dt);x=a.x;z=a.z;}warning=Math.max(0,warning-dt);const rule=routeRule(x,z);if(rule&&!(coldAt(K.player.x,K.player.z)&&!warm()&&z>K.player.z)){if(!warning){K.toast(rule,3500);warning=4;}K.player.vx=K.player.vz=0;return{x:K.player.x,z:K.player.z};}return{x,z};};
   const oldSpeed=H.travelSpeed;H.travelSpeed=s=>{s=oldSpeed?oldSpeed(s):s;const n=W.nAt(K.player.x,K.player.z);if(K.G.region===1&&K.player.z<60&&n[1]<.62&&!rockyRide()&&!K.player.glide)return Math.min(s,1.8);return s;};
-  const previousSurface=H.travelStamina;H.travelStamina=s=>{s=previousSurface?previousSurface(s):s;if(K.G.region===1&&K.player.z<60&&K.player.climb&&!rockyRide())s+=18;return s;};
+  const previousSurface=H.travelStamina;H.travelStamina=s=>{s=previousSurface?previousSurface(s):s;if(K.fieldTravel&&K.fieldTravel.mounted())return 0;if(K.G.region===1&&K.player.z<60&&K.player.climb&&!rockyRide())s+=18;return s;};
   // 雪原の境界に支度の案内。条件はUIでも確認できる。
   H.menu.push(()=>({label:'たびの したく',sub:'ゆき・やま・あさいち',fn:()=>K.say(['ゆきぐにの ふく：ミナトの ツムギに はなし、ソラに そうび。','やまみち：がんばり9こ（180）か、イワノコ・イワゴロン。','きたの たかいやま：あったかい ふくと、イワノコ・イワゴロン。','さかなの あさいち：シオミ・ミナト・アワの里で あさ5じ〜10じ。'])}));
   // 世話係は既存の家畜小屋のそばの安全な地面だけに置く。

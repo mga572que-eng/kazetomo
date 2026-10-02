@@ -7,7 +7,11 @@ const cv = document.getElementById('game');
 if (!World.init(cv, COARSE || DEBUG)) { document.getElementById('fallback').hidden = false; return; }
 const { hAt, nAt, surfaceAt, Blocks, V, clamp, lerp, smooth } = World;
 const $ = id => document.getElementById(id);
-const wait = ms => new Promise(r => setTimeout(r, ms));
+function portraitBlocked() { return innerHeight > innerWidth; }
+const wait = ms => new Promise(resolve => setTimeout(() => {
+  const resume = () => { if (portraitBlocked()) return; removeEventListener('resize', resume); removeEventListener('orientationchange', resume); resolve(); };
+  if (portraitBlocked()) { addEventListener('resize', resume); addEventListener('orientationchange', resume); } else resolve();
+}, ms));
 const R = Math.random;
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const SPC = DATA.species;
@@ -427,7 +431,17 @@ const pup = e => { if (e.pointerId === stick.id) { stick.id = null; stick.x = st
 cv.addEventListener('pointerup', pup); cv.addEventListener('pointercancel', pup);
 cv.addEventListener('wheel', e => { cam.dist = clamp(cam.dist + e.deltaY * .01, 4, 16); cam.inAt = performance.now(); e.preventDefault(); }, { passive: false });
 cv.addEventListener('contextmenu', e => e.preventDefault());
-function releaseInputs() { keys.clear(); stick.id = null; stick.x = stick.y = 0; stickEl.hidden = true; look.id = null; pinch.on = false; pinch.b = null; }
+function releaseInputs() { keys.clear(); jumpReq = false; stick.id = null; stick.x = stick.y = 0; stickEl.hidden = true; look.id = null; pinch.on = false; pinch.b = null; }
+function syncLandscape() {
+  const blocked = portraitBlocked();
+  if (blocked) { releaseInputs(); player.vx = player.vz = player.vy = 0; }
+  document.querySelectorAll('body > :not(#orientationNotice):not(script):not(style)').forEach(el => { el.inert = blocked; });
+}
+addEventListener('resize', syncLandscape); addEventListener('orientationchange', syncLandscape);
+for (const type of ['pointerdown', 'keydown']) addEventListener(type, e => {
+  if (portraitBlocked() && !e.target.closest?.("#orientationNotice")) { e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
+syncLandscape();
 addEventListener('keydown', e => {
   if (e.target && e.target.tagName === 'INPUT') return;
   if (MENUS.length) { menuKey(e); return; }
@@ -444,7 +458,8 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyQ') cycleMat();
 });
 addEventListener('keyup', e => keys.delete(e.code));
-addEventListener('blur', () => keys.clear());
+addEventListener('blur', releaseInputs);
+document.addEventListener('visibilitychange', () => { if (document.hidden) releaseInputs(); });
 const tapBtn = (id, fn) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
 tapBtn('btnAct', () => act()); tapBtn('btnMenu', () => { if (mode() === 'field') openMenu(); }); tapBtn('btnJump', () => { jumpReq = true; });
 tapBtn('btnBuild', () => toggleBuild()); tapBtn('btnPlace', () => place()); tapBtn('btnBreak', () => breakBlock()); tapBtn('btnMat', () => cycleMat());
@@ -501,7 +516,8 @@ function menu({ title, items, where = 'center', cancel = true, cols = 0, cls = '
 }
 function paint(M) { M.el.querySelectorAll('.m-item').forEach((b, i) => b.classList.toggle('on', i === M.sel)); const on = M.el.querySelectorAll('.m-item')[M.sel]; on && on.scrollIntoView && on.scrollIntoView({ block: 'nearest' }); }
 function closeMenu(M, v) { M.el.remove(); MENUS.splice(MENUS.indexOf(M), 1); M.res(v); }
-function menuKey(e) { const M = MENUS[MENUS.length - 1]; if (!M) return; if (M.key) { M.key(e); return; }
+function menuKey(e) { const M = MENUS[MENUS.length - 1]; if (!M) return;
+  if (e.target?.closest?.('.ranch-filters,.ranch-pager') && ['Tab', 'Space', 'Enter'].includes(e.code)) return; if (M.key) { M.key(e); return; }
   if (M.panel) { if (['Escape', 'Enter', 'Space', 'KeyE', 'Backspace'].includes(e.code)) { e.preventDefault(); Music.sfx('cancel'); closeMenu(M, -1); } return; }
   const n = M.items.length; const step = d => { let i = M.sel; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!M.items[i].disabled) break; } M.sel = i; Music.sfx('cursor'); paint(M); };
   const cols = M.cols || (M.el.classList.contains('m-battle') && !M.el.classList.contains('one') ? 2 : 1);
@@ -604,7 +620,7 @@ const REGION_NAME = ['風灯の島', '霧の大陸', '天空の浮島', '海の�
 
 // ================= interaction =================
 let target = null, sandCd = 0;
-function onSand() { const b = World.biomeAt(player.x, player.z); const h = hAt(player.x, player.z); return player.ground && (b === 'desert' || (b === 'shore' && h > .3)) && player.y - h < .3; }
+function onSand() { const b = World.biomeAt(player.x, player.z); const h = hAt(player.x, player.z); return player.ground && !player.swim && !(window.KZ && KZ.interior && KZ.interior.cur) && h > .3 && (b === 'desert' || b === 'shore') && Math.abs(player.y - h) < .3; }
 function findTarget() {
   const r = REGr(); const px = player.x, pz = player.z, fx = Math.sin(player.yaw), fz = Math.cos(player.yaw); let best = null, bs = 1e9;
   const cand = (o, type, x, z, rng) => { if (Math.abs(x - px) > rng + 1 || Math.abs(z - pz) > rng + 1) return; const dx = x - px, dz = z - pz, d = Math.hypot(dx, dz); if (d > rng) return; const f = (dx * fx + dz * fz) / (d || 1); const sc = d - f * 1.3; if (type === 'npc' && (f < .25 || Math.abs(player.y - (o.y ?? surfaceAt(x, z, hAt(x,z) + 2))) > 3)) return; if (sc < bs) { bs = sc; best = { o, type, x, z }; } };
@@ -642,7 +658,7 @@ function act() {
     if (t.o.hits >= needH) { t.o.state = 'fall'; t.o.t = 0; t.o.hits = 0; const g = iw ? 3 : 2; gain('ishi', g); let msg = `石 +${g}`; if (G.region === 1 && R() < .08) { gain('hoshikake'); msg += '  星のかけら！'; } floatText([t.o.x, t.o.y + 1.6, t.o.z], msg); } else floatText([t.o.x, t.o.y + 1.4, t.o.z], '●'.repeat(t.o.hits) + '○'.repeat(needH - t.o.hits)); return; }
   if (t.type === 'bush') { t.o.has = false; t.o.t = 0; gain('mi', 2); Music.sfx('pick'); floatText([t.o.x, t.o.y + 1.2, t.o.z], '木の実 +2'); return; }
   if (t.type === 'shroom') { t.o.has = false; t.o.t = 0; gain('kinoko'); Music.sfx('pick'); floatText([t.o.x, t.o.y + .8, t.o.z], 'キノコ +1'); return; }
-  if (t.type === 'sand') { if (sandCd > 0) return; sandCd = .45; gain('suna'); Music.sfx('mine'); floatText([player.x, player.y + 1, player.z], '砂 +1'); return; }
+  if (t.type === 'sand') { if (sandCd > 0) return; if (!onSand()) return; sandCd = .65; gain('suna', 3); Music.sfx('mine'); floatText([player.x, player.y + 1, player.z], 'すな +3'); save(); return; }
   if (t.type === 'chest') return run(() => openChest(t.o));
   if (t.type === 'statue') return run(statueEvent);
   if (t.type === 'fire') return run(cookMenu);
@@ -1219,6 +1235,9 @@ async function credits(ch) {
 // ================= battle =================
 const B = { active: false }; let bSkip = false;
 $('bMsg').addEventListener('pointerdown', () => { bSkip = true; });
+const AUTO_STRATEGIES = [{id:'balance',name:'バランス'}, {id:'attack',name:'せめる'}, {id:'heal',name:'かいふく優先'}, {id:'save',name:'MPせつやく'}];
+function strategy() { return AUTO_STRATEGIES.find(s => s.id === G.strategy) || AUTO_STRATEGIES[0]; }
+$('bStrategy').addEventListener('click', () => { G.strategy = AUTO_STRATEGIES[(AUTO_STRATEGIES.indexOf(strategy()) + 1) % AUTO_STRATEGIES.length].id; $('bStrategy').textContent = `さくせん：${strategy().name}`; if (!B.active) save(); });
 $('bSpd').addEventListener('click', () => { G.speed = G.speed === 1 ? 2 : G.speed === 2 ? 3 : 1; $('bSpd').textContent = `はやさ ×${G.speed}`; $('battle').style.setProperty('--bs', G.speed); $('bfx').style.setProperty('--bs', G.speed); });
 // バトル画面の どこを タップしても 演出を とばせる（コマンド・ボタン類は のぞく）／ 右クリックで もどる
 $('battle').addEventListener('pointerdown', e => { if (!e.target.closest('.menu,.bctl,.bnav')) bSkip = true; });
@@ -1231,7 +1250,7 @@ const CONF = ['#ffd36a', '#ff7fb0', '#8fe06a', '#7fd0ff', '#fff6c9', '#b98cff', 
 function confetti(n, o = {}) { let h = ''; for (let i = 0; i < n; i++) { const a = (o.a0 ?? -Math.PI) + R() * (o.arc ?? Math.PI), d = (o.d || 160) * (.4 + R() * .8);
   h += `<i class="${o.cls || 'cf'}" style="--x:${Math.cos(a) * d * 1.6}px;--y:${Math.sin(a) * d}px;--fall:${60 + R() * 120}px;--r:${Math.round(R() * 720 - 360)}deg;--c:${CONF[i % CONF.length]};--dl:${(R() * .25).toFixed(2)}s;--sz:${4 + R() * 6}px">${o.ch || ''}</i>`; } return h; }
 function cryOf(f, o = {}) { try { if (f.sp) return Music.cry(f.sp, { shadow: !SPC[f.sp].legend, ...o }); if (f.bid) return Music.cry(f.bid, { boss: true, ...o }); } catch (e) { console.error(e); } return 0; }
-$('bAuto').addEventListener('click', () => { G.auto = !G.auto; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF';
+$('bAuto').addEventListener('click', () => { G.auto = !G.auto; $('bStrategy').textContent = `さくせん：${strategy().name}`; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF';
   if (G.auto) for (const M of MENUS.slice().reverse()) if (M.el.classList.contains('m-battle')) closeMenu(M, 'auto'); });
 function wildLevel(x, z) { if (G.region === 0) return Math.max(1, 1 + G.order * 3 + (G.flags.cleared ? 4 : 0) + Math.floor(R() * 2));
   if (G.region === 3) { const b = World.biomeAt(x, z); return ({ sand: 40, kelp: 41, coral: 42, rock: 44, trench: 47 }[b] || 40) + Math.floor(R() * 3) + (G.flags.c4done ? 5 : 0); }
@@ -1630,7 +1649,7 @@ async function runBattle(specs, opts = {}) {
   F.forEach(f => { if (f.sp) G.dex.seen[f.sp] = 1; });
   P.forEach(m => { m.defUp = 0; m.atkUp = 0; m.spdUp = 0; m.sleep = 0; m.guard = false; m.slow = 0; m.ail = null; });
   let friendBoost = 1;
-  $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF'; $('bSpd').textContent = `はやさ ×${G.speed || 1}`;
+  $('bStrategy').textContent = `さくせん：${strategy().name}`; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF'; $('bSpd').textContent = `はやさ ×${G.speed || 1}`;
   if (!G.tips.battle1) tip('<b>バトルの コツ</b><span>敵の 下の「弱点」タイプの 技は 1.5倍。「おまかせ」で 自動、「はやさ」で 倍速に できる。</span>', 'battle1');
   $('bMsg').innerHTML = ''; buildStage(opts); B.d3 = false; try { B.d3 = !!(HOOK.b3dStart && HOOK.b3dStart(opts, P, F)); } catch (e) { console.error(e); } if (B.d3) B.stage = false; $('battle').hidden = false; $('battle').classList.toggle('isboss', !!opts.boss);
   const redraw = (ai = -1) => { drawParty(P, ai); drawAllies(P, ai); drawFoes(F); };
@@ -1668,17 +1687,29 @@ async function runBattle(specs, opts = {}) {
   const combosFor = m => (DATA.combos || []).filter(c => (c.a === m.id || c.b === m.id || c.b === m.uid)).map(c => ({ c, partner: P.find(x => (x.id === (c.a === m.id ? c.b : c.a) || x.uid === (c.a === m.id ? c.b : c.a))) })).filter(o => o.partner && o.partner.hp > 0 && !(o.partner.sleep > 0) && m.mp >= o.c.mp && o.partner.mp >= o.c.mp);
   let turnN = 0;
   function aiPlan(m) {
+    const mode = strategy().id, threshold = mode === 'heal' ? .75 : mode === 'save' ? .25 : mode === 'attack' ? .3 : .5;
+    const hurt = aliveP().filter(a => a.hp < a.st.hp * threshold).sort((a,b) => a.hp/a.st.hp-b.hp/b.st.hp);
+    const afford = sid => DATA.skills[sid] && m.mp >= costOf(m,sid) && !DATA.skills[sid].gold && !DATA.skills[sid].steal;
+    const revive = m.skills.find(sid => DATA.skills[sid].revive && afford(sid));
+    if (revive && P.some(a => a.hp <= 0)) return {type:'skill',s:revive,t:null};
+    const healing = m.skills.filter(sid => DATA.skills[sid].heal && afford(sid));
+    if (hurt.length && healing.length) {
+      const singles = healing.filter(sid => DATA.skills[sid].tg === 'ally');
+      const pool = hurt.length === 1 && singles.length ? singles : healing;
+      pool.sort((a,b) => costOf(m,a)-costOf(m,b));
+      const sid = hurt.length > 1 ? pool.find(s => DATA.skills[s].tg === 'party') || pool[0] : pool[0];
+      return {type:'skill',s:sid,t:hurt[0]};
+    }
     const A = aliveP(), Fs = aliveF(); const can = sid => m.mp >= costOf(m, sid) && !DATA.skills[sid].gold && !DATA.skills[sid].steal; // おまかせでは お金・ぬすむを つかわない
     if (Fs.some(f => f.charging) && m.hp < m.st.hp * .7 && !m.skills.some(sid => DATA.skills[sid].heal && can(sid))) return { type: 'guard' };
-    if (Fs.some(f => f.boss) && turnN % 3 === 2) { const cb = combosFor(m).find(o => o.c.power); if (cb) return { type: 'combo', c: cb.c, partner: cb.partner, t: Fs[0] }; }
+    if (mode !== 'save' && Fs.some(f => f.boss) && turnN % 3 === 2) { const cb = combosFor(m).find(o => o.c.power); if (cb) return { type: 'combo', c: cb.c, partner: cb.partner, t: Fs[0] }; }
     if (A.some(a => a.ail === 'poison' || a.ail === 'burn') && !A.some(a => a.hp < a.st.hp * .45)) { const cs = m.skills.find(sid => DATA.skills[sid].cure && can(sid)); if (cs) return { type: 'skill', s: cs, t: null }; }
-    if (Fs.some(f => f.boss) && !A.some(a => a.hp < a.st.hp * .45)) { for (const [sid, key] of [['mamori', 'defUp'], ['hagemashi', 'atkUp'], ['oikaze', 'spdUp']]) if (m.skills.includes(sid) && can(sid) && !A.some(a => a[key] > 1)) return { type: 'skill', s: sid, t: null }; }
-    const low = A.filter(a => a.hp < a.st.hp * .45); const heals = m.skills.filter(sid => DATA.skills[sid].heal && can(sid));
-    if (heals.length && (low.length >= 2 || A.some(a => a.hp < a.st.hp * .3))) { const hp = heals.find(sid => DATA.skills[sid].tg === 'party') || heals[0]; return { type: 'skill', s: hp, t: low.sort((a, b) => a.hp / a.st.hp - b.hp / b.st.hp)[0] }; }
+    if (mode !== 'save' && mode !== 'attack' && Fs.some(f => f.boss) && !A.some(a => a.hp < a.st.hp * .45)) { for (const [sid, key] of [['mamori', 'defUp'], ['hagemashi', 'atkUp'], ['oikaze', 'spdUp']]) if (m.skills.includes(sid) && can(sid) && !A.some(a => a[key] > 1)) return { type: 'skill', s: sid, t: null }; }
     const est = (pow, type, magic, f) => (m.st.atk * pow - f.def * (magic ? .25 : .5)) * DATA.typeMul(type, f.type);
     let best = null, bs = -1e9;
     for (const f of Fs) { const v = est(1, null, false, f); if (v > bs) { bs = v; best = { type: 'atk', t: f }; } }
     const base = bs;
+    if (mode === 'save') return best;
     for (const sid of m.skills) { const sk = DATA.skills[sid]; if (!sk.power || !can(sid)) continue;
       if (sk.tg === 'enemies') { const v = Fs.reduce((a, f) => a + Math.max(1, est(sk.power, sk.type, sk.magic, f)), 0); if (v > bs && v > base * 1.3) { bs = v; best = { type: 'skill', s: sid, t: null }; } }
       else for (const f of Fs) { const v = est(sk.power, sk.type, sk.magic, f); if (v > bs && v > base * 1.3) { bs = v; best = { type: 'skill', s: sid, t: f }; } } }
@@ -1854,7 +1885,7 @@ async function runBattle(specs, opts = {}) {
     const rows = [];
     for (const m of P) { const row = { m, lv0: m.lv, e0: m.exp / need(m.lv), st0: { ...m.st }, skills: [], sp: 0, alive: m.hp > 0 };
       if (m.kind === 'mon' && m.hp > 0) { m.bond = Math.min(100, (m.bond || 0) + 1); m.endured = false; }
-      if (m.hp > 0 && exp) { m.exp += exp; while (m.exp >= need(m.lv)) { m.exp -= need(m.lv); const old = m.skills.slice(), ohp = m.st.hp, omp = m.st.mp; m.lv++; calc(m); m.hp += m.st.hp - ohp; m.mp += m.st.mp - omp;
+      if (m.hp > 0 && exp) { m.exp += exp; while (m.exp >= need(m.lv)) { m.exp -= need(m.lv); const old = m.skills.slice(); m.lv++; calc(m); m.hp = m.st.hp; m.mp = m.st.mp;
         if (m.kind === 'human') { const g = 1 + (m.lv % 5 === 0 ? 1 : 0); G.sp[m.id] = (G.sp[m.id] || 0) + g; row.sp += g; }
         for (const sk of m.skills) if (!old.includes(sk)) row.skills.push(DATA.skills[sk].name);
         if (m.kind === 'mon' && SPC[m.id].evo && m.lv >= SPC[m.id].evo.lv && !evolving.includes(m)) evolving.push(m); } }
@@ -1879,7 +1910,7 @@ async function runBattle(specs, opts = {}) {
       const card = bAdd('b-lv', `<div class="b-lv-rays"></div><div class="b-lv-cf">${confetti(24, { d: 170, arc: Math.PI * 2, cls: 'sp', ch: '✦' })}</div>
         <div class="b-lv-face">${r.m.kind === 'human' ? Art.portrait(r.m.id, 'joy') : faceOf(r.m)}</div>
         <div class="b-lv-body"><div class="b-lv-t">レベルアップ！</div><div class="b-lv-n">${esc(nameOf(r.m))}　Lv${r.lv0} <i>→</i> <b>Lv${r.m.lv}</b></div>
-          <div class="b-lv-st">${statList(r)}</div>${r.skills.map(s => `<div class="b-lv-new">あたらしく <b>${esc(s)}</b>を おぼえた！</div>`).join('')}
+          <div class="b-lv-st">${statList(r)}</div><div class="b-lv-new">HP・MPが ぜんかいふく！</div>${r.skills.map(s => `<div class="b-lv-new">あたらしく <b>${esc(s)}</b>を おぼえた！</div>`).join('')}
           ${r.sp ? `<div class="b-lv-sp">スキルポイント <b>+${r.sp}</b>（メニューの「スキル」で つかえる）</div>` : ''}</div><p class="res-tap">タップで つぎへ</p>`);
       await bwait(260); await btap(1500 + r.skills.length * 500); card.classList.add('out'); await wait(160 / bspd()); card.remove(); }
     $('battle').classList.remove('res-on');
@@ -1887,19 +1918,23 @@ async function runBattle(specs, opts = {}) {
     for (const f of F) if (f.sp) { const b = SPC[f.sp].type; const pool = b === 'earth' ? ['ishi', 'ishi', 'mi'] : b === 'grass' ? ['mi', 'kinoko', 'ha'] : b === 'water' ? ['mi', 'shizuku'] : b === 'light' || b === 'dark' ? ['shizuku', 'hoshikake'] : b === 'wind' ? ['kumowata', 'kumowata', 'mi'] : ['mi'];
       if (R() < .35) { const it = pool[Math.floor(R() * pool.length)]; gain(it); await bmsg(`${f.name}は ${DATA.items[it].name}を おとしていった。`, 300); } }
     for (const f of F.filter(f => f.sp)) {
+      if (!canAddSpecies(f.sp)) continue;
       const S = SPC[f.sp]; const rate = S.legend ? 1 : Math.min(.9, (S.rare ? .16 : .3) * (inParty('mio') ? 1.3 : 1) * friendBoost * (f.shiny ? 1.5 : 1));
       if (R() < rate) { $('bFoes').innerHTML = `<div class="foe befriend"><div class="foe-art">${Art.species(f.sp, { shiny: f.shiny })}</div><div class="foe-shadow"></div></div>`; screenFx('light'); Music.sfx('magic');
         await bmsg(`かげが はれて、${S.name}の すがたに もどった。`, 400); await bmsg(`${S.name}は しばらく ${G.name}を 見つめていたが……`, 500);
         const m = mkMon(f.sp, Math.max(1, f.lv - 1), f.shiny); G.mons.push(m); const isNew = !G.dex.got[f.sp]; G.dex.got[f.sp] = 1; fixTeam();
         { const fe = $('bFoes').querySelector('.foe'); if (fe) { fe.classList.add('love'); bAdd('b-hearts', confetti(16, { cls: 'ht', ch: '♥', d: 150, arc: Math.PI * 2 }), fe); } }
         Music.cry(f.sp, { vol: 1.1 }); setTimeout(() => Music.sfx('heart'), 260 / bspd()); setTimeout(() => Music.sfx('friend'), 700 / bspd()); await bmsg(`${S.name}${f.shiny ? '★' : ''}が なかまに くわわった！${isNew ? '（図鑑に 登録された！）' : ''}`, 900);
+        const profile = ranchProfile(m); const joinCard = bAdd('win b-join', `<div>${Art.species(m.id,{shiny:m.shiny})}</div><section><h3>${esc(nameOf(m))}と なかまに！</h3><p>Lv${m.lv} ・ ${esc(profile.label)}</p><p>${esc(profile.detail)}</p><p>${G.team.includes(m.uid) ? 'いっしょに 冒険へ！' : '牧場で まっているよ。なかまメニューで 入れかえ。'}</p><small>タップで つぎへ</small></section>`); await btap(2200); joinCard.remove();
         if (!G.team.includes(m.uid)) await bmsg(`（${S.name}は 牧場で まっている。 メニューの「なかま」で 入れかえ できる）`, 700);
         break; } }
   } else if (result === 'lose') { $('battle').classList.add('lose'); Music.sfx('lose'); const lb = bAdd('b-banner lose', '<span>ちからつきた……</span>');
     await bmsg(`${G.name}たちは ちからつきた……`, 600); await bwait(900); lb.remove(); }
   P.forEach(m => { if (m.hp <= 0 && result !== 'lose') m.hp = 1; m.sleep = 0; m.defUp = 0; m.slow = 0; m.ail = null; });
+  if (result === 'win') for (const m of P) if (m.kind === 'mon' && SPC[m.id].evo && m.lv >= SPC[m.id].evo.lv && canAddSpecies(SPC[m.id].evo.to, m) && !evolving.includes(m)) evolving.push(m);
   if (evolving.length && B.d3) $('battle').classList.remove('b3d'); // 進化の 場面は 2Dで みせる
   for (const m of evolving) { const from = SPC[m.id], to = SPC[from.evo.to];
+    if (!canAddSpecies(from.evo.to, m)) { await bmsg(`${to.name}は すでに 3ひき いるので、すがたを かえるのは またこんど。`, 900); continue; }
     $('bFoes').innerHTML = `<div class="foe evo"><div class="foe-art">${Art.species(m.id, { shiny: m.shiny })}</div></div>`; await bmsg(`${from.name}の からだが 光に つつまれていく……！`, 700);
     screenFx('white'); Music.jingle('light', opts.boss ? null : fieldSong()); m.id = from.evo.to; const r = m.hp / m.st.hp; calc(m); m.hp = Math.max(1, Math.round(m.st.hp * r)); G.dex.seen[m.id] = 1; G.dex.got[m.id] = 1;
     $('bFoes').innerHTML = `<div class="foe evo"><div class="foe-art">${Art.species(m.id, { shiny: m.shiny })}</div></div>`; await bmsg(`${from.name}は ${to.name}に すがたを かえた！`, 1200); }
@@ -1979,12 +2014,53 @@ async function skillMenu() {
       if (j < 0) break; const n = B[j];
       if (!(await confirm(`${n.name}：${n.desc}\n${n.cost}SPで 覚えますか？`))) continue;
       G.sp[m.id] -= n.cost; own.push(n.id); const r = m.hp / m.st.hp; calc(m); m.hp = Math.round(m.st.hp * r); m.mp = Math.min(m.mp, m.st.mp); Music.sfx('friend'); toast(`${nameOf(m)}は ${n.name}を 覚えた！`, 1500); hud(); } } }
-function useItemField(k, m) { const it = DATA.items[k]; G.inv[k]--; if (it.heal) m.hp = Math.min(m.st.hp, m.hp + it.heal); if (it.mp) m.mp = Math.min(m.st.mp, m.mp + it.mp); Music.sfx('heal'); hud(); }
+function useItemField(k, m) { const it = DATA.items[k]; if (!it || !(G.inv[k] > 0) || m.hp <= 0 || !((it.heal && m.hp < m.st.hp) || (it.mp && m.mp < m.st.mp))) return false; G.inv[k]--; if (it.heal) m.hp = Math.min(m.st.hp, m.hp + it.heal); if (it.mp) m.mp = Math.min(m.st.mp, m.mp + it.mp); Music.sfx('heal'); hud(); save(); return true; }
+function fieldSkillTargets(s, P, target) {
+  return s.tg === 'party' ? P : target ? [target] : [];
+}
+function useFieldSkill(m, sid, target, P = battleParty()) {
+  const s = DATA.skills[sid];
+  if (!s || !m.skills.includes(sid) || m.hp <= 0 || !['ally','party'].includes(s.tg) || !(s.heal || s.revive || s.cure) || s.power || s.gold || m.mp < costOf(m,sid)) return false;
+  const T = fieldSkillTargets(s,P,target);
+  if (!T.length || T.some(t => !P.includes(t))) return false;
+  const useful = T.some(t => t.hp <= 0 ? !!s.revive : (s.heal && t.hp < t.st.hp) || (s.cure && (t.ail || t.sleep > 0)));
+  if (!useful) return false;
+  m.mp -= costOf(m,sid);
+  for (const t of T) {
+    const down = t.hp <= 0;
+    if (down && s.revive) { t.hp = Math.max(1,Math.round(t.st.hp*s.revive)); t.ail=null; t.sleep=0; }
+    if (!down && s.heal) t.hp = Math.min(t.st.hp,t.hp+Math.round((s.heal+(s.healPct||0)*t.st.hp)*(1+(m.pas?.healUp||0))));
+    if (!down && s.cure) { t.ail=null; t.sleep=0; }
+  }
+  Music.sfx('heal'); hud(); save(); return true;
+}
+async function fieldSpellMenu() {
+  while (true) {
+    const P = battleParty(), casters=P.filter(m=>m.hp>0&&m.skills.some(sid=>{const s=DATA.skills[sid];return s&&!s.power&&!s.gold&&['ally','party'].includes(s.tg)&&(s.heal||s.revive||s.cure);}));
+    if (!casters.length) { await panel('<h3>じゅもん・とくぎ</h3><p>移動中に つかえる わざを まだ おぼえていない。</p>'); return; }
+    const i=await menu({title:'だれが つかう？',items:casters.map(m=>({label:nameOf(m),sub:`MP ${m.mp}/${m.st.mp}`})),where:'side'}); if(i<0)return;
+    const m=casters[i], skills=m.skills.filter(sid=>{const s=DATA.skills[sid];return s&&!s.power&&!s.gold&&['ally','party'].includes(s.tg)&&(s.heal||s.revive||s.cure);});
+    const j=await menu({title:nameOf(m)+'の わざ',items:skills.map(sid=>({label:DATA.skills[sid].name,sub:`MP ${costOf(m,sid)} / ${DATA.skills[sid].tg==='party'?'みんな':'ひとり'}`,hint:DATA.skills[sid].desc,disabled:m.mp<costOf(m,sid)})),where:'side'}); if(j<0)continue;
+    const sid=skills[j], s=DATA.skills[sid]; let target=null;
+    if(s.tg==='ally'){const k=await menu({title:'だれに？',items:P.map(t=>({label:nameOf(t),sub:`HP ${t.hp}/${t.st.hp}`,disabled:t.hp<=0&&!s.revive})),where:'side'});if(k<0)continue;target=P[k];}
+    toast(useFieldSkill(m,sid,target,P)?s.name+'で かいふくした！':'いまは かいふくが いらない',1200);
+  }
+}
+async function fieldMPMenu() {
+  const P=battleParty(), k='shizuku';
+  if(!(G.inv[k]>0)){await panel('<h3>MPかいふく</h3><p>夜露のしずくは 各町の どうぐ屋で 買える。1こ40G・MP30。宿や 道の駅でも みんなの MPが もどる。</p>');return;}
+  const i=await menu({title:'MPを かいふくする',items:P.map(m=>({label:nameOf(m),sub:`MP ${m.mp}/${m.st.mp} → ${Math.min(m.st.mp,m.mp+DATA.items[k].mp)}`,disabled:m.hp<=0||m.mp>=m.st.mp})),where:'side'});
+  if(i>=0){useItemField(k,P[i]);save();}
+}
 async function itemMenu() {
   while (true) {
     const cats = Object.keys(DATA.itemCats);
-    const c = await menu({ title: 'どうぐ', items: cats.map(cat => { const n = Object.keys(DATA.items).filter(k => DATA.items[k].cat === cat && (G.inv[k] || 0) > 0).length; return { label: DATA.itemCats[cat], sub: `${n}しゅるい` }; }), where: 'side' });
-    if (c < 0) return; const cat = cats[c];
+    const c = await menu({ title: 'どうぐ', items: cats.map(cat => { const n = Object.keys(DATA.items).filter(k => DATA.items[k].cat === cat && (G.inv[k] || 0) > 0).length; return { label: DATA.itemCats[cat], sub: `${n}しゅるい` }; }).concat([{label:'ぶき・ぼうぐ',sub:'もっている そうびを つけかえる'},{label:'じゅもん・とくぎ',sub:'移動中の かいふく・ふっかつ'},{label:'MPかいふく',sub:`夜露のしずく ×${G.inv.shizuku || 0}`}]), where: 'side' });
+    if (c < 0) return;
+    if (c === cats.length) { if (window.KZ && KZ.bal) await KZ.bal.equipUI(); continue; }
+    if (c === cats.length + 1) { await fieldSpellMenu(); continue; }
+    if (c === cats.length + 2) { await fieldMPMenu(); continue; }
+    const cat = cats[c];
     while (true) {
       const ks = Object.keys(DATA.items).filter(k => DATA.items[k].cat === cat && (G.inv[k] || 0) > 0);
       if (!ks.length) { await panel(`<h3>${DATA.itemCats[cat]}</h3><p>なにも もっていない。</p>`); break; }
@@ -1996,7 +2072,7 @@ async function itemMenu() {
       if (it.warp) { G.inv[k]--; await warpTo(REGr().town.x + 2, REGr().town.z + 3); return 'warped'; }
       if (it.stam) { G.inv[k]--; G.stam = G.stamMax; player.tired = false; Music.sfx('heal'); toast('がんばりが 全回復した！', 1200); continue; }
       if (it.healAll) { G.inv[k]--; allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); Music.sfx('heal'); toast('みんな 全回復した！', 1200); hud(); continue; }
-      const P = battleParty(); const j = await menu({ title: `だれに つかう？`, items: P.map(m => ({ label: nameOf(m), sub: `HP ${m.hp}/${m.st.hp}  MP ${m.mp}/${m.st.mp}` })), where: 'side' });
+      const P = battleParty(); const j = await menu({ title: `だれに つかう？`, items: P.map(m => ({ label: nameOf(m), sub: `HP ${m.hp}/${m.st.hp}  MP ${m.mp}/${m.st.mp}`, disabled: m.hp <= 0 || !((it.heal && m.hp < m.st.hp) || (it.mp && m.mp < m.st.mp)) })), where: 'side' });
       if (j >= 0) useItemField(k, P[j]); } } }
 async function travel(dest, x, z, yaw = Math.PI, cine = null) { await fade(true); G.region = dest; World.setRegion(dest); enemies = []; player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.vx = player.vz = player.vy = 0; player.glide = false; trail.length = 0; cam.yaw = yaw; camFrame(yaw); player.yaw = cam.yaw; player.safe = { x, z }; if (cine) await cinematic(cine.kind, cine.title || REGION_NAME[dest], cine.sub); Music.play(fieldSong(), { restart: true }); await wait(cine ? 250 : 400); await fade(false); save(); }
 async function warpTo(x, z) { await fade(true); player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.safe = { x, z }; player.vx = player.vz = player.vy = 0; trail.length = 0; enemies = []; camFrame(cam.yaw); player.yaw = cam.yaw; await wait(200); await fade(false); }
@@ -2011,7 +2087,7 @@ function mapImage() {
     const sh = hAt(wx - 3, wz - 3) - h; const k = 1 + Math.max(-.25, Math.min(.25, sh * .06)); const o = (j * S + i) * 4; img.data[o] = col[0] * k; img.data[o + 1] = col[1] * k; img.data[o + 2] = col[2] * k; img.data[o + 3] = 255; }
   x.putImageData(img, 0, 0); return mapCache[G.region] = c.toDataURL(); }
 function mapPanel() { return new Promise(res => {
-  const r = REGr(); const pos = (x, z) => `left:${(x / 540 + .5) * 100}%;top:${(z / 540 + .5) * 100}%`; const ob = objective(); const marks = [];
+  const r = REGr(); const pos = (x, z) => `left:${(x / 540 + .5) * 100}%;top:${(z / 540 + .5) * 100}%`; const ob = (HOOK.track && HOOK.track()) || objective(); const here = window.KZ && KZ.interior && KZ.interior.cur ? KZ.interior.cur.back : player; const marks = [];
   const warps = []; if (G.region === 2) { warps.push({ n: '雲の里ククル', x: r.town.x + 2, z: r.town.z + 4 }); r.shrines.forEach(sh => { if (G.wind[sh.i]) warps.push({ n: DATA.windTrials[sh.i].name, x: sh.x + 1, z: sh.z + 1 }); }); if (G.flags.c3bridge) warps.push({ n: '星巣の塔 入口', x: r.midboss.x, z: r.midboss.z + 3 }); }
   else if (G.warp || G.region === 1) { warps.push({ n: TOWN_NAME[G.region], x: r.town.x + 2, z: r.town.z + 4 }); if (G.region === 0) r.beacons.forEach(b => { if (b.lit) warps.push({ n: `灯台：${DATA.trials[b.i].name}`, x: b.x + 3, z: b.z + 3 }); }); if (G.region === 1 && G.flags.c2rumor) warps.push({ n: '星の遺跡 入口', x: r.ruinsEntrance.x - 3, z: r.ruinsEntrance.z }); }
   if (G.warp || G.region > 0) for (const f of HOOK.warps) warps.push(...f(G.region));
@@ -2023,12 +2099,12 @@ function mapPanel() { return new Promise(res => {
   else { r.shrines.forEach(sh => marks.push(`<span class="mk bc${G.wind[sh.i] ? ' lit' : ''}" style="${pos(sh.x, sh.z)}" title="${DATA.windTrials[sh.i].name}">${G.wind[sh.i] ? '🌀' : '◇'}</span>`)); if (!hasWarp('星巣の塔')) marks.push(`<span class="mk ru" style="${pos(r.tower.x, r.tower.z)}">星巣の塔</span>`); }
   marks.push(`<span class="mk" style="${pos(r.pier.x, r.pier.z)}">⚓</span>`);
   for (const f of HOOK.mapMarks) marks.push(...f(G.region, pos).filter(h => !warps.some(w => String(h).includes(`>${w.n}<`))));
-  if (ob.p) marks.push(`<span class="mk goal" style="${pos(ob.p.x, ob.p.z)}">★</span>`);
-  marks.push(`<span class="mk me" style="${pos(player.x, player.z)};transform:translate(-50%,-50%) rotate(${Math.PI - player.yaw}rad)">▲</span>`);
+  if (ob.p) marks.push(`<span class="mk goal" style="${pos(ob.p.x, ob.p.z)}">★ もくてき</span>`);
+  marks.push(`<span class="mk me" style="${pos(here.x, here.z)}"><i style="display:inline-block;transform:rotate(${Math.PI - player.yaw}rad)">▲</i> いま</span>`);
   const pins = warps.map((w, i) => `<button class="wp" type="button" data-i="${i}" style="${pos(w.x, w.z)}" aria-label="${w.n}へ ワープ"><i>◆</i>${w.n.replace(/^灯台：/, '')}</button>`).join('');
   const el = document.createElement('div'); el.className = 'win panel mapp';
   el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button><div class="mapwrap"><div class="map"><img src="${mapImage()}" alt="${REGION_NAME[G.region]}の 地図">${marks.join('')}${pins}</div>
-    <div class="mapside"><h3>地図：${REGION_NAME[G.region]}</h3><p class="q-now">★ ${ob.t}</p><p class="map-legend"><span><b>▲</b> いま</span><span><b class="g">★</b> 目的地</span>${warps.length ? '<span><b class="g">◆</b> ピンを タップで ワープ</span>' : ''}</p>
+    <div class="mapside"><h3>地図：${REGION_NAME[G.region]}</h3><p class="q-now">★ ${esc(ob.t)}</p>${here !== player ? '<p>いえの なか：入口を 表示</p>' : ''}<p class="map-legend"><span><b>▲</b> いま</span><span><b class="g">★</b> 目的地</span>${warps.length ? '<span><b class="g">◆</b> ピンを タップで ワープ</span>' : ''}</p>
       ${warps.length ? `<details class="wdet"><summary>ワープ先 一覧（${warps.length}）</summary><div class="wlist">${warps.map((w, i) => `<button class="t-btn wbtn" type="button" data-i="${i}">${w.n}</button>`).join('')}</div></details>` : '<p class="st-eq">最初の 灯台を ともすと ワープが つかえる。</p>'}</div></div>`;
   const M = { el, panel: true, items: [], res }; el.querySelector('.m-x').addEventListener('click', () => { Music.sfx('cancel'); closeMenu(M, -1); });
   el.querySelectorAll('.wbtn,.wp').forEach(b => b.addEventListener('click', async () => { const w = warps[+b.dataset.i]; M.res = () => {}; closeMenu(M, -1); Music.sfx('magic'); await warpTo(w.x, w.z); res('warped'); }));
@@ -2078,17 +2154,77 @@ async function monPanel(m) { if (m.kind === 'human') { await charPanel(m.id); re
     <p>こせい <b class="grade g${ivGrade(m)}">${ivGrade(m)}</b>　${['hp', 'atk', 'def', 'spd', 'mp'].map(k => `${{ hp: 'HP', atk: 'こう', def: 'ぼう', spd: 'すば', mp: 'MP' }[k]}${'★'.repeat(Math.round(((m.iv || {})[k] ?? 8) / 5))}`).join(' ')}</p>
     <p>なつき <span class="bond">${'♥'.repeat(Math.floor((m.bond || 0) / 20))}${'♡'.repeat(5 - Math.floor((m.bond || 0) / 20))}</span> ${m.bond || 0}/100 <small>（30〜：ふんばり　80〜：会心アップ）</small></p>
     <p>とくぎ：${m.skills.map(s => DATA.skills[s].name + ((m.extra || []).includes(s) ? '（継承）' : '')).join('・')}</p>${S.evo ? `<p class="st-sk">Lv${S.evo.lv}で すがたが 変わるらしい……</p>` : ''}</div></div>`, 'wide'); }
+const MON_SPECIES_LIMIT = 3;
+function speciesCount(id, except = null) { return G.mons.filter(m => m !== except && m.id === id).length; }
+function canAddSpecies(id, except = null) { return !!SPC[id] && speciesCount(id, except) < MON_SPECIES_LIMIT; }
+function ranchProfile(m) {
+  const S = SPC[m.id], st = m.st;
+  const skills = (m.skills || []).map(k => DATA.skills[k]).filter(Boolean);
+  const heal = skills.filter(s => s.heal || s.healPct || s.revive);
+  const support = skills.filter(s => s.buff || s.cure || s.sleep || s.slow || s.ail);
+  const strongest = [['atk', 'こうげき'], ['def', 'ぼうぎょ'], ['spd', 'すばやさ']].sort((a,b) => st[b[0]] - st[a[0]])[0];
+  let role = heal.length ? 'heal' : support.length && !skills.some(s => s.power) ? 'support' : strongest[0] === 'def' ? 'guard' : strongest[0] === 'spd' ? 'speed' : 'attack';
+  const labels = { heal: '♥ かいふく', support: '✦ おたすけ', guard: '◆ まもり', speed: '➜ すばやい', attack: '⚔ こうげき' };
+  const keySkill = heal[0] || support[0] || skills.find(s => s.power) || skills[0];
+  const futureHeal = (S.sk || []).find(([k, lv]) => lv > m.lv && (DATA.skills[k]?.heal || DATA.skills[k]?.healPct || DATA.skills[k]?.revive));
+  const detail = keySkill ? `${keySkill.name} ・ MP${keySkill.mp || 0}${m.mp < (keySkill.mp || 0) ? '（MPふそく）' : ''}` : 'わざは これから';
+  const reason = role === 'heal' ? 'かいふく役に' : role === 'support' ? 'なかまの おたすけに' : role === 'guard' ? 'まもりを かためたいときに' : role === 'speed' ? 'すばやさを いかしたいときに' : 'こうげき役に';
+  const score = role === 'heal' || role === 'support' ? st.mp : role === 'guard' ? st.def : role === 'speed' ? st.spd : st.atk;
+  return { role, label: labels[role], heal: heal.length > 0, support: support.length > 0, detail, future: futureHeal ? `Lv${futureHeal[1]}で ${DATA.skills[futureHeal[0]].name}（かいふく）` : '', strength: `${strongest[1]} ${st[strongest[0]]}`, reason, score, ready: m.hp > 0 && keySkill && m.mp >= (keySkill.mp || 0) };
+}
+function ranchCards(list, visible = null) {
+  const profiles = list.map(ranchProfile), best = new Map();
+  profiles.forEach((p,i) => { if (p.ready && (!best.has(p.role) || p.score > profiles[best.get(p.role)].score)) best.set(p.role,i); });
+  const slots = new Map();
+  return list.map((m,i) => { const p = profiles[i], S = SPC[m.id], slot = (slots.get(m.id) || 0) + 1; slots.set(m.id,slot);
+    if (visible && !visible.has(m.uid)) return { label: '', profile: p, ref: m.uid };
+    const count = speciesCount(m.id), inTeam = G.team.includes(m.uid), rec = best.get(p.role) === i;
+    const label = `<span class="ranch-art" aria-hidden="true">${Art.species(m.id, { shiny: m.shiny })}</span><span class="ranch-info"><span class="ranch-name">${esc(nameOf(m))} <small>Lv${m.lv}</small></span><span class="ranch-badges"><span class="ranch-role role-${p.role}">${p.label}</span>${inTeam ? '<span class="ranch-team">たいれつ</span>' : ''}${rec ? '<span class="ranch-rec">おすすめ</span>' : ''}</span><span class="ranch-count">${slot}ひきめ ・ このしゅるい ${count}/${MON_SPECIES_LIMIT}${count >= MON_SPECIES_LIMIT ? '（追加なし）' : ''}</span><span>HP ${m.hp}/${m.st.hp} ・ MP ${m.mp}/${m.st.mp}${m.hp <= 0 ? ' ・ おやすみ中' : ''}</span><span class="ranch-strength">つよみ：${p.strength} ・ ${esc(DATA.types[S.type])}</span><span>${esc(p.detail)}</span>${p.future ? `<span class="ranch-future">${esc(p.future)}</span>` : ''}<span class="ranch-advice">${p.reason}${rec ? '（同じ役の なかで 能力が 高い子）' : ''}</span></span>`;
+    return { label, cls: 'ranch-card', profile: p, ref: m.uid };
+  });
+}
+function ranchPage(list, filter, page) {
+  const matched = list.filter(m => { const p = ranchProfile(m); return filter === 'all' || filter === 'heal' && p.heal || filter === 'support' && p.support || p.role === filter; });
+  const pages = Math.max(1, Math.ceil(matched.length / 12));
+  page = Math.max(0, Math.min(pages - 1, page));
+  return { refs: new Set(matched.slice(page * 12, page * 12 + 12).map(m => m.uid)), page, pages, count: matched.length };
+}
+async function ranchPick(list, filter, page) {
+  const slice = ranchPage(list, filter, page), shown = ranchCards(list, slice.refs).filter(c => slice.refs.has(c.ref));
+  const promise = menu({ title: `牧場 ${G.mons.length}ひき <small>同じしゅるいは 3ひきまで</small>`, items: shown.length ? shown : [{ label: 'この役の なかまは まだ いない', disabled: true }], cols: 2, cls: 'ranch-menu' });
+  const M = MENUS[MENUS.length - 1], bar = document.createElement('div'); bar.className = 'ranch-filters'; bar.setAttribute('aria-label', '役割で しぼる');
+  for (const [key, label] of [['all','ぜんぶ'],['heal','かいふく'],['attack','こうげき'],['guard','まもり'],['speed','すばやさ'],['support','おたすけ']]) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(key === filter));
+    b.addEventListener('click', () => closeMenu(M, 'filter:' + key)); bar.appendChild(b);
+  }
+  const pager = document.createElement('div'); pager.className = 'ranch-pager';
+  for (const [delta, label] of [[-1,'まえ'],[1,'つぎ']]) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+    b.disabled = slice.page + delta < 0 || slice.page + delta >= slice.pages;
+    b.addEventListener('click', () => closeMenu(M, 'page:' + (slice.page + delta))); pager.appendChild(b);
+    if (delta === -1) { const text = document.createElement('span'); text.textContent = `${slice.page + 1}/${slice.pages}ページ ・ ${slice.count}ひき`; pager.appendChild(text); }
+  }
+  M.el.insertBefore(bar, M.el.querySelector('.m-list'));
+  M.el.appendChild(pager);
+  const i = await promise; return typeof i === 'string' ? i : i < 0 ? null : shown[i]?.ref;
+}
 async function ranch() {
+  let filter = 'all', page = 0;
   while (true) {
     const list = G.mons.slice(); if (!list.length) { await panel('<h3>牧場</h3><p>まだ いきものの なかまは いない。 かげものを たおすと、なかまに なってくれることが ある。</p>'); return; }
-    const i = await menu({ title: `牧場（${list.length}ひき）`, items: list.map(m => ({ label: (G.team.includes(m.uid) ? '◆ ' : '') + nameOf(m), sub: `Lv${m.lv} ${DATA.types[SPC[m.id].type]}` })), where: 'side' });
-    if (i < 0) return; const m = list[i]; const inTeam = G.team.includes(m.uid);
+    list.sort((a,b) => SPC[a.id].no - SPC[b.id].no || b.lv - a.lv || a.uid.localeCompare(b.uid));
+    const picked = await ranchPick(list, filter, page);
+    if (picked == null) return;
+    if (picked.startsWith('filter:')) { filter = picked.slice(7); page = 0; continue; }
+    if (picked.startsWith('page:')) { page = Number(picked.slice(5)); continue; }
+    const m = G.mons.find(m => m.uid === picked); if (!m) continue;
+    const inTeam = G.team.includes(m.uid);
     const snack = ['stew', 'kinojiru', 'yakimi', 'pan', 'mi'].find(k => (G.inv[k] || 0) > 0);
     const c = await menu({ title: nameOf(m), items: [{ label: 'くわしく 見る' }, { label: inTeam ? 'たいれつから はずす' : 'たいれつに 入れる' }, { label: 'にがす', disabled: G.mons.length <= 1 || inTeam }, { label: 'おやつを あげる', sub: snack ? `${DATA.items[snack].name}（のこり${G.inv[snack]}）` : 'たべもの なし', disabled: !snack || (m.bond || 0) >= 100 }] });
     if (c === 3) { G.inv[snack]--; const up = { stew: 12, kinojiru: 8, yakimi: 5, pan: 4, mi: 2 }[snack]; m.bond = Math.min(100, (m.bond || 0) + up); calc(m); Music.sfx('friend'); await say([`${nameOf(m)}は ${DATA.items[snack].name}を おいしそうに たべた！`, `なつき +${up}（${m.bond}/100）`]); save(); }
     if (c === 0) await window.KZ.monPanel(m);
-    if (c === 1) { if (inTeam) G.team.splice(G.team.indexOf(m.uid), 1); else { if (G.team.length >= 4) G.team[3] = m.uid; else G.team.push(m.uid); } }
-    if (c === 2 && await confirm(`${nameOf(m)}を 自然に かえしますか？`)) { G.mons = G.mons.filter(x => x !== m); await say([`${nameOf(m)}は なんども ふりかえりながら 帰っていった。`]); }
+    if (c === 1) { if (inTeam) G.team.splice(G.team.indexOf(m.uid), 1); else { if (G.team.length >= 4) G.team[3] = m.uid; else G.team.push(m.uid); } save(); hud(); }
+    if (c === 2 && await confirm(`${nameOf(m)}を 自然に かえしますか？`)) { G.mons = G.mons.filter(x => x !== m); await say([`${nameOf(m)}は なんども ふりかえりながら 帰っていった。`]); save(); }
   } }
 async function dexMenu() {
   const got = Object.keys(G.dex.got).length, seen = Object.keys(G.dex.seen).length;
@@ -2234,6 +2370,7 @@ function camFrame(pref) { const head = [player.x, player.y + 1.6, player.z]; let
 let last = performance.now(), T = 0, saveT = 0, shinyFx = [];
 function frame(now) { if (DEBUG && window.__norender) setTimeout(() => frame(performance.now()), 16); else requestAnimationFrame(frame); try { frameBody(now); } catch (e) { if (DEBUG) window.__ferr = String(e && e.stack || e).slice(0, 400); if ((frame.err = (frame.err || 0) + 1) < 4) console.error(e); try { dlgUpdate(.016); Music.tick(); } catch (_) {} } }
 function frameBody(now) {
+  if (portraitBlocked()) { last = now; return; }
   const dt = Math.min((now - last) / 1000, .05); last = now; T += dt;
   const md = mode();
   document.body.classList.toggle('modal', phase === 'field' && md !== 'field'); document.body.classList.toggle('inbattle', B.active);
@@ -2330,6 +2467,7 @@ function frameBody(now) {
     if (player.glide) { glideT -= dt; if (glideT <= 0) { glideT = .06; const rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw); for (const sx of [-1, 1]) streaks.push({ x: player.x + rx * sx * 1.3, y: player.y + 2.5, z: player.z + rz * sx * 1.3, t: 0 }); } }
     let using = (sprint ? 14 : 0) + ((climbing && im > .1) || wallClimb ? 12 : 0) + (player.glide && !G.flags.glider3 ? (G.flags.glider2 ? 2.2 : 4.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
     if (HOOK.travelStamina) using = HOOK.travelStamina(using);
+    if (window.KZ && KZ.fieldTravel && KZ.fieldTravel.mounted()) { using = 0; player.tired = false; }
     if (using > 0) G.stam = Math.max(0, G.stam - using * dt); else if (player.ground && !player.swim) G.stam = Math.min(G.stamMax, G.stam + (moved < .01 ? 40 : 26) * dt);
     if (G.stam <= 0) { player.tired = true; player.glide = false; } if (player.tired && G.stam > G.stamMax * .35) player.tired = false;
     if (player.swim && G.stam <= 0) { toast('おぼれかけて、岸に もどった……', 1600); const s = player.safe || r.pier; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99); G.stam = G.stamMax * .5; player.tired = false; }
