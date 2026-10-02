@@ -49,6 +49,17 @@ test('雨：割合と 雨宿り', async ({ page }) => {
   ok(r.rain > 50 && r.rain < 160 && r.sea === 0, `雨の 割合：${JSON.stringify(r)}`);
 });
 
+test('戦いの 評価：S・A・B', async ({ page }) => {
+  await page.evaluate(() => { const K = KZ, G = K.G; G.auto = true; G.party.forEach(m => { m.lv = 60; K.calc(m); m.hp = m.st.hp; m.mp = m.st.mp; }); window.__r = null; window.__g = G.gold; K.runBattle([{ sp: 'watapoko', lv: 2 }]).then(r => window.__r = r); });
+  for (let i = 0; i < 80 && !(await page.evaluate(() => window.__r)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(250); }
+  const r = await page.evaluate(() => ({ cls: document.getElementById('brk').className, txt: document.getElementById('brk').textContent })); ok(/S|A|B/.test(r.cls), '評価が 出ない：' + JSON.stringify(r)); await idle(page);
+});
+test('道場の 段位', async ({ page }) => {
+  await page.evaluate(async () => { const c = KZ.newTowns.towns.brave.c; await KZ.travel(1, c.x + 2, c.z + 6); const K = KZ, G = K.G; G.auto = true; G.party.forEach(m => { m.lv = 60; K.calc(m); m.hp = m.st.hp; m.mp = m.st.mp; }); }); await idle(page); await page.evaluate(() => __dbg.sim(20));
+  act(page, `() => KZ.funPlus.dojo()`); await idle(page, 900);
+  ok(await page.evaluate(() => (KZ.G.stat || {}).dojoWin) === 1, '段位が 上がらない');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }

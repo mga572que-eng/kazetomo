@@ -1,32 +1,26 @@
 # 作業の再開
 
-更新: 2026-10-02T06:28:32.667Z
-ブランチ: work/quality-tools
-直前コミット: 5f7c6cba0f42a8697041db46b805219fb54c669f
+更新: 2026-10-02T06:39:53.432Z
+ブランチ: work/fun-2
+直前コミット: 39ed12ba08d5357e75c106fac3b0df55302be627
 
 ## 目的
-品質プランB：計測の道具
+面白さ部署⑤⑦
 
 ## 完了・途中の内容
-perf.js（#perf で fps 表示・場所ごとの記録）、tests/（回帰テスト8件・お金の試算）、docs/reports/economy.md。版 20261002152829
+funplus.js：戦いの評価S・A・B（お金のおまけ）、道場の段位（見習い〜十段・段ごとの品・称号）。回帰テスト10件成功。版 20261002153604
 
 ## 次の一手
-iPhone テスト（#perf 付き）の結果で C 段階
+iPhone テストの結果（#perf）で品質プランC
 
 ## 検証
 構文・参照・PWA検査: PASS
 実プレイ: 未確認（担当AIが結果を別途記録）
 
 ## 保存対象
-- perf.js
-- world.js
-- tests/lib.mjs
+- funplus.js
 - tests/run.mjs
-- tests/economy.mjs
-- tests/README.md
-- package.json
-- docs/reports/economy.md
-- docs/plan/quality-plan.md
+- docs/design/fun-audit.md
 - version.json
 - index.html
 - pwa.js
