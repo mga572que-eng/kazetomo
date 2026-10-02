@@ -755,7 +755,7 @@ async function talkYui() {
   const F = G.flags;
   if (!F.metYui) {
     await say([who('yui', 'smile', 'おはよう、{name}。 ……また 岬で 夜あかし？ 髪が 潮で ごわごわよ。'), who('sora', 'worried', '……今日も、ひとつも ついてなかった。'),
-      who('sora', 'determined', 'でも 北の 灯台の てっぺんで、なにか 光ったんだ。 ほんとだよ！ ぼく、見てくる。'),
+      who('sora', 'determined', 'でも 野原の 灯台の てっぺんで、なにか 光ったんだ。 ほんとだよ！ ぼく、見てくる。'),
       who('yui', 'sad', '……止めても 行く 顔ね。 あの人と おんなじ。'), who('yui', 'determined', 'あの人、「灯台に 置いてきた ものが ある」って 言っていたわ。 ゲン兄さんの 工房で したくを しておいで。'),
       who('yui', 'smile', 'つかれたら いつでも 帰っておいで。 ごはんと おふとんは、ここに ある。')]); F.metYui = true; save(); return; }
   const c = await menu({ title: 'ユイ', items: [{ label: 'やすむ', sub: '全回復＋記録' }, { label: 'はなす' }] });
