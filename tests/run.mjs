@@ -27,10 +27,10 @@ test('町のくらし：昼と夜', async ({ page }) => {
 });
 test('家の中：入る・しらべる・外へ', async ({ page }) => {
   await page.evaluate(async () => { const t = KZ.REG[0].town; await KZ.travel(0, t.x + 2, t.z + 4); KZ.G.tod = .45; }); await idle(page);
-  act(page, `() => KZ.HOOK.acts.inEnter(KZ.interior.houses(0)[0])`); await idle(page); ok(await page.evaluate(() => !!KZ.interior.cur), '家に 入れない');
+  act(page, `() => KZ.HOOK.acts.inEnter(KZ.interior.houses(0)[0])`); await idle(page); ok(await page.evaluate(() => !!KZ.interior.cur), '家に 入れない'); ok(await page.evaluate(() => !!(KZ.HOOK.noClimb && KZ.HOOK.noClimb())), '家の 中で かべを 登れて しまう');
   const before = await page.evaluate(() => Object.keys(KZ.G.searched || {}).length); act(page, `() => KZ.interior.search(KZ.interior.cur.props.find(q => q.kind && q.kind !== 'garden'))`); await idle(page);
   ok(await page.evaluate(() => Object.keys(KZ.G.searched || {}).length) === before + 1, 'しらべた 記録が ふえない');
-  act(page, `() => KZ.interior.leave()`); await idle(page); ok(await page.evaluate(() => !KZ.interior.cur), '外へ 出られない');
+  act(page, `() => KZ.interior.leave()`); await idle(page); ok(await page.evaluate(() => !KZ.interior.cur), '外へ 出られない'); ok(await page.evaluate(() => !(KZ.HOOK.noClimb && KZ.HOOK.noClimb())), '外に 出ても 登れない まま');
 });
 test('カジノ：コイン・スロット', async ({ page }) => {
   await page.evaluate(() => { KZ.casino.C().coin = 50; }); act(page, `() => KZ.casino.slot()`); await page.waitForTimeout(500);

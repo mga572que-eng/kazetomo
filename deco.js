@@ -183,3 +183,7 @@
     for (const f of fronts()) { if (Math.hypot(f.x - pl.x, f.z - pl.z) > 70) continue; const m = mFront[f.k]; m.set(m.n++, f.x, K.hAt(f.x, f.z) - .02, f.z, 1, f.yaw); } });
   K.road0 = { pts, segs, onRoad, signAt, viewAt, fronts, get drawn() { return mSign.n + mLamp.n; } };
 })();
+
+// ---------------- 家の 中では かべを 登らない（灯台の 中と 同じ しくみ。interiors.js は さわらない） ----------------
+(() => { const K = window.KZ; if (!K) return; const H = K.HOOK; const prev = H.noClimb;
+  H.noClimb = () => !!(K.interior && K.interior.cur) || !!(prev && prev()); })();
