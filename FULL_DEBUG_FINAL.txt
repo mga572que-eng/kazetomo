@@ -1,0 +1,18 @@
+- generic "ともしびアイランド ゲーム画面"
+- text: ▶
+- generic: E 灯台を しらべる
+- generic: はさまっていたので ぬけだした
+- generic: 称号を 手に入れた：「きずなの 友」
+- generic: なつき 100 の いきもの（メニューの「きろく帳」で つけかえ）
+- paragraph: 画面を タップして はじめる
+- button "♪ ON"
+- generic: 野原の灯台
+- generic: 〜 野に 立つ 最初の 灯台 〜
+- generic: ボスが まちうける 灯台
+- generic: 💾 セーブしました
+- button "全機能の横断検査"
+- button "実戦闘を検査"
+- button "境界条件を検査" [active]
+- button "メニューを開く"
+- button "落下・視点を検査"
+- generic: PASS 町・祠外の検査用地面 PASS 野外落下ダメージ PASS 落下でHP0にならない PASS 落下設定OFF PASS 町内は落下ダメージなし PASS 一人称のフレーム更新 PASS 移動検査の例外なし PASS 全スクリプトの初期化エラーなし PASS 装備袋読込 PASS 会話読込 PASS 住人読込 PASS 酒場・探索読込 PASS 専用装備・覚醒読込 PASS 職業支援読込 PASS 灯台回廊読込 PASS 町の生活読込 PASS 建物内部読込 PASS 追加町読込 PASS 人間会話 sora PASS 人間会話 mio PASS 人間会話 riku PASS 人間会話 sana PASS 人間会話 haru PASS 人間会話 kaito PASS モンスター会話 watapoko PASS モンスター能力 watapoko PASS モンスター会話 watafuwari PASS モンスター能力 watafuwari PASS モンスター会話 iwanoko PASS モンスター能力 iwanoko PASS モンスター会話 iwagoron PASS モンスター能力 iwagoron PASS モンスター会話 mizumochi PASS モンスター能力 mizumochi PASS モンスター会話 mizudaifuku PASS モンスター能力 mizudaifuku PASS モンスター会話 hoshikage PASS モンスター能力 hoshikage PASS モンスター会話 hoshimikage PASS モンスター能力 hoshimikage PASS モンスター会話 yorukoumori PASS モンスター能力 yorukoumori PASS モンスター会話 yoibasa PASS モンスター能力 yoibasa PASS モンスター会話 tsuchimogu PASS モンスター能力 tsuchimogu PASS モンスター会話 hanapokke PASS モンスター能力 hanapokke PASS モンスター会話 hanakanmuri PASS モンスター能力 hanakanmuri PASS モンスター会話 sunawani PASS モンスター能力 sunawani PASS モンスター会話 sunawaniking PASS モンスター能力 sunawaniking PASS モンスター会話 sabotenbo PASS モンスター能力 sabotenbo PASS モンスター会話 yukiusa PASS モンスター能力 yukiusa PASS モンスター会話 yukinomiko PASS モンスター能力 yukinomiko PASS モンスター会話 kooridori PASS モンスター能力 kooridori PASS モンスター会話 kazetaka PASS モンスター能力 kazetaka PASS モンスター会話 arashitaka PASS モンスター能力 arashitaka PASS モンスター会話 morinoko PASS モンスター能力 morinoko PASS モンスター会話 hibana PASS モンスター能力 hibana PASS モンスター会話 homura PASS モンスター能力 homura PASS モンスター会話 umiushu PASS モンスター能力 umiushu PASS モンスター会話 ishigaki PASS モンスター能力 ishigaki PASS モンスター会話 nijikujira PASS モンスター能力 nijikujira PASS モンスター会話 hoshikujira PASS モンスター能力 hoshikujira PASS モンスター会話 kumomo PASS モンスター能力 kumomo PASS モンスター会話 raikumo PASS モンスター能力 raikumo PASS モンスター会話 soramedaka PASS モンスター能力 soramedaka PASS モンスター会話 soramanta PASS モンスター能力 soramanta PASS モンスター会話 fuurin PASS モンスター能力 fuurin PASS モンスター会話 hoshikakera PASS モンスター能力 hoshikakera PASS モンスター会話 seishou PASS モンスター能力 seishou PASS モンスター会話 tsukimiusa PASS モンスター能力 tsukimiusa PASS モンスター会話 amatsubame PASS モンスター能力 amatsubame PASS モンスター会話 hoshimori PASS モンスター能力 hoshimori PASS モンスター会話 pukuawa PASS モンスター能力 pukuawa PASS モンスター会話 oopuku PASS モンスター能力 oopuku PASS モンスター会話 hitoden PASS モンスター能力 hitoden PASS モンスター会話 takosumi PASS モンスター能力 takosumi PASS モンスター会話 oodako PASS モンスター能力 oodako PASS モンスター会話 sangoron PASS モンスター能力 sangoron PASS モンスター会話 chouchinan PASS モンスター能力 chouchinan PASS モンスター会話 uminokami PASS モンスター能力 uminokami PASS 元の会話も選択される PASS 追加キーなし旧セーブ初期化 PASS 装備効果 PASS 覚醒効果 PASS 個体UID連携 PASS 同状態で連携配列を再生成しない PASS 隠し報酬は一度だけ PASS 地域0描画・座標 PASS 地域1描画・座標 PASS 地域2描画・座標 PASS 地域3描画・座標 PASS 入れる家 PASS 家の内部に入る PASS 家から出る PASS 追加3町 PASS 灯台回廊配置 PASS 町の生活配置 PASS 実セーブ PASS 実ロード PASS 進行・所持品・装備・会話保持 PASS 横断検査の例外なし PASS 開始0秒で水やり済み PASS 開始0秒の水やりが45秒後に咲く PASS 同ページの室内ロードで外へ復帰 PASS 樽・ツボの報酬を二重取得しない PASS 盗み済みの敵から再取得しない PASS 倒れた敵から盗まない PASS 料理レシピの出力・材料ID PASS 同ページの回廊ロードで灯台へ復帰 PASS 境界条件の例外なし 境界検査 全成功

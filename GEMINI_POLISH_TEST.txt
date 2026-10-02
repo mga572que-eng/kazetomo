@@ -1,0 +1,8 @@
+- generic "ともしびアイランド ゲーム画面"
+- text: ▶
+- generic: わたげのくびわを そうびした！
+- paragraph: 画面を タップして はじめる
+- button "♪ ON"
+- generic: 💾 セーブしました
+- button "装備の修正を検査" [active]
+- generic: PASS 装備してもHP0を維持 PASS 装備を取得済み在庫から移動 PASS 在庫は1個だけ消費 PASS 未知の装備IDでも画面が停止しない PASS 未知のアイテムを生成しない PASS なつき100で覚醒 PASS ソラがいないとソラの台詞を出さない PASS 覚醒後のMPが範囲内 PASS 覚醒済みを二重実行しない PASS 呼び出し側でもなつき条件を検査 PASS 9装備すべてに購入経路あり PASS 実セーブ PASS 実ロード PASS 装備の保存保持 全検査成功

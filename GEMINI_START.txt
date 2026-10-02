@@ -1,0 +1,130 @@
+以下はGitHubの取得済み文書です。記録の日付と状態を確認し、まず完了事項・未確認事項を説明してください。PR #2はmainへ統合済みです。GitHubの直接編集・保存ができない場合は明示し、修正を差分または変更ファイルとして返してください。
+Repository: https://github.com/mga572que-eng/kazetomo
+Commit: f889309529e48cb5a73bcf8b09b3eef8e82abc9a
+
+===== WORK_STATE.md =====
+
+# 作業の再開
+
+更新: 2026-10-01
+対象PR: https://github.com/mga572que-eng/kazetomo/pull/2
+
+## 完了した作業
+AI共通運用、resume、個別ファイルのcheckpoint、安全な停止を実装。8ファイルはGitHubへ保存済みで、検証済みローカル版と改行以外一致。ゲーム本体は変更していない。
+
+## 検証
+構文・参照・PWA検査と途中保存の独立試験が成功。アップロードコミット25bf781のGitHubチェック成功。実プレイ、Codespaces初回起動、各AIアカウント接続は未確認。
+
+## 再開するAIへ
+PR #2がMergedなら環境整備は完了。新しい依頼は最新mainからwork/内容を作って開始する。Openなら最新チェックの成功を確認して統合を完了する。過去のアップロード待ちの記録は解消済み。普段の手順はOPERATIONS.mdを読む。
+
+コードはGitHubで共有できる。各AIへの接続は別途必要で、自動切替は行わない。ブラウザーのゲームセーブはGitの保存・バックアップには含まれない。
+
+
+===== AGENTS.md =====
+
+# ともしびアイランド — AI共通作業ルール
+
+最初に `npm run resume`、`AGENTS.md`、`AI_HANDOFF.md`、存在すれば `WORK_STATE.md` を読む。コード・Git履歴・実際の差分を正とする。ユーザーにブランチ名や引き継ぎの整理を毎回求めず、自分で作業状態を確認する。
+
+- Claude / Codex / Geminiの実装担当は固定しない。交代時は同じ作業ブランチを引き継ぐ。レビューは大きな変更、セーブ互換性、難しい不具合で利用する。
+- 作業前に `git status`、`git log -5`、`git fetch origin`。他の担当の未保存変更は保全し、上書きしない。共有フォルダーでは1担当だけ作業する。
+- mainは公開版。新しい作業は最新mainから `work/<短い内容>` を作る。交代では新しいmainからやり直さず、未完了ブランチと未コミット差分を確認する。
+- 小さな機能がまとまる時、別機能へ移る前、会話終了前、AI交代前にcheckpointを作る。制限到達後まで記録を先延ばしにしない。毎メッセージの保存は不要。
+- `npm run checkpoint -- --goal "目的" --done "できた部分と途中の部分" --next "次の具体的な操作" --files <確認した個別ファイル>` は指定ファイルとWORK_STATE.mdだけをコミットする。秘密情報やセーブは内容も目視確認する。既存のステージ済み変更を勝手に混ぜない。
+- checkpointはローカル保存。差分と残る変更を確認し、許可された方法で作業ブランチをpushしてGitHubのコミットを確認して初めて他PCから再開できる。送信が拒否された時は迂回せず、保存場所と未送信を明示する。
+- 検査が失敗した途中のコードも作業ブランチへWIP保存できる。公開はしない。全変更が保存されたクリーンな状態で `npm run backup` を行う。
+- チャットだけにある提案・コードは実装済み扱いにしない。未保存ファイルが取得できなければその点だけユーザーへ伝える。別AIが履歴を自動で読めると仮定しない。
+- 既存スクリプト読込順、window.KZ、HOOK、セーブキー、データID、進行フラグを維持。ゲーム変更の公開時はindex/pwa/sw/versionの版番号を同期する。
+- localStorage.clear、本番セーブ削除、force push、reset --hard、clean -fdを行わない。実セーブ、秘密情報、チャット全文をGitへ含めない。
+- 統合前は `npm run check`、`git diff --check`、変更に応じた実プレイ。必要なレビューを行い、ユーザーの確認後にPRをmainへ統合。保存と公開を区別する。
+- WORK_STATE.mdは現在の作業、AI_HANDOFF.mdは構成と長期的な注意点。完了時に双方を整え、古い未完了記録を残さない。運用詳細はOPERATIONS.md、実機確認はDEVELOPMENT.mdを読む。
+
+
+===== AI_HANDOFF.md =====
+
+# AI 引き継ぎ
+
+## 基準
+- ゲーム：ともしびアイランド（ブラウザー3D冒険RPG / PWA）
+- GitHub：https://github.com/mga572que-eng/kazetomo
+- 公開URL：https://mga572que-eng.github.io/kazetomo/
+- 初回基準：6c656eb8573c7d12912db00d896e6c7f7515d406（main、10コミット）
+- ゲーム版：20260930230833
+- 記録日：2026-10-01 JST
+- 現担当：Codex / 開発環境・保全の初期設定
+
+## 今回の変更
+共通ルール、Claude/Gemini入口、運用手順、Node起動・構文/参照検査・Gitバックアップを追加。既存ゲームファイルは変更しない。
+開発環境はPR #1でmainへ統合済み。作業開始は最新mainから担当別ブランチを作る。
+
+## 構成と壊しやすい箇所
+ビルド不要のHTMLと通常スクリプト。index.htmlの順序：pwa → music → art → data → art_mon → art_face → world → game → settings → life → shrines → base → ch4 → jobs → quests → deco → ux → onboard → unstuck。
+world.jsが描画・地形、game.jsが進行・戦闘・セーブとwindow.KZ/HOOK。後続モジュールはKZ/HOOKへ追加する。data.jsが共通データ、ch4.jsが第4章、jobs/quests/base/life/shrinesが拡張、ux/onboard/unstuck/settingsが操作・救出・設定。
+セーブ：kazetomo-rpg-3、追加スロットkazetomo-rpg-3-sN、旧kazetomo-rpg-1。設定：kazetomo-opt。IDと進行フラグを勝手に変更しない。
+PWA版番号はindex/pwa/sw/versionで同期。現状ch4.jsだけ?vなし。既知の構造として記録し、今回変更しない。
+
+## 未確認と次の一手
+- Claude「JRPG 作成」の本文・未保存変更はアクセス拒否のため未確認。GitHub版と同一と断定しない。未公開ファイルがあれば別フォルダーへ保存し、基準と比較する。
+- 各AIアカウントへのログイン・権限付与・AI Studioへのインポートは未実施。接続時は必要な範囲だけ許可する。
+- ブラウザーでゲーム全章の動作と既存セーブの継続確認は未実施。
+- この作業の最終検証は SETUP_REPORT.md を参照。
+- 次担当：このファイルを読んで git status と HEAD を確認。変更したい機能を1つに絞り、作業ブランチから開始。
+
+## 次回終了時に更新
+担当 / 開始コミット / 終了コミット（文書更新時点の直前コミット可） / 変更ファイル / 実施した検証と結果 / 未解決 / 次の一手。
+
+## PCに依存しない設定の追加
+.devcontainer（Node 22）、.nvmrc、GitHub検査と手動バックアップワークフロー、CLOUD_DEVELOPMENT.mdを追加。リモート反映・main統合とGame checks成功を確認済み。Codespacesの初回起動は未実施。保存はGitHubへのcommit/pushを完了条件とする。セーブはブラウザー単位で自動同期されない。
+
+## リモート最終確認（2026-10-01）
+- PR #1統合後、設定ファイルを所定の場所へ配置。ゲーム実行ファイルは初回基準から差分なし。
+- 確認コミット：7ddca17bbfe2d9bcdae2f4fedb18cb65b928767f（この文書更新直前）。
+- GitHub Game checksと取得したmainの構文・参照・PWA検査は成功。mainバックアップのbundle復元も確認。
+- クラウドバックアップ初回はupload-artifact v7の相対パス制限で失敗。runner.tempへコピーする修正を反映し、再実行：https://github.com/mga572que-eng/kazetomo/actions/runs/36805603525
+- SETUP_REPORT.mdの初期リモート未反映記録は過去の状態。この節を最新の進捗として扱う。
+
+
+===== OPERATIONS.md =====
+
+# 普段の運用とAI交代
+
+## あなたが行うこと
+使えるAIへ「〇〇を作って」、止まったら別のAIへ「kazetomoの続きをやって」と伝える。最後にプレビューを遊び、公開してよいか判断する。ブランチ管理・検査・保存記録はAIが担当する。
+GitHub連携やプロジェクトの選択は各サービスで必要。全AIの自動接続・自動切替はこの設定では行わない。チャット内だけの未保存コードは別途渡す必要がある。
+
+## AIが行うこと
+1. `npm run resume`とGitの状態を確認。WORK_STATE.mdの内容を差分と照合する。
+2. 新しい依頼ならクリーンな最新mainでbackup後、work/内容ブランチ。交代なら途中のブランチを引き継ぐ。未保存コードは消さない。
+3. 目的を1つに絞って実装。小さな単位で下記checkpointを使う。
+4. 差分を確認して作業ブランチへpush。リモートのコミットを確認。クリーンな時にbackup。
+5. 完成時に検査・実プレイ、必要なら別AIでレビュー。ユーザー確認後にPR統合。
+
+## 途中保存
+```sh
+npm run checkpoint -- --goal "戦闘UIを改善" --done "表示は実装。タッチ操作は未確認" --next "スマホ操作を確認する" --files ux.js
+```
+ファイル名は実際に確認した個別ファイルに置き換える。複数ファイルは空白区切り。スペース入りのパスは引用符で囲む。--filesは最後のオプション。
+指定ファイルとWORK_STATE.mdを同じWIPコミットへ保存。main/master、切り離されたHEAD、競合、既存のステージ済み変更では停止する。検査失敗はFAILと記録し、途中保存は可能。失敗したコードをmainへ統合しない。
+個別ファイルだけを保存するので未選択の変更は残る。秘密情報の除外は名前による補助であり、保存前の内容確認を省略しない。
+このコマンドはpushしない。AIはgit showとgit statusを確認し、許可された方法で `git push -u origin HEAD`。GitHubへの保存が拒否された場合は迂回せず、ローカル保存と未送信を報告する。
+
+## Claudeが制限に達したら
+次のAIへ「kazetomoの続きをやって。GitHubの未完了ブランチとWORK_STATE.mdを確認して」と伝える。
+同じPC・同じフォルダーなら未コミット変更も確認して引き継ぐ。別PCならGitHubへpush済みの変更だけ取得できる。未pushの作業がある時は元PCで保全し、保存を完了してから移る。
+制限はコードの削除ではない。途中ブランチをmainで上書きしない。元のAIが復帰しても、最新Gitと作業記録を読んでから再開する。
+
+## 別PC・クラウド
+軽い編集はgithub.dev、実行確認はCodespaces。CodespacesのTerminalでnpm run resume、npm run dev、Portsの4173を開く。ローカルとクラウドの保存先は同じGitHub。Codespaces初回起動は別途確認が必要。
+保存完了はcommit+push。エディターのSaveだけでは別PCへ共有されない。セーブデータはブラウザー単位で、コードと一緒には同期されない。
+
+## バックアップ
+クリーンな状態でnpm run backup。GitHubではActionsのDownloadable Git backupを手動実行。履歴bundle・ソースZIP・SHA256を作る。成果物の保存は30日なので長期保管はダウンロードして別媒体へ保存。GitHubバックアップ実行は確認済み。
+
+
+===== GEMINI.md =====
+
+# Geminiの入口
+
+AGENTS.md、AI_HANDOFF.md、WORK_STATE.md、OPERATIONS.mdを読み、指定コミットから実装またはレビューを引き継ぐ。レビュー専用には固定しない。
+AI Studioでは文書が自動で読まれると仮定しない。対象コミットと必要なソースを明示して渡し、変更ファイルか差分として返す。別の雛形で全体を置き換えない。Gitへ直接保存できない場合は未保存と明示し、Gitを操作できる担当に変更ファイルを渡す。

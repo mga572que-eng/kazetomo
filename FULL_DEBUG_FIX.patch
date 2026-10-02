@@ -1,0 +1,285 @@
+diff --git a/AI_HANDOFF.md b/AI_HANDOFF.md
+index b86c501..41d7437 100644
+--- a/AI_HANDOFF.md
++++ b/AI_HANDOFF.md
+@@ -4,20 +4,27 @@
+ - ゲーム：ともしびアイランド（ブラウザー3D冒険RPG / PWA）
+ - GitHub：https://github.com/mga572que-eng/kazetomo
+ - 公開URL：https://mga572que-eng.github.io/kazetomo/
+-- 最新main：f70088b（PR #11 統合、2026-10-01 20:54 JST）
+-- ゲーム版：20261001184146（公開済み）
+-- 記録日：2026-10-01 JST
+-- 担当：固定しない（Claude / Codex / Gemini）。今回の記録：Claude
++- 検査基準main：47b445fe8c076c302dfd10b2a8764ec0d3119d87（PR #24 統合）
++- 基準mainのゲーム版：20261002084913。ローカル修正版：20261002091407（未送信・未公開）
++- 記録日：2026-10-02 JST
++- 担当：固定しない（Claude / Codex / Gemini）。今回の記録：Codex
+ 
+ ## 構成と壊しやすい箇所
+-ビルド不要のHTMLと通常スクリプト。index.htmlの順序：pwa → music → art → data → art_mon → art_face → world → game → settings → life → shrines → base → ch4 → jobs → quests → deco → ux → onboard → unstuck → names → balance → battle3d → talk → town → mobs → monplus → gemini-talk。
++ビルド不要のHTMLと通常スクリプト。index.htmlの順序：pwa → music → art → data → art_mon → art_face → world → game → settings → life → shrines → base → ch4 → jobs → quests → deco → ux → onboard → unstuck → names → balance → battle3d → talk → town → mobs → monplus → gemini-talk → jobfield → lighthouses → townlife → interiors → newtowns。
+ world.jsが描画・地形、game.jsが進行・戦闘・セーブとwindow.KZ/HOOK。後続モジュールはKZ/HOOKへ追加する。data.jsが共通データ、ch4.jsが第4章、jobs/quests/base/life/shrinesが拡張、ux/onboard/unstuck/settingsが操作・救出・設定。
+ 追加モジュール：names（技の表示名）、balance（そうび袋・防具の種類・店・売却、K.bal）、battle3d（立体バトル、設定で平面に戻せる）、talk / gemini-talk（仲間会話）、town（酒場・訳あり家・探索）、mobs（町の住人）、monplus（モンスター装備・覚醒・連携）。
+ セーブ：kazetomo-rpg-3、追加スロットkazetomo-rpg-3-sN、旧kazetomo-rpg-1。設定：kazetomo-opt。IDと進行フラグを勝手に変更しない。
+ 追加のセーブ値：bag、armTier、talkSeen、talkIdx、town、flags.tw_*、monEq、monAwake。旧セーブでは無くても動く（HOOK.loadで補う）。
+ PWA版番号はindex/pwa/sw/versionで同期する。
+ 
+-## 状況（保存済み／公開済み／未確認）
++## 今回の横断デバッグ
++- 作業ブランチ：work/full-debug。花の水やり時刻0秒、室内ロード、灯台回廊ロードの3件を再現し修正。セーブキー・ID・進行フラグ・読込順は変更していない。
++- Chromeの分離したローカル検査環境で、人間6人・モンスター46種の会話、装備・覚醒・連携、4地域の描画、追加3町の登録、建物出入り、セーブ保持、境界条件、通常立体戦闘、落下と視点の検査を実施。
++- 町生活・追加町・職業支援などは登録と一部機能の確認。全イベントを完走した意味ではない。灯台回廊は現実装の1件が対象。
++- iPhone実機、全章通し、全職業・町イベント・全ボス、オフラインでのPWA更新は未確認。
++- 修正はローカル保存。以前のGitHubアップロード拒否を迂回せず、未送信・未公開を維持。
++
++## 過去の状況（2026-10-01の履歴。現在の状態ではない）
+ | 区分 | 内容 |
+ |---|---|
+ | 公開済み（main・Pages） | PR #3〜#11 と、直接アップロード 301ca07〜7c699d9（Gemini成果の適用・小修正）。自動検査（Game checks・build・deploy）は、すべて success |
+@@ -26,7 +33,7 @@ PWA版番号はindex/pwa/sw/versionで同期する。
+ | 844×390 画面 | ブラウザの模擬画面で確認済み（そうび・モンスター・戦闘） |
+ | **未確認** | **iPhone 実機**（立体バトルの重さ・操作・PWA）、**全章の通しプレイ**、旧セーブでの長時間の継続 |
+ 
+-## 未確認と次の一手
++## 過去の計画と運用方針
+ - 計画と優先順位：docs/plan/NEXT.md。他のAIへの依頼文：docs/plan/PROMPTS.md。
+ - 優先順位（開発者決定）：
+   1. 作業記録の更新・改行のLF統一（専用PR）・PR運用
+diff --git a/WORK_STATE.md b/WORK_STATE.md
+index cada178..76a144c 100644
+--- a/WORK_STATE.md
++++ b/WORK_STATE.md
+@@ -1,31 +1,30 @@
+ # 作業の再開
+ 
+-更新: 2026-10-01T23:52:13.558Z
+-ブランチ: work/new-towns
+-直前コミット: 642d0dce0fdbe278221bcb62eac890395cdc6c67
++更新: 2026-10-02T00:16:22.134Z
++ブランチ: work/full-debug
++直前コミット: 47b445fe8c076c302dfd10b2a8764ec0d3119d87
+ 
+ ## 目的
+-町のくらし 第3段：新しい町
++現実装を横断デバッグ
+ 
+ ## 完了・途中の内容
+-newtowns.js：王都ルミナリア（城・世界会議）、黄金の都ラッキーナ（カジノ・劇場）、はじまりの町ブレイブ（勇者の像・道場）。townlife に町ごとの人・店番を足せる形。ブロック上限 14000。版 20261002084913
++main 47b445fを検査。花の時刻0・室内ロード・回廊ロードの3件を修正、ブラウザー再検査成功、版20261002091407。ローカル保存・未公開。検査範囲と未確認はdocs/qa/full-debug-2026-10-02.md
+ 
+ ## 次の一手
+-iPhone 実機で重さとカメラ。全章通し
++送信拒否を迂回せず作業ブランチのPR反映を行う。iPhone実機・全章通し・町や職業イベント全件は未確認
+ 
+ ## 検証
+ 構文・参照・PWA検査: PASS
+ 実プレイ: 未確認（担当AIが結果を別途記録）
+ 
+ ## 保存対象
+-- newtowns.js
+-- townlife.js
+ - interiors.js
+-- world.js
++- lighthouses.js
+ - index.html
+-- sw.js
+ - pwa.js
++- sw.js
+ - version.json
+-- docs/design/town-life.md
++- AI_HANDOFF.md
++- docs/qa/full-debug-2026-10-02.md
+ 
+ このコミットは作業の保管用。mainへの統合・公開承認ではない。GitHubへpushされたことを別途確認する。未選択ファイルはこの保存に含まれない。
+diff --git a/docs/qa/full-debug-2026-10-02.md b/docs/qa/full-debug-2026-10-02.md
+new file mode 100644
+index 0000000..e495cd4
+--- /dev/null
++++ b/docs/qa/full-debug-2026-10-02.md
+@@ -0,0 +1,46 @@
++# 現実装の横断デバッグ（2026-10-02）
++
++基準は main `47b445fe8c076c302dfd10b2a8764ec0d3119d87`、版 `20261002084913`。修正版は作業ブランチ `work/full-debug`、版 `20261002091407`。コードと検査記録はローカル保存。GitHubへの送信・公開は未実施。
++
++## 再現して直した不具合
++
++| 不具合 | 原因と修正 | 再検査 |
++|---|---|---|
++| 開始0秒で水をやった花が育たない | 時刻0を未水やりと判定していた。有限の数値かを判定し、0も有効にする | 水やり済み・45秒後の開花とも成功 |
++| 建物内でセーブを読み直すと出口を失う | ロード時に室内状態を消す一方、初回救出の判定をリセットしていなかった。ロードごとに再判定 | 同じページでのセーブ／ロード後、外へ復帰 |
++| 灯台回廊内で読み直しても外へ戻らない | 回廊の救出判定がページの初回だけだった。ロードごとに再判定 | 同じページでのセーブ／ロード後、灯台へ復帰 |
++
++変更は `interiors.js` と `lighthouses.js` の3箇所。版番号4ファイルと引き継ぎ記録も更新。セーブ形式、既存ID、進行フラグ、スクリプト順は変更していない。実ユーザーのセーブは触らず、分離した localhost:4184 のテスト用セーブを使用。
++
++## 確認した範囲
++
++| 機能・モジュール | 検査結果と範囲 |
++|---|---|
++| 全32スクリプト、画像、PWA設定 | 構文・参照アセット・版同期を check.mjs で確認。全スクリプトをブラウザーで初期化し、例外なし。SWのCOREに全スクリプトがあり重複なし |
++| 会話 talk / gemini-talk | 人間6人、モンスター46種の会話候補とセリフの存在。元の本編会話も選ばれる。全会話の文体や進行条件を全組み合わせで確認した意味ではない |
++| 装備 balance / monplus | 装備袋の初期化、専用装備の効果、覚醒の能力増加、個体UIDの連携、同状態で連携配列が再生成されないこと |
++| モンスター共通データ | 46種の能力値が有限。全技の戦闘バランスは未検査 |
++| 町 town / mobs / townlife / newtowns | 読込、隠し報酬の一度だけの取得、町生活の登録、追加3町の登録。全店・住人イベントの完走は未確認 |
++| 建物 interiors | 通常の出入り、室内ロード復帰、樽・ツボの報酬を二重取得しないこと、花の時刻0・45秒境界 |
++| 灯台 lighthouses | 現在実装された1回廊の登録、回廊内セーブからの復帰。回廊の全パズル完走は未確認 |
++| 職業支援 jobfield | 初期化、盗み済み／倒れた敵から再取得しないこと。全職業の追加効果は未確認 |
++| 料理 life | レシピの出力・材料IDが存在すること。全レシピの調理操作は未確認 |
++| world / game と後続描画HOOK | 4地域で座標・カメラが有限、更新時の例外なし |
++| 通常戦闘 battle3d | 実ゲームの立体戦闘を開始し、自動操作で勝利、戦闘終了、例外なし。全ボス・敗北・逃走は未確認 |
++| 落下・settings | 野外でダメージ、HPが0にならない、設定OFF、町内の無効化、一人称と三人称でのフレーム更新 |
++| セーブ／ロード | 進行フラグ、所持品、専用装備、既読会話を保持。追加キーなしのデータをHOOK.loadで初期化。実際の旧版セーブ全種類の互換性保証ではない |
++| その他 music / art / art_mon / art_face / shrines / base / ch4 / jobs / quests / deco / ux / onboard / unstuck / names / pwa | 構文と起動・4地域更新・通常戦闘との共存は確認。個別イベントすべての実行は未確認 |
++
++## Geminiの以前の監査との関係
++
++元会話の候補落ち、連携配列の毎フレーム再生成、住人の一時衝突後の復帰、SW重複は基準mainで既に対処されていた。今回、会話と連携キャッシュは動作確認、住人の復帰処理はコード確認、SW重複は静的確認。過去の行番号と修正案をそのまま適用していない。
++
++## 未確認
++
++iPhone実機、長時間の性能、全章通し、全ボス・町イベント・職業・クエスト・建築・祠の完走、オフライン起動とPWA更新。今回の合格は検査した範囲の結果であり、すべての不具合がないという断定ではない。
++
++## 保存・公開
++
++以前のGitHubファイル送信拒否を迂回せず、修正は未送信・未公開。ローカルの作業ブランチ、Gitバックアップ、変更ファイル一式を保管する。統合時は最新mainとの差分を再確認してPRにする。
++
++検査の原文：FULL_DEBUG_BASELINE.txt、FULL_DEBUG_EDGE_BEFORE.txt、FULL_DEBUG_EDGE_AFTER.txt、FULL_DEBUG_MOVEMENT.txt、FULL_DEBUG_FINAL.txt。再現用コードは DEBUG_TOOLS/ に保存。
+diff --git a/index.html b/index.html
+index f1ed90f..a2e279c 100644
+--- a/index.html
++++ b/index.html
+@@ -1014,36 +1014,36 @@
+ <button class="chip-btn" id="btnMute" type="button">♪ ON</button>
+ <div id="rotate"><div><svg width="64" height="64" viewBox="0 0 64 64"><rect x="18" y="6" width="28" height="52" rx="5" fill="none" stroke="#f4f0e6" stroke-width="3"/><circle cx="32" cy="51" r="2.5" fill="#f4f0e6"/></svg><p>端末を 横に してあそんでね</p></div></div>
+ 
+-<script src="pwa.js?v=20261002084913"></script>
+-<script src="music.js?v=20261002084913"></script>
+-<script src="art.js?v=20261002084913"></script>
+-<script src="data.js?v=20261002084913"></script>
+-<script src="art_mon.js?v=20261002084913"></script>
+-<script src="art_face.js?v=20261002084913"></script>
+-<script src="world.js?v=20261002084913"></script>
+-<script src="game.js?v=20261002084913"></script>
+-<script src="settings.js?v=20261002084913"></script>
+-<script src="life.js?v=20261002084913"></script>
+-<script src="shrines.js?v=20261002084913"></script>
+-<script src="base.js?v=20261002084913"></script>
+-<script src="ch4.js?v=20261002084913"></script>
+-<script src="jobs.js?v=20261002084913"></script>
+-<script src="quests.js?v=20261002084913"></script>
+-<script src="deco.js?v=20261002084913"></script>
+-<script src="ux.js?v=20261002084913"></script>
+-<script src="onboard.js?v=20261002084913"></script>
+-<script src="unstuck.js?v=20261002084913"></script>
+-<script src="names.js?v=20261002084913"></script>
+-<script src="balance.js?v=20261002084913"></script>
+-<script src="battle3d.js?v=20261002084913"></script>
+-<script src="talk.js?v=20261002084913"></script>
+-<script src="town.js?v=20261002084913"></script>
+-<script src="mobs.js?v=20261002084913"></script>
+-<script src="monplus.js?v=20261002084913"></script>
+-<script src="gemini-talk.js?v=20261002084913"></script>
+-<script src="jobfield.js?v=20261002084913"></script>
+-<script src="lighthouses.js?v=20261002084913"></script>
+-<script src="townlife.js?v=20261002084913"></script>
+-<script src="interiors.js?v=20261002084913"></script>
+-<script src="newtowns.js?v=20261002084913"></script>
++<script src="pwa.js?v=20261002091407"></script>
++<script src="music.js?v=20261002091407"></script>
++<script src="art.js?v=20261002091407"></script>
++<script src="data.js?v=20261002091407"></script>
++<script src="art_mon.js?v=20261002091407"></script>
++<script src="art_face.js?v=20261002091407"></script>
++<script src="world.js?v=20261002091407"></script>
++<script src="game.js?v=20261002091407"></script>
++<script src="settings.js?v=20261002091407"></script>
++<script src="life.js?v=20261002091407"></script>
++<script src="shrines.js?v=20261002091407"></script>
++<script src="base.js?v=20261002091407"></script>
++<script src="ch4.js?v=20261002091407"></script>
++<script src="jobs.js?v=20261002091407"></script>
++<script src="quests.js?v=20261002091407"></script>
++<script src="deco.js?v=20261002091407"></script>
++<script src="ux.js?v=20261002091407"></script>
++<script src="onboard.js?v=20261002091407"></script>
++<script src="unstuck.js?v=20261002091407"></script>
++<script src="names.js?v=20261002091407"></script>
++<script src="balance.js?v=20261002091407"></script>
++<script src="battle3d.js?v=20261002091407"></script>
++<script src="talk.js?v=20261002091407"></script>
++<script src="town.js?v=20261002091407"></script>
++<script src="mobs.js?v=20261002091407"></script>
++<script src="monplus.js?v=20261002091407"></script>
++<script src="gemini-talk.js?v=20261002091407"></script>
++<script src="jobfield.js?v=20261002091407"></script>
++<script src="lighthouses.js?v=20261002091407"></script>
++<script src="townlife.js?v=20261002091407"></script>
++<script src="interiors.js?v=20261002091407"></script>
++<script src="newtowns.js?v=20261002091407"></script>
+ </html>
+diff --git a/interiors.js b/interiors.js
+index bc6ab5c..5747e24 100644
+--- a/interiors.js
++++ b/interiors.js
+@@ -76,7 +76,7 @@
+     g.searched[spot.key] = 1; Music.sfx('pick'); const L = loot(spot); await K.say([`${nm}を しらべた！`, ...L]); K.hud(); K.save(); }
+   // ---------- 花の 水やり・つみとり ----------
+   const BLOOM = 45; // 水を やってから さくまで（秒）
+-  const gstate = id => { const g = G(); g.garden = g.garden || {}; const s = g.garden[id]; if (!s) return 0; if (s.w && (g.play || 0) - s.w >= BLOOM) return 2; return s.w ? 1 : 0; };
++  const gstate = id => { const g = G(); g.garden = g.garden || {}; const s = g.garden[id]; if (!s || !Number.isFinite(s.w)) return 0; return (g.play || 0) - s.w >= BLOOM ? 2 : 1; };
+   async function garden(spot) { const g = G(); g.garden = g.garden || {}; const st = gstate(spot.key);
+     if (st === 0) { g.garden[spot.key] = { w: g.play || 0 }; Music.sfx('heal'); K.toast('じょうろで 水を やった。 しばらく したら さきそうだ', 1800); K.save(); return; }
+     if (st === 1) { K.toast('土が しっとり している。 もうすこし まとう', 1400); return; }
+@@ -155,6 +155,6 @@
+   H.labels.inSearch = t => `${NAME[t.o.kind] || 'もの'}を しらべる${searched(t.o.key) ? '（しらべた）' : ''}`;
+   H.labels.garden = t => ['花に 水を やる', '花が そだっている', '花を つみとる'][gstate(t.o.key)];
+   H.acts.inEnter = async h => enter(h); H.acts.inExit = async () => leave(); H.acts.inSearch = async o => search(o); H.acts.garden = async o => garden(o);
+-  H.load.push(g => { g.searched = g.searched || {}; g.garden = g.garden || {}; cur = null; });
++  H.load.push(g => { g.searched = g.searched || {}; g.garden = g.garden || {}; cur = null; checked = false; });
+   K.interior = { KIND, NAMEH, houses, enter, leave, get cur() { return cur; }, outdoor, outside, search, garden, gstate, ROOM };
+ })();
+diff --git a/lighthouses.js b/lighthouses.js
+index 7ce2b16..c726ac8 100644
+--- a/lighthouses.js
++++ b/lighthouses.js
+@@ -99,7 +99,7 @@
+     const G = K.G; G.lhDun = G.lhDun || {}; G.lhDun[d.i] = 1; const w = d.reward, L = [`${d.name}の 最上階に たどりついた！`, '火皿の 灯が、ひときわ 明るく なった。'];
+     if (w.gold) { G.gold += w.gold; L.push(`${w.gold}ゴールドを 手に入れた！`); } for (const [k, v] of Object.entries(w.give || {})) { K.gain(k, v); L.push(`${DATA.items[k].name}を ${v}こ 手に入れた！`); }
+     Music.jingle('light', K.fieldSong()); await K.say(L); K.save(); K.hud(); if (await K.confirm('外へ 出ますか？')) await leave(d); };
+-  H.load.push(G => { G.lhDun = G.lhDun || {}; });
++  H.load.push(G => { G.lhDun = G.lhDun || {}; checked = false; });
+   // 回廊の 中で ロードしたら、灯台の 足もとへ もどす（しかけは セーブしない ため）
+   let checked = false; H.frame.push(() => { if (checked || K.phase !== 'field') return; checked = true; const d = here(); if (d) { const b = K.REG[d.r].beacons[d.i]; const p = K.player; p.x = b.x + 3; p.z = b.z + 3; p.y = K.surfaceAt(p.x, p.z, 99); K.trail.length = 0; } });
+   H.mapMarks.push((r, pos) => DUNS.filter(d => d.r === r && K.REG[r].beacons[d.i] && K.REG[r].beacons[d.i].lit).map(d => { const b = K.REG[r].beacons[d.i]; return `<span class="mk${done(d) ? ' lit' : ''}" style="${pos(b.x + 6, b.z + 6)}" title="${d.name}">${done(d) ? '✦' : '▣'}</span>`; }));
+diff --git a/pwa.js b/pwa.js
+index c0eb618..c05f90e 100644
+--- a/pwa.js
++++ b/pwa.js
+@@ -1,7 +1,7 @@
+ // ともしびアイランド — アプリ化（ホーム画面に追加の案内・全画面・自動アップデート・画面スリープ防止）
+ 'use strict';
+ (() => {
+-  const BUILD = '20261002084913';
++  const BUILD = '20261002091407';
+   const ua = navigator.userAgent;
+   const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+   const isAndroid = /Android/.test(ua);
+diff --git a/sw.js b/sw.js
+index 86ebe77..4189db5 100644
+--- a/sw.js
++++ b/sw.js
+@@ -3,7 +3,7 @@
+ //  ・同じ場所の JS/画像など：stale-while-revalidate（キャッシュで 即起動、裏で 更新）。?v=ビルド番号 が 変われば 別URLなので 新版は 取り直し
+ //  ・version.json：つねに ネット（pwa.js の 版チェック用）
+ //  ・Googleフォント：stale-while-revalidate（オフラインでは 端末フォントに フォールバック）
+-const CACHE = 'kazetomo-20261002084913';
++const CACHE = 'kazetomo-20261002091407';
+ const CORE = ['./', './index.html', './music.js', './art.js', './art_mon.js', './art_face.js', './data.js', './world.js', './game.js', './settings.js', './life.js', './shrines.js', './base.js', './ch4.js', './jobs.js', './quests.js', './deco.js', './ux.js', './onboard.js', './unstuck.js', './names.js', './balance.js', './battle3d.js', './talk.js', './mobs.js', './town.js', './monplus.js', './gemini-talk.js', './jobfield.js', './lighthouses.js', './townlife.js', './interiors.js', './newtowns.js', './pwa.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+ self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => c.add(new Request(u, { cache: 'reload' })).catch(() => {}))))); });
+ self.addEventListener('activate', e => { e.waitUntil((async () => { for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k); await self.clients.claim(); })()); });
+diff --git a/version.json b/version.json
+index ae6d805..ae81a17 100644
+--- a/version.json
++++ b/version.json
+@@ -1 +1 @@
+-{"build": "20261002084913"}
++{"build": "20261002091407"}

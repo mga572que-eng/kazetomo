@@ -1,0 +1,7 @@
+公開完了: 2026-10-01
+GitHub main: 301ca07 (Add files via upload)
+公開版: 20261001165123
+https://mga572que-eng.github.io/kazetomo/
+公開された6実行ファイルは検査済みローカルファイルと一致。送信された8ファイルはローカルのコミットec0ba5cとGit差分なし。
+ローカル実ゲームの会話/セーブ/住人検査PASS。iPhone実端末と全シナリオ通しプレイは未検証。
+GitHubのWORK_STATE.md内の「未公開」はアップロード前の記録。現在の公開状態はこの確認結果を参照。

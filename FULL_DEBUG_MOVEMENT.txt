@@ -1,0 +1,14 @@
+- generic "ともしびアイランド ゲーム画面"
+- text: ▶
+- generic: E ミオと はなす
+- generic: 風見の村 人口 およそ40人・ひっそり・物価 安い
+- paragraph: 画面を タップして はじめる
+- button "♪ ON"
+- generic: 風灯の島
+- generic: 〜 灯を 継ぐ 風の 島 〜
+- button "全機能の横断検査"
+- button "実戦闘を検査"
+- button "境界条件を検査"
+- button "メニューを開く"
+- button "落下・視点を検査" [active]
+- generic: PASS 町・祠外の検査用地面 PASS 野外落下ダメージ PASS 落下でHP0にならない PASS 落下設定OFF PASS 町内は落下ダメージなし PASS 一人称のフレーム更新 PASS 移動検査の例外なし 移動検査 全成功

@@ -1,0 +1,32 @@
+- generic "ともしびアイランド ゲーム画面"
+- text: ▶
+- generic: E 灯台の 外へ 出る
+- generic: 画質を 自動で 下げました（低）
+- heading "ともしびアイランド" [level=1]:
+  - generic: と
+  - generic: も
+  - generic: し
+  - generic: び
+  - generic: ア
+  - generic: イ
+  - generic: ラ
+  - generic: ン
+  - generic: ド
+  - generic: 〜 風灯の島と ちいさな相棒 〜
+- paragraph: 第一章 ともしびの継ぎ手 ／ 第二章 星くずの大陸 ／ 第三章 天空の星巣 ／ 第四章 海の底
+- button "つづきから"
+- button "はじめから（第1章）"
+- button "第2章から あそぶ"
+- button "第3章から あそぶ"
+- button "第4章から あそぶ"
+- button "⚙ せってい"
+- button "📲 アプリにする"
+- button "♪ ON"
+- generic: 野原の灯台・内部
+- generic: 灯台の 内部（寄り道）
+- generic: 💾 セーブしました
+- button "全機能の横断検査"
+- button "実戦闘を検査"
+- button "境界条件を検査"
+- button "メニューを開く"
+- generic: FAIL 開始0秒で水やり済み FAIL 開始0秒の水やりが45秒後に咲く FAIL 同ページの室内ロードで外へ復帰 PASS 樽・ツボの報酬を二重取得しない PASS 盗み済みの敵から再取得しない PASS 倒れた敵から盗まない PASS 料理レシピの出力・材料ID FAIL 同ページの回廊ロードで灯台へ復帰 PASS 境界条件の例外なし 境界検査 失敗 4

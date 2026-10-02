@@ -1,10 +1,14 @@
-# ともしびアイランド
+# 保存した成果物
 
-ブラウザで遊べる3D冒険RPG。スマホはホーム画面に追加すると全画面アプリになります。
+ゲームの既存実行ファイルは変更なし。READMEだけ開発案内を追加。
+作業リポジトリ：kazetomo
+現在コミット：d124455c71255b051355ad18db94ecbc400f9e3d
+ブランチ：ai/codex/handoff-setup
+別PC・ブラウザー手順：kazetomo/CLOUD_DEVELOPMENT.md
+引き継ぎ：kazetomo/AI_HANDOFF.md
+移転用ソースZIP：kazetomo-portable.zip
+全Git履歴：backups/portable-setup/history.bundle
+SHA256：backups/portable-setup/manifest.json
 
-Play: https://mga572que-eng.github.io/kazetomo/
-
-## 開発と引き継ぎ
-[AI引き継ぎ](AI_HANDOFF.md) / [開発手順](DEVELOPMENT.md) / [別PC・ブラウザー開発](CLOUD_DEVELOPMENT.md)
-
-GitHubのCode > Codespacesから開き、npm run devで起動。編集後はcommitとpushで保存します。
+49ファイルの復元照合とゲーム本体差分なしを確認。構文・参照・PWA版検査PASS。
+GitHubへのアップロードはユーザーの許可後も実行側で拒否されたため未反映。CodespacesとActionsは設定作成済み・クラウド稼働未確認。各AIのアカウント接続とブラウザーセーブ自動同期は未設定。
