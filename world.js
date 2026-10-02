@@ -196,14 +196,14 @@ vec3 tone(vec3 c){ c*=1.14; float lu=dot(c,vec3(.299,.587,.114)); c=max(mix(vec3
 `;
   const FS_DEPTH = `#version 300 es
 precision mediump float; out vec4 o; void main(){ o=vec4(1.); }`;
-  // 道の デカール（地形シェーダで 土色に・草を よける）。 World.setPaths(region, [[x0,z0,x1,z1,w],...]) で 設定（最大8本）
+  // 道の デカール（地形シェーダで 土色に・草を よける）。 World.setPaths(region, [[x0,z0,x1,z1,w],...]) で 設定（最大12本）
   const PATHF = `
-uniform vec4 uPath[8]; uniform float uPathW[8]; uniform float uPathN;
-float pathD(vec2 p){ float d=1e4; for(int i=0;i<8;i++){ if(float(i)>=uPathN) break; vec4 s=uPath[i]; vec2 ab=s.zw-s.xy; float t=clamp(dot(p-s.xy,ab)/max(dot(ab,ab),1e-4),0.,1.); d=min(d, length(p-s.xy-ab*t)-uPathW[i]); } return d; }
+uniform vec4 uPath[12]; uniform float uPathW[12]; uniform float uPathN;
+float pathD(vec2 p){ float d=1e4; for(int i=0;i<12;i++){ if(float(i)>=uPathN) break; vec4 s=uPath[i]; vec2 ab=s.zw-s.xy; float t=clamp(dot(p-s.xy,ab)/max(dot(ab,ab),1e-4),0.,1.); d=min(d, length(p-s.xy-ab*t)-uPathW[i]); } return d; }
 float pathMask(vec2 p){ return uPathN<.5 ? 1. : smoothstep(-.3,.8,pathD(p)); }
 `;
-  const PATHS = [0, 1, 2, 3].map(() => ({ s: new Float32Array(32), w: new Float32Array(8), n: 0 }));
-  function setPaths(r, list) { const P0 = PATHS[r]; P0.n = Math.min(8, list.length); list.slice(0, 8).forEach((l, i) => { P0.s.set(l.slice(0, 4), i * 4); P0.w[i] = l[4] || 1; }); }
+  const PATHS = [0, 1, 2, 3].map(() => ({ s: new Float32Array(48), w: new Float32Array(12), n: 0 }));
+  function setPaths(r, list) { const P0 = PATHS[r]; P0.n = Math.min(12, list.length); list.slice(0, 12).forEach((l, i) => { P0.s.set(l.slice(0, 4), i * 4); P0.w[i] = l[4] || 1; }); }
   let grsCells = new Int16Array(2 * 210 * 210), grsCB, grsN = 0;
 
   let P = {}, VAO = {}, hmTex, shTex, shFbo, SHS, GRID, GSP, terPB, terNB, grsKey = '', shValid = false;
