@@ -60,6 +60,19 @@ test('道場の 段位', async ({ page }) => {
   ok(await page.evaluate(() => (KZ.G.stat || {}).dojoWin) === 1, '段位が 上がらない');
 });
 
+test('かくし宝箱：祠と 灯台', async ({ page }) => {
+  await page.evaluate(async () => { const sh = DATA.shrines.find(s => s.id === 's0'); KZ.G.shrineDone = Object.assign(KZ.G.shrineDone || {}, { s0: 1 }); await KZ.travel(0, sh.gate.x, sh.gate.z + 1); }); await idle(page);
+  await page.evaluate(() => { const s = KZ.secrets.shSpot(DATA.shrines.find(s => s.id === 's0')); const P = KZ.player; P.x = s.x; P.z = s.z; P.y = s.y; });
+  const g0 = await page.evaluate(() => KZ.G.gold); act(page, `() => KZ.HOOK.acts.secShrine({ sh: DATA.shrines.find(s => s.id === 's0') })`); await idle(page);
+  ok(await page.evaluate(() => !!KZ.G.secret['sh:s0']), '祠の かくし宝箱が 開かない'); ok(await page.evaluate(g0 => KZ.G.gold > g0, g0), 'お金が ふえない');
+  await page.evaluate(async () => { const d = KZ.lhDuns.find(d => d.r === 0); const bc = KZ.REG[0].beacons[d.i]; bc.lit = true; KZ.G.lit[d.i] = 1; await KZ.travel(0, bc.x + 2.4, bc.z + 3.6); }); await idle(page);
+  act(page, `() => KZ.HOOK.acts.lhdIn(KZ.lhDuns.find(d => d.r === 0))`); await idle(page);
+  const d = await page.evaluate(() => !!KZ.lhDungeon.here()); ok(d, '灯台の なかに 入れない');
+  await page.evaluate(() => { const d = KZ.lhDungeon.here(); KZ.secrets.breakWall(d); const c = KZ.secrets.lhChest(d); const P = KZ.player; P.x = c.x - 1; P.z = c.z; P.y = c.y; });
+  await page.evaluate(() => __dbg.sim(10)); ok(await page.evaluate(() => !KZ.blocked(KZ.player.x, KZ.player.z, KZ.player.y)), 'かくし部屋に 立てない');
+  ok(await page.evaluate(() => !!KZ.secrets.broken), 'かくし部屋で 灯台を わすれる'); act(page, `() => KZ.HOOK.acts.secLh({ d: KZ.secrets.broken })`); await idle(page); ok(await page.evaluate(() => Object.keys(KZ.G.secret).length === 2), '灯台の かくし宝箱が 開かない');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
