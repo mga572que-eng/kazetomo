@@ -115,7 +115,7 @@
     if (rain && !['guard', 'shop', 'teacher'].includes(R) && !night) { if (R === 'kid' || R === 'elder') return { to: home, act: h < 20 ? 'stand' : 'home' }; if (i % 2) return { to: pick(S.food, i) || home, act: 'stand' }; p.umb = true; }
     if (R === 'guard') { const k = Math.floor(h * 1.5 + i) % S.walk.length; return { to: S.walk[k] || plaza, act: 'stand' }; }
     if (R === 'mail') { if (h < 8 || h >= 17) return { to: home, act: 'home' }; return { to: pick([...S.homes, ...S.market, ...S.food], Math.floor(h * 2) + i), act: 'stand' }; }
-    if (R === 'teacher') { if (S.school && h >= 8 && h < 15 && !(h >= 12 && h < 13)) return { to: S.school, act: 'stand', yaw: S.schoolYaw + Math.PI }; if (h >= 15 && h < 18) return { to: market, act: 'stand' }; return { to: home, act: h < 20 ? 'stand' : 'home' }; }
+    if (R === 'teacher') { if (S.school && h >= 8 && h < 15 && !(h >= 12 && h < 13)) return { to: S.school, act: 'stand', yaw: S.schoolYaw + Math.PI }; if (h >= 15 && h < 18) return { to: market, act: 'stand' }; return { to: home, act: h >= 6 && h < 20 ? 'stand' : 'home' }; } // 夜中（0〜6時）も 家に 入る
     if (R === 'kid') { if (h < 6.5 || h >= 20) return { to: home, act: 'home' }; if (S.school && ((h >= 8 && h < 12) || (h >= 13 && h < 15))) return { to: S.seats[i % S.seats.length], act: 'sit', yaw: S.schoolYaw };
       if (!S.school && h >= 8 && h < 12) return { to: pick(S.market, i) || work, act: 'stand' }; if (h >= 15 && h < 18) return { to: pick(S.walk, i + Math.floor(h * 6)), act: 'stand', run: true }; return { to: home, act: 'stand' }; }
     if (R === 'elder') { if (h < 6 || h >= 20.5) return { to: home, act: 'home' }; if ((h >= 9 && h < 12) || (h >= 14 && h < 17)) return { to: pick(S.walk, i + Math.floor(h)), act: h < 12 ? 'stand' : 'sit', slow: true }; return { to: home, act: 'sit' }; }
@@ -148,7 +148,7 @@
     else p.moving = false;
     if(neighbours.some(q=>dist(q,n)<1.4)){const away=near(S.r,n,1.8,5,p.i+719,1,neighbours)[0];if(away){n.x=away.x;n.z=away.z;}else{n.indoor=true;n.placed=false;p.goal=null;return;}}
     if(!okSpot(S.r,n.x,n.z)){n.indoor=true;n.placed=false;p.goal=null;return;}
-    n.indoor = P.act === 'home' && d < 1.2; if (P.act === 'home' && far) n.indoor = true;
+    n.indoor = P.act === 'home' && (d < 1.2 || dist(n, P.to) < 2.5); /* 戸口が こんでいて ずらした 行き先でも、自分の 家の 戸口に 着けば 家に 入る */ if (P.act === 'home' && far) n.indoor = true;
     if (!p.moving) n.yaw = P.yaw != null ? P.yaw : (dist(n, pl) < 5 ? Math.atan2(pl.x - n.x, pl.z - n.z) : (n.baseYaw || n.yaw || 0));
     p.pose = p.moving ? ((Math.floor((p.walk || 0) / .42) % 2) ? 'walkA' : 'walkB') : P.act === 'sit' ? 'sit' : P.act === 'work' ? ((Math.floor(T * 2.2 + p.i) % 2) ? 'work' : 'stand') : 'stand'; p.act = P.act; }
   // ---------- 毎フレーム ----------
