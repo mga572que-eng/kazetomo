@@ -51,7 +51,7 @@ const entries = [
   { id: 'tk_riku_add_01', c: 'riku', cond: (G, r) => r === 0 && !G.flags.cleared,
     t: [who('riku', 'smirk', 'おい あまちゃん。 あしもと フラついてんぞ。 ちゃんと めし くってんのか？'), who('sora', 'angry', 'フラついてないよ！ まだまだ あるけるし！')] },
   { id: 'tk_riku_add_02', c: 'riku', cond: (G, r) => r === 0 && World.skyInfo(G.tod).night > .5,
-    t: [who('riku', 'neutral', 'よみちは かげものの なわばりだ。 やりの とどく はんいから はなれるなよ。')] },
+    t: [who('riku', 'neutral', 'よみちは まものの なわばりだ。 やりの とどく はんいから はなれるなよ。')] },
   { id: 'tk_riku_add_03', c: 'riku', cond: (G, r) => r === 0 && G.order >= 3,
     t: [who('riku', 'neutral', '……おまえの おやじさん、 カイトって いったな。 しまじゅうから たよりに されてた わけだ。')] },
   { id: 'tk_riku_add_04', c: 'riku', cond: (G, r) => r === 0 && G.flags.cleared,

@@ -93,11 +93,11 @@ const DATA = {
   weapons: [{ name: '灯の短剣', atk: 0 }, { name: '石の剣', atk: 7, cost: { ishi: 5, maki: 3 } }, { name: '灯の剣', atk: 16, cost: { ishi: 10, maki: 6, shizuku: 2 } }],
   armors: [{ name: '旅の服', def: 0 }, { name: '木の胸当て', def: 4, cost: { maki: 5, ishi: 2 } }, { name: '石の よろい', def: 9, cost: { ishi: 12, maki: 4 } }],
   enemies: {
-    kage_wata: { name: 'かげワタポコ', art: ['watapoko', 1], hp: 16, atk: 9, def: 3, spd: 7, exp: 6, drop: [['mi', .4]], join: 'watapoko', joinRate: .3 },
-    kage_iwa: { name: 'かげイワノコ', art: ['iwanoko', 1], hp: 24, atk: 11, def: 9, spd: 4, exp: 9, drop: [['ishi', .5]], join: 'iwanoko', joinRate: .28 },
-    kage_mizu: { name: 'かげミズモチ', art: ['mizumochi', 1], hp: 20, atk: 10, def: 5, spd: 9, exp: 8, drop: [['mi', .3]], join: 'mizumochi', joinRate: .3, acts: [['atk', .7], ['e_mizu', .3]] },
+    kage_wata: { name: 'ワタポコ', art: ['watapoko', 1], hp: 16, atk: 9, def: 3, spd: 7, exp: 6, drop: [['mi', .4]], join: 'watapoko', joinRate: .3 },
+    kage_iwa: { name: 'イワノコ', art: ['iwanoko', 1], hp: 24, atk: 11, def: 9, spd: 4, exp: 9, drop: [['ishi', .5]], join: 'iwanoko', joinRate: .28 },
+    kage_mizu: { name: 'ミズモチ', art: ['mizumochi', 1], hp: 20, atk: 10, def: 5, spd: 9, exp: 8, drop: [['mi', .3]], join: 'mizumochi', joinRate: .3, acts: [['atk', .7], ['e_mizu', .3]] },
     koumori: { name: 'ヨルコウモリ', art: ['koumori', 1], hp: 17, atk: 12, def: 4, spd: 15, exp: 10, drop: [['shizuku', .3]] },
-    kage_hoshi: { name: 'かげホシカゲ', art: ['hoshikage', 1], hp: 28, atk: 13, def: 7, spd: 12, exp: 16, drop: [['shizuku', .5]], join: 'hoshikage', joinRate: .35, acts: [['atk', .6], ['e_hoshi', .4]] },
+    kage_hoshi: { name: 'ホシカゲ', art: ['hoshikage', 1], hp: 28, atk: 13, def: 7, spd: 12, exp: 16, drop: [['shizuku', .5]], join: 'hoshikage', joinRate: .35, acts: [['atk', .6], ['e_hoshi', .4]] },
     tsutakage: { name: 'ツタカゲ', art: ['tsutakage', 1], hp: 110, atk: 15, def: 8, spd: 6, exp: 70, boss: true, acts: [['atk', .6], ['karami', .4]] },
     rikuDuel: { name: 'リク', portrait: 'riku', hp: 130, atk: 19, def: 11, spd: 14, exp: 100, boss: true, acts: [['atk', .65], ['tsuranuki_e', .35]] },
     iwaoni: { name: 'イワオニ', art: ['iwaoni', 1], hp: 210, atk: 25, def: 18, spd: 5, exp: 160, boss: true, acts: [['atk', .6], ['jinarashi', .4]] },
@@ -273,7 +273,7 @@ Object.assign(DATA.skills.issen, { desc: '敵全体に ひかりの 斬撃（闇
 Object.assign(DATA.skills.kenbu, { desc: '敵全体に 強力な ほのおの 斬撃' });
 Object.assign(DATA.skills.iyashi, { desc: '味方全員の HPを かいふく' });
 Object.assign(DATA.skills.nemuri, { desc: '敵1体を 2〜3ターン ねむらせる（ボスには きかない）' });
-Object.assign(DATA.skills.kiyome, { desc: '敵1体に ひかりの 魔法（かげものに 大ダメージ）' });
+Object.assign(DATA.skills.kiyome, { desc: '敵1体に ひかりの 魔法（まものに 大ダメージ）' });
 Object.assign(DATA.skills.hagemashi, { desc: '3ターン 味方全員の こうげき ×1.4' });
 Object.assign(DATA.skills.hoshiuta, { desc: '敵全体に ひかりの 魔法' });
 Object.assign(DATA.skills.tsuranuki, { desc: '敵1体に 強烈な 一突き' });
@@ -302,7 +302,7 @@ DATA.boards = {
     { id: 'b1', name: '歌声', desc: '最大MP +15%', cost: 1, eff: { mp: .15 } },
     { id: 'b2', name: 'ねむりの歌', desc: '技：敵1体を ねむらせる', cost: 1, skill: 'nemuri' },
     { id: 'b3', name: '癒し手', desc: '回復量 +25%', cost: 2, eff: { healUp: .25 }, req: 'b1' },
-    { id: 'b4', name: 'きよめの歌', desc: '技：ひかりの 魔法（かげものに 大ダメージ）', cost: 2, skill: 'kiyome', req: 'b2' },
+    { id: 'b4', name: 'きよめの歌', desc: '技：ひかりの 魔法（まものに 大ダメージ）', cost: 2, skill: 'kiyome', req: 'b2' },
     { id: 'b5', name: 'はげましの歌', desc: '技：3ターン 味方の こうげき ×1.4', cost: 3, skill: 'hagemashi', req: 'b3' },
     { id: 'b6', name: '息つぎ上手', desc: '消費MP −25%', cost: 2, eff: { mpSave: .25 }, req: 'b3' },
     { id: 'b7', name: '星の歌', desc: '技：敵全体に ひかりの 魔法', cost: 3, skill: 'hoshiuta', req: 'b4' },
@@ -350,7 +350,7 @@ DATA.itemCats = { heal: 'かいふく・べんり', food: '料理', mat: '素材
 DATA.trials = [
   { name: '灯の欠片', text: '灯台の まわりに 散らばった「灯の欠片」を 3つ 集める', fuel: { maki: 3 } },
   { name: '天をつく塔', text: '灯台の 横の 塔の てっぺんへ 登る（がんばり・ブロックで 足場）', fuel: { maki: 3, ishi: 2 } },
-  { name: '三連戦', text: 'おしよせる かげものを 3回 しずめる', fuel: { maki: 4 } },
+  { name: '三連戦', text: 'おしよせる まものを 3回 しずめる', fuel: { maki: 4 } },
   { name: '夜の灯', text: '夜にだけ 火皿が ひらく（「夜まで 待つ」も できる）', fuel: { maki: 2, shizuku: 1 } },
   { name: '風の足場', text: '崖の 先の 浮き足場へ わたる（滑空・ブロックで 橋）', fuel: { maki: 3, ha: 2 } },
 ];

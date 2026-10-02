@@ -703,7 +703,7 @@ function breakBlock() { if (mode() !== 'field' || !G.build) return; const fx = p
 function regionSpecies(r) { return DATA.speciesOrder.filter(k => SPC[k].hab && (SPC[k].hab.r === r || SPC[k].hab.r === -1)); }
 function newBounty() {
   const r = R(); const pool = regionSpecies(G.region === 2 ? 2 : 1).filter(k => !SPC[k].rare && !SPC[k].legend);
-  if (r < .35) { const n = [5, 8, 12][Math.floor(R() * 3)]; return { kind: 'hunt', n, c: 0, text: `かげものを ${n}体 しずめる`, gold: n * 22 }; }
+  if (r < .35) { const n = [5, 8, 12][Math.floor(R() * 3)]; return { kind: 'hunt', n, c: 0, text: `まものを ${n}体 しずめる`, gold: n * 22 }; }
   if (r < .6) { const sp = pool[Math.floor(R() * pool.length)]; const n = 2 + Math.floor(R() * 2); return { kind: 'huntSp', sp, n, c: 0, text: `${SPC[sp].name}を ${n}体 しずめる`, gold: 90 * n }; }
   if (r < .82) { const it = ['maki', 'ishi', 'suna', 'kinoko', 'mi'][Math.floor(R() * 5)]; const n = 5 + Math.floor(R() * 6); return { kind: 'give', it, n, text: `${DATA.items[it].name}を ${n}こ とどける`, gold: n * 14 }; }
   const cand = pool.filter(k => !G.dex.got[k]); const sp = cand.length ? cand[Math.floor(R() * cand.length)] : pool[0];
@@ -768,7 +768,7 @@ async function talkGen(n) {
   if (!F.metGen) {
     await say([who('gen', 'neutral', '……来たか、{name}。 ユイから 聞いた。'), who('sora', 'worried', '……止めないの？'),
       who('gen', 'sad', '止めて 聞く 血すじじゃねえ。 ……カイトも そうだった。'),
-      who('gen', 'neutral', '灯台には かげものが 巣くってる。 木を 切りゃ 薪、岩を 割りゃ 石だ。 材料さえ ありゃ、武器でも 防具でも 打ってやる。')]); F.metGen = true;
+      who('gen', 'neutral', '灯台には まものが 巣くってる。 木を 切りゃ 薪、岩を 割りゃ 石だ。 材料さえ ありゃ、武器でも 防具でも 打ってやる。')]); F.metGen = true;
     // 灯台の 鍵（k0）の 依頼を その場で 受ける（おつかいの 往復を 1回 へらす）
     if (HOOK.talks.gen && n) await HOOK.talks.gen(n);
     await say([who('gen', 'neutral', '……それと、広場の ミオが おまえを 探してたぞ。')]); save(); return; }
@@ -802,7 +802,7 @@ async function talkMio() {
     who('mio', 'worried', '……あのね。 夜に なると きこえるの。 灯台の ほうから、だれかが 泣いてる こえ。'),
     who('mio', 'determined', 'カイトさんには 海で 命を 助けてもらった。 こんどは わたしの 番。'),
     { t: 'ミオが なかまに くわわった！', fx: () => { F.mio = true; G.party.push(mkHuman('mio', G.party[0].lv)); fixTeam(); Music.sfx('friend'); } },
-    who('mio', 'smile', 'かげものって、ほんとは こわがってる だけ なの。 しずめて あげれば、もとの いきものに もどるんだよ。'),
+    who('mio', 'smile', 'まものって、ほんとは こわがってる だけ なの。 しずめて あげれば、もとの いきものに もどるんだよ。'),
     who('sora', 'smile', 'じゃあ これは、やっつける 旅じゃなくて……いやす 旅だね。')]); save();
 }
 async function talkKurou() {
@@ -926,8 +926,8 @@ async function talkTsumugi() {
     await say([who('tsumugi', 'surprised', 'わっ！ お、お客さん……？ ……あっ！！ その子！！'),
       G.mons[0] ? who('tsumugi', 'grin', `${SPC[G.mons[0].id].name}だ！ 島の いきものだよね！？ 本物 はじめて 見た！`) : who('tsumugi', 'grin', '島から 来たの！？ 島の いきもの、見たこと ある？'),
       who('tsumugi', 'smile', 'わたし、ツムギ。 いきもの研究家の……見習い。 おばあちゃんの 図鑑、とちゅうで 止まったままなの。'),
-      who('tsumugi', 'worried', '町の 大人は「かげものの 図鑑なんて、だれが 買うんだ」って 笑うけど……。'),
-      who('sora', 'smile', 'ぼくは 読みたいな。 かげものが もとに もどった あとの 顔、ぜんぶ 見てみたい。'),
+      who('tsumugi', 'worried', '町の 大人は「まものの 図鑑なんて、だれが 買うんだ」って 笑うけど……。'),
+      who('sora', 'smile', 'ぼくは 読みたいな。 まものが なかよく なった あとの 顔、ぜんぶ 見てみたい。'),
       who('tsumugi', 'joy', '……！ じゃあ、手伝って！ 島と 大陸には 28種の いきものが いるって、おばあちゃんの ノートに あるの。'),
       { t: '「いきもの図鑑」を もらった！', fx: () => { F.dex = true; Music.sfx('friend'); } },
       who('tsumugi', 'grin', '夜にしか 出ない子、育つと すがたが 変わる子、ごくたまに 色が ちがう子も いるんだって。 見つけたら ぜったい 教えてね！'),
@@ -967,7 +967,7 @@ async function inheritMenu() {
 async function talkGuild() {
   const F = G.flags;
   if (!F.c2rumor) {
-    await say([nm('ギルドの 受付', 'ようこそ、冒険者ギルドへ！ 依頼は 掲示板で 受けてね。 かげものを しずめたり、素材を とどけたりで お金に なるわ。'),
+    await say([nm('ギルドの 受付', 'ようこそ、冒険者ギルドへ！ 依頼は 掲示板で 受けてね。 まものを しずめたり、素材を とどけたりで お金に なるわ。'),
       nm('ギルドの 受付', '……え、星の 話？ ええ、東の 砂漠の「星の遺跡」に 星が 落ちつづけてるの。 おかげで 港は 星のかけら 売りで 大もうけ。 ……ここだけの 話、ちょっと 品が ないわよね。'),
       nm('ギルドの 受付', '紺色の 髪の 女の子が、ひとりで 遺跡へ 入っていくのを 見たって 人が いたわ。 星の 髪飾りを つけた子。'),
       inParty('riku') ? who('riku', 'surprised', '……星の 髪飾り。 サナだ。 まちがいねえ。') : null,
@@ -989,7 +989,7 @@ async function beaconEvent(b, atTop) {
     : '火皿は 崖の 先に 浮かぶ 足場の 上だ。 風布で 滑空するか、ブロックで 橋を かけよう。']); return; }
   if (!HOOK.beaconGate && b.i === 0 && (st.shards || 0) < 3) { await say([`灯の欠片が 足りない（${st.shards || 0}/3）。 灯台の まわりで 光っている 欠片を さがそう。`]); return; }
   if (!HOOK.beaconGate && b.i === 2 && (st.waves || 0) < 3) {
-    if (!(await confirm(`かげものの 群れが せまってくる。（推奨Lv${DATA.guardLv[G.order]}） 迎えうつ？`))) return;
+    if (!(await confirm(`まものの 群れが せまってくる。（推奨Lv${DATA.guardLv[G.order]}） 迎えうつ？`))) return;
     for (let w = st.waves || 0; w < 3; w++) {
       await say([`第${w + 1}波！`]); const lv = Math.max(1, DATA.guardLv[G.order] - 3 + w);
       const pool = ['watapoko', 'iwanoko', 'mizumochi', 'hanapokke', 'tsuchimogu']; const n = 2 + (w > 0 ? 1 : 0);
@@ -1013,7 +1013,7 @@ async function beaconEvent(b, atTop) {
     b.guard = true;
     if (gi === 1) await say([who('riku', 'sad', '……ちっ。 まっすぐな 剣だ。 ばかみたいに。'), who('sora', 'smile', 'よく 言われる。 ……いっしょに 行こうよ。 きみの 故郷の 灯も、きっと また ともせる。'),
       who('riku', 'smirk', '……リクだ。 勘違いすんなよ。 闇の王を 追うのに 都合が いいだけだ。'), { t: 'リクが なかまに くわわった！', fx: () => { G.party.push(mkHuman('riku', Math.max(G.party[0].lv, 6))); fixTeam(); Music.sfx('friend'); } }]);
-    else await say([`${DATA.enemies[gid].name}の かげが はれて、光の 粒に なって 消えていった。`]);
+    else await say([`${DATA.enemies[gid].name}の やみが はれて、光の 粒に なって 消えていった。`]);
     save();
   }
   if (!HOOK.beaconGate && !fuelOk(b)) { await say([`火皿は 冷えきっている。 燃料が 足りない。`, `（必要：${fuelTxt(b)}）`, '（木を 切ると 薪と 葉っぱ、岩を 掘ると 石、夜の いきものから 夜露の しずくが 手に入る）']); return; }
@@ -1043,7 +1043,7 @@ async function finalOpen() {
 }
 async function shrineEvent() {
   await say([`（推奨Lv${DATA.bossCfg.yomikage[0]}　連戦に なる。 準備は いいか？）`, who('yomi', 'neutral', '来たか。'), who('yomi', 'angry', '灯が あるから、人は 海へ 出る。 そして 帰ってこない。 ……だから 消した。 もう だれも、見送らなくて すむように。'),
-    who('sora', 'determined', 'ちがう！ ぼくは 三年、消えた 灯台を 見てた。 灯が ないほうが、待つ 夜は ずっと 長いんだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, inParty('riku') ? who('riku', 'angry', 'シオミじゃ、かげを 連れてきたのは おれだって 言われたぜ。 ……見送るのが つらいなら、そう 言えよ。 灯を 消して、だれかの せいに するな！') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
+    who('sora', 'determined', 'ちがう！ ぼくは 三年、消えた 灯台を 見てた。 灯が ないほうが、待つ 夜は ずっと 長いんだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, inParty('riku') ? who('riku', 'angry', 'シオミじゃ、まものを 連れてきたのは おれだって 言われたぜ。 ……見送るのが つらいなら、そう 言えよ。 灯を 消して、だれかの せいに するな！') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
   let res = await runBattle([{ boss: 'yomikage' }], { boss: true, noFlee: true });
   if (res !== 'win') return defeated();
   await say([who('yomi', 'angry', 'まだだ……！ この 悲しみごと、永遠の 夜に しずめてやる！'), { t: '闇が ふくれあがり、空いっぱいの 王の すがたに なった！', fx: () => battleParty().forEach(m => { m.hp = Math.max(m.hp, Math.round(m.st.hp * .8)); m.mp = Math.max(m.mp, Math.round(m.st.mp * .6)); }) }]);
@@ -1169,7 +1169,7 @@ async function windEvent(sh) {
     if (i === 1) pre.push('雲の 中から、ふわりと 巨大な くらげが あらわれた！', inParty('mio') ? who('mio', 'worried', 'この子……眠たいのに、眠れないって 泣いてる。') : null);
     if (i === 2) pre.push('星の 光が ゆがみ、黒い 鳥の すがたに なった！', inParty('sana') ? who('sana', 'angry', '星を 喰らった 鳥……星喰いと 同じ 気配です！') : null);
     await say(pre); const res = await runBattle([{ boss: gid }], { boss: true, noFlee: true }); if (res !== 'win') return defeated();
-    st.guard = 1; await say([`${DATA.enemies[gid].name}の かげが はれて、澄んだ 風に なって 空へ かえっていった。`]); save(); }
+    st.guard = 1; await say([`${DATA.enemies[gid].name}の やみが はれて、澄んだ 風に なって 空へ かえっていった。`]); save(); }
   G.wind[i] = 1; if (G.wind.every(Boolean)) { G.flags.c3bridge = true; buildBridge(); } Music.jingle('light', fieldSong()); allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); await wait(900);
   const rw = DATA.windRewards[G.wind.filter(Boolean).length - 1]; const M = DATA.haruMem[G.wind.filter(Boolean).length - 1];
   const react = [[inParty('mio') && who('mio', 'worried', 'ハル……その 歌、もしかして——'), who('haru', 'sad', 'わからない。 でも、とても なつかしい。')],
@@ -1880,7 +1880,7 @@ async function runBattle(specs, opts = {}) {
     $('battle').classList.add('won'); Music.sfx('stamp'); screenFx('white');
     const vic = bAdd('b-win', `<div class="b-win-t">しょうり！</div><div class="b-win-cf">${confetti(38, { d: 190 })}${confetti(10, { cls: 'sp', ch: '✦', d: 150, arc: Math.PI * 2 })}</div>`);
     setTimeout(() => Music.sfx('sparkle'), 260 / bspd());
-    await bmsg(opts.boss ? `${F[0].name}を うちまかした！` : 'かげものたちを しずめた！', 400); await bwait(350);
+    await bmsg(opts.boss ? `${F[0].name}を うちまかした！` : 'まものたちを しずめた！', 400); await bwait(350);
     if (gold) G.gold += gold;
     const rows = [];
     for (const m of P) { const row = { m, lv0: m.lv, e0: m.exp / need(m.lv), st0: { ...m.st }, skills: [], sp: 0, alive: m.hp > 0 };
@@ -1921,7 +1921,7 @@ async function runBattle(specs, opts = {}) {
       if (!canAddSpecies(f.sp)) continue;
       const S = SPC[f.sp]; const rate = S.legend ? 1 : Math.min(.9, (S.rare ? .16 : .3) * (inParty('mio') ? 1.3 : 1) * friendBoost * (f.shiny ? 1.5 : 1));
       if (R() < rate) { $('bFoes').innerHTML = `<div class="foe befriend"><div class="foe-art">${Art.species(f.sp, { shiny: f.shiny })}</div><div class="foe-shadow"></div></div>`; screenFx('light'); Music.sfx('magic');
-        await bmsg(`かげが はれて、${S.name}の すがたに もどった。`, 400); await bmsg(`${S.name}は しばらく ${G.name}を 見つめていたが……`, 500);
+        await bmsg(`${S.name}は おとなしく なった。`, 400); await bmsg(`${S.name}は しばらく ${G.name}を 見つめていたが……`, 500);
         const m = mkMon(f.sp, Math.max(1, f.lv - 1), f.shiny); G.mons.push(m); const isNew = !G.dex.got[f.sp]; G.dex.got[f.sp] = 1; fixTeam();
         { const fe = $('bFoes').querySelector('.foe'); if (fe) { fe.classList.add('love'); bAdd('b-hearts', confetti(16, { cls: 'ht', ch: '♥', d: 150, arc: Math.PI * 2 }), fe); } }
         Music.cry(f.sp, { vol: 1.1 }); setTimeout(() => Music.sfx('heart'), 260 / bspd()); setTimeout(() => Music.sfx('friend'), 700 / bspd()); await bmsg(`${S.name}${f.shiny ? '★' : ''}が なかまに くわわった！${isNew ? '（図鑑に 登録された！）' : ''}`, 900);
@@ -2211,7 +2211,7 @@ async function ranchPick(list, filter, page) {
 async function ranch() {
   let filter = 'all', page = 0;
   while (true) {
-    const list = G.mons.slice(); if (!list.length) { await panel('<h3>牧場</h3><p>まだ いきものの なかまは いない。 かげものを たおすと、なかまに なってくれることが ある。</p>'); return; }
+    const list = G.mons.slice(); if (!list.length) { await panel('<h3>牧場</h3><p>まだ いきものの なかまは いない。 まものを たおすと、なかまに なってくれることが ある。</p>'); return; }
     list.sort((a,b) => SPC[a.id].no - SPC[b.id].no || b.lv - a.lv || a.uid.localeCompare(b.uid));
     const picked = await ranchPick(list, filter, page);
     if (picked == null) return;

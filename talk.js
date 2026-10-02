@@ -33,7 +33,7 @@
     // ===== ミオ =====
     { id: 'mio_island_night', w: 'mio', when: c => c.r === 0 && c.night, pri: 3, s: () => [W('mio', 'worried', '……夜の 海って、黒い 布みたい。 わたし、ちょっと にがて。'), W('mio', 'smile', 'でも 灯台が 光ってると、だいじょうぶって 思えるの。 {name}が ともしたんだよ。')] },
     { id: 'mio_kaito_save', w: 'mio', when: c => c.ch === 1, pri: 2, s: () => [W('mio', 'neutral', 'ちいさい ころ、わたし 海で おぼれたの。 ひっぱりあげて くれたのが、カイトさん。'), W('mio', 'smile', 'だから {name}の お父さんは、わたしの 恩人でも あるんだよ。 ……ぜったい、また 会おうね。')] },
-    { id: 'mio_voice', w: 'mio', when: c => c.ch <= 2, pri: 2, s: () => [W('mio', 'neutral', 'かげものの こえ、たまに 聞こえるの。 「さむい」とか「ひとりは いやだ」とか。'), W('mio', 'sad', 'たたかうたびに、ちょっとだけ ごめんねって 思う。 ……へん、かな。')] },
+    { id: 'mio_voice', w: 'mio', when: c => c.ch <= 2, pri: 2, s: () => [W('mio', 'neutral', 'まものの こえ、たまに 聞こえるの。 「さむい」とか「ひとりは いやだ」とか。'), W('mio', 'sad', 'たたかうたびに、ちょっとだけ ごめんねって 思う。 ……へん、かな。')] },
     { id: 'mio_after_hard', w: 'mio', when: c => c.lb && c.lb.hurt >= 2, pri: 6, s: () => [W('mio', 'worried', 'いまの、あぶなかったね……。 みんな、けが 見せて。'), W('mio', 'determined', '歌で なおせる ぶんは なおすから。 むりは しないって、約束して。')] },
     { id: 'mio_low_hp', w: 'mio', when: c => c.hp < .45, pri: 7, s: () => [W('mio', 'worried', '{name}、顔色が わるいよ。 一度 やすもう？'), W('mio', 'smile', '宿屋か、たき火か。 あったかい ところで ねむれば、だいたい なおるんだよ。')] },
     { id: 'mio_shiomi', w: 'mio', when: c => c.place === 'shiomi', pri: 4, s: () => [W('mio', 'sad', 'シオミの 人たち、リクの こと「疫病神」って 呼んでたんだって。'), W('mio', 'determined', 'こわいと、人は だれかの せいに したくなるの。 ……わかるけど、ゆるさない。')] },
@@ -185,7 +185,7 @@
   addT("sora_02", () => isNight() && K.G.region === 0 && !F().cleared, "sora", "smile", "よるの うみは くらいね。 とうだいの あかりを とりもどしたいな。");
   addT("sora_03", () => inTown() && K.G.region === 0 && isNight(), "sora", "smile", "むらの あかりを みると ほっとするよ。 かえりみちを たしかめよう。");
   addT("sora_04", () => isLowHp(K.member("sora")), "sora", "worried", "うう…… さすがに すこし からだが おもいな。 どこかで ひとやすみ したいよ。");
-  addT("sora_05", () => recentBattle()?.res === "win", "sora", "joy", "みんな、 ケガは なかった？ かげものたち、 ちゃんと ひかりへ かえれたかな。");
+  addT("sora_05", () => recentBattle()?.res === "win", "sora", "joy", "みんな、 ケガは なかった？ まものたち、 ちゃんと すみかへ かえれたかな。");
   addT("sora_06", () => K.G.region === 1, "sora", "surprised", "たいりくの さばくは ひろいなぁ。 みわたす かぎり すなばかりで、 まいごに なりそうだよ。");
   addT("sora_07", () => K.G.region === 2, "sora", "worried", "あしの したに くもが あるなんて、 まだ しんじられないよ。 おちないように きをつけなきゃ。");
   addT("sora_08", () => K.G.region === 3, "sora", "surprised", "うみの そこなのに いきが できるなんて、 あわのすずの ちからって ほんとうに ふしぎだな。");
@@ -279,7 +279,7 @@
     "kaito", "smile", "おもたいから こそ、 うでっぷしが なまらねえのさ。 おまえの やりも いい こうだな。",
     "who(\"riku\",\"smile\",\"……ほんどの かじやに とくちゅうで うたせた わざものだ。 そまつには あつかわねえよ。\")");
   addT("riku_25", () => inTown() && K.G.region === 1, "riku", "neutral", "港町ミナトの ほしさかな、 しおの ききが ちょうど いい。 10ひきくらい かいだめしとくか。");
-  addT("riku_26", () => isNight(), "riku", "neutral", "やえいの ときは、 ひの ばんを こうたいで やるぞ。 ゆだんした やつから かげに くわれる。");
+  addT("riku_26", () => isNight(), "riku", "neutral", "やえいの ときは、 ひの ばんを こうたいで やるぞ。 ゆだんした やつから まものに くわれる。");
   addT("riku_27", () => recentBattle()?.res === "flee", "riku", "neutral", "チッ…… にげるなんざ せいに あわねえが、 ぜんめつするよりは マシだ。");
   addT("riku_28", () => isLowHp(K.member("sora")), "riku", "worried", "おい あまちゃん、 ふらついてんぞ！ まえを みて あるけ、 まえを！");
   addT("riku_29", () => K.G.gold < 100, "riku", "neutral", "おいおい、 しょじきんが そこをつきかけてんぞ。 ギルドの いらいでも こなして かせぐか。");
