@@ -102,6 +102,12 @@ test('風見の村→野原の灯台の 道：歩ける・木が ない・道し
   act(page, `() => KZ.HOOK.acts.road0Sign()`); await idle(page);
 });
 
+test('シオミの 港への 道が 上限で 切れない', async ({ page }) => {
+  await page.evaluate(async () => { window.__paths = null; const o = World.setPaths; World.setPaths = (r, l) => { if (r === 0) window.__paths = l; return o(r, l); }; const S = KZ.shiomi; await KZ.travel(0, S.x + 3, S.z + 3); }); await idle(page); await page.evaluate(() => __dbg.sim(3));
+  const r = await page.evaluate(() => { const L = window.__paths || [], S = KZ.shiomi; return { n: L.length, harbor: L.slice(0, 8).some(s => Math.hypot(s[2] - S.x, s[3] - S.z) > 40), road: KZ.road0 ? L.slice(8).length : -1 }; });
+  ok(r.harbor, 'シオミの 港への 道が 表示の 8本に 入っていない'); ok(r.n <= 12, '道が 上限12本を こえる：' + r.n); ok(r.road === 3, '風見の村の 道が 消えた');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }

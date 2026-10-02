@@ -86,15 +86,16 @@
     o.mill = best; return o; }
   function place0() { const S = K.shiomi; if (!S) return { none: 1 }; const o = { boats: [], posts: [] };
     let best = null; for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { for (let d = 10; d < 160; d++) { if (K.hAt(S.x + dx * d, S.z + dz * d) < -.4) { if (!best || d < best.d) best = { d, dx, dz }; break; } } }
-    const segs = [[S.x, S.z, S.x, S.z, 3.2]];
+    const segs = [[S.x, S.z, S.x, S.z, 3.2]]; let harbor = null; // 港への 道は 上限で 切れないよう 2本目に 入れる（下）
     K.NPCS.filter(n => n.r === 0 && Math.hypot(n.x - S.x, n.z - S.z) < 20 && n.id !== 'chibi').forEach(n => segs.push([S.x, S.z, n.x, n.z, .85]));
     if (best) { const { d, dx, dz } = best, px = -dz, pz = dx; let sx = Math.round(S.x + dx * (d - 5)), sz = Math.round(S.z + dz * (d - 5));
       for (let i = 0; i < 16; i++) { const cx = sx + dx * i, cz = sz + dz * i; for (let w = -1; w <= 1; w++) { const x = cx + px * w, z = cz + pz * w, t = Math.floor(K.hAt(x + .5, z + .5)); if (t > 1) continue; W.Blocks.set(x, Math.max(0, Math.min(t, 1)), z, 0, true, 0); }
         if (i % 4 === 3) for (const w of [-1.55, 1.55]) o.posts.push([cx + .5 + px * w, cz + .5 + pz * w, 0]); }
       const ex = sx + dx * 15 + .5, ez = sz + dz * 15 + .5, yaw = Math.atan2(dx, dz);
       o.boats.push([ex + px * 3.2 - dx * 3, ez + pz * 3.2 - dz * 3, yaw + .15], [ex - px * 3.4 - dx * 6, ez - pz * 3.4 - dz * 6, yaw - .2], [ex + px * 2.5 + dx * 4, ez + pz * 2.5 + dz * 4, yaw + 1.2]);
-      segs.push([S.x, S.z, sx + .5 - dx * 1, sz + .5 - dz * 1, 1.05]); }
-    W.setPaths(0, [...segs.slice(0, 8), ...(K.road0 ? K.road0.segs() : [])]); return o; } // シオミは これまでどおり 先頭8本、残りに 風見の村→野原の灯台の 道
+      harbor = [S.x, S.z, sx + .5 - dx * 1, sz + .5 - dz * 1, 1.05]; }
+    const shi = harbor ? [segs[0], harbor, ...segs.slice(1)] : segs; // 港への 道（いちばん 大事）を 先に。人への 小道は 残りの 枠で
+    W.setPaths(0, [...shi.slice(0, 8), ...(K.road0 ? K.road0.segs() : [])]); return o; } // シオミは これまでどおり 先頭8本、残りに 風見の村→野原の灯台の 道
   const PLACE = [place0, null, place2, place3];
 
   // ---------------- 毎フレーム ----------------
