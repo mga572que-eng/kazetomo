@@ -1,0 +1,63 @@
+PASS 初期化エラーなし
+PASS 発見場所12件 ["field_r0_0","field_r0_1","field_r0_2","field_r1_0","field_r1_1","field_r1_2","field_r2_0","field_r2_1","field_r2_2","field_r3_0","field_r3_1","field_r3_2"]
+PASS 地域0発見場所3件
+PASS 地域1発見場所3件
+PASS 地域2発見場所3件
+PASS 地域3発見場所3件
+PASS 川と橋の生成 ["river_bridge","cliff_view","row_dock_0","row_dock_1"]
+PASS 崖の生成
+PASS 道の駅4・船着き場2
+PASS 川底が水面下
+PASS 地域往復で川を保持
+PASS 橋の上の足場
+PASS 地域0描画数 8867
+PASS 地域1描画数 12801
+PASS 地域2描画数 5571
+PASS 地域3描画数 1856
+PASS 発見 field_r0_0
+PASS 重複報酬なし field_r0_0
+PASS 発見 field_r0_1
+PASS 重複報酬なし field_r0_1
+PASS 発見 field_r0_2
+PASS 重複報酬なし field_r0_2
+PASS 発見 field_r1_0
+PASS 重複報酬なし field_r1_0
+PASS 発見 field_r1_1
+PASS 重複報酬なし field_r1_1
+PASS 発見 field_r1_2
+PASS 重複報酬なし field_r1_2
+PASS 発見 field_r2_0
+PASS 重複報酬なし field_r2_0
+PASS 発見 field_r2_1
+PASS 重複報酬なし field_r2_1
+PASS 発見 field_r2_2
+PASS 重複報酬なし field_r2_2
+PASS 発見 field_r3_0
+PASS 重複報酬なし field_r3_0
+PASS 発見 field_r3_1
+PASS 重複報酬なし field_r3_1
+PASS 発見 field_r3_2
+PASS 重複報酬なし field_r3_2
+PASS 乗り物の貸出保存
+PASS 馬に乗る
+PASS 馬の移動速度
+PASS 歩く速度に復帰
+PASS 隊列のモンスターに乗る
+PASS 重複追従を除外
+PASS 隊列から外すと降りる
+PASS 川で舟に乗る
+PASS 舟の水面の足場
+PASS 舟では泳ぎ疲れなし
+PASS 舟の保存地点は岸・船着き場
+PASS 舟から再読込で安全に復帰
+PASS 陸で舟に乗れない
+PASS 休憩で残金不足なら変更なし
+PASS 休憩で回復・料金
+PASS 実際の保存
+PASS 島の点火・門番を記録
+PASS 島の点火・門番を再読込
+PASS プレイヤーブロックを再読込
+PASS 探索と貸出を再読込
+PASS 乗った状態はロード後解除
+PASS フレーム実行エラーなし
+全検査成功

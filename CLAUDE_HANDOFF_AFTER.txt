@@ -1,0 +1,15 @@
+- generic "ともしびアイランド ゲーム画面"
+- text: ▶
+- generic: E ミオと はなす
+- generic: ☀ 雨が やんだ
+- paragraph: 画面を タップして はじめる
+- button "♪ ON"
+- generic: 風灯の島
+- generic: 〜 灯を 継ぐ 風の 島 〜
+- button "全機能の横断検査"
+- button "実戦闘を検査"
+- button "境界条件を検査"
+- button "メニューを開く"
+- button "落下・視点を検査"
+- button "Claude引き継ぎを検査" [active]
+- generic: PASS 新規3モジュールの初期化 PASS 伏線5場面 PASS 伏線の場所ID PASS 追加称号14件 PASS 称号29回は未達 PASS 称号30回で達成 PASS 材料なしは作れない PASS 材料2回分の表示 PASS 海底は天気なし PASS 雨セリフ9町各6本 PASS 雨の時間帯 PASS 屋外花壇 PASS 雨が水やり時刻0を上書きしない PASS 雨が未水やりの屋外花壇に届く PASS 天気設定OFF PASS 引き継ぎ検査の例外なし 引き継ぎ検査 全成功

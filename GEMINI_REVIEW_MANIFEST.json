@@ -1,0 +1,216 @@
+{
+  "commit": "d47f2db4b2eeca8fad0ae1a99e589fd3daa35300",
+  "build": "20261002104321",
+  "files": [
+    {
+      "file": "AGENTS.md",
+      "lines": 16,
+      "sha256": "02731eb1c18366a590f88068f473c1cefbf95d30b08916b931bc6053a4ad746e"
+    },
+    {
+      "file": "index.html",
+      "lines": 1053,
+      "sha256": "d9690af198f5e7415d5af030a4642b0e10d87b7bcfc2445e40d35eba0882da81"
+    },
+    {
+      "file": "pwa.js",
+      "lines": 100,
+      "sha256": "ab9824a7dcad7103fbeef8623ba3c20f1fea6da39c6fc5232df225a555d80029"
+    },
+    {
+      "file": "music.js",
+      "lines": 492,
+      "sha256": "b895417bf064665e06b742a59897a22d5fc90985debaec8ecc326e27915c8ac7"
+    },
+    {
+      "file": "art.js",
+      "lines": 500,
+      "sha256": "e7cb1d3b53cba128882f56e89fd98807b9293045d3f2ff8b72be59fe9cd16d5a"
+    },
+    {
+      "file": "data.js",
+      "lines": 662,
+      "sha256": "4f2b20e25adbfb762658f14b6c06ca7fb5f216ecdf5c114b03b9fd7fcabf3330"
+    },
+    {
+      "file": "art_mon.js",
+      "lines": 436,
+      "sha256": "41b18697baff8b8bbf916f48eb8fde484125a3280f20c05b8817c06381ff0a79"
+    },
+    {
+      "file": "art_face.js",
+      "lines": 315,
+      "sha256": "ea4b99c7501fd8f18b04d25fb652727635f637a10ab3e4907eb3ac57b1cf2ca5"
+    },
+    {
+      "file": "world.js",
+      "lines": 978,
+      "sha256": "b581f5e919982a40446ff9ea7af3907d3f918a1284a6dd8a481b8bf7385a7e97"
+    },
+    {
+      "file": "game.js",
+      "lines": 2546,
+      "sha256": "1cb1ae995f788ac6f9f1ff932efb632e60b9480273b54507608dd1b928e9f8b8"
+    },
+    {
+      "file": "settings.js",
+      "lines": 79,
+      "sha256": "305ce72fc8e5424a80d7776f11f9f116625849ec00ede7321cd3e180844b2e0b"
+    },
+    {
+      "file": "life.js",
+      "lines": 119,
+      "sha256": "66a11961b09268d9500f3481c0ad07058d29435ccd4c4333d2937f096d38cf01"
+    },
+    {
+      "file": "shrines.js",
+      "lines": 127,
+      "sha256": "d64909c0e5ad6040c8d9a271780af841b40b0835fa7ba9384c952b19d0dd7fcb"
+    },
+    {
+      "file": "base.js",
+      "lines": 96,
+      "sha256": "8762760e5c16c3572d3209ea7452771c3b4579f61655035ae1863c9e49020cb1"
+    },
+    {
+      "file": "ch4.js",
+      "lines": 159,
+      "sha256": "4f952c3c195b162976522e8796da5ad5f976ce1289efa1b9cdbe42612d0c87ba"
+    },
+    {
+      "file": "jobs.js",
+      "lines": 376,
+      "sha256": "b604a0733a4dd9450067e7fbe9db74a4953910fbeb4c5f0a03051ed70cd2b276"
+    },
+    {
+      "file": "quests.js",
+      "lines": 242,
+      "sha256": "d1ecb4cc36cc4c5136366ac2b28dae71cff01fa7f62561f96868a3806724dac4"
+    },
+    {
+      "file": "deco.js",
+      "lines": 125,
+      "sha256": "fbdbc1daf44204b19c4a1708f1bfa1ad7f15934496434a224008101f388a6135"
+    },
+    {
+      "file": "ux.js",
+      "lines": 169,
+      "sha256": "e4a6577564228428943e78c645a76fe592da4b9e060f6ab98b23c3772fceabe0"
+    },
+    {
+      "file": "onboard.js",
+      "lines": 70,
+      "sha256": "adebd77a7048ddaa9b131c4c77fbad5268318ecacf9675d4841928c26d3e80d3"
+    },
+    {
+      "file": "unstuck.js",
+      "lines": 38,
+      "sha256": "2733baf45f43220ec368dfae5ef1b86bc8ade908a8b70109bc4d7b333cceb6a8"
+    },
+    {
+      "file": "names.js",
+      "lines": 45,
+      "sha256": "b0cc4de16215b56b095576ff6bc6e07a929daf71ff0d4336a67c513d46288970"
+    },
+    {
+      "file": "balance.js",
+      "lines": 175,
+      "sha256": "c3df8e79407edf3c0cefd7955d5965fae6330f6099919d6d80b977edb1ad2757"
+    },
+    {
+      "file": "battle3d.js",
+      "lines": 151,
+      "sha256": "0e221eb3d20dfc1066a742b40059687bfca475d7f5b4ef15046b82ba144705f5"
+    },
+    {
+      "file": "talk.js",
+      "lines": 1311,
+      "sha256": "1b858cff697c7428200f2283dd089e2e67e8cb6c668fb4fe8e5cc8909161ee2c"
+    },
+    {
+      "file": "town.js",
+      "lines": 381,
+      "sha256": "5f8e26572b536954dab4ca96e546a9db8288dd0b91d5502b18f80e6e526932b9"
+    },
+    {
+      "file": "mobs.js",
+      "lines": 276,
+      "sha256": "3081ce3cc394b1be95a7f197b7d5374870767a7a1cf604b0c295f01414bf9be6"
+    },
+    {
+      "file": "monplus.js",
+      "lines": 320,
+      "sha256": "884d9b6e2a18495acf168d60ec4e70fdae0d139d2a7e36665927f54854e8efef"
+    },
+    {
+      "file": "gemini-talk.js",
+      "lines": 225,
+      "sha256": "73a921ddcc60e343ee338281cf51a8fb937af98749e1d6821cc5a9afb592d7b6"
+    },
+    {
+      "file": "jobfield.js",
+      "lines": 69,
+      "sha256": "75937562420742518ef38cc4563d4226916f8674d13d3ac24dee218c9ac86521"
+    },
+    {
+      "file": "lighthouses.js",
+      "lines": 107,
+      "sha256": "8f0c8072c304e1a460ef76dfd956e9f4e5364ff269932f62bd848e79e64f3f4c"
+    },
+    {
+      "file": "townlife.js",
+      "lines": 168,
+      "sha256": "90b589339a36140b896c1c51d7e6897cfe5c60b16759bf226bbaa6d07c985528"
+    },
+    {
+      "file": "interiors.js",
+      "lines": 160,
+      "sha256": "dd2b6845552f02e7ba063187e9e93f7cbe054067eac33d9cbbd7588c96678f12"
+    },
+    {
+      "file": "newtowns.js",
+      "lines": 157,
+      "sha256": "facaa65f6fb818833e405ebc73e585d596f942f2299f38734b584568ecdee7b5"
+    },
+    {
+      "file": "recipes.js",
+      "lines": 37,
+      "sha256": "23f2a1cbc2d89c5313a0c482ed26cc7a1c4e97bbd44c8bdb3a8e1e27b7b1ddf2"
+    },
+    {
+      "file": "payoff.js",
+      "lines": 28,
+      "sha256": "9d2ca537766e126f7319a727c0dee4a0c717b887728166cbd86a16965d595f04"
+    },
+    {
+      "file": "titles2.js",
+      "lines": 17,
+      "sha256": "9c88b3e40851a1250b158341747564cc05f72a7ac2ada1d871e6a50ae8a44377"
+    },
+    {
+      "file": "weather.js",
+      "lines": 51,
+      "sha256": "a2a56c0765180c5a4445c6208c4711caa146be285b83bb3c7d9f5c393b860788"
+    },
+    {
+      "file": "sw.js",
+      "lines": 28,
+      "sha256": "dab80cb09cb8fe12ca2b8a3763d19a44c74ce30b6242a4d967d2d45df242d762"
+    },
+    {
+      "file": "version.json",
+      "lines": 1,
+      "sha256": "ba069ad325d024334e46380800e625a6165ef63249a1ec1c6eec049b75692bee"
+    },
+    {
+      "file": "manifest.webmanifest",
+      "lines": 19,
+      "sha256": "c6408a6564c7bb879e2969997b7ebcabe0d629aaec81062316677b0cf45bfe6a"
+    },
+    {
+      "file": "check.mjs",
+      "lines": 25,
+      "sha256": "f38fc55499fc73ecdf67b59c38a9bffff62c435064e576c6cc4587c56c8b8364"
+    }
+  ]
+}

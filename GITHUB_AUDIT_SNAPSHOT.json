@@ -1,0 +1,795 @@
+{
+  "timestamp_utc": "2026-10-02T01:59:39.192256+00:00",
+  "commit": "d47f2db4b2eeca8fad0ae1a99e589fd3daa35300",
+  "repository_tree": [
+    ".devcontainer/devcontainer.json",
+    ".gitattributes",
+    ".github/workflows/backup.yml",
+    ".github/workflows/check.yml",
+    ".gitignore",
+    ".nojekyll",
+    ".nvmrc",
+    "AGENTS.md",
+    "AI_HANDOFF.md",
+    "CLAUDE.md",
+    "CLOUD_DEVELOPMENT.md",
+    "DEVELOPMENT.md",
+    "FULL_DEBUG_BASELINE.txt",
+    "FULL_DEBUG_EDGE_AFTER.txt",
+    "FULL_DEBUG_EDGE_BEFORE.txt",
+    "FULL_DEBUG_FINAL.txt",
+    "FULL_DEBUG_FIX.patch",
+    "FULL_DEBUG_MOVEMENT.txt",
+    "FULL_DEBUG_PROOF.png",
+    "FULL_DEBUG_REPORT.md",
+    "G1_AUDIT_f70088b.txt",
+    "GEMINI.md",
+    "GEMINI_CH4_SOURCE.txt",
+    "GEMINI_FOUR_PUBLISH.txt",
+    "GEMINI_FOUR_TEST.txt",
+    "GEMINI_POLISH_REPORT.txt",
+    "GEMINI_POLISH_TEST.txt",
+    "GEMINI_START.txt",
+    "GEMINI_TALK_MOBS_FILES.zip",
+    "GEMINI_TALK_MOBS_INSTRUCTIONS.md",
+    "GEMINI_TALK_MOBS_SOURCE.txt",
+    "GITHUB_STATUS.md",
+    "OPERATIONS.md",
+    "PUBLISH_CLAUDE_GAME_20261002104321/base.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/battle3d.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/game.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/index.html",
+    "PUBLISH_CLAUDE_GAME_20261002104321/interiors.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/newtowns.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/payoff.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/pwa.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/recipes.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/sw.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/titles2.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/townlife.js",
+    "PUBLISH_CLAUDE_GAME_20261002104321/version.json",
+    "PUBLISH_CLAUDE_GAME_20261002104321/weather.js",
+    "PUBLISH_FULL_DEBUG.zip",
+    "PUBLISH_NEXT.txt",
+    "README.md",
+    "ROADMAP.md",
+    "SETUP_REPORT.md",
+    "TALK_MOBS_BROWSER_TEST.txt",
+    "TEAM_CONTROL.md",
+    "WORK_STATE.md",
+    "ai-handoff-saved.png",
+    "art.js",
+    "art_face.js",
+    "art_mon.js",
+    "backup.cmd",
+    "backup.mjs",
+    "balance.js",
+    "base.js",
+    "battle3d.js",
+    "ch4.js",
+    "check.cmd",
+    "check.mjs",
+    "checkpoint.mjs",
+    "claude-saved.png",
+    "cloud-backup-success.png",
+    "correct-upload-branch.png",
+    "data.js",
+    "deco.js",
+    "dev-server.mjs",
+    "devcontainer-saved.png",
+    "development-saved.png",
+    "docs/briefs/README.md",
+    "docs/briefs/gemini-01-talk-and-mobs.md",
+    "docs/briefs/gemini-02-town-and-foreshadow.md",
+    "docs/briefs/gemini-03-monster-companions.md",
+    "docs/briefs/gemini-04-balance-design.md",
+    "docs/briefs/gemini-05-story.md",
+    "docs/briefs/gemini-06-qa-audit.md",
+    "docs/design/balance.md",
+    "docs/design/jobs-support.md",
+    "docs/design/lighthouses.md",
+    "docs/design/monsters.md",
+    "docs/design/story.md",
+    "docs/design/town-life.md",
+    "docs/lore/foreshadow.md",
+    "docs/plan/NEXT.md",
+    "docs/plan/PROMPTS.md",
+    "docs/reports/gemini-pack2-review.md",
+    "docs/reports/qa-audit.md",
+    "docs/reports/qa-round2-g1.md",
+    "docs/reports/story-climax.md",
+    "docs/reports/text-fix.md",
+    "game.js",
+    "gemini-four-mobile.png",
+    "gemini-four-monster.png",
+    "gemini-polish-test.png",
+    "gemini-saved.png",
+    "gemini-stage1-correction-sent.png",
+    "gemini-stage1-second-correction.png",
+    "gemini-talk.js",
+    "gemini-upload-waiting.png",
+    "github-branch.png",
+    "icons/apple-touch-icon.png",
+    "icons/icon-192.png",
+    "icons/icon-512.png",
+    "icons/icon-maskable-512.png",
+    "icons/icon.svg",
+    "index.html",
+    "interiors.js",
+    "jobfield.js",
+    "jobs.js",
+    "kazetomo-portable.zip",
+    "life.js",
+    "lighthouses.js",
+    "manifest.webmanifest",
+    "mobs.js",
+    "monplus.js",
+    "music.js",
+    "names.js",
+    "newtowns.js",
+    "onboard.js",
+    "package.json",
+    "payoff.js",
+    "pr11-merged.png",
+    "pwa.js",
+    "quests.js",
+    "recipes.js",
+    "settings.js",
+    "shrines.js",
+    "start-dev.cmd",
+    "sw.js",
+    "talk-mobs-checks.png",
+    "talk-mobs-mobile.png",
+    "talk.js",
+    "titles2.js",
+    "tools-saved.png",
+    "town.js",
+    "townlife.js",
+    "unstuck.js",
+    "upgrade-merged.png",
+    "upgrade-upload-blocked.png",
+    "upgrade-upload.png",
+    "upload-reset.png",
+    "ux.js",
+    "version.json",
+    "weather.js",
+    "world.js"
+  ],
+  "files_in_ops_bundle": [
+    "package.json",
+    ".gitignore",
+    ".gitattributes",
+    ".nvmrc",
+    ".nojekyll",
+    "AGENTS.md",
+    "AI_HANDOFF.md",
+    "WORK_STATE.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "OPERATIONS.md",
+    "DEVELOPMENT.md",
+    "CLOUD_DEVELOPMENT.md",
+    "ROADMAP.md",
+    "README.md",
+    "SETUP_REPORT.md",
+    ".devcontainer/devcontainer.json",
+    ".github/workflows/backup.yml",
+    ".github/workflows/check.yml",
+    "backup.cmd",
+    "backup.mjs",
+    "check.cmd",
+    "check.mjs",
+    "checkpoint.mjs",
+    "dev-server.mjs",
+    "docs/briefs/README.md",
+    "docs/briefs/gemini-01-talk-and-mobs.md",
+    "docs/briefs/gemini-02-town-and-foreshadow.md",
+    "docs/briefs/gemini-03-monster-companions.md",
+    "docs/briefs/gemini-04-balance-design.md",
+    "docs/briefs/gemini-05-story.md",
+    "docs/briefs/gemini-06-qa-audit.md",
+    "docs/design/balance.md",
+    "docs/design/jobs-support.md",
+    "docs/design/lighthouses.md",
+    "docs/design/monsters.md",
+    "docs/design/story.md",
+    "docs/design/town-life.md",
+    "docs/lore/foreshadow.md",
+    "docs/plan/NEXT.md",
+    "docs/plan/PROMPTS.md",
+    "docs/reports/gemini-pack2-review.md",
+    "docs/reports/qa-audit.md",
+    "docs/reports/qa-round2-g1.md",
+    "docs/reports/story-climax.md",
+    "docs/reports/text-fix.md",
+    "start-dev.cmd"
+  ],
+  "repo": {
+    "full_name": "mga572que-eng/kazetomo",
+    "visibility": "public",
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "size": 5864,
+    "open_issues_count": 7,
+    "allow_merge_commit": null,
+    "allow_squash_merge": null,
+    "allow_rebase_merge": null,
+    "delete_branch_on_merge": null
+  },
+  "branches": [
+    {
+      "name": "ai/codex/handoff-setup",
+      "sha": "a96a4c33b68988022aa29dd807b27d2dc678fdb3",
+      "protected": false
+    },
+    {
+      "name": "ai/shared/resumable-workflow",
+      "sha": "981302ae7cedbde4dc806a2c717729de765b1a04",
+      "protected": false
+    },
+    {
+      "name": "main",
+      "sha": "d47f2db4b2eeca8fad0ae1a99e589fd3daa35300",
+      "protected": false
+    },
+    {
+      "name": "work/balance-v1",
+      "sha": "c531aa836cdc687aadd4bd78a1a4afeb7c36a47c",
+      "protected": false
+    },
+    {
+      "name": "work/battle-3d",
+      "sha": "d7e1bbb65eed535b06a9b0f6d21704adcc6af981",
+      "protected": false
+    },
+    {
+      "name": "work/battle-motion",
+      "sha": "21d6de79deeb5b34b0a8f4d44a59d0bf20728f8f",
+      "protected": false
+    },
+    {
+      "name": "work/battle-spotlight",
+      "sha": "b21874e6762e3142c6cfa5efb48897f448b225c7",
+      "protected": false
+    },
+    {
+      "name": "work/enemy-motion",
+      "sha": "bf5bc04e96eea7b766d497893db17f6f1efee2f8",
+      "protected": false
+    },
+    {
+      "name": "work/eol-lf",
+      "sha": "992d318b3c8feac4df117aa93f0b2742b86ee18d",
+      "protected": false
+    },
+    {
+      "name": "work/fall-damage",
+      "sha": "001ee2399600f93dbe936f116b0ad86a115ec3c6",
+      "protected": false
+    },
+    {
+      "name": "work/foreshadow",
+      "sha": "0f5321f6e0c1fc32bef27a948bd0bd01af660328",
+      "protected": false
+    },
+    {
+      "name": "work/gear-bag",
+      "sha": "2808d98e90ac77e763c433afa2b05aa022531808",
+      "protected": false
+    },
+    {
+      "name": "work/handoff-update",
+      "sha": "b4b75733e084d610da624e4f6519c5d6f0c52d68",
+      "protected": false
+    },
+    {
+      "name": "work/interiors",
+      "sha": "642d0dce0fdbe278221bcb62eac890395cdc6c67",
+      "protected": false
+    },
+    {
+      "name": "work/job-steal",
+      "sha": "c84ac08835c96ca8d15a64f53770b40a52774034",
+      "protected": false
+    },
+    {
+      "name": "work/lighthouse-dungeon",
+      "sha": "bf1b83a5d4e18b6b17b41ad626fd73f4b9dcac8f",
+      "protected": false
+    },
+    {
+      "name": "work/menu-fpv",
+      "sha": "a76b406a92f6c4ef0c855b1099ee7e8087fa6a17",
+      "protected": false
+    },
+    {
+      "name": "work/naming-rule",
+      "sha": "9304fe84e73e987ca1b924fb62f39bce626e8427",
+      "protected": false
+    },
+    {
+      "name": "work/new-towns",
+      "sha": "483221a4e86929e55f2b61d1eafb34f9beaf204a",
+      "protected": false
+    },
+    {
+      "name": "work/next-plan",
+      "sha": "c1ce35130a39ece8397e3012a31dee0868bf9e89",
+      "protected": false
+    },
+    {
+      "name": "work/party-anim",
+      "sha": "2f7bab431a8276dce1a808dbc5809b142267acac",
+      "protected": false
+    },
+    {
+      "name": "work/party-talk",
+      "sha": "f7f12e2260438fed0c84d5076e264656f6220ccf",
+      "protected": false
+    },
+    {
+      "name": "work/qa-audit-fixes",
+      "sha": "3c31f5b14f4b03b22eb012e0709bb2c8ba9a92f8",
+      "protected": false
+    },
+    {
+      "name": "work/qa-round2",
+      "sha": "eb40d18bc5540d048be8ffd69a989bf357a0bd99",
+      "protected": false
+    },
+    {
+      "name": "work/rain-lines",
+      "sha": "f197882f458f2674c0ca190677de07a0c7c4e9ea",
+      "protected": false
+    },
+    {
+      "name": "work/recipe-book",
+      "sha": "383a67d384929c459a0b2162251b119207189955",
+      "protected": false
+    },
+    {
+      "name": "work/roadmap-handoff",
+      "sha": "0c6a1120fc4e9c7f637ff0065504443646907c07",
+      "protected": false
+    },
+    {
+      "name": "work/story-climax",
+      "sha": "700b66a87c785b2c7d220489192fa195605f103a",
+      "protected": false
+    },
+    {
+      "name": "work/text-fix",
+      "sha": "4d233ef7c4e842164662afdb5ef10a309696fe44",
+      "protected": false
+    },
+    {
+      "name": "work/titles2",
+      "sha": "f30ae47a940ee35acfda48f0a652b5a5f58349ae",
+      "protected": false
+    },
+    {
+      "name": "work/town-life",
+      "sha": "d57cf61996e11c90b3745f4babae07e545522ec9",
+      "protected": false
+    },
+    {
+      "name": "work/weather",
+      "sha": "be52448245c0f64ba5f94363c08e804845e5f92d",
+      "protected": false
+    }
+  ],
+  "pulls": [
+    {
+      "number": 31,
+      "title": "雨の日の台詞（9町×6）",
+      "url": "https://github.com/mga572que-eng/kazetomo/pull/31",
+      "state": "open",
+      "draft": false,
+      "head": "work/rain-lines",
+      "head_sha": "f197882f458f2674c0ca190677de07a0c7c4e9ea",
+      "base": "main"
+    },
+    {
+      "number": 30,
+      "title": "天気（雨・霧）と町の人の雨宿り・傘",
+      "url": "https://github.com/mga572que-eng/kazetomo/pull/30",
+      "state": "open",
+      "draft": false,
+      "head": "work/weather",
+      "head_sha": "be52448245c0f64ba5f94363c08e804845e5f92d",
+      "base": "main"
+    },
+    {
+      "number": 29,
+      "title": "称号の追加（新しい遊び14件）",
+      "url": "https://github.com/mga572que-eng/kazetomo/pull/29",
+      "state": "open",
+      "draft": false,
+      "head": "work/titles2",
+      "head_sha": "f30ae47a940ee35acfda48f0a652b5a5f58349ae",
+      "base": "main"
+    },
+    {
+      "number": 28,
+      "title": "伏線の回収場面（5場面・本編と照合ずみ）",
+      "url": "https://github.com/mga572que-eng/kazetomo/pull/28",
+      "state": "open",
+      "draft": false,
+      "head": "work/foreshadow",
+      "head_sha": "0f5321f6e0c1fc32bef27a948bd0bd01af660328",
+      "base": "main"
+    },
+    {
+      "number": 27,
+      "title": "敵の動きを種族ごとに（Gemini の割り当て表を採用）",
+      "url": "https://github.com/mga572que-eng/kazetomo/pull/27",
+      "state": "open",
+      "draft": false,
+      "head": "work/enemy-motion",
+      "head_sha": "bf5bc04e96eea7b766d497893db17f6f1efee2f8",
+      "base": "main"
+    },
+    {
+      "number": 26,
+      "title": "レシピ帳（作れるもの・足りない材料・手に入れ方）",
+      "url": "https://github.com/mga572que-eng/kazetomo/pull/26",
+      "state": "open",
+      "draft": false,
+      "head": "work/recipe-book",
+      "head_sha": "383a67d384929c459a0b2162251b119207189955",
+      "base": "main"
+    },
+    {
+      "number": 25,
+      "title": "主人公と仲間の関節アニメ＋第3期の分担表",
+      "url": "https://github.com/mga572que-eng/kazetomo/pull/25",
+      "state": "open",
+      "draft": false,
+      "head": "work/party-anim",
+      "head_sha": "2f7bab431a8276dce1a808dbc5809b142267acac",
+      "base": "main"
+    }
+  ],
+  "runs": [
+    {
+      "id": 36952778734,
+      "name": "Game checks",
+      "head_sha": "d47f2db4b2eeca8fad0ae1a99e589fd3daa35300",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36952778734",
+      "created_at": "2026-10-02T01:49:43Z"
+    },
+    {
+      "id": 36952777856,
+      "name": "pages build and deployment",
+      "head_sha": "d47f2db4b2eeca8fad0ae1a99e589fd3daa35300",
+      "head_branch": "main",
+      "event": "dynamic",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36952777856",
+      "created_at": "2026-10-02T01:49:42Z"
+    },
+    {
+      "id": 36952650409,
+      "name": "Game checks",
+      "head_sha": "7584698711f634ecb52f191208d4c6e7162cfe39",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36952650409",
+      "created_at": "2026-10-02T01:47:59Z"
+    },
+    {
+      "id": 36952650224,
+      "name": "pages build and deployment",
+      "head_sha": "7584698711f634ecb52f191208d4c6e7162cfe39",
+      "head_branch": "main",
+      "event": "dynamic",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36952650224",
+      "created_at": "2026-10-02T01:47:59Z"
+    },
+    {
+      "id": 36949467105,
+      "name": "Game checks",
+      "head_sha": "f197882f458f2674c0ca190677de07a0c7c4e9ea",
+      "head_branch": "work/rain-lines",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36949467105",
+      "created_at": "2026-10-02T01:08:09Z"
+    },
+    {
+      "id": 36949018622,
+      "name": "Game checks",
+      "head_sha": "be52448245c0f64ba5f94363c08e804845e5f92d",
+      "head_branch": "work/weather",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36949018622",
+      "created_at": "2026-10-02T01:02:46Z"
+    },
+    {
+      "id": 36947504777,
+      "name": "Game checks",
+      "head_sha": "f30ae47a940ee35acfda48f0a652b5a5f58349ae",
+      "head_branch": "work/titles2",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36947504777",
+      "created_at": "2026-10-02T00:44:30Z"
+    },
+    {
+      "id": 36946894821,
+      "name": "Game checks",
+      "head_sha": "0f5321f6e0c1fc32bef27a948bd0bd01af660328",
+      "head_branch": "work/foreshadow",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36946894821",
+      "created_at": "2026-10-02T00:37:12Z"
+    },
+    {
+      "id": 36946242063,
+      "name": "Game checks",
+      "head_sha": "db28700060240a008b3862c3a0af976b87bedf4a",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36946242063",
+      "created_at": "2026-10-02T00:29:25Z"
+    },
+    {
+      "id": 36946241354,
+      "name": "pages build and deployment",
+      "head_sha": "db28700060240a008b3862c3a0af976b87bedf4a",
+      "head_branch": "main",
+      "event": "dynamic",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36946241354",
+      "created_at": "2026-10-02T00:29:24Z"
+    },
+    {
+      "id": 36945919356,
+      "name": "Game checks",
+      "head_sha": "bf5bc04e96eea7b766d497893db17f6f1efee2f8",
+      "head_branch": "work/enemy-motion",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36945919356",
+      "created_at": "2026-10-02T00:25:32Z"
+    },
+    {
+      "id": 36945902889,
+      "name": "Game checks",
+      "head_sha": "f13929fbe4a55a7732b08481d413d33603c7659b",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36945902889",
+      "created_at": "2026-10-02T00:25:20Z"
+    },
+    {
+      "id": 36945901731,
+      "name": "pages build and deployment",
+      "head_sha": "f13929fbe4a55a7732b08481d413d33603c7659b",
+      "head_branch": "main",
+      "event": "dynamic",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36945901731",
+      "created_at": "2026-10-02T00:25:20Z"
+    },
+    {
+      "id": 36945899126,
+      "name": "Game checks",
+      "head_sha": "bf5bc04e96eea7b766d497893db17f6f1efee2f8",
+      "head_branch": "work/enemy-motion",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36945899126",
+      "created_at": "2026-10-02T00:25:18Z"
+    },
+    {
+      "id": 36945326098,
+      "name": "Game checks",
+      "head_sha": "383a67d384929c459a0b2162251b119207189955",
+      "head_branch": "work/recipe-book",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36945326098",
+      "created_at": "2026-10-02T00:18:29Z"
+    },
+    {
+      "id": 36945322423,
+      "name": "Game checks",
+      "head_sha": "383a67d384929c459a0b2162251b119207189955",
+      "head_branch": "work/recipe-book",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36945322423",
+      "created_at": "2026-10-02T00:18:27Z"
+    },
+    {
+      "id": 36944612652,
+      "name": "Game checks",
+      "head_sha": "2f7bab431a8276dce1a808dbc5809b142267acac",
+      "head_branch": "work/party-anim",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36944612652",
+      "created_at": "2026-10-02T00:10:06Z"
+    },
+    {
+      "id": 36944608930,
+      "name": "Game checks",
+      "head_sha": "2f7bab431a8276dce1a808dbc5809b142267acac",
+      "head_branch": "work/party-anim",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36944608930",
+      "created_at": "2026-10-02T00:10:04Z"
+    },
+    {
+      "id": 36943420896,
+      "name": "Game checks",
+      "head_sha": "47b445fe8c076c302dfd10b2a8764ec0d3119d87",
+      "head_branch": "main",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36943420896",
+      "created_at": "2026-10-01T23:56:23Z"
+    },
+    {
+      "id": 36943419736,
+      "name": "pages build and deployment",
+      "head_sha": "47b445fe8c076c302dfd10b2a8764ec0d3119d87",
+      "head_branch": "main",
+      "event": "dynamic",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36943419736",
+      "created_at": "2026-10-01T23:56:22Z"
+    }
+  ],
+  "checks": [
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success",
+      "details_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36952777856/job/110669199526",
+      "started_at": "2026-10-02T01:50:04Z",
+      "completed_at": "2026-10-02T01:50:14Z"
+    },
+    {
+      "name": "report-build-status",
+      "status": "completed",
+      "conclusion": "success",
+      "details_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36952777856/job/110669199474",
+      "started_at": "2026-10-02T01:50:03Z",
+      "completed_at": "2026-10-02T01:50:07Z"
+    },
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "details_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36952777856/job/110669153747",
+      "started_at": "2026-10-02T01:49:52Z",
+      "completed_at": "2026-10-02T01:50:01Z"
+    },
+    {
+      "name": "check",
+      "status": "completed",
+      "conclusion": "success",
+      "details_url": "https://github.com/mga572que-eng/kazetomo/actions/runs/36952778734/job/110669131919",
+      "started_at": "2026-10-02T01:49:45Z",
+      "completed_at": "2026-10-02T01:49:53Z"
+    }
+  ],
+  "pages": {
+    "unavailable": "HTTP Error 404: Not Found"
+  },
+  "deployments": [
+    {
+      "id": 6799375293,
+      "sha": "d47f2db4b2eeca8fad0ae1a99e589fd3daa35300",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-02T01:50:01Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6799375293/statuses"
+    },
+    {
+      "id": 6799353962,
+      "sha": "7584698711f634ecb52f191208d4c6e7162cfe39",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-02T01:48:10Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6799353962/statuses"
+    },
+    {
+      "id": 6798338647,
+      "sha": "db28700060240a008b3862c3a0af976b87bedf4a",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-02T00:29:36Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6798338647/statuses"
+    },
+    {
+      "id": 6798286212,
+      "sha": "f13929fbe4a55a7732b08481d413d33603c7659b",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-02T00:25:30Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6798286212/statuses"
+    },
+    {
+      "id": 6797898527,
+      "sha": "47b445fe8c076c302dfd10b2a8764ec0d3119d87",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-01T23:56:33Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6797898527/statuses"
+    },
+    {
+      "id": 6783562589,
+      "sha": "f70088b267cb89c74ebe5b8152184c5d3da3e7ab",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-01T11:54:47Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6783562589/statuses"
+    },
+    {
+      "id": 6782984417,
+      "sha": "7c699d94542f84f356b5d2bcab743019e9b76eb5",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-01T11:24:04Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6782984417/statuses"
+    },
+    {
+      "id": 6780976696,
+      "sha": "b0fd71d2e14f4223bf80a751d055fe454d37d6ee",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-01T09:34:09Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6780976696/statuses"
+    },
+    {
+      "id": 6780873181,
+      "sha": "0d8f77fbee51b0ebbc574a3bb355ccff8fc93155",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-01T09:32:09Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6780873181/statuses"
+    },
+    {
+      "id": 6779202018,
+      "sha": "301ca0705f1a1e29881c6ee71a5f5747367a6d2b",
+      "ref": "main",
+      "environment": "github-pages",
+      "created_at": "2026-10-01T08:00:21Z",
+      "statuses_url": "https://api.github.com/repos/mga572que-eng/kazetomo/deployments/6779202018/statuses"
+    }
+  ]
+}
