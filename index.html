@@ -77,7 +77,8 @@
   .m-battle{position:absolute;left:0;bottom:0;width:100%;max-height:100%;min-width:0;padding:6px 4px}
   .m-battle .m-list{grid-template-columns:1fr 1fr}
   .m-battle:not(.one) .m-list{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .m-battle:not(.one) .m-item{grid-template-columns:minmax(0,1fr);justify-items:center;padding:var(--s1)}
+  .m-battle:not(.one) .m-item{grid-template-columns:minmax(0,1fr);justify-items:center;padding:var(--s1);white-space:nowrap;font-size:min(16px,2vw)}
+  .m-battle:not(.one) .m-l{white-space:nowrap}
   .m-battle:not(.one) .m-cur{display:none}
   .m-battle .m-item{padding:var(--s2);font-size:var(--text-body);min-height:var(--control-h);touch-action:manipulation}
   .m-battle .m-x.solo{position:absolute;float:none;margin:0;width:var(--control-h);height:var(--control-h);font-size:18px;top:-50px;right:0;background:var(--win);border:2px solid var(--win-line);border-radius:6px}
@@ -172,7 +173,7 @@
   .rb{pointer-events:auto;border-radius:50%;background:var(--chip);border:1.5px solid var(--line);cursor:pointer;display:grid;place-items:center;font:700 13px var(--ui);touch-action:none;white-space:nowrap}
   /* しらべる：ラベルは 空白で 2行に 折り、長さに 合わせて 文字を 縮める（--fit は ux.js が 設定） */
   #btnAct{width:86px;height:86px;grid-row:1/3;grid-column:2;padding:8px;text-align:center;overflow:hidden}
-  #btnActLabel{display:block;max-width:100%;font-size:calc(13px * var(--fit,1));line-height:1.18;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.02em}
+  #btnActLabel{display:block;max-width:100%;font-size:max(12px,calc(13px * var(--fit,1)));line-height:1.18;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.02em}
   #btnAct.ready{background:linear-gradient(180deg,var(--flame),var(--flame-deep));color:#2a1406;border:0;box-shadow:0 0 22px rgba(243,165,74,.5)}
   #btnBuild{font-size:12px}
   @media (max-height:430px){#btnAct{width:74px;height:74px;padding:6px}}
@@ -555,6 +556,9 @@
   #bCmd{--skh:var(--bb-h)}
   #bCmd > .m-battle.one{width:min(640px,calc(var(--app-w,100vw) - 24px - var(--sl) - var(--sr)));height:var(--skh);max-height:none;background:linear-gradient(180deg,#141c3c,#0c1230)!important;z-index:40}
   #bCmd > .m-battle.one .m-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;align-content:start}
+  #bCmd > .m-battle.one .m-item:not(.on) .m-h{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
+  #bCmd > .m-battle.one .m-item.on .m-h{display:block;overflow:visible}
+  #bCmd:has(> .m-battle.one .m-h) .bcrumb::after{content:'  ↕ スクロール';font:12px var(--ui);color:var(--gold)}
   #battle:has(#bCmd > .m-battle.one) .bctl{visibility:hidden}
   #bCmd:has(> .m-battle.one) .bnav{bottom:calc(var(--skh) + 6px);flex-direction:row;align-items:center}
   .bctl{top:auto!important;right:calc(20px + var(--sr));bottom:calc(var(--bb-h) - var(--control-h) + var(--sb));gap:8px;z-index:3}
@@ -767,7 +771,7 @@
   .foe.actor .foe-art{scale:1.07;filter:drop-shadow(0 0 10px rgba(255,90,110,.9)) drop-shadow(0 0 3px #fff)}
   .foe.lunge2{animation:foeLunge2 calc(.5s / var(--bs,1)) cubic-bezier(.4,0,.3,1)}
   @keyframes foeLunge2{0%{translate:0 0}22%{translate:calc(var(--lx) * -.12) calc(var(--ly) * -.12 - 6px);scale:.96 1.05}48%{translate:var(--lx) var(--ly);scale:1.14 .92}100%{translate:0 0;scale:1}}
-  .foe.tgt .foe-name{box-shadow:0 0 0 2px #ffd36a,0 0 12px rgba(255,211,106,.8)}
+  .foe.tgt .foe-name,.foe.preview .foe-name{box-shadow:0 0 0 2px #ffd36a,0 0 12px rgba(255,211,106,.8)}
   .foe.dodge{animation:foeDodge calc(.45s / var(--bs,1)) ease-out}@keyframes foeDodge{40%{translate:26px -8px;opacity:.6}}
   /* ステージの いろみ（属性） */
   #bTint{position:absolute;inset:0;background:var(--tc,transparent);opacity:0;transition:opacity calc(.25s / var(--bs,1)) ease-out;mix-blend-mode:multiply}
@@ -972,7 +976,7 @@
   @media (prefers-reduced-motion:reduce){.al-body,.sb{animation:none}}
   /* ===== /battle v8 ===== */
 #stam{left:18px!important;top:auto!important;bottom:calc(92px + env(safe-area-inset-bottom));z-index:30;width:220px;height:36px;mask:none;-webkit-mask:none;background:#13251fe8;border-radius:8px;padding:6px 10px;pointer-events:none;opacity:1}
-#stam span{display:block;font-size:11px;color:#fff;white-space:nowrap}#stam i{display:block;height:9px;background:#314538;max-width:100%;border-radius:3px;margin-top:4px}#stam i b{display:block;height:100%;background:#82e568;border-radius:3px}#stam.low{background:#3a1e17}#stam.low i b{background:#ff8156}
+#stam span{display:block;font-size:12px;color:#fff;white-space:nowrap}#stam i{position:relative;display:block;height:9px;background:#314538;max-width:100%;border-radius:3px;margin-top:4px}#stam i b{display:block;height:100%;background:#82e568;border-radius:3px}#stam i::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(var(--stam-unit) - 1px),#13251f calc(var(--stam-unit) - 1px) var(--stam-unit));border-radius:3px}#stam.low{background:#3a1e17}#stam.low i b{background:#ff8156}
 @media(max-width:600px){#stam{left:12px!important;bottom:calc(135px + env(safe-area-inset-bottom));width:175px}}
 
 #orientationNotice{display:none;position:fixed;inset:0;z-index:10000;background:#0b1016;color:#fff;padding:24px;text-align:center;align-items:center;justify-content:center;flex-direction:column;gap:18px;font:18px/1.7 var(--ui);touch-action:none}
@@ -1010,7 +1014,7 @@
   .b-join svg{width:110px;height:110px}.b-join h3{font:700 18px var(--ui);color:#ffe38a}.b-join p{font:14px/1.5 var(--ui)}
   .map .mk.me,.map .mk.goal{z-index:8;font:700 13px var(--ui);padding:4px 6px;border:2px solid #fff;border-radius:8px;background:#0d3152;text-shadow:none;animation:none;box-shadow:0 2px 6px #000}
   .map .mk.goal{background:#583d00;color:#ffec91}.map .mk.me{color:#fff}.map .mk i{font-style:normal}
-  #mapGoalText{position:absolute;right:calc(24px + clamp(92px,24vh,132px) + var(--sr));top:calc(56px + var(--st));max-width:160px;background:#0e2039eF;color:#ffe38a;border-radius:6px;padding:4px 7px;font:700 12px/1.35 var(--ui);pointer-events:none}
+  #mapGoalText b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#mapGoalText span{display:block;margin-top:3px;color:#f4f0e6}#mapGoalText{position:absolute;right:calc(24px + clamp(92px,24vh,132px) + var(--sr));top:calc(56px + var(--st));max-width:160px;background:#0e2039eF;color:#ffe38a;border-radius:6px;padding:4px 7px;font:700 12px/1.35 var(--ui);pointer-events:none}
   @media(orientation:landscape) and (max-height:500px){
     /* 戦場を 広く（横の 短い 画面）：味方カードは 1段（名前と Lv を 横に）、下段は 画面の 約3割、メッセージは 半透明 */
     #battle .pc-face{width:28px;height:28px}#battle .pc{padding:3px 6px 22px 3px;gap:5px}#battle .pc-wpn{display:none}
@@ -1022,9 +1026,6 @@
     #battle .m-battle:not(.one) .m-item{min-height:var(--control-h);padding:2px var(--s1);font-size:15px;white-space:nowrap}
     /* 敵が 3体 いるときは、弱点の 札を 選んでいる 敵だけに（重なって 読めなく なるため） */
     #bFoes:has(> .foe:nth-child(3)) .foe:not(.tgt) .foe-weak{display:none}
-    /* 3体の ときは まん中の 名札を 1段 上へ ずらして 重ならないように */
-    #bFoes:has(> .foe:nth-child(3)) .foe:nth-child(3n+2) .foe-name{transform:translateY(-118%)}
-    #bFoes:has(> .foe:nth-child(3)) .foe-name{font-size:12px;padding:2px 6px}
     /* とくぎの 一覧：下段より 少し 高く 広げ、選んでいない 技の 説明は 1行に（選んだ 技は 全文） */
     #bCmd{--skh:calc(var(--bb-h) + 84px)}
     #bCmd > .m-battle.one .m-item:not(.on) .m-h{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1077,53 +1078,53 @@
 <button class="chip-btn" id="btnMute" type="button">♪ ON</button>
 <div id="rotate"><div><svg width="64" height="64" viewBox="0 0 64 64"><rect x="18" y="6" width="28" height="52" rx="5" fill="none" stroke="#f4f0e6" stroke-width="3"/><circle cx="32" cy="51" r="2.5" fill="#f4f0e6"/></svg><p>端末を 横に してあそんでね</p></div></div>
 
-<script src="pwa.js?v=20261002212900"></script>
-<script src="music.js?v=20261002212900"></script>
-<script src="art.js?v=20261002212900"></script>
-<script src="data.js?v=20261002212900"></script>
-<script src="art_mon.js?v=20261002212900"></script>
-<script src="art_face.js?v=20261002212900"></script>
-<script src="world.js?v=20261002212900"></script>
-<script src="game.js?v=20261002212900"></script>
-<script src="settings.js?v=20261002212900"></script>
-<script src="life.js?v=20261002212900"></script>
-<script src="shrines.js?v=20261002212900"></script>
-<script src="base.js?v=20261002212900"></script>
-<script src="ch4.js?v=20261002212900"></script>
-<script src="jobs.js?v=20261002212900"></script>
-<script src="quests.js?v=20261002212900"></script>
-<script src="deco.js?v=20261002212900"></script>
-<script src="ux.js?v=20261002212900"></script>
-<script src="onboard.js?v=20261002212900"></script>
-<script src="unstuck.js?v=20261002212900"></script>
-<script src="names.js?v=20261002212900"></script>
-<script src="balance.js?v=20261002212900"></script>
-<script src="battle3d.js?v=20261002212900"></script>
-<script src="talk.js?v=20261002212900"></script>
-<script src="town.js?v=20261002212900"></script>
-<script src="mobs.js?v=20261002212900"></script>
-<script src="monplus.js?v=20261002212900"></script>
-<script src="gemini-talk.js?v=20261002212900"></script>
-<script src="jobfield.js?v=20261002212900"></script>
-<script src="lighthouses.js?v=20261002212900"></script>
-<script src="townlife.js?v=20261002212900"></script>
-<script src="interiors.js?v=20261002212900"></script>
-<script src="newtowns.js?v=20261002212900"></script>
-<script src="recipes.js?v=20261002212900"></script>
-<script src="payoff.js?v=20261002212900"></script>
-<script src="titles2.js?v=20261002212900"></script>
-<script src="weather.js?v=20261002212900"></script>
-<script src="townbuildings.js?v=20261002212900"></script>
-<script src="fieldexplore.js?v=20261002212900"></script>
-<script src="fieldtravel.js?v=20261002212900"></script>
-<script src="adventurelife.js?v=20261002212900"></script>
-<script src="casino.js?v=20261002212900"></script>
-<script src="chestfx.js?v=20261002212900"></script>
-<script src="bossfx.js?v=20261002212900"></script>
-<script src="dungeonfx.js?v=20261002212900"></script>
-<script src="funplus.js?v=20261002212900"></script>
-<script src="secrets.js?v=20261002212900"></script>
-<script src="mimic.js?v=20261002212900"></script>
-<script src="tomotree.js?v=20261002212900"></script>
-<script src="perf.js?v=20261002212900"></script>
+<script src="pwa.js?v=20261003175157"></script>
+<script src="music.js?v=20261003175157"></script>
+<script src="art.js?v=20261003175157"></script>
+<script src="data.js?v=20261003175157"></script>
+<script src="art_mon.js?v=20261003175157"></script>
+<script src="art_face.js?v=20261003175157"></script>
+<script src="world.js?v=20261003175157"></script>
+<script src="game.js?v=20261003175157"></script>
+<script src="settings.js?v=20261003175157"></script>
+<script src="life.js?v=20261003175157"></script>
+<script src="shrines.js?v=20261003175157"></script>
+<script src="base.js?v=20261003175157"></script>
+<script src="ch4.js?v=20261003175157"></script>
+<script src="jobs.js?v=20261003175157"></script>
+<script src="quests.js?v=20261003175157"></script>
+<script src="deco.js?v=20261003175157"></script>
+<script src="ux.js?v=20261003175157"></script>
+<script src="onboard.js?v=20261003175157"></script>
+<script src="unstuck.js?v=20261003175157"></script>
+<script src="names.js?v=20261003175157"></script>
+<script src="balance.js?v=20261003175157"></script>
+<script src="battle3d.js?v=20261003175157"></script>
+<script src="talk.js?v=20261003175157"></script>
+<script src="town.js?v=20261003175157"></script>
+<script src="mobs.js?v=20261003175157"></script>
+<script src="monplus.js?v=20261003175157"></script>
+<script src="gemini-talk.js?v=20261003175157"></script>
+<script src="jobfield.js?v=20261003175157"></script>
+<script src="lighthouses.js?v=20261003175157"></script>
+<script src="townlife.js?v=20261003175157"></script>
+<script src="interiors.js?v=20261003175157"></script>
+<script src="newtowns.js?v=20261003175157"></script>
+<script src="recipes.js?v=20261003175157"></script>
+<script src="payoff.js?v=20261003175157"></script>
+<script src="titles2.js?v=20261003175157"></script>
+<script src="weather.js?v=20261003175157"></script>
+<script src="townbuildings.js?v=20261003175157"></script>
+<script src="fieldexplore.js?v=20261003175157"></script>
+<script src="fieldtravel.js?v=20261003175157"></script>
+<script src="adventurelife.js?v=20261003175157"></script>
+<script src="casino.js?v=20261003175157"></script>
+<script src="chestfx.js?v=20261003175157"></script>
+<script src="bossfx.js?v=20261003175157"></script>
+<script src="dungeonfx.js?v=20261003175157"></script>
+<script src="funplus.js?v=20261003175157"></script>
+<script src="secrets.js?v=20261003175157"></script>
+<script src="mimic.js?v=20261003175157"></script>
+<script src="tomotree.js?v=20261003175157"></script>
+<script src="perf.js?v=20261003175157"></script>
 </html>

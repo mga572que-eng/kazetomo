@@ -13,9 +13,12 @@ export async function boot({ render = false, chapter = '#btnCh3' } = {}) {
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   page.on('pageerror', e => errors.push(e.message));
   await ctx.addInitScript(r => { localStorage.setItem('kz-guide-seen', 'x'); if (!r) window.__norender = 1; }, render);
-  try { await page.goto(GAME + '#debug', {waitUntil:'domcontentloaded', timeout:60000}); }
-  catch (error) { await browser.close(); throw error; }
-  for (const s of ['#splash', chapter, '.slot[data-n="1"]', '#nameForm button']) { await page.waitForTimeout(600); try { await page.click(s, { force: true, timeout: 2000 }); } catch (_) {} }
+  try {
+    await page.goto(GAME + '#debug', {waitUntil:'domcontentloaded', timeout:60000});
+    const splash=page.locator('#splash');if(await splash.isVisible())await splash.click({timeout:60000});
+    for(const selector of [chapter,'.slot[data-n="1"]','#nameForm button'])await page.locator(selector).click({timeout:60000});
+    await page.waitForFunction(()=>document.getElementById('title').hidden);
+  } catch (error) { await browser.close(); throw error; }
   await idle(page); await page.evaluate(() => { KZ.G.tips = new Proxy(KZ.G.tips || {}, { get: () => 1 }); });
   return { browser, page, errors };
 }

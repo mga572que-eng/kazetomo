@@ -120,20 +120,31 @@
     return { eye, tgt }; };
   // 目印（2D演出の 位置）を 3Dの 位置へ：レンダーの あと（VPが 新しい）に うごかす
   H.b3dAnchors = () => { if (!A) return; const P = B.P || [], F = B.F || [];
-    const place = (x, el, art, isFoe) => { const st = S.get(x); if (!st || !el || st.sx == null || !isFinite(st.sx)) return; const h = tall(x);
-      const a = World.project([st.sx, st.sy + h * .5, st.sz]), b = World.project([st.sx, st.sy + h, st.sz]); if (!a || !b || !isFinite(a[0]) || !isFinite(a[1]) || !isFinite(b[1])) { el.style.visibility = 'hidden'; return; }
-      el.style.visibility = ''; let px = Math.max(36, Math.min(260, Math.abs(a[1] - b[1]) * 2.1)), sy = a[1];
-      if (isFoe) { const top = $('bParty').getBoundingClientRect().bottom + 4, bottom = $('bBottom').getBoundingClientRect().top - 4;
-        const artBox = el.querySelector('.foe-art');
-        const labelH = Math.max(0, el.getBoundingClientRect().height - (artBox ? artBox.getBoundingClientRect().height : 0));
-        px = Math.max(1, Math.min(px, bottom - top - labelH));
-        sy = Math.max(top + px / 2, Math.min(sy, bottom - px / 2 - labelH)); }
-      el.style.setProperty('--sx', a[0].toFixed(1) + 'px'); el.style.setProperty('--sy', sy.toFixed(1) + 'px'); el.style.setProperty('--fw', px.toFixed(0) + 'px');
-      if (isFoe) { const edge = $('bBottom').getBoundingClientRect().top - 4, actual = el.getBoundingClientRect().bottom;
-        if (actual > edge) el.style.setProperty('--sy', (sy - actual + edge).toFixed(1) + 'px'); }
-      el.classList.toggle('m3', !!st.mesh); };
-    P.forEach((m, i) => place(m, $('al' + i), null, false)); F.forEach((m, i) => place(m, $('foe' + i), null, true)); };
-  const resetDom = () => document.querySelectorAll('#battle .al, #battle .foe').forEach(e => { ['--sx', '--sy', '--fw'].forEach(k => e.style.removeProperty(k)); e.style.visibility = ''; e.classList.remove('m3'); });
+    // 読み取りを先にまとめる。styleを書いた後にはレイアウトを読まない。
+    const top = $('bParty').getBoundingClientRect().bottom + 4, bottom = $('bBottom').getBoundingClientRect().top - 4;
+    const width = $('battle').getBoundingClientRect().width;
+    const read = (x, el, foe) => { const st = S.get(x); if (!st || !el || st.sx == null || !isFinite(st.sx)) return null;
+      const h = tall(x), a = World.project([st.sx, st.sy + h * .5, st.sz]), b = World.project([st.sx, st.sy + h, st.sz]);
+      if (!a || !b || !isFinite(a[0]) || !isFinite(a[1]) || !isFinite(b[1])) return {el,hidden:true};
+      const art = el.querySelector('.foe-art'), tag = el.querySelector('.al-n');
+      return {el,st,foe,a,px:Math.max(36,Math.min(260,Math.abs(a[1]-b[1])*2.1)),
+        footer:foe ? Math.max(0,el.offsetHeight-(art ? art.offsetHeight : 0)) + 2 : 0,
+        tagH:tag ? tag.getBoundingClientRect().height : 0}; };
+    const allies=P.map((m,i)=>read(m,$('al'+i),false)).filter(Boolean), foes=F.map((m,i)=>read(m,$('foe'+i),true)).filter(Boolean);
+    const visible=foes.filter(q=>!q.hidden).sort((a,b)=>a.a[0]-b.a[0]), gap=Math.min(88,(width-104)/Math.max(1,visible.length-1));
+    visible.forEach((q,i)=>{q.sx=Math.max(52,Math.min(width-52,q.a[0]));if(i)q.sx=Math.max(q.sx,visible[i-1].sx+gap);});
+    for(let i=visible.length-1;i>=0;i--){visible[i].sx=Math.min(visible[i].sx,i+1<visible.length?visible[i+1].sx-gap:width-52);}
+    visible.forEach((q,i)=>{const left=i ? q.sx-visible[i-1].sx : 2*(q.sx-12), right=i+1<visible.length ? visible[i+1].sx-q.sx : 2*(width-12-q.sx);
+      q.labelW=Math.max(1,Math.min(260,left-8,right-8));});
+    for (const q of [...allies,...foes]) { const el=q.el;if(q.hidden){el.style.visibility='hidden';continue;}
+      let px=q.px,sy=q.a[1];
+      if(q.foe){px=Math.max(1,Math.min(px,bottom-top-q.footer));sy=Math.max(top+px/2,Math.min(sy,bottom-px/2-q.footer));}
+      else {px=Math.max(1,Math.min(px,bottom-top-q.tagH-4));sy=Math.max(top+px/2+q.tagH+4,Math.min(sy,bottom-px/2));}
+      el.style.visibility='';el.style.setProperty('--sx',(q.sx ?? q.a[0]).toFixed(1)+'px');el.style.setProperty('--sy',sy.toFixed(1)+'px');el.style.setProperty('--fw',px.toFixed(0)+'px');
+      if(q.foe)el.style.setProperty('--label-w',q.labelW.toFixed(1)+'px');el.classList.toggle('m3',!!q.st.mesh);
+    }
+  };
+  const resetDom = () => document.querySelectorAll('#battle .al, #battle .foe').forEach(e => { ['--sx', '--sy', '--fw', '--label-w'].forEach(k => e.style.removeProperty(k)); e.style.visibility = ''; e.classList.remove('m3'); });
 
   // ---------- 見た目 ----------
   const css = document.createElement('style');
@@ -144,10 +155,16 @@
   #battle.b3d .al .al-art,#battle.b3d .al .al-wpn,#battle.b3d .al .al-shadow{opacity:0!important}
   #battle.b3d .al .al-body{animation:none}
   #battle.b3d .al.guard .al-body::before,#battle.b3d .al.tgt .al-body::after{opacity:1}
-  #battle.b3d #bFoes{display:block;padding:0;scale:1!important;translate:none!important}
-  #battle.b3d #bAllies{scale:1!important;translate:none!important}
-  #battle.b3d .foe{position:fixed;left:var(--sx,-300px);top:var(--sy,-300px);translate:-50% calc(var(--fw,120px) / -2);transition:none}
+  #battle.b3d #bFoes{display:block;padding:0;scale:none!important;translate:none!important}
+  #battle.b3d #bAllies{scale:none!important;translate:none!important}
+  #battle.b3d .foe{grid-template-columns:minmax(0,1fr);width:var(--label-w,160px);min-width:0;position:fixed;left:var(--sx,-300px);top:var(--sy,-300px);translate:-50% calc(var(--fw,120px) / -2);transition:none}
   #battle.b3d .foe .foe-art{width:var(--fw,120px)!important;height:var(--fw,120px)!important}
+  #battle.b3d .foe .foe-name{width:100%;max-width:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #battle.b3d .foe .bar{width:100%;min-width:0}
+  #battle.b3d .foe .foe-weak{width:100%;min-width:0;height:24px;overflow:hidden}
+  #battle.b3d .foe .weak{white-space:nowrap;overflow:hidden;font-size:11px}
+  #battle.b3d .foe:not(.tgt):not(.actor):not(.preview) .foe-weak{visibility:hidden}
+  #battle.b3d .foe.preview .foe-weak,#battle.b3d .foe.tgt .foe-weak,#battle.b3d .foe.actor .foe-weak{width:max-content;max-width:calc(100vw - 24px)}
   #battle.b3d .foe.m3 .foe-art{opacity:0}
   #battle.b3d .foe.m3 .foe-shadow{display:none}
   #battle.b3d.spot .foe:not(.actor):not(.tgt) .foe-art{filter:none}

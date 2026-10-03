@@ -17,6 +17,7 @@
   // 軸に そろった 箱（hw,hd＝幅・奥行きの 半分）。4角柱を 45度 まわして つくる
   const box = (g, hw, hd, y0, y1, col, x = 0, z = 0) => { const i0 = g.p.length; prism(g, Math.SQRT1_2, Math.SQRT1_2, y0, y1, 4, col); for (let i = i0; i < g.p.length; i += 3) { const px = g.p[i], pz = g.p[i + 2], nx = g.n[i], nz = g.n[i + 2]; g.p[i] = (px - pz) * Math.SQRT1_2 * 2 * hw + x; g.p[i + 2] = (px + pz) * Math.SQRT1_2 * 2 * hd + z; g.n[i] = (nx - nz) * Math.SQRT1_2; g.n[i + 2] = (nx + nz) * Math.SQRT1_2; } };
   const SHAPES = {
+    houseLamp: g => { box(g, .15, .08, .2, .6, DARK); seg(g, [0, .45, 0], [0, .45, .3], .04, .04, 4, IRON); box(g, .18, .16, .35, .7, solid([1, .73, .3], .75), 0, .32); box(g, .21, .19, .7, .75, IRON, 0, .32); },
     tansu: g => { box(g, .45, .25, 0, 1.3, WOOD); box(g, .47, .27, 1.3, 1.36, DARK); for (let k = 0; k < 3; k++) { box(g, .42, .02, .1 + k * .4, .45 + k * .4, hex('#b07a4a'), 0, .25); for (const x of [-.18, .18]) ico(g, .03, [x, .28 + k * .4, .28], hex('#f3c15a'), 0); } },
     shelf: g => { for (const x of [-.62, .62]) prism(g, .06, .06, 0, 1.9, 4, DARK, x, 0, 1, 4); for (let k = 0; k < 4; k++) { seg(g, [-.62, .05 + k * .48, 0], [.62, .05 + k * .48, 0], .05, .05, 4, WOOD);
       for (let j = 0; j < 7; j++) prism(g, .055, .055, .1 + k * .48, .38 + k * .48 - (j % 3) * .03, 4, hex(['#b84a3a', '#3a6aa8', '#4a8a4a', '#d8a83a', '#7a4a8a', '#c86a3a', '#3a3a5a'][(j + k) % 7]), -.45 + j * .15, .05, 1, 3.5); } },
@@ -105,10 +106,23 @@
   function buildShell(r) { const R0 = ROOM[r], prev = W.region; W.setRegion(r);
     for (let a = -9; a <= 9; a++) for (let b = -9; b <= 9; b++) { B.set(R0.x + a, R0.y - 1, R0.z + b, 1, true, r); B.set(R0.x + a, R0.y, R0.z + b, 0, true, r); }
     W.setRegion(prev); }
-  function dressShell(r, kind) { const R0 = ROOM[r], prev = W.region; W.setRegion(r); const S = (a, h, b, t) => B.set(R0.x + a, R0.y + h, R0.z + b, t, true, r);
-    for (let a = -8; a <= 8; a++) for (let b = -8; b <= 8; b++) { S(a, 0, b, FLOOR[kind] ?? 0); for (let h = 1; h <= 4; h++) B.rm(R0.x + a, R0.y + h, R0.z + b, r); }
-    for (let a = -8; a <= 8; a++) for (let b = -8; b <= 8; b++) { if (Math.abs(a) < 10 && Math.abs(b) < 8) continue; for (let h = 1; h <= (b === 8 && Math.abs(a) < 8 ? 1 : 3); h++) { /* 入口がわの 壁は 低く（カメラから 中が 見える） */ const win = h === 2 && ((Math.abs(a) === 8 && (b === -2 || b === 2)) || (b === -8 && (a === -3 || a === 3))); S(a, h, b, Math.abs(a) === 8 && Math.abs(b) === 8 ? 5 : win ? 2 : (WALL[kind] ?? 4)); } }
-    for (let a = -7; a <= 7; a++) for (let h = a === 0 ? 1 : 2; h <= 3; h++) S(a, h, 8, 19); // 戸口と 低い 壁の 上（見えない 壁：外は 空なので）
+  function dressShell(r, kind) { const R0 = ROOM[r], prev = W.region; W.setRegion(r); const S = (a, h, b, t) => { const x=R0.x+a,y=R0.y+h,z=R0.z+b; if (B.has(x,y,z) && !B.isProt(x,y,z)) return; B.set(x,y,z,t,true,r); };
+    // 高い閉天井。カメラも既存のブロック遮蔽判定で室内に収まり、空が見えない。
+    for (let a = -8; a <= 8; a++) for (let b = -8; b <= 8; b++) {
+      S(a, 0, b, FLOOR[kind] ?? 0);
+      for (let h = 1; h <= 8; h++) if (B.isProt(R0.x+a,R0.y+h,R0.z+b)) B.rm(R0.x + a, R0.y + h, R0.z + b, r);
+      S(a, 7, b, 0); S(a, 8, b, 3);
+      if (Math.abs(a) !== 8 && Math.abs(b) !== 8) continue;
+      for (let h = 1; h <= 6; h++) {
+        if (b === 8 && (a === 0 || a === 1) && h <= 3) continue; // 元の出入口をふさがない
+        const win = (h === 2 || h === 3) && ((Math.abs(a) === 8 && (b === -2 || b === 2)) || (b === -8 && (a === -3 || a === 3)));
+        const beam = h === 4 || h === 6 || Math.abs(a) === 8 && Math.abs(b) === 8;
+        S(a, h, b, beam ? 5 : win ? 2 : (WALL[kind] ?? 4));
+      }
+    }
+    // 梁を天井より下に出し、入口の上にもまぐさを置く。
+    for (const b of [-5, 0, 5]) for (let a = -7; a <= 7; a++) S(a, 6, b, 5);
+    for (let a = 0; a <= 1; a++) S(a, 4, 8, 5);
     W.setRegion(prev); }
   let cur = null; // { r, h, kind, props: [{k,x,z,yaw,kind,key,...}], back, pitch }
   function furnish(r, h) { const R0 = ROOM[r], kind = KIND[h.id] || 'home', list = [...BASE, ...(EXTRA[kind] || [])];
@@ -116,13 +130,13 @@
       const p = { k, x: R0.x + a * 1.6 + .5, z: R0.z + b * 1.6 + .5, yaw: yaw || 0, kind: sk || null, ...(opt || {}) }; if (sk) p.key = `${r}:${h.id}:${sk}:${a},${b}`; props.push(p); }
     // 当たり判定（見えない ブロック）
     const prev = W.region; W.setRegion(r); for (const p of props) if (!['rug', 'net', 'cat', 'flower0'].includes(p.k)) { const cells = [[Math.floor(p.x), Math.floor(p.z)]]; if (p.k === 'bed') cells.push([Math.floor(p.x), Math.floor(p.z + .6)]);
-      for (const [cx, cz] of cells) for (let h = 1; h <= 2; h++) B.set(cx, R0.y + h, cz, 19, true, r); } W.setRegion(prev);
+      for (const [cx, cz] of cells) for (let h = 1; h <= 2; h++) if (!B.has(cx,R0.y+h,cz) || B.isProt(cx,R0.y+h,cz)) B.set(cx, R0.y + h, cz, 19, true, r); } W.setRegion(prev);
     return props; }
   async function enter(h) { const r = G().region, d = doorOf(h); dressShell(r, KIND[h.id] || 'home'); const props = furnish(r, h); const R0 = ROOM[r];
-    const nc = { r, h, kind: KIND[h.id] || 'home', props, back: d.out, pitch: K.cam.pitch };
-    await K.fade(true); cur = nc; const p = K.player; p.x = R0.x + .5; p.z = R0.z + 6.5; p.y = R0.y + 1.02; p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.enemies = []; K.cam.yaw = Math.PI; p.yaw = Math.PI; K.cam.pitch = Math.max(K.cam.pitch, .62); await K.wait(150); await K.fade(false);
+    const nc = { r, h, kind: KIND[h.id] || 'home', props, back: d.out, pitch: K.cam.pitch, dist: K.cam.dist };
+    await K.fade(true); cur = nc; const p = K.player; p.x = R0.x + .5; p.z = R0.z + 6.5; p.y = R0.y + 1.02; p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.enemies = []; K.cam.yaw = Math.PI; p.yaw = Math.PI; K.cam.pitch = .35; K.cam.dist = 6; await K.wait(150); await K.fade(false);
     const g = K.G; g.housesIn = g.housesIn || {}; g.housesIn[`${r}:${h.id}`] = 1; K.toast(`${NAMEH[h.id] || '家'}に おじゃました`, 1500); }
-  async function leave() { if (!cur) return; const c = cur; await K.fade(true); const p = K.player; p.x = c.back.x; p.z = c.back.z; p.y = K.surfaceAt(p.x, p.z, 99); p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.cam.pitch = c.pitch; p.yaw = c.h.yaw; K.cam.yaw = c.h.yaw; cur = null; await K.wait(150); await K.fade(false); }
+  async function leave() { if (!cur) return; const c = cur; await K.fade(true); const p = K.player; p.x = c.back.x; p.z = c.back.z; p.y = K.surfaceAt(p.x, p.z, 99); p.vx = p.vy = p.vz = 0; K.trail.length = 0; K.cam.pitch = c.pitch; K.cam.dist = c.dist; p.yaw = c.h.yaw; K.cam.yaw = c.h.yaw; cur = null; await K.wait(150); await K.fade(false); }
   const inRoom = () => cur && G().region === cur.r && Math.abs(K.player.x - ROOM[cur.r].x - .5) < 10 && Math.abs(K.player.z - ROOM[cur.r].z - .5) < 10 && K.player.y > ROOM[cur.r].y - 3;
   // ---------- 町の 外の しらべもの（樽・ツボ・木箱）と 花だん ----------
   const outside = {}; // town.key -> [{k,x,z,yaw,kind,key}]
@@ -140,11 +154,11 @@
   for (let r = 0; r < 4; r++) buildShell(r);
   let checked = false;
   H.frame.push((dt, T) => { for (const k in MESH) MESH[k].n = 0; if (K.phase !== 'field' || (K.B && K.B.active)) return; const g = G(), r = g.region, pl = K.player;
-    if (!checked) { checked = true; const R0 = ROOM[r]; if (Math.abs(pl.x - R0.x) < 10 && Math.abs(pl.z - R0.z) < 10 && pl.y > R0.y - 3) { const t = K.REG[r].town; pl.x = t.x + 2; pl.z = t.z + 4; pl.y = K.surfaceAt(pl.x, pl.z, 99); K.trail.length = 0; } }
+    if (!checked && !cur) { checked = true; const R0 = ROOM[r]; if (Math.abs(pl.x - R0.x) < 10 && Math.abs(pl.z - R0.z) < 10 && pl.y > R0.y - 3) { const t = K.REG[r].town; pl.x = t.x + 2; pl.z = t.z + 4; pl.y = K.surfaceAt(pl.x, pl.z, 99); K.trail.length = 0; } }
     const draw = (k, x, y, z, yaw) => { const m = meshOf(k); if (m.n < m.maxN) m.set(m.n++, x, y, z, 1, yaw); };
-    if (cur && inRoom()) { K.enemies = []; const y0 = ROOM[r].y + 1; for (const p of cur.props) { let k = p.k; if (k === 'flower0' && p.key) k = 'flower' + gstate(p.key); let x = p.x, z = p.z, yaw = p.yaw;
+    if (cur && inRoom()) { K.enemies = []; const y0 = ROOM[r].y + 1; for (const x of [-6, 6]) draw('houseLamp', ROOM[r].x + x + .5, y0 + 1.5, ROOM[r].z - 7.4, 0); for (const p of cur.props) { let k = p.k; if (k === 'flower0' && p.key) k = 'flower' + gstate(p.key); let x = p.x, z = p.z, yaw = p.yaw;
         if (k === 'cat') { yaw = p.yaw + Math.sin(T * .4) * .8; x += Math.sin(T * .3) * .4; } draw(k, x, y0 + (['net'].includes(k) ? .9 : 0), z, yaw); } return; }
-    if (cur && !inRoom()) { if (K.cam.pitch > cur.pitch) K.cam.pitch = cur.pitch; cur = null; }
+    if (cur && !inRoom()) { K.cam.pitch = cur.pitch; K.cam.dist = cur.dist; cur = null; }
     if (!K.townLife) return; for (const T0 of K.townLife.TOWNS) { if (T0.r !== r) continue; const c = T0.at(); if (!c || dist(c, pl) > 90) continue;
       for (const o of outdoor(T0)) draw(o.k === 'flower' ? 'flower' + gstate(o.key) : o.k, o.x, o.y, o.z, o.yaw); } });
   // ---------- しらべる ----------
@@ -163,5 +177,5 @@
   H.frame.push(() => { plates.forEach(e => e.hidden = true); if (K.phase !== 'field' || (K.B && K.B.active) || cur || document.body.classList.contains('modal')) return; const r = G().region, pl = K.player;
     const list = houses(r).map(h => ({ h, d: doorOf(h) })).map(o => ({ ...o, k: Math.hypot(o.d.x - pl.x, o.d.z - pl.z) })).filter(o => o.k < 18).sort((a, b) => a.k - b.k).slice(0, 3);
     list.forEach((o, i) => { const y = K.surfaceAt(o.d.x, o.d.z, K.hAt(o.d.x, o.d.z) + 2) + 2.4, p = World.project([o.d.x, y, o.d.z]); if (!p || p[1] < 100 || p[0] < 60 || p[0] > innerWidth - 60 || (p[0] > innerWidth - 220 && p[1] < 200)) return; /* 上の HUD・ミニマップと 重ねない */ const e = plates[i]; e.hidden = false; e.style.left = p[0] + 'px'; e.style.top = p[1] + 'px'; const t = '⌂ ' + (PLATE[o.h.id] || NAMEH[o.h.id] || '家'); if (e.textContent !== t) e.textContent = t; }); });
-  K.interior = { KIND, NAMEH, houses, enter, leave, get cur() { return cur; }, outdoor, outside, search, garden, gstate, ROOM };
+  K.interior = { KIND, NAMEH, houses, enter, leave, get cur() { return cur; }, outdoor, outside, search, garden, gstate, ROOM, shellHeight: 7 };
 })();
