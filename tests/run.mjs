@@ -232,6 +232,23 @@ test('星巣の塔「星座の間」：階段から 床へ・星座の 順・ま
   const r = await page.evaluate(g0 => ({ f: KZ.G.flags.towerStars, d: KZ.G.gold - g0 }), g0); ok(r.f === 2 && r.d === 2500, 'ほうびが 1回だけで ない：' + JSON.stringify(r));
 });
 
+test('深淵の宮 屋上「潮の間」：石段で のぼる・潮は 一方通行・とびこえも できない・ほうびは 1回', async ({ page }) => {
+  await page.evaluate(async () => { const M = KZ.mainFloors.palace; delete KZ.G.flags.palaceTide; await KZ.travel(3, M.stairs.x + .5, M.stairs.z + 2); }); await idle(page);
+  await page.evaluate(() => { const P = KZ.player, M = KZ.mainFloors.palace; Object.assign(P, { x: M.stairs.x - .5, z: M.stairs.z + 1, vy: 0 }); P.y = KZ.hAt(P.x, P.z); P.yaw = Math.PI; KZ.cam.yaw = Math.PI; __dbg.sim(3); });
+  await page.keyboard.down('KeyW'); for (let i = 0; i < 40; i++) { await page.evaluate(() => __dbg.sim(6)); if (await page.evaluate(() => KZ.player.z < KZ.mainFloors.palace.PZ + .9)) break; } await page.keyboard.up('KeyW');
+  const s = await page.evaluate(() => ({ y: KZ.player.y, fy: KZ.mainFloors.palace.FY, dz: KZ.player.z - KZ.mainFloors.palace.PZ }));
+  ok(Math.abs(s.y - s.fy) < .6 && s.dz < 2, '石段で 屋上まで のぼれない：' + JSON.stringify(s));
+  const ride = (i, j, y = 0, vx = 0) => page.evaluate(([i, j, y, vx]) => { const M = KZ.mainFloors.palace, P = KZ.player; Object.assign(P, { x: M.cx(i) + .5, z: M.cz(j) + .5, y: M.FY + y, vy: 0 }); for (let k = 0; k < 40; k++) { P.x += vx * .016; __dbg.sim(1); } return [Math.floor(P.x) - M.PX + 6, Math.floor(P.z) - M.PZ + 6]; }, [i, j, y, vx]);
+  ok(JSON.stringify(await ride(8, 2)) === '[7,2]', '西むきの 潮で 押しもどされない');
+  ok(JSON.stringify(await ride(12, 5)) === '[12,4]', '北むきの 潮で 運ばれない');
+  ok(await page.evaluate(() => KZ.mainFloors.palace.inRoom() && !!KZ.HOOK.noClimb()), '潮の間で かべを 登れて しまう');
+  ok((await ride(7, 2, 1, 5))[0] <= 7, '潮の 上を とびこえて 真珠の 側へ 入れて しまう');
+  ok(await page.evaluate(() => { const G = KZ.G, lh = G.lh; G.lh = [1, 1, 1]; const hit = KZ.HOOK.target.some(f => { let h = false; f((o, k) => { if (k === 'palace') h = true; }); return h; }); const P = KZ.player, y = P.y; P.y = KZ.REG[3].palace.y; const below = KZ.HOOK.target.some(f => { let h = false; f((o, k) => { if (k === 'palace') h = true; }); return h; }); P.y = y; G.lh = lh; return !hit && below; }), '屋上から 決戦の 扉が 呼べる／下で 呼べない');
+  await page.evaluate(() => { const M = KZ.mainFloors.palace, P = KZ.player; Object.assign(P, { x: M.goal.x, z: M.goal.z + 1.2, y: M.FY }); __dbg.sim(2); });
+  const g0 = await page.evaluate(() => KZ.G.gold); for (let k = 0; k < 2; k++) { act(page, `() => KZ.HOOK.acts.tdPearl({})`); await idle(page); }
+  const r = await page.evaluate(g0 => ({ f: KZ.G.flags.palaceTide, d: KZ.G.gold - g0 }), g0); ok(r.f === 2 && r.d === 3000, 'ほうびが 1回だけで ない：' + JSON.stringify(r));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
