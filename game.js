@@ -54,7 +54,7 @@ const REG = [{}, {}, {}, {}];
   let pz = 20; while (pz < 250 && hAt(4.5, pz) > .15) pz += 1; r.pier = { x: 4.5, z: pz + 5 }; buildPier(4, pz - 3, 1, 12); r.ship = { x: 4.5, z: pz + 13, yaw: 0 };
   r.town = { x: 0, z: 0 }; r.home = r.houses[0];
   r.statue = { x: -4, z: 9 }; r.fire = { x: 5, z: -2 };
-  // ---- 灯台の試練の しかけ ----
+  // ---- 灯の樹の試練の しかけ ----
   const tr = rng(4242);
   r.beacons.forEach(b => { b.fireAt = [b.x, b.y + 4.05, b.z]; b.act = { x: b.x, z: b.z, y: b.y }; });
   { const b = r.beacons[0]; b.shards = []; for (let k = 0; k < 3; k++) { const a = k * 2.1 + tr() * 1.2, d = 11 + tr() * 12; const x = b.x + Math.cos(a) * d, z = b.z + Math.sin(a) * d; b.shards.push({ x, z, y: hAt(x, z) }); } }
@@ -165,7 +165,7 @@ const REG = [{}, {}, {}, {}];
   r.pier = { x: TX + .5, z: TZ + 24 }; r.ship = { x: 0, z: 9999, yaw: 0 };
   r.statue = { x: TX - 4, z: TZ + 5 }; r.fire = { x: TX + 4, z: TZ + 3 }; r.board = { x: TX + 3, z: TZ - 9 }; r.home = r.houses[1];
   r.lh = World.LH3.map(([x, z], i) => ({ i, x, z, y: hAt(x, z) }));
-  // 沈んだ 灯台（石レンガの 塔・ガラスの 灯室）
+  // 沈んだ 灯の樹（石レンガの 塔・ガラスの 灯室）
   for (const L of r.lh) { const b = Math.floor(L.y); for (let y = b; y < b + 9; y++) for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) { const e = Math.abs(dx) === 2 || Math.abs(dz) === 2; if (!e || (y === b + 1 && dz === 2 && Math.abs(dx) < 1)) continue; if ((y + dx * 3 + dz * 5 + L.i) % 7 === 0 && y > b + 2) continue; Blocks.set(Math.floor(L.x) + dx, y, Math.floor(L.z) + dz, 6, true); }
     for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) Blocks.set(Math.floor(L.x) + dx, b + 9, Math.floor(L.z) + dz, 1, true);
     for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) Blocks.set(Math.floor(L.x) + dx, b + 10, Math.floor(L.z) + dz, 7, true); L.fire = [L.x + .5, b + 10.6, L.z + .5]; L.top = b + 10; }
@@ -581,9 +581,9 @@ function objective() {
     let best = null, bd = 1e9; for (const b of r0.beacons) if (!b.lit) { const d = Math.hypot(b.x - player.x, b.z - player.z); if (d < bd) { bd = d; best = b; } }
     const T = DATA.trials[best.i], st = G.trial[best.i]; const lv = DATA.guardLv[G.order];
     let step; if (!st.seen) step = `「${T.name}」の 番人を たおす`; else if (!HOOK.beaconGate && !trialDone(best)) step = best.i === 0 ? `灯の欠片を 集める ${st.shards || 0}/3` : `群れを しずめる ${st.waves || 0}/3`;
-    else if (!best.guard) step = best.i === 3 ? '夜に 灯台の 番人と たたかう' : best.act.top ? `${best.i === 1 ? '塔の てっぺん' : '浮き足場'}で 番人と たたかう` : '灯台の 番人と たたかう';
+    else if (!best.guard) step = best.i === 3 ? '夜に 灯の樹の 番人と たたかう' : best.act.top ? `${best.i === 1 ? '塔の てっぺん' : '浮き足場'}で 番人と たたかう` : '灯の樹の 番人と たたかう';
     else if (!HOOK.beaconGate && !fuelOk(best)) step = `燃料を 集める（${fuelTxt(best)}）`; else step = best.act.top ? `${best.i === 1 ? '塔の てっぺん' : '浮き足場'}で 火を ともす` : '火を ともす';
-    return { t: `【灯台 ${G.order}/5・推奨Lv${lv}】${step}`, p: best.act.top && st.seen ? best.act : best }; }
+    return { t: `【灯の樹 ${G.order}/5・推奨Lv${lv}】${step}`, p: best.act.top && st.seen ? best.act : best }; }
   if (!F.cleared) return { t: `【決戦・推奨Lv${DATA.bossCfg.yomikage[0]}】島で いちばん 高い 場所、宵の祠へ`, p: r0.shrine };
   if (!F.c2start) return { t: '【第2章】広場の クロウと 話そう', p: npcAt('kurou', 0) };
   if (!F.c2done && (!F.c2arrive || G.region !== 1)) { if (G.region === 0) return { t: '桟橋の バルド船長の 船で 霧の大陸へ', p: npcAt('baldo', 0) }; }
@@ -645,7 +645,7 @@ function findTarget() {
 function actLabel(t) { if (!t) return ''; switch (t.type) {
   case 'npc': return `${t.o.nm || (DATA.cast[t.o.id] || {}).name || "ひと"}と はなす`; case 'tree': return '木を 切る'; case 'rock': return '石を 掘る'; case 'bush': return '実を つむ'; case 'shroom': return 'キノコを とる';
   case 'chest': return '宝箱を あける'; case 'statue': return '石像を しらべる'; case 'fire': return '料理する'; case 'board': return '依頼を 見る'; case 'sand': return '砂を 掘る';
-  case 'beacon': case 'beacontop': return (t.o.act.top && t.type === 'beacon') ? '灯台を しらべる' : fuelOk(t.o) && t.o.guard ? '火を ともす' : '灯台を しらべる'; case 'shrine': return '祠へ すすむ';
+  case 'beacon': case 'beacontop': return (t.o.act.top && t.type === 'beacon') ? '灯の樹を しらべる' : fuelOk(t.o) && t.o.guard ? '灯を ともす' : '灯の樹を しらべる'; case 'shrine': return '祠へ すすむ';
   case 'midboss': return '奥へ すすむ'; case 'altar': return '祭壇へ すすむ'; case 'flute': return '星笛を ふく'; case 'wshrine': return '祠を しらべる';
   case 'whale': return 'ホシクジラに 乗る'; case 'midboss3': return '塔へ 入る'; case 'altar3': return '頂へ すすむ'; } const hl = HOOK.labels[t.type]; return hl ? (typeof hl === 'function' ? hl(t) : hl) : ''; }
 function act() {
@@ -755,8 +755,8 @@ async function talkYui() {
   const F = G.flags;
   if (!F.metYui) {
     await say([who('yui', 'smile', 'おはよう、{name}。 ……また 岬で 夜あかし？ 髪が 潮で ごわごわよ。'), who('sora', 'worried', '……今日も、ひとつも ついてなかった。'),
-      who('sora', 'determined', 'でも 野原の 灯台の てっぺんで、なにか 光ったんだ。 ほんとだよ！ ぼく、見てくる。'),
-      who('yui', 'sad', '……止めても 行く 顔ね。 あの人と おんなじ。'), who('yui', 'determined', 'あの人、「灯台に 置いてきた ものが ある」って 言っていたわ。 ゲン兄さんの 工房で したくを しておいで。'),
+      who('sora', 'determined', 'でも 野原の 灯の樹の てっぺんで、なにか 光ったんだ。 ほんとだよ！ ぼく、見てくる。'),
+      who('yui', 'sad', '……止めても 行く 顔ね。 あの人と おんなじ。'), who('yui', 'determined', 'あの人、「灯の樹に 置いてきた ものが ある」って 言っていたわ。 ゲン兄さんの 工房で したくを しておいで。'),
       who('yui', 'smile', 'つかれたら いつでも 帰っておいで。 ごはんと おふとんは、ここに ある。')]); F.metYui = true; save(); return; }
   const c = await menu({ title: 'ユイ', items: [{ label: 'やすむ', sub: '全回復＋記録' }, { label: 'はなす' }] });
   if (c === 0) await rest(0);
@@ -768,8 +768,8 @@ async function talkGen(n) {
   if (!F.metGen) {
     await say([who('gen', 'neutral', '……来たか、{name}。 ユイから 聞いた。'), who('sora', 'worried', '……止めないの？'),
       who('gen', 'sad', '止めて 聞く 血すじじゃねえ。 ……カイトも そうだった。'),
-      who('gen', 'neutral', '灯台には まものが 巣くってる。 木を 切りゃ 薪、岩を 割りゃ 石だ。 材料さえ ありゃ、武器でも 防具でも 打ってやる。')]); F.metGen = true;
-    // 灯台の 鍵（k0）の 依頼を その場で 受ける（おつかいの 往復を 1回 へらす）
+      who('gen', 'neutral', '灯の樹には まものが 巣くってる。 木を 切りゃ 薪、岩を 割りゃ 石だ。 材料さえ ありゃ、武器でも 防具でも 打ってやる。')]); F.metGen = true;
+    // 灯の樹の 鍵（k0）の 依頼を その場で 受ける（おつかいの 往復を 1回 へらす）
     if (HOOK.talks.gen && n) await HOOK.talks.gen(n);
     await say([who('gen', 'neutral', '……それと、広場の ミオが おまえを 探してたぞ。')]); save(); return; }
   if (HOOK.genTalk) return HOOK.genTalk(n); // v9：店・鍛冶は balance.js（K.bal）が あつかう
@@ -799,7 +799,7 @@ async function talkMio() {
   const F = G.flags;
   if (!F.metYui) { await say([who('mio', 'smile', '{name}、 おはよう！ 先に ユイさんに 顔を 見せてきなよ。')]); return; }
   await say([who('mio', 'grin', '{name}！ 旅に 出るって ほんと？ わたしも 行く！'), who('sora', 'surprised', 'ええっ？ まだ なにも 言ってないよ！'),
-    who('mio', 'worried', '……あのね。 夜に なると きこえるの。 灯台の ほうから、だれかが 泣いてる こえ。'),
+    who('mio', 'worried', '……あのね。 夜に なると きこえるの。 灯の樹の ほうから、だれかが 泣いてる こえ。'),
     who('mio', 'determined', 'カイトさんには 海で 命を 助けてもらった。 こんどは わたしの 番。'),
     { t: 'ミオが なかまに くわわった！', fx: () => { F.mio = true; G.party.push(mkHuman('mio', G.party[0].lv)); fixTeam(); Music.sfx('friend'); } },
     who('mio', 'smile', 'まものって、ほんとは こわがってる だけ なの。 しずめて あげれば、もとの いきものに もどるんだよ。'),
@@ -981,13 +981,13 @@ const fuelOk = b => Object.entries(fuelOf(b)).every(([k, v]) => (G.inv[k] || 0) 
 const fuelTxt = b => Object.entries(fuelOf(b)).map(([k, v]) => `${DATA.items[k].name} ${Math.min(G.inv[k] || 0, v)}/${v}`).join('・');
 function trialDone(b) { const st = G.trial[b.i]; return b.i === 0 ? (st.shards || 0) >= 3 : b.i === 2 ? (st.waves || 0) >= 3 : true; }
 async function beaconEvent(b, atTop) {
-  if (!G.flags.metGen) { await say(['灯台の 足もとに、黒い 気配が うずまいている。', who('sora', 'worried', '……まずは 村で じゅんびを しよう。')]); return; }
+  if (!G.flags.metGen) { await say(['灯の樹の 足もとに、黒い 気配が うずまいている。', who('sora', 'worried', '……まずは 村で じゅんびを しよう。')]); return; }
   const T = DATA.trials[b.i], st = G.trial[b.i];
   if (HOOK.beaconGate) { const g = HOOK.beaconGate(b); if (g) { await say(g); return; } }
-  if (!st.seen) { st.seen = 1; await say([`【灯台の試練　${T.name}】`, T.text, `（火を ともす 燃料：${fuelTxt(b)}）`]); }
-  if (b.act.top && !atTop) { await say([b.i === 1 ? '火皿は 灯台ではなく、となりの 高い 塔の てっぺんに ある。 がんばりゲージが あれば 壁を よじ登れる。 ブロックで 階段を 作っても いい。'
-    : '火皿は 崖の 先に 浮かぶ 足場の 上だ。 風布で 滑空するか、ブロックで 橋を かけよう。']); return; }
-  if (!HOOK.beaconGate && b.i === 0 && (st.shards || 0) < 3) { await say([`灯の欠片が 足りない（${st.shards || 0}/3）。 灯台の まわりで 光っている 欠片を さがそう。`]); return; }
+  if (!st.seen) { st.seen = 1; await say([`【灯の樹の試練　${T.name}】`, T.text, `（灯を ともす 燃料：${fuelTxt(b)}）`]); }
+  if (b.act.top && !atTop) { await say([b.i === 1 ? '灯の花は 樹ではなく、となりの 高い 塔の てっぺんに ある。 がんばりゲージが あれば 壁を よじ登れる。 ブロックで 階段を 作っても いい。'
+    : '灯の花は 崖の 先に 浮かぶ 足場の 上に さいている。 風布で 滑空するか、ブロックで 橋を かけよう。']); return; }
+  if (!HOOK.beaconGate && b.i === 0 && (st.shards || 0) < 3) { await say([`灯の欠片が 足りない（${st.shards || 0}/3）。 灯の樹の まわりで 光っている 欠片を さがそう。`]); return; }
   if (!HOOK.beaconGate && b.i === 2 && (st.waves || 0) < 3) {
     if (!(await confirm(`まものの 群れが せまってくる。（推奨Lv${DATA.guardLv[G.order]}） 迎えうつ？`))) return;
     for (let w = st.waves || 0; w < 3; w++) {
@@ -997,16 +997,16 @@ async function beaconEvent(b, atTop) {
       if (res !== 'win') return defeated(); st.waves = w + 1; save(); }
     await say(['群れを しりぞけた！']); }
   if (b.i === 3 && !b.guard && World.skyInfo(G.tod).night < .5) {
-    const c = await menu({ title: '火皿は かたく 閉じている。 夜にしか ひらかないようだ。', items: [{ label: '夜まで 待つ' }, { label: 'やめておく' }] });
+    const c = await menu({ title: '灯の花は かたく 閉じている。 夜にしか ひらかないようだ。', items: [{ label: '夜まで 待つ' }, { label: 'やめておく' }] });
     if (c !== 0) return; await fade(true); G.tod = .82; await wait(300); await fade(false); await say(['……夜に なった。 火皿が ゆっくりと ひらいていく。']); }
   if (!b.guard) {
     const gi = G.order, gid = DATA.guards[gi]; const pre = [`（推奨Lv${DATA.guardLv[gi]}）`];
-    if (gi === 0) pre.push('とつぜん、灯台の 足もとから 黒い つるが のびてきた！', inParty('mio') ? who('mio', 'worried', 'この子……灯を こわがってる。 でも、とめなきゃ！') : null, who('sora', 'determined', 'だいじょうぶ、こわくないよ。 ……ぼくも ちょっと こわいけど！'));
-    if (gi === 1) pre.push(who('riku', 'angry', '待て。 その灯台に 火を つけるな。'), who('sora', 'surprised', 'き、きみが リク？ シオミの ナミさんが 心配してたよ。'), who('riku', 'smirk', '……あの町が？ おれに 石を 投げた 町が、心配ねえ。'),
+    if (gi === 0) pre.push('とつぜん、灯の樹の 足もとから 黒い つるが のびてきた！', inParty('mio') ? who('mio', 'worried', 'この子……灯を こわがってる。 でも、とめなきゃ！') : null, who('sora', 'determined', 'だいじょうぶ、こわくないよ。 ……ぼくも ちょっと こわいけど！'));
+    if (gi === 1) pre.push(who('riku', 'angry', '待て。 その灯の樹に 灯を ともすな。'), who('sora', 'surprised', 'き、きみが リク？ シオミの ナミさんが 心配してたよ。'), who('riku', 'smirk', '……あの町が？ おれに 石を 投げた 町が、心配ねえ。'),
       who('riku', 'angry', '灯を ともせば、あいつが 気づく。 おれの 故郷は、それで 一晩で 喰われた。'), who('sora', 'determined', 'でも 灯が なかったら、だれも 帰ってこられない！'), who('riku', 'determined', '……口じゃ わからねえか。 かかってこい、甘ちゃん。'));
     if (gi === 2) pre.push('地ひびきと ともに、岩の かたまりが 立ちあがった！', inParty('riku') ? who('riku', 'smirk', 'でけえな。 ……おい 甘ちゃん、足 ふるえてるぞ。') : null, who('sora', 'determined', 'む、武者ぶるいだよ！'));
     if (gi === 3) pre.push('海が 黒く ふくらみ、なにかが 顔を 出した！', inParty('mio') ? who('mio', 'sad', 'この子の こえ……さみしい、って。') : null, who('sora', 'determined', 'さみしいなら、なおさら 灯が いるよ。'));
-    if (gi === 4) pre.push('空が 裂け、夜の とばりが 鳥の かたちに なった！', who('sora', 'determined', 'これが 最後の 灯台だ。 みんな、いくよ！'));
+    if (gi === 4) pre.push('空が 裂け、夜の とばりが 鳥の かたちに なった！', who('sora', 'determined', 'これが 最後の 灯の樹だ。 みんな、いくよ！'));
     await say(pre);
     const res = await runBattle([{ boss: gid }], { boss: true, noFlee: true });
     if (res !== 'win') return defeated();
@@ -1016,8 +1016,8 @@ async function beaconEvent(b, atTop) {
     else await say([`${DATA.enemies[gid].name}の やみが はれて、光の 粒に なって 消えていった。`]);
     save();
   }
-  if (!HOOK.beaconGate && !fuelOk(b)) { await say([`火皿は 冷えきっている。 燃料が 足りない。`, `（必要：${fuelTxt(b)}）`, '（木を 切ると 薪と 葉っぱ、岩を 掘ると 石、夜の いきものから 夜露の しずくが 手に入る）']); return; }
-  if (HOOK.beaconGate) { if (!(await confirm('灯台に 火を ともしますか？'))) return; }
+  if (!HOOK.beaconGate && !fuelOk(b)) { await say([`灯の花は しぼんでいる。 燃料が 足りない。`, `（必要：${fuelTxt(b)}）`, '（木を 切ると 薪と 葉っぱ、岩を 掘ると 石、夜の いきものから 夜露の しずくが 手に入る）']); return; }
+  if (HOOK.beaconGate) { if (!(await confirm('灯の樹に 灯を ともしますか？'))) return; }
   else { if (!(await confirm(`燃料（${Object.entries(fuelOf(b)).map(([k, v]) => DATA.items[k].name + v).join('・')}）を つかって 火を ともしますか？`))) return;
     for (const [k, v] of Object.entries(fuelOf(b))) G.inv[k] -= v; }
   b.lit = true; b.t = 0; const k = G.order; G.order++;
@@ -1027,10 +1027,10 @@ async function beaconEvent(b, atTop) {
   const react = [[who('sora', 'sad', '父さん……。')], [inParty('riku') && who('riku', 'determined', '師匠……？ 闇の王に、名前が あるってのか。')], [inParty('mio') && who('mio', 'sad', 'ずっと 泣いてる こえ……あれは、その人の こえ だったんだ。')],
     [who('sora', 'determined', 'ひとりじゃ 夜は 長すぎる……。 だから 灯が あるんだね。')], [inParty('riku') && who('riku', 'smile', '待ってる、か。 ……いい 親父さんじゃ ねえか。')]][k].filter(Boolean);
   const rw = DATA.beaconRewards[k];
-  await say([`${k + 1}つめの 灯が ともった！`, '火皿の 下に、古い 封筒が はさまっていた。', who('kaito', 'smile', L[0]), who('kaito', 'smile', L[1]), ...react,
+  await say([`${k + 1}つめの 灯が ともった！`, '灯の花の 下に、古い 封筒が はさまっていた。', who('kaito', 'smile', L[0]), who('kaito', 'smile', L[1]), ...react,
     { t: `【報酬】${rw.text}`, fx: () => { if (rw.kind === 'warp') { G.warp = true; G.stamMax += 20; G.stam = G.stamMax; } if (rw.kind === 'sp') G.party.forEach(m => G.sp[m.id] = (G.sp[m.id] || 0) + 2);
       if (rw.kind === 'glider') G.flags.glider = true; if (rw.kind === 'hp') { G.hpPct = (G.hpPct || 0) + .1; G.party.forEach(m => { calc(m); m.hp = m.st.hp; }); } Music.sfx('friend'); } }]);
-  if (rw.kind === 'warp') tip('<b>ワープが つかえるように なった</b><span>メニューの「地図」から、ともした 灯台と 村へ 一瞬で もどれる。</span>', 'warp');
+  if (rw.kind === 'warp') tip('<b>ワープが つかえるように なった</b><span>メニューの「地図」から、ともした 灯の樹と 村へ 一瞬で もどれる。</span>', 'warp');
   if (rw.kind === 'sp') tip('<b>スキルポイントを もらった</b><span>メニューの「スキル」で 技や 能力を 覚えよう。</span>', 'sp2');
   save(); hud();
   if (G.order === 5) await finalOpen();
@@ -1043,7 +1043,7 @@ async function finalOpen() {
 }
 async function shrineEvent() {
   await say([`（推奨Lv${DATA.bossCfg.yomikage[0]}　連戦に なる。 準備は いいか？）`, who('yomi', 'neutral', '来たか。'), who('yomi', 'angry', '灯が あるから、人は 海へ 出る。 そして 帰ってこない。 ……だから 消した。 もう だれも、見送らなくて すむように。'),
-    who('sora', 'determined', 'ちがう！ ぼくは 三年、消えた 灯台を 見てた。 灯が ないほうが、待つ 夜は ずっと 長いんだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, inParty('riku') ? who('riku', 'angry', 'シオミじゃ、まものを 連れてきたのは おれだって 言われたぜ。 ……見送るのが つらいなら、そう 言えよ。 灯を 消して、だれかの せいに するな！') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
+    who('sora', 'determined', 'ちがう！ ぼくは 三年、消えた 灯の樹を 見てた。 灯が ないほうが、待つ 夜は ずっと 長いんだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, inParty('riku') ? who('riku', 'angry', 'シオミじゃ、まものを 連れてきたのは おれだって 言われたぜ。 ……見送るのが つらいなら、そう 言えよ。 灯を 消して、だれかの せいに するな！') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
   let res = await runBattle([{ boss: 'yomikage' }], { boss: true, noFlee: true });
   if (res !== 'win') return defeated();
   await say([who('yomi', 'angry', 'まだだ……！ この 悲しみごと、永遠の 夜に しずめてやる！'), { t: '闇が ふくれあがり、空いっぱいの 王の すがたに なった！', fx: () => battleParty().forEach(m => { m.hp = Math.max(m.hp, Math.round(m.st.hp * .8)); m.mp = Math.max(m.mp, Math.round(m.st.mp * .6)); }) }]);
@@ -1173,7 +1173,7 @@ async function windEvent(sh) {
   G.wind[i] = 1; if (G.wind.every(Boolean)) { G.flags.c3bridge = true; buildBridge(); } Music.jingle('light', fieldSong()); allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); await wait(900);
   const rw = DATA.windRewards[G.wind.filter(Boolean).length - 1]; const M = DATA.haruMem[G.wind.filter(Boolean).length - 1];
   const react = [[inParty('mio') && who('mio', 'worried', 'ハル……その 歌、もしかして——'), who('haru', 'sad', 'わからない。 でも、とても なつかしい。')],
-    [inParty('riku') && who('riku', 'surprised', '嵐の 夜に、灯台の 灯が 消えてた……？ どっかで 聞いた 話だな。'), who('sora', 'surprised', '……クロウさんの 話と、同じだ。')],
+    [inParty('riku') && who('riku', 'surprised', '嵐の 夜に、灯の樹の 灯が 消えてた……？ どっかで 聞いた 話だな。'), who('sora', 'surprised', '……クロウさんの 話と、同じだ。')],
     [who('sora', 'determined', 'ハル。 地上に、きみを 待ってる 人が いるかもしれない。'), who('haru', 'sad', '……うん。 塔の 上で、星守さまに 聞けば わかる 気が する。')]][G.wind.filter(Boolean).length - 1].filter(Boolean);
   await say(['祠に 風が かよった！', { t: '光る 風が、北の 空へ 吹きぬけていく——', fx: () => Music.sfx('magic') }, who('haru', 'surprised', '……っ！ いま、なにか……思い出した。'), who('haru', 'sad', M[0]), who('haru', 'sad', M[1]), ...react,
     { t: `【報酬】${rw.text}`, fx: () => { if (rw.kind === 'stam') { G.stamMax += 30; G.stam = G.stamMax; G.party.forEach(m => G.sp[m.id] = (G.sp[m.id] || 0) + 2); } if (rw.kind === 'sp') G.party.forEach(m => G.sp[m.id] = (G.sp[m.id] || 0) + 3); if (rw.kind === 'glider2') G.flags.glider2 = true; Music.sfx('friend'); } }]);
@@ -1203,14 +1203,14 @@ async function finalEvent3() {
     inParty('mio') ? who('mio', 'smile', 'だいじょうぶ。 もう ひとりで 見送らなくて いいんだよ。') : null,
     nm('星守', '……星を、空へ かえそう。'),
     { t: '夜空いっぱいに、星が よみがえった——', fx: () => { G.flags.c3done = true; G.tod = .86; Music.jingle('light'); } },
-    who('haru', 'determined', '{name}。 わたし、思い出したの。 ぜんぶ。'), who('haru', 'sad', '……会いたい 人が いる。 地上の、小さな 灯台の 島に。')]);
+    who('haru', 'determined', '{name}。 わたし、思い出したの。 ぜんぶ。'), who('haru', 'sad', '……会いたい 人が いる。 地上の、小さな 灯の樹の 島に。')]);
   save(); await reunion(); save(); await credits(3);
   await say(['——第3章 クリア。 ハルは これからも いっしょに 旅を する。 空へは 星の遺跡の 祭壇から 行ける。', '……ソヨギさまは、ハルに まだ 言っていない ことが ありそうだ。', 'うわさでは、星が もどった 夜、星巣の塔の 頂に なにかが 舞いおりるらしい……。']); }
 async function reunion() {
   await fade(true); G.region = 0; World.setRegion(0); enemies = []; player.x = 1; player.z = 8; player.y = surfaceAt(1, 8, 99); cam.yaw = Math.PI; trail.length = 0; G.tod = .7; Music.play('village', { restart: true }); await wait(400); await fade(false);
   await say(['——風灯の島。 夕暮れの 広場。', who('kurou', 'surprised', '……{name}？ 空から くじらが おりてきたと 聞いたが——'), who('haru', 'worried', '……あの。'), who('kurou', 'surprised', '…………。'),
     who('kurou', 'sad', 'その 目……その 歌うような 声……。 まさか……ハル……？'), who('haru', 'sad', '……おとうさん。 わたし、ずっと 空の 上に いたの。'),
-    who('haru', 'smile', '灯台の 灯……見えてたよ。 雲の 切れ間から、ずっと。'), who('kurou', 'sad', 'すまなかった……。 あの 夜、灯を 消したままで……わたしは……。'),
+    who('haru', 'smile', '灯の樹の 灯……見えてたよ。 雲の 切れ間から、ずっと。'), who('kurou', 'sad', 'すまなかった……。 あの 夜、灯を 消したままで……わたしは……。'),
     who('haru', 'joy', 'ううん。 おとうさんの 子守歌、ちゃんと 覚えてた。 ……ただいま。'), who('kurou', 'joy', '……おかえり。 おかえり、ハル……！'),
     who('kaito', 'smile', '……師匠の 灯が、やっと 帰ってきたな。'), inParty('mio') ? who('mio', 'joy', 'あの 子守歌……クロウさんが ハルに 歌ってた 歌 だったんだね。') : null,
     inParty('riku') ? who('riku', 'smile', '……ったく。 泣かせやがる。') : null, who('sora', 'joy', '灯は、帰る場所の しるし。 ……ほんとうに、そうだったね。')]); G.flags.c3reunion = true; }
@@ -1225,7 +1225,7 @@ async function defeated() {
 function fade(on) { return new Promise(r => { $('fade').classList.toggle('on', on); setTimeout(r, 900); }); }
 async function credits(ch) {
   Music.play('ending', { restart: true });
-  const c = DATA.cast; const list = (ch === 1 ? ['sora', 'mio', 'riku', 'kaito', 'yui', 'gen', 'nagi', 'yomi'] : ch === 2 ? ['sora', 'mio', 'riku', 'sana', 'tsumugi', 'baldo', 'kurou'] : ch === 3 ? ['sora', 'mio', 'riku', 'sana', 'haru', 'soyogi', 'kurou'] : ['sora', 'mio', 'riku', 'sana', 'haru', 'kaito', 'yui', 'kurou']).map(k => k === 'kurou' ? { k, n: 'クロウ', r: 'かつての灯台守' } : { k, n: k === 'sora' ? esc(G.name) : c[k].name, r: `${c[k].role}・${c[k].title}` });
+  const c = DATA.cast; const list = (ch === 1 ? ['sora', 'mio', 'riku', 'kaito', 'yui', 'gen', 'nagi', 'yomi'] : ch === 2 ? ['sora', 'mio', 'riku', 'sana', 'tsumugi', 'baldo', 'kurou'] : ch === 3 ? ['sora', 'mio', 'riku', 'sana', 'haru', 'soyogi', 'kurou'] : ['sora', 'mio', 'riku', 'sana', 'haru', 'kaito', 'yui', 'kurou']).map(k => k === 'kurou' ? { k, n: 'クロウ', r: 'かつての灯守り' } : { k, n: k === 'sora' ? esc(G.name) : c[k].name, r: `${c[k].role}・${c[k].title}` });
   const el = $('credits'); el.innerHTML = `<div class="cr-roll"><h2>ともしびアイランド</h2><p class="cr-sub">${['', '第一章　ともしびの継ぎ手', '第二章　星くずの大陸', '第三章　天空の星巣', '第四章　海の底'][ch]}</p>${list.map(o => `<div class="cr-row"><div class="cr-face">${Art.portrait(o.k, o.k === 'yomi' ? 'neutral' : 'smile')}</div><div><b>${o.n}</b><span>${o.r}</span></div></div>`).join('')}
     <p class="cr-h">いきもの</p><p>なかま ${Object.keys(G.dex.got).length} / ${DEX_N} 種</p><p class="cr-h">音楽</p><p>オリジナル・オーケストラ</p><p class="cr-h">企画</p><p>あなた</p><p class="cr-h">制作</p><p>Claude</p>
     <p class="cr-end">${['', 'そして 灯は、帰る場所の しるしに なった。', '星は 空へ 還り、旅は つづく。', 'そして 星は、帰る場所を 照らしつづける。', 'そして 灯は、海の いちばん 深い 場所まで とどいた。'][ch]}</p><p class="cr-end">— ${['', '第一章 おわり', 'つづく', '第三章 おわり', '第四章 おわり ・ ありがとう'][ch]} —</p></div><button class="btn-close" type="button">旅に もどる</button>`;
@@ -2089,7 +2089,7 @@ function mapImage() {
 function mapPanel() { return new Promise(res => {
   const r = REGr(); const pos = (x, z) => `left:${(x / 540 + .5) * 100}%;top:${(z / 540 + .5) * 100}%`; const ob = (HOOK.track && HOOK.track()) || objective(); const here = window.KZ && KZ.interior && KZ.interior.cur ? KZ.interior.cur.back : player; const marks = [];
   const warps = []; if (G.region === 2) { warps.push({ n: '雲の里ククル', x: r.town.x + 2, z: r.town.z + 4 }); r.shrines.forEach(sh => { if (G.wind[sh.i]) warps.push({ n: DATA.windTrials[sh.i].name, x: sh.x + 1, z: sh.z + 1 }); }); if (G.flags.c3bridge) warps.push({ n: '星巣の塔 入口', x: r.midboss.x, z: r.midboss.z + 3 }); }
-  else if (G.warp || G.region === 1) { warps.push({ n: TOWN_NAME[G.region], x: r.town.x + 2, z: r.town.z + 4 }); if (G.region === 0) r.beacons.forEach(b => { if (b.lit) warps.push({ n: `灯台：${DATA.trials[b.i].name}`, x: b.x + 3, z: b.z + 3 }); }); if (G.region === 1 && G.flags.c2rumor) warps.push({ n: '星の遺跡 入口', x: r.ruinsEntrance.x - 3, z: r.ruinsEntrance.z }); }
+  else if (G.warp || G.region === 1) { warps.push({ n: TOWN_NAME[G.region], x: r.town.x + 2, z: r.town.z + 4 }); if (G.region === 0) r.beacons.forEach(b => { if (b.lit) warps.push({ n: `灯の樹：${DATA.trials[b.i].name}`, x: b.x + 3, z: b.z + 3 }); }); if (G.region === 1 && G.flags.c2rumor) warps.push({ n: '星の遺跡 入口', x: r.ruinsEntrance.x - 3, z: r.ruinsEntrance.z }); }
   if (G.warp || G.region > 0) for (const f of HOOK.warps) warps.push(...f(G.region));
   const hasWarp = t => warps.some(w => w.n.startsWith(t)); // ワープピンが 名前を 出すので、同じ場所の 文字ラベルは はぶく
   if (!hasWarp(TOWN_NAME[G.region])) marks.push(`<span class="mk town" style="${pos(r.town.x, r.town.z)}">${TOWN_NAME[G.region]}</span>`);
@@ -2101,11 +2101,11 @@ function mapPanel() { return new Promise(res => {
   for (const f of HOOK.mapMarks) marks.push(...f(G.region, pos).filter(h => !warps.some(w => String(h).includes(`>${w.n}<`))));
   if (ob.p) marks.push(`<span class="mk goal" style="${pos(ob.p.x, ob.p.z)}">★ もくてき</span>`);
   marks.push(`<span class="mk me" style="${pos(here.x, here.z)}"><i style="display:inline-block;transform:rotate(${Math.PI - player.yaw}rad)">▲</i> いま</span>`);
-  const pins = warps.map((w, i) => `<button class="wp" type="button" data-i="${i}" style="${pos(w.x, w.z)}" aria-label="${w.n}へ ワープ"><i>◆</i>${w.n.replace(/^灯台：/, '')}</button>`).join('');
+  const pins = warps.map((w, i) => `<button class="wp" type="button" data-i="${i}" style="${pos(w.x, w.z)}" aria-label="${w.n}へ ワープ"><i>◆</i>${w.n.replace(/^灯の樹：/, '')}</button>`).join('');
   const el = document.createElement('div'); el.className = 'win panel mapp';
   el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button><div class="mapwrap"><div class="map"><img src="${mapImage()}" alt="${REGION_NAME[G.region]}の 地図">${marks.join('')}${pins}</div>
     <div class="mapside"><h3>地図：${REGION_NAME[G.region]}</h3><p class="q-now">★ ${esc(ob.t)}</p>${here !== player ? '<p>いえの なか：入口を 表示</p>' : ''}<p class="map-legend"><span><b>▲</b> いま</span><span><b class="g">★</b> 目的地</span>${warps.length ? '<span><b class="g">◆</b> ピンを タップで ワープ</span>' : ''}</p>
-      ${warps.length ? `<details class="wdet"><summary>ワープ先 一覧（${warps.length}）</summary><div class="wlist">${warps.map((w, i) => `<button class="t-btn wbtn" type="button" data-i="${i}">${w.n}</button>`).join('')}</div></details>` : '<p class="st-eq">最初の 灯台を ともすと ワープが つかえる。</p>'}</div></div>`;
+      ${warps.length ? `<details class="wdet"><summary>ワープ先 一覧（${warps.length}）</summary><div class="wlist">${warps.map((w, i) => `<button class="t-btn wbtn" type="button" data-i="${i}">${w.n}</button>`).join('')}</div></details>` : '<p class="st-eq">最初の 灯の樹を ともすと ワープが つかえる。</p>'}</div></div>`;
   const M = { el, panel: true, items: [], res }; el.querySelector('.m-x').addEventListener('click', () => { Music.sfx('cancel'); closeMenu(M, -1); });
   el.querySelectorAll('.wbtn,.wp').forEach(b => b.addEventListener('click', async () => { const w = warps[+b.dataset.i]; M.res = () => {}; closeMenu(M, -1); Music.sfx('magic'); await warpTo(w.x, w.z); res('warped'); }));
   $('ui').appendChild(el); MENUS.push(M); layoutPins(el.querySelector('.map')); }); }
@@ -2122,7 +2122,7 @@ function layoutPins(map) { if (!map) return; const mr = map.getBoundingClientRec
 async function questLog() {
   const F = G.flags, ck = v => v ? '<b class="ok">✓</b>' : '<b class="ng">□</b>'; const ob = objective(); const rk = rankOf(rankPts());
   const r0 = REG[0];
-  const ch1 = [['母さん（ユイ）と 話す', F.metYui], ['ゲンの 工房へ', F.metGen], ['ミオを 仲間に', F.mio], ...r0.beacons.map(b => [`灯台「${DATA.trials[b.i].name}」`, b.lit]), ['宵の祠で 決着', F.cleared]];
+  const ch1 = [['母さん（ユイ）と 話す', F.metYui], ['ゲンの 工房へ', F.metGen], ['ミオを 仲間に', F.mio], ...r0.beacons.map(b => [`灯の樹「${DATA.trials[b.i].name}」`, b.lit]), ['宵の祠で 決着', F.cleared]];
   const ch2 = [['クロウの 話を 聞く', F.c2start], ['霧の大陸へ わたる', F.c2arrive], ['ツムギに 会う', F.dex], ['ギルドで 情報収集', F.c2rumor], ['遺跡の 番人', F.c2mid], ['祭壇の 決戦', F.c2done]];
   const got = Object.keys(G.dex.got).length, nx = DATA.dexRewards.find(x => got < x.n);
   const chests = REG[0].chests.length + REG[1].chests.length + REG[2].chests.length;
@@ -2137,7 +2137,7 @@ async function questLog() {
       <li>ギルドの 依頼 達成 ${G.bountyDone}件${F.c2rumor ? '' : '（港町ミナトで 受けられる）'}</li>
       ${HOOK.quest.map(f => f()).join('')}
       ${G.bounties.map(b => `<li class="sub">・${b.text} ${b.kind === 'hunt' || b.kind === 'huntSp' ? `${b.c}/${b.n}` : bDone(b) ? '★達成' : ''}</li>`).join('')}
-    </ul><p class="st-eq">ランクpt：ボス20・灯台15・依頼6・図鑑5・宝箱3・種2</p></section></div>`, 'wide'); }
+    </ul><p class="st-eq">ランクpt：ボス20・灯の樹15・依頼6・図鑑5・宝箱3・種2</p></section></div>`, 'wide'); }
 async function partyMenu() {
   while (true) {
     fixTeam(); const team = G.team.map(member);
@@ -2505,7 +2505,7 @@ function frameBody(now) {
       mFeather.set(mFeather.n++, f.x, f.y + Math.sin(T * 2 + k) * .25, f.z, 1.3, T * 1.5); }); }
     mSkyRock.n = 0; if (G.region === 2) { r.skyRocks.forEach((k, i) => mSkyRock.set(i, k.x, k.y + Math.sin(T * .3 + k.ph) * .8, k.z, k.s, k.r + T * .01)); mSkyRock.n = r.skyRocks.length; }
     if (G.region === 2 && G.flags.c3arrive) { const w = r.whale; mWhale.set(0, w.x, w.y + Math.sin(T * .7) * .6, w.z, 3.4, Math.PI / 2 + Math.sin(T * .3) * .1); mWhale.n = 1; } else mWhale.n = 0;
-    if (G.region === 0) { r.beacons.forEach((b, i) => mBeacon.set(i, b.x, b.y, b.z, HOOK.beaconScale ? HOOK.beaconScale(b) : 1, i * .7)); /* 灯の樹に した 灯台は 0（tomotree.js） */ mBeacon.n = 5; mShrine.set(0, r.shrine.x, r.shrine.y, r.shrine.z, 1, 0); mShrine.n = 1; } else { mBeacon.n = 0; mShrine.n = 0; }
+    if (G.region === 0) { r.beacons.forEach((b, i) => mBeacon.set(i, b.x, b.y, b.z, HOOK.beaconScale ? HOOK.beaconScale(b) : 1, i * .7)); /* 灯の樹に した 灯の樹は 0（tomotree.js） */ mBeacon.n = 5; mShrine.set(0, r.shrine.x, r.shrine.y, r.shrine.z, 1, 0); mShrine.n = 1; } else { mBeacon.n = 0; mShrine.n = 0; }
     mShip.set(0, r.ship.x, -.2 + Math.sin(T * .8) * .12, r.ship.z, 1, r.ship.yaw + Math.sin(T * .6) * .03); mShip.n = G.region !== 2 && (G.region === 1 || G.flags.c2start) ? 1 : 0;
     let ci = 0; for (const c of r.chests) if (!G.chests[c.id] && ci < 16) mChest.set(ci++, c.x, c.y, c.z, 1, 0); mChest.n = ci;
     if (r.board) { mBoard.set(0, r.board.x, surfaceAt(r.board.x, r.board.z, 99), r.board.z, 1, 0); mBoard.n = 1; } else mBoard.n = 0;
@@ -2674,7 +2674,7 @@ function setupCh3() {
   const t = npcAt('tsumugi', 1); player.x = t.x; player.z = t.z + 3; player.y = surfaceAt(player.x, player.z, 99); }
 async function opening() {
   const el = $('cut'); el.hidden = false; phase = 'cut'; Music.play('night');
-  const L = ['「いってきます。 灯が 見えたら、それが 父さんだ」', 'そう 言って、灯台守の 父さんは 小舟で 夜の 海へ 出ていった。', 'その夜、島の 五つの 灯台は ひとつ残らず 消えた。', '……あれから 三年。 灯は まだ、どこにも 見えない。'];
+  const L = ['「いってきます。 灯が 見えたら、それが 父さんだ」', 'そう 言って、灯守りの 父さんは 小舟で 夜の 海へ 出ていった。', 'その夜、島の 五つの 灯の樹は ひとつ残らず 消えた。', '……あれから 三年。 灯は まだ、どこにも 見えない。'];
   // タップ／Enter で 次の 行へ。 右下の「スキップ」か Esc で 全部 とばす
   let skipAll = false, poke = null; const on = e => { if (e.type === 'keydown' && !['Enter', 'Space', 'NumpadEnter', 'Escape', 'KeyE'].includes(e.code)) return; if (e.type === 'keydown') e.preventDefault();
     if (e.code === 'Escape' || (e.target && e.target.closest && e.target.closest('.cut-skip'))) skipAll = true; poke && poke(); };

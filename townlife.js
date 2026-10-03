@@ -7,7 +7,7 @@
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
   // ---------- 町の 設定（本編の 設定に あわせた にぎわい・物価） ----------
   const TOWNS = [
-    { key: 'kazami', pre: 'k', r: 0, name: '風見の村', at: () => K.REG[0].town, pop: 40, lv: 2, price: .9, school: true, farm: true, extras: 3, note: '灯台守と 漁師の 小さな 村' },
+    { key: 'kazami', pre: 'k', r: 0, name: '風見の村', at: () => K.REG[0].town, pop: 40, lv: 2, price: .9, school: true, farm: true, extras: 3, note: '灯守りと 漁師の 小さな 村' },
     { key: 'shiomi', pre: 's', r: 0, name: '潮見の町 シオミ', at: () => K.shiomi, pop: 60, lv: 1, price: 1.2, school: false, farm: false, extras: 4, note: '半年前の 火事から 立ちなおり中。 物が 足りず 値が 高い' },
     { key: 'minato', pre: 'm', r: 1, name: '港町ミナト', at: () => K.REG[1].town, pop: 320, lv: 5, price: 1.1, school: true, farm: false, extras: 7, stalls: 4, note: '霧の大陸の 玄関口。 交易で にぎわう' },
     { key: 'oasis', pre: 'o', r: 1, name: 'オアシスの村 サラム', at: () => K.oasis, pop: 70, lv: 2, price: 1.25, school: false, farm: true, extras: 3, stalls: 1, note: '砂漠の 水場。 品物を 運ぶのが たいへんで 値が 高い' },

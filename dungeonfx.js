@@ -1,8 +1,8 @@
 // ダンジョンの 区切りと ごほうびの 演出 — 面白さ部署 ④（docs/design/fun-audit.md）
-// ・入口で 名前と ひとことの 見出し（試練の祠・灯台の 内部）
+// ・入口で 名前と ひとことの 見出し（試練の祠・灯の樹の 内部）
 // ・入ってから 頂上／証の台までの 時間を はかり、金・銀・銅の メダル。いちばんの 記録を のこす
 // ・クリアの とき、宝箱と 同じ「光の 演出」で メダルを 見せる
-// セーブ：G.records（祠・灯台ごとの いちばんの 時間と メダル）だけ 追加。中身・進行は かえない
+// セーブ：G.records（祠・灯の樹ごとの いちばんの 時間と メダル）だけ 追加。中身・進行は かえない
 'use strict';
 (() => {
   const K = window.KZ; if (!K) return; const H = K.HOOK, G = () => K.G;
@@ -27,13 +27,13 @@
   const PAR_SH = [60, 150];
   const pg = H.acts.shgate; if (pg) H.acts.shgate = async sh => { const first = !((G().shrineDone || {})[sh.id]) && timers['sh:' + sh.id] == null; if (first) { await title('試練の祠', sh.name, SH[sh.kind] || ''); timers['sh:' + sh.id] = now(); } return pg(sh); };
   const pgo = H.acts.shgoal; if (pgo) H.acts.shgoal = async sh => { const was = !!((G().shrineDone || {})[sh.id]); await pgo(sh); if (!was && (G().shrineDone || {})[sh.id]) await finish('sh:' + sh.id, sh.name, PAR_SH); };
-  // 灯台の 内部
+  // 灯の樹の 内部
   const PAR_LH = [120, 240];
   const lhKey = d => 'lh:' + (d.key || d.id || d.i || d.name);
   const snap = () => JSON.stringify(G().lhDun || {});
   const pin = H.acts.lhdIn; if (pin) H.acts.lhdIn = async d => { const p = K.player, x0 = p.x, z0 = p.z; await pin(d); const moved = Math.hypot(p.x - x0, p.z - z0) > 20; // 「入る」を えらんで 中へ うつった ときだけ
-    if (d && moved) { timers[lhKey(d)] = now(); await title('灯台の 内部', d.name || '灯台', '光を 頂へ'); } };
-  const pgl = H.acts.lhdGoal; if (pgl) H.acts.lhdGoal = async d => { const s0 = snap(); await pgl(d); if (snap() !== s0) await finish(lhKey(d), d.name || '灯台', PAR_LH); };
+    if (d && moved) { timers[lhKey(d)] = now(); await title('灯の樹の 内部', d.name || '灯の樹', '光を 頂へ'); } };
+  const pgl = H.acts.lhdGoal; if (pgl) H.acts.lhdGoal = async d => { const s0 = snap(); await pgl(d); if (snap() !== s0) await finish(lhKey(d), d.name || '灯の樹', PAR_LH); };
   H.load.push(g => { g.records = g.records || {}; for (const k in timers) delete timers[k]; });
   K.dungeonFx = { title, finish, timers };
 })();

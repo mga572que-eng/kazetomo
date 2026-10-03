@@ -5,8 +5,8 @@
   // ---------------- data ----------------
   DATA.fish = [
     { id: 'kohadai', name: 'コハダイ', r: 0, t: 'any', w: 10, size: [18, 34], diff: 1, desc: '島の 浜で いちばん よく つれる。塩焼きが うまい。' },
-    { id: 'toudaisaba', name: 'トウダイサバ', r: 0, t: 'day', w: 6, size: [26, 48], diff: 2, desc: '灯台の 光を 目印に 群れで 泳ぐ。' },
-    { id: 'umihotaru', name: 'ウミホタルウオ', r: 0, t: 'night', w: 5, size: [10, 22], diff: 2, desc: '夜の 海で 青く 光る。灯台守の 守り神とも。' },
+    { id: 'toudaisaba', name: 'トウダイサバ', r: 0, t: 'day', w: 6, size: [26, 48], diff: 2, desc: '灯の樹の 光を 目印に 群れで 泳ぐ。' },
+    { id: 'umihotaru', name: 'ウミホタルウオ', r: 0, t: 'night', w: 5, size: [10, 22], diff: 2, desc: '夜の 海で 青く 光る。灯守りの 守り神とも。' },
     { id: 'kazehirame', name: 'カゼヒラメ', r: 0, t: 'any', w: 1.5, size: [40, 80], diff: 3, desc: '砂に まぎれて 風の 音を 聴いている。' },
     { id: 'minatoaji', name: 'ミナトアジ', r: 1, t: 'any', w: 10, size: [16, 30], diff: 1, desc: '港町ミナトの 名物。朝市に 山ほど ならぶ。' },
     { id: 'yukimasu', name: 'ユキマス', r: 1, t: 'any', w: 5, size: [30, 60], diff: 2, desc: '冷たい 水を 好む 銀色の マス。' },
@@ -15,7 +15,7 @@
     { id: 'kumouo', name: 'クモウオ', r: 2, t: 'any', w: 10, size: [14, 28], diff: 1, desc: '雲海を 泳ぐ ふわふわの 魚。焼くと 綿あめの 香り。' },
     { id: 'nijitobi', name: 'ニジトビウオ', r: 2, t: 'day', w: 4, size: [25, 45], diff: 2, desc: '雲から 雲へ 虹を かけて とぶ。' },
     { id: 'tsukiuo', name: 'ツキウオ', r: 2, t: 'night', w: 2, size: [30, 55], diff: 3, desc: '月の 光を 食べて 育つ。' },
-    { id: 'uminonushi', name: 'ウミノヌシ', r: 0, t: 'night', w: .5, size: [150, 240], diff: 4, bait: true, desc: '島の 伝説。灯台の 灯が すべて ともった 夜、姿を 見せる。' },
+    { id: 'uminonushi', name: 'ウミノヌシ', r: 0, t: 'night', w: .5, size: [150, 240], diff: 4, bait: true, desc: '島の 伝説。灯の樹の 灯が すべて ともった 夜、姿を 見せる。' },
   ];
   Object.assign(DATA.items, {
     tsurizao: { name: 'つりざお', key: true, price: 300, sell: 0, cat: 'heal', desc: '水辺で「つりを する」が できる', src: '道具屋・バルド船長', use: '浜辺や 雲海の ふちで つり' },

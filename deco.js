@@ -95,7 +95,7 @@
       o.boats.push([ex + px * 3.2 - dx * 3, ez + pz * 3.2 - dz * 3, yaw + .15], [ex - px * 3.4 - dx * 6, ez - pz * 3.4 - dz * 6, yaw - .2], [ex + px * 2.5 + dx * 4, ez + pz * 2.5 + dz * 4, yaw + 1.2]);
       harbor = [S.x, S.z, sx + .5 - dx * 1, sz + .5 - dz * 1, 1.05]; }
     const shi = harbor ? [segs[0], harbor, ...segs.slice(1)] : segs; // 港への 道（いちばん 大事）を 先に。人への 小道は 残りの 枠で
-    W.setPaths(0, [...shi.slice(0, 8), ...(K.road0 ? K.road0.segs() : [])]); return o; } // シオミは これまでどおり 先頭8本、残りに 風見の村→野原の灯台の 道
+    W.setPaths(0, [...shi.slice(0, 8), ...(K.road0 ? K.road0.segs() : [])]); return o; } // シオミは これまでどおり 先頭8本、残りに 風見の村→野原の灯の樹の 道
   const PLACE = [place0, null, place2, place3];
 
   // ---------------- 毎フレーム ----------------
@@ -125,9 +125,9 @@
   });
 })();
 
-// ---------------- 風見の村 → 野原の灯台の 道（品質の基準区間） ----------------
-// 道を 1本（地形シェーダの 道）＋ 分かれ道の 道しるべ ＋ 灯の 石（2つ）。道ぞいの 木と 岩は 消して 灯台への 見通しを つくる。
-// 灯台・村の 位置、セーブ、進行は かえない（木は 他の 町と 同じく state='gone'。保存されない）。
+// ---------------- 風見の村 → 野原の灯の樹の 道（品質の基準区間） ----------------
+// 道を 1本（地形シェーダの 道）＋ 分かれ道の 道しるべ ＋ 灯の 石（2つ）。道ぞいの 木と 岩は 消して 灯の樹への 見通しを つくる。
+// 灯の樹・村の 位置、セーブ、進行は かえない（木は 他の 町と 同じく state='gone'。保存されない）。
 (() => {
   const K = window.KZ; if (!K || typeof World === 'undefined') return; const W = World, H = K.HOOK;
   let P = null, cleared = false;
@@ -152,18 +152,18 @@
     [p[2], [(p[2][0] + p[3][0]) / 2, (p[2][1] + p[3][1]) / 2]].forEach(([x, z], i) => { const ox = x + 1.7, oz = z - 1.7; mLamp.set(i, ox, K.hAt(ox, oz) - .05, oz, 1, 0); }); mLamp.n = 2; });
   H.target.push(cand => { if (K.G.region !== 0) return; const s = signAt(); if (s) cand({}, 'road0Sign', s.x, s.z, 2); });
   H.labels.road0Sign = '道しるべを 読む';
-  // 見晴らし（小さな 発見）：丘の 上の 灯の石で あたりを 見わたすと、カメラが 灯台を 向き、仲間が 反応する。はじめての 1回だけ 木の実を 2つ（既存の 道具・少しだけ）
+  // 見晴らし（小さな 発見）：丘の 上の 灯の石で あたりを 見わたすと、カメラが 灯の樹を 向き、仲間が 反応する。はじめての 1回だけ 木の実を 2つ（既存の 道具・少しだけ）
   const viewAt = () => { const p = pts(); return p && { x: p[2][0] + 1.7, z: p[2][1] - 1.7 }; };
   H.target.push(cand => { if (K.G.region !== 0) return; const v = viewAt(); if (v) cand({}, 'road0View', v.x, v.z, 2); });
   H.labels.road0View = 'あたりを 見わたす';
   H.acts.road0View = async () => { const g = K.G, b = K.REG[0].beacons[0], pl = K.player, first = !(g.flags && g.flags.road0View);
     if (K.cam) K.cam.yaw = Math.atan2(b.x - pl.x, b.z - pl.z); // 灯の樹の ほうを 向く（cam.yaw は 見る 方向）
-    const L = ['丘の 上から、野原の灯台が よく 見える。', b.lit ? '灯台の てっぺんで、灯が ゆれている。' : '灯台の てっぺんは、まだ 暗い。'];
+    const L = ['丘の 上から、野原の灯の樹が よく 見える。', b.lit ? '灯の樹の てっぺんで、灯が ゆれている。' : '灯の樹の てっぺんは、まだ 暗い。'];
     const mio = K.inParty && K.inParty('mio'); if (mio && K.who) L.push(K.who('mio', 'smile', b.lit ? 'ここから 見ると、灯って ほんとに 遠くまで とどくんだね。' : 'あそこまで あと すこし！ 道を たどって いこう。'));
     if (first) { g.flags = g.flags || {}; g.flags.road0View = 1; K.gain('mi', 2); L.push('灯の石の かげに 木の実が 2つ おちていた！'); }
     await K.say(L); if (first) { K.hud(); K.save(); } };
   H.acts.road0Sign = async () => { const b = K.REG[0].beacons[0], s = signAt(), d = Math.round(Math.hypot(b.x - s.x, b.z - s.z));
-    await K.say([`道しるべ：「→ 野原の灯台（${d}m）　← 風見の村」`, b.lit ? '灯台の 灯が、ここからでも 見える。' : 'この道を まっすぐ 行けば、灯台の ふもとに 出る。']); };
+    await K.say([`道しるべ：「→ 野原の灯の樹（${d}m）　← 風見の村」`, b.lit ? '灯の樹の 灯が、ここからでも 見える。' : 'この道を まっすぐ 行けば、灯の樹の ふもとに 出る。']); };
   // ---------- 風見の村：入口の 目じるし（屋外の 小物だけ。家の 形・中は さわらない） ----------
   // 食堂＝のれんと ちょうちん、工房＝金床と 金づちの 看板、家＝ポストと 植木ばち。入口の わき（外がわ 0.9m・横 1.4m）に 置き、通り道は ふさがない
   const FG = { cook: W.Geo(), smith: W.Geo(), home: W.Geo() };
@@ -184,7 +184,7 @@
   K.road0 = { pts, segs, onRoad, signAt, viewAt, fronts, get drawn() { return mSign.n + mLamp.n; } };
 })();
 
-// ---------------- 家の 中では かべを 登らない（灯台の 中と 同じ しくみ。interiors.js は さわらない） ----------------
+// ---------------- 家の 中では かべを 登らない（灯の樹の 中と 同じ しくみ。interiors.js は さわらない） ----------------
 (() => { const K = window.KZ; if (!K) return; const H = K.HOOK; const prev = H.noClimb;
   H.noClimb = () => !!(K.interior && K.interior.cur) || !!(prev && prev()); })();
 
