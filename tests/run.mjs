@@ -138,7 +138,7 @@ test('道の 見晴らし：灯台を 向く・ごほうびは 1回だけ', asyn
 
 test('最初の町：入口の 目じるし（食堂・工房・家）と 通り道', async ({ page }) => {
   await page.evaluate(async () => { await KZ.travel(0, 2, 2); }); await idle(page);
-  const r = await page.evaluate(() => KZ.road0.fronts().map(f => { dx = Math.sin(f.yaw), dz = Math.cos(f.yaw), x = f.dx + dx * 1.2, z = f.dz + dz * 1.2; return [f.k, KZ.blocked(x, z, KZ.surfaceAt(x, z, 99) + .1)]; }));
+  const r = await page.evaluate(() => KZ.road0.fronts().map(f => { const dx = Math.sin(f.yaw), dz = Math.cos(f.yaw), x = f.dx + dx * 1.2, z = f.dz + dz * 1.2; return [f.k, KZ.blocked(x, z, KZ.surfaceAt(x, z, 99) + .1)]; }));
   ok(r.length === 5 && ['cook', 'smith', 'home', 'inn', 'shop'].every(k => r.some(([kk]) => kk === k)), '目じるしが 5軒に ない：' + JSON.stringify(r)); ok(r.every(([, b]) => !b), '入口の 前が ふさがれている');
 });
 
