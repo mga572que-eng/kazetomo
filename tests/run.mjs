@@ -215,6 +215,23 @@ test('星の遺跡 2階「星見の間」：石段で のぼれる・光の か�
   ok(await page.evaluate(() => KZ.mainFloors.ruins.starDoor.every(c => World.Blocks.get(...c) === 7)), '記録の ない セーブで 扉が しまらない');
 });
 
+test('星巣の塔「星座の間」：階段から 床へ・星座の 順・まちがいで やりなおし・ほうびは 1回', async ({ page }) => {
+  await page.evaluate(async () => { const t = KZ.REG[2].tower; delete KZ.G.flags.towerStars; KZ.G.flags.c3bridge = true; /* 虹の橋の あと（塔の 結界が ない） */ await KZ.travel(2, t.x, t.z + 8); }); await idle(page);
+  await page.evaluate(() => { const M = KZ.mainFloors.tower, P = KZ.player; Object.assign(P, { x: M.WX + 4.5, z: M.WZ - 2.5, y: M.FY - 1, vy: 0 }); P.yaw = -Math.PI / 2; KZ.cam.yaw = -Math.PI / 2; __dbg.sim(3); });
+  await page.keyboard.down('KeyW'); for (let i = 0; i < 6; i++) await page.evaluate(() => __dbg.sim(5)); await page.keyboard.up('KeyW');
+  const w = await page.evaluate(() => ({ y: KZ.player.y, fy: KZ.mainFloors.tower.FY, x: KZ.player.x - KZ.mainFloors.tower.WX }));
+  ok(Math.abs(w.y - w.fy) < .6 && w.x < 4, '階段から 星座の 床へ 上がれない：' + JSON.stringify(w));
+  const step = c => page.evaluate(c => { const M = KZ.mainFloors.tower, P = KZ.player; Object.assign(P, { x: M.WX + c[0] + .5, z: M.WZ + c[1] + .5, y: M.FY, vy: 0 }); __dbg.sim(2); Object.assign(P, { x: M.WX + .5, z: M.WZ + .5 - 0.0, y: M.FY }); return M.st.step; }, c);
+  const S = await page.evaluate(() => KZ.mainFloors.tower.stars), D = await page.evaluate(() => KZ.mainFloors.tower.decoys);
+  ok(await step(S[1]) === 0, '明るい 星から でなくても すすむ');
+  await step(S[0]); await step(S[1]); ok(await step(D[0]) === 0, '線の ない 星で やりなおしに ならない');
+  await step(S[0]); ok(await step(S[2]) === 0, '順の ちがう 星で やりなおしに ならない');
+  const g0 = await page.evaluate(() => KZ.G.gold); for (const c of S) await step(c); await idle(page);
+  ok(await page.evaluate(() => KZ.G.flags.towerStars) === 1, '星座を たどっても とけない');
+  for (let k = 0; k < 2; k++) { act(page, `() => KZ.HOOK.acts.twPed({})`); await idle(page); }
+  const r = await page.evaluate(g0 => ({ f: KZ.G.flags.towerStars, d: KZ.G.gold - g0 }), g0); ok(r.f === 2 && r.d === 2500, 'ほうびが 1回だけで ない：' + JSON.stringify(r));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }

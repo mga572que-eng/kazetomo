@@ -96,3 +96,58 @@
   H.quest.push(() => K.G.flags && K.G.flags.c2rumor ? `<li>星の遺跡 2階「星見の間」${flag() >= 2 ? '（クリア）' : '：北の 石段から 屋根の 上へ'}</li>` : '');
   K.mainFloors = { ruins: { room: { x0: X0, x1: X1, z0: Z0, z1: Z1, y: FY }, stairs: { x: ox + 4.5, z: oz - 1.5 }, landing: { x: ox + 17.5, z: oz - 1.5, y: FY }, dais: DAIS, mirrors: MIR, st, trace: () => trace(), wx, wz, starDoor, door: { x: ox + 17.5, z: Z0 + .5 } } };
 })();
+
+// ===== 2件目：星巣の塔「星座の間」と 星座の 床の 謎 =====
+// ・塔の 中の 階段の 13段目の 高さに 床（7×7）を 張る。階段・屋上の 祭壇・中ボス・第3章の 流れは そのまま
+// ・床の 星の 石を、星座の 線で つながる 順に ふむ。はじまりは いちばん 明るい 星。線の ない 星や 順の ちがう 星を ふむと やりなおし
+// ・とけると 床の 真ん中に 光の 台が あらわれ、ほうび（1回だけ）。記録は G.flags.towerStars（1＝とけた・2＝ほうびずみ）だけ
+(() => {
+  const K = window.KZ; if (!K || typeof World === 'undefined') return; const W = World, H = K.HOOK, B = W.Blocks;
+  const R2 = K.REG[2], tw = R2 && R2.tower; if (!tw) return;
+  const C = (h, e = 0) => { const n = parseInt(h.slice(1), 16); return () => [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255, e]; };
+  const WX = Math.floor(tw.x), WZ = Math.floor(tw.z), PY = tw.base + 12, FY = PY + 1; // 床の ブロックの 高さ・立つ 高さ
+  const STARS = [[-3, -3], [-1, -2], [1, -3], [3, -1], [2, 1], [0, 2], [-2, 3]], DECOY = [[-2, 0], [3, 3], [-3, 1]];
+  const key = (a, b) => a + ',' + b, starAt = new Map(STARS.map((s, i) => [key(...s), i])), decoyAt = new Set(DECOY.map(d => key(...d)));
+  W.setRegion(2);
+  for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) { const k = key(a, b); B.set(WX + a, PY, WZ + b, starAt.has(k) || decoyAt.has(k) ? 13 : (a + b) & 1 ? 6 : 1, true, 2); } // くらい 石の 床で 星を 目立たせる
+  for (const [a, b] of [[-3, -3], [3, -3], [-3, 3], [3, 3]]) for (let h = 1; h <= 2; h++) B.set(WX + a, PY - h, WZ + b, 6, true, 2); // 床の 下の 支え（見た目）
+  W.setRegion(0);
+  const flag = () => (K.G.flags || {}).towerStars || 0;
+  const st = { step: 0, last: null };
+  const onFloor = () => K.G.region === 2 && Math.abs(K.player.y - FY) < .6 && Math.abs(K.player.x - tw.x) < 3.6 && Math.abs(K.player.z - tw.z) < 3.6;
+  const cellOf = () => [Math.floor(K.player.x) - WX, Math.floor(K.player.z) - WZ];
+  function setTile(a, b, on) { const t = on ? 14 : 13; if (B.get(WX + a, PY, WZ + b) !== t) B.set(WX + a, PY, WZ + b, t, true, 2); }
+  function resetStars(msg) { st.step = 0; STARS.forEach(s => setTile(...s, false)); if (msg) { Music.sfx('cancel'); K.toast(msg, 1500); } }
+  function solve() { const G = K.G; G.flags = G.flags || {}; if (!G.flags.towerStars) G.flags.towerStars = 1; Music.sfx('magic'); K.toast('星座が ひとつに つながった！　床の 真ん中に 光の 台が あらわれた', 2400); K.save(); }
+  // ---- 見た目：星（明るい星は 大きく）・星座の 線（点線）・光の 台 ----
+  const gStar = W.Geo(); W.ico(gStar, .26, [0, 0, 0], C('#6fa0ff', .62), 0, 1, 1); const gStarOn = W.Geo(); W.ico(gStarOn, .32, [0, 0, 0], C('#ffc832', .7), 0, 1, 1);
+  const gDot = W.Geo(); W.ico(gDot, .08, [0, 0, 0], C('#5f90ff', .6), 0, 0, 1); const gPed = W.Geo(); W.prism(gPed, .45, .5, 0, .8, 8, C('#8a8fa8')); W.ico(gPed, .35, [0, 1.25, 0], C('#fff2b0', 1), .1, 1, 1);
+  const mStar = W.makeMesh(gStar, STARS.length + DECOY.length), mOn = W.makeMesh(gStarOn, STARS.length), mDot = W.makeMesh(gDot, 120), mPed = W.makeMesh(gPed, 1);
+  const P = ([a, b]) => [WX + a + .5, WZ + b + .5];
+  H.frame.push((dt, T) => { for (const m of [mStar, mOn, mDot, mPed]) m.n = 0; if (K.G.region !== 2 || K.phase !== 'field') return;
+    if (Math.hypot(K.player.x - tw.x, K.player.z - tw.z) > 60) return; const done = flag() >= 1;
+    STARS.forEach((s, i) => { const [x, z] = P(s), lit = done || i < st.step, big = i === 0 ? 1.7 : 1; (lit ? mOn : mStar).set((lit ? mOn : mStar).n++, x, FY + .35 + Math.sin(T * 2 + i) * .05, z, big, T); });
+    DECOY.forEach(d => { const [x, z] = P(d); mStar.set(mStar.n++, x, FY + .35, z, .8, 0); });
+    for (let i = 0; i + 1 < STARS.length; i++) { const [x0, z0] = P(STARS[i]), [x1, z1] = P(STARS[i + 1]), L = Math.hypot(x1 - x0, z1 - z0), n = Math.floor(L / .45);
+      for (let k = 1; k < n && mDot.n < mDot.maxN; k++) mDot.set(mDot.n++, x0 + (x1 - x0) * k / n, FY + .06, z0 + (z1 - z0) * k / n, done || i < st.step - 1 ? 1.5 : 1, 0); }
+    if (done && flag() < 2) mPed.set(mPed.n++, tw.x, FY, tw.z, 1, T);
+    if (done) { STARS.forEach(s => setTile(...s, true)); return; }
+    if (!onFloor()) { st.last = null; return; } const [a, b] = cellOf(), k = key(a, b); if (k === st.last) return; st.last = k;
+    if (decoyAt.has(k)) return resetStars('線の ない 星だ……　はじめから');
+    if (!starAt.has(k)) return; const i = starAt.get(k); if (i < st.step) return;
+    if (i !== st.step) return resetStars(st.step === 0 ? 'いちばん 明るい 星から はじめよう' : '順が ちがう……　はじめから');
+    setTile(a, b, true); st.step++; Music.sfx('pick'); if (st.step >= STARS.length) solve(); });
+  // ---- しらべる ----
+  const TAB = { x: tw.x - 3.3, z: tw.z + 3.3 };
+  H.target.push(cand => { if (K.G.region !== 2 || Math.abs(K.player.y - FY) > 2.5 || Math.hypot(K.player.x - tw.x, K.player.z - tw.z) > 6) return;
+    cand({}, 'twTablet', TAB.x, TAB.z, 1.6); if (flag() === 1) cand({}, 'twPed', tw.x, tw.z, 1.8); });
+  H.labels.twTablet = '星座の 石版を しらべる'; H.labels.twPed = '光の 台を しらべる';
+  H.acts.twTablet = async () => { if (flag() >= 1) { await K.say(['星座の 石版：床の 星は みんな つながっている。']); return; }
+    await K.say(['【星座の間】', '石版：「星を 線の とおりに たどれ。 はじまりは いちばん 明るい 星」', '（線の ない 星を ふむと、はじめから）']);
+    const c = await K.menu({ title: '星座の 石版', items: [{ label: 'がんばる' }, { label: '星を もとに もどす' }] }); if (c === 1) resetStars(); };
+  H.acts.twPed = async () => { const G = K.G; if (flag() !== 1) return; G.flags.towerStars = 2; G.gold += 2500; K.gain('stew', 1); K.gain('shizuku', 3); Music.jingle('light', K.fieldSong());
+    await K.say(['光の 台に ふれると、星の 光が しずかに ほどけた。', '2500ゴールドを 手に入れた！', `${DATA.items.stew.name}を 1こ 手に入れた！`, '夜露のしずくを 3こ 手に入れた！']); K.save(); K.hud(); };
+  H.mapMarks.push((r, pos) => r === 2 && K.G.flags && K.G.flags.c3bridge ? [`<span class="mk${flag() >= 2 ? ' lit' : ''}" style="${pos(tw.x + 7, tw.z)}" title="星座の間（塔の 中ほど）">${flag() >= 2 ? '✦' : '◈'}</span>`] : []);
+  H.quest.push(() => K.G.flags && K.G.flags.c3bridge ? `<li>星巣の塔「星座の間」${flag() >= 2 ? '（クリア）' : '：塔の 階段の 中ほど'}</li>` : '');
+  K.mainFloors = K.mainFloors || {}; K.mainFloors.tower = { WX, WZ, PY, FY, stars: STARS, decoys: DECOY, st, tablet: TAB, reset: () => resetStars() };
+})();
