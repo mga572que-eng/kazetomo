@@ -53,7 +53,7 @@
     pot: [['gold', 1], ['dokukeshi', 2], ['mi', 2], ['shizuku', 1], ['hoshikake', 1, .1]], crate: [['ishi', 3], ['maki', 3], ['pan', 1], ['gold', 1]],
     counter: [['pan', 2], ['yakimi', 2], ['kinojiru', 1], ['stew', 1, .12]], tub: [['gold', 1]], sack: [['mi', 4], ['kinoko', 2], ['pan', 1]], stove: [['yakimi', 2], ['pan', 1]], bed: [['gold', 1], ['hane', 1]],
   };
-  const BOOKS = ['「灯台守の こころえ」……灯は 帰る 場所の しるし。 いってらっしゃいの しるしでも ある。', '「いきもの図鑑の つけかた」……よく 見て、よく 書く。 それが いちばん。', '「星の よみかた」……夜空の 星は、ずっと むかしの 光だと いう。',
+  const BOOKS = ['「灯守りの こころえ」……灯は 帰る 場所の しるし。 いってらっしゃいの しるしでも ある。', '「いきもの図鑑の つけかた」……よく 見て、よく 書く。 それが いちばん。', '「星の よみかた」……夜空の 星は、ずっと むかしの 光だと いう。',
     '「風の ことわざ集」……むかい風は、たこを いちばん 高く あげる。', '「おいしい 料理」……木の実は 焼くと あまく なる。', '「船乗りの 日記」……霧の 大陸の 港は、いつも 人で いっぱいだ。'];
   const bag = () => K.bal && K.bal.bag ? K.bal.bag() : null;
   const HUM = ['sora', 'mio', 'riku', 'sana', 'haru', 'kaito'];
@@ -173,6 +173,7 @@
   H.load.push(g => { g.searched = g.searched || {}; g.garden = g.garden || {}; cur = null; checked = false; });
   // ---------- 入口の 名前札（近くの 家 3軒まで。てんしょくの像と 同じ 見た目。地図・セーブは かえない） ----------
   const PLATE = { nagi: '食堂 かざみ亭' };
+  const plateStyle = document.createElement('style'); plateStyle.textContent = '.inbattle .doorTag{display:none!important}'; document.head.append(plateStyle);
   const plates = [0, 1, 2].map(() => { const e = document.createElement('div'); e.className = 'doorTag'; e.style.cssText = 'position:fixed;z-index:24;pointer-events:none;background:#213558da;color:#ffe38b;padding:4px 8px;border-radius:5px;font:600 13px/1.3 var(--ui);white-space:nowrap;transform:translate(-50%,-100%)'; e.hidden = true; document.body.append(e); return e; });
   H.frame.push(() => { plates.forEach(e => e.hidden = true); if (K.phase !== 'field' || (K.B && K.B.active) || cur || document.body.classList.contains('modal')) return; const r = G().region, pl = K.player;
     const list = houses(r).map(h => ({ h, d: doorOf(h) })).map(o => ({ ...o, k: Math.hypot(o.d.x - pl.x, o.d.z - pl.z) })).filter(o => o.k < 18).sort((a, b) => a.k - b.k).slice(0, 3);
