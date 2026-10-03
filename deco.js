@@ -157,7 +157,7 @@
   H.target.push(cand => { if (K.G.region !== 0) return; const v = viewAt(); if (v) cand({}, 'road0View', v.x, v.z, 2); });
   H.labels.road0View = 'あたりを 見わたす';
   H.acts.road0View = async () => { const g = K.G, b = K.REG[0].beacons[0], pl = K.player, first = !(g.flags && g.flags.road0View);
-    if (K.cam) K.cam.yaw = Math.atan2(pl.x - b.x, pl.z - b.z);
+    if (K.cam) K.cam.yaw = Math.atan2(b.x - pl.x, b.z - pl.z); // 灯の樹の ほうを 向く（cam.yaw は 見る 方向）
     const L = ['丘の 上から、野原の灯台が よく 見える。', b.lit ? '灯台の てっぺんで、灯が ゆれている。' : '灯台の てっぺんは、まだ 暗い。'];
     const mio = K.inParty && K.inParty('mio'); if (mio && K.who) L.push(K.who('mio', 'smile', b.lit ? 'ここから 見ると、灯って ほんとに 遠くまで とどくんだね。' : 'あそこまで あと すこし！ 道を たどって いこう。'));
     if (first) { g.flags = g.flags || {}; g.flags.road0View = 1; K.gain('mi', 2); L.push('灯の石の かげに 木の実が 2つ おちていた！'); }

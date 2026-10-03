@@ -53,7 +53,7 @@
   #battle:not(.b3d) .foe .bar{width:clamp(80px,20vh,130px);height:7px;border:1px solid rgba(0,0,0,.65);border-radius:4px;box-shadow:0 1px 0 rgba(255,255,255,.15)}
   #battle:not(.b3d) .foe.boss .bar{width:clamp(160px,36vh,280px)}`; document.head.appendChild(css);
   let cam = null;
-  H.bgStart = opts => { if (!(H.OPT && H.OPT.mix) || !K.player || (typeof __norender !== 'undefined' && __norender)) return false; const p = K.player, y = K.cam.yaw, f = [-Math.sin(y), -Math.cos(y)];
+  H.bgStart = opts => { if (!(H.OPT && H.OPT.mix) || !K.player || (typeof __norender !== 'undefined' && __norender)) return false; const p = K.player, y = K.cam.yaw, f = [Math.sin(y), Math.cos(y)]; // いま 見ている 方向（cam.yaw は 見る 方向）
     cam = { p: [p.x, p.y, p.z], f, boss: !!opts.boss }; document.getElementById('battle').classList.add('bg3d'); return true; };
   H.bgCam = (dt, T) => { if (!cam) return null; for (const k in K.mSp) K.mSp[k].n = 0; for (const k in K.mH) if (k !== 'statue') { K.mH[k].n = 0; if (K.poseHide) K.poseHide(k); }
     const [x, y, z] = cam.p, f = cam.f, s = Math.sin(T * .2) * .35, back = cam.boss ? 2.6 : 2.0;

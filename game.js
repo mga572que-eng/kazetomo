@@ -2505,7 +2505,7 @@ function frameBody(now) {
       mFeather.set(mFeather.n++, f.x, f.y + Math.sin(T * 2 + k) * .25, f.z, 1.3, T * 1.5); }); }
     mSkyRock.n = 0; if (G.region === 2) { r.skyRocks.forEach((k, i) => mSkyRock.set(i, k.x, k.y + Math.sin(T * .3 + k.ph) * .8, k.z, k.s, k.r + T * .01)); mSkyRock.n = r.skyRocks.length; }
     if (G.region === 2 && G.flags.c3arrive) { const w = r.whale; mWhale.set(0, w.x, w.y + Math.sin(T * .7) * .6, w.z, 3.4, Math.PI / 2 + Math.sin(T * .3) * .1); mWhale.n = 1; } else mWhale.n = 0;
-    if (G.region === 0) { r.beacons.forEach((b, i) => mBeacon.set(i, b.x, b.y, b.z, 1, i * .7)); mBeacon.n = 5; mShrine.set(0, r.shrine.x, r.shrine.y, r.shrine.z, 1, 0); mShrine.n = 1; } else { mBeacon.n = 0; mShrine.n = 0; }
+    if (G.region === 0) { r.beacons.forEach((b, i) => mBeacon.set(i, b.x, b.y, b.z, HOOK.beaconScale ? HOOK.beaconScale(b) : 1, i * .7)); /* 灯の樹に した 灯台は 0（tomotree.js） */ mBeacon.n = 5; mShrine.set(0, r.shrine.x, r.shrine.y, r.shrine.z, 1, 0); mShrine.n = 1; } else { mBeacon.n = 0; mShrine.n = 0; }
     mShip.set(0, r.ship.x, -.2 + Math.sin(T * .8) * .12, r.ship.z, 1, r.ship.yaw + Math.sin(T * .6) * .03); mShip.n = G.region !== 2 && (G.region === 1 || G.flags.c2start) ? 1 : 0;
     let ci = 0; for (const c of r.chests) if (!G.chests[c.id] && ci < 16) mChest.set(ci++, c.x, c.y, c.z, 1, 0); mChest.n = ci;
     if (r.board) { mBoard.set(0, r.board.x, surfaceAt(r.board.x, r.board.z, 99), r.board.z, 1, 0); mBoard.n = 1; } else mBoard.n = 0;

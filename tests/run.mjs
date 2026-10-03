@@ -130,7 +130,7 @@ test('道の 見晴らし：灯台を 向く・ごほうびは 1回だけ', asyn
   ok(await page.evaluate(() => { const v = KZ.road0.viewAt(), P = KZ.player; P.x = v.x - 1; P.z = v.z + 1; P.y = KZ.surfaceAt(P.x, P.z, 99); __dbg.sim(3); return document.getElementById('btnActLabel').textContent; }) === 'あたりを 見わたす', '見晴らしを しらべられない');
   const m0 = await page.evaluate(() => KZ.G.inv.mi || 0);
   act(page, `() => KZ.HOOK.acts.road0View()`); await idle(page);
-  const r = await page.evaluate(m0 => { const b = KZ.REG[0].beacons[0], P = KZ.player, want = Math.atan2(P.x - b.x, P.z - b.z), d = Math.abs(((KZ.cam.yaw - want) % 6.283 + 9.42) % 6.283 - 3.14); return { got: (KZ.G.inv.mi || 0) - m0, flag: KZ.G.flags.road0View, d }; }, m0);
+  const r = await page.evaluate(m0 => { const b = KZ.REG[0].beacons[0], P = KZ.player, want = Math.atan2(b.x - P.x, b.z - P.z), d = Math.abs(((KZ.cam.yaw - want) % 6.283 + 9.42) % 6.283 - 3.14); return { got: (KZ.G.inv.mi || 0) - m0, flag: KZ.G.flags.road0View, d }; }, m0); // cam.yaw は 見る 方向（画面への 投影で 確認ずみ）
   ok(r.got === 2 && r.flag === 1, '1回めの ごほうびが ちがう：' + r.got); ok(r.d < .3, 'カメラが 灯台を 向いていない');
   const m1 = await page.evaluate(() => KZ.G.inv.mi || 0); act(page, `() => KZ.HOOK.acts.road0View()`); await idle(page);
   ok(await page.evaluate(m1 => (KZ.G.inv.mi || 0) === m1, m1), '2回めも ごほうびが でる');
@@ -152,6 +152,12 @@ test('戦闘：2Dの 絵＋3Dの けしき（標準）・HPバーが 1体ずつ 
   await page.evaluate(() => { KZ.G.auto = true; }); for (let i = 0; i < 80 && !(await page.evaluate(() => window.__r)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(250); } await idle(page);
   ok(await page.evaluate(() => !document.getElementById('battle').classList.contains('bg3d')), '戦闘の あとに 3Dの けしきの 設定が のこる');
 }, { render: true });
+
+test('灯の樹（試作）：野原の灯台が 樹に なる・幹は 通りぬけない・灯は 花の 位置', async ({ page }) => {
+  await page.evaluate(async () => { const b = KZ.REG[0].beacons[0]; await KZ.travel(0, b.x - 12, b.z - 12); }); await idle(page); await page.evaluate(() => __dbg.sim(3));
+  const r = await page.evaluate(() => { const b = KZ.REG[0].beacons[0], b1 = KZ.REG[0].beacons[1]; return { tree: KZ.tomoTree.isTree(b), scale0: KZ.HOOK.beaconScale(b), scale1: KZ.HOOK.beaconScale(b1), wall: KZ.blocked(b.x, b.z, b.y + 1), fire: b.fireAt[1] - b.y }; });
+  ok(r.tree && r.scale0 === 0 && r.scale1 === 1, '野原だけ 樹に なっていない：' + JSON.stringify(r)); ok(r.wall, '幹を 通りぬけられる'); ok(r.fire > 7, '灯の 位置が 花の 高さに ない：' + r.fire);
+});
 
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
