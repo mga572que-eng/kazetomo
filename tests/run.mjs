@@ -187,6 +187,12 @@ test('海の さんごの 樹：石の 塔が なくなり、幹は 通りぬけ
   ok(w.every(([wall, gone]) => wall && gone), '幹の かべ／石の 塔の とりのぞきが ちがう：' + JSON.stringify(w));
 });
 
+test('地図から 灯の樹へ：根の道の 演出で 移動', async ({ page }) => {
+  const r = await page.evaluate(async () => { const b = KZ.REG[0].beacons[2]; b.lit = true; KZ.G.lit[2] = 1; let shown = false; const fx = document.getElementById('rootfx'); const ob = new MutationObserver(() => { if (fx.classList.contains('on')) shown = true; }); ob.observe(fx, { attributes: true });
+    await KZ.HOOK.rootWarp({ n: '灯の樹：岩山の灯の樹', x: b.x + 3, z: b.z + 3 }); ob.disconnect(); const P = KZ.player; return { shown, near: Math.hypot(P.x - b.x - 3, P.z - b.z - 3) < 2, off: !fx.classList.contains('on') }; });
+  ok(r.shown && r.near && r.off, '根の道の 演出で 移動しない：' + JSON.stringify(r));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
