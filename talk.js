@@ -1,6 +1,6 @@
 // ともしびアイランド — 仲間会話（いつでも 仲間に 話しかけられる）
 // ・メニュー「はなす」→ 話す 相手を えらぶ（または「みんなで」）
-// ・場面（町・灯台・祠・海の底・夜・戦いの あと・HPが すくない）と 物語の 進み具合で セリフを えらぶ
+// ・場面（町・灯の樹・祠・海の底・夜・戦いの あと・HPが すくない）と 物語の 進み具合で セリフを えらぶ
 // ・一度 聞いた セリフは G.talkSeen に 記録し、くり返さない（ぜんぶ 聞いたら 短い 反応セリフを 順番に）
 // セリフを 足すとき：下の L に { id, w: 話す人, need: [いっしょに いる 人], when: c => 条件, pri: 優先度, s: c => [セリフ] } を 足す。id は 変えない（既読の 記録に つかう）
 'use strict';
@@ -31,9 +31,9 @@
   // ---------- セリフ（w：話す人） ----------
   const L = [
     // ===== ミオ =====
-    { id: 'mio_island_night', w: 'mio', when: c => c.r === 0 && c.night, pri: 3, s: () => [W('mio', 'worried', '……夜の 海って、黒い 布みたい。 わたし、ちょっと にがて。'), W('mio', 'smile', 'でも 灯台が 光ってると、だいじょうぶって 思えるの。 {name}が ともしたんだよ。')] },
+    { id: 'mio_island_night', w: 'mio', when: c => c.r === 0 && c.night, pri: 3, s: () => [W('mio', 'worried', '……夜の 海って、黒い 布みたい。 わたし、ちょっと にがて。'), W('mio', 'smile', 'でも 灯の樹が 光ってると、だいじょうぶって 思えるの。 {name}が ともしたんだよ。')] },
     { id: 'mio_kaito_save', w: 'mio', when: c => c.ch === 1, pri: 2, s: () => [W('mio', 'neutral', 'ちいさい ころ、わたし 海で おぼれたの。 ひっぱりあげて くれたのが、カイトさん。'), W('mio', 'smile', 'だから {name}の お父さんは、わたしの 恩人でも あるんだよ。 ……ぜったい、また 会おうね。')] },
-    { id: 'mio_voice', w: 'mio', when: c => c.ch <= 2, pri: 2, s: () => [W('mio', 'neutral', 'かげものの こえ、たまに 聞こえるの。 「さむい」とか「ひとりは いやだ」とか。'), W('mio', 'sad', 'たたかうたびに、ちょっとだけ ごめんねって 思う。 ……へん、かな。')] },
+    { id: 'mio_voice', w: 'mio', when: c => c.ch <= 2, pri: 2, s: () => [W('mio', 'neutral', 'まものの こえ、たまに 聞こえるの。 「さむい」とか「ひとりは いやだ」とか。'), W('mio', 'sad', 'たたかうたびに、ちょっとだけ ごめんねって 思う。 ……へん、かな。')] },
     { id: 'mio_after_hard', w: 'mio', when: c => c.lb && c.lb.hurt >= 2, pri: 6, s: () => [W('mio', 'worried', 'いまの、あぶなかったね……。 みんな、けが 見せて。'), W('mio', 'determined', '歌で なおせる ぶんは なおすから。 むりは しないって、約束して。')] },
     { id: 'mio_low_hp', w: 'mio', when: c => c.hp < .45, pri: 7, s: () => [W('mio', 'worried', '{name}、顔色が わるいよ。 一度 やすもう？'), W('mio', 'smile', '宿屋か、たき火か。 あったかい ところで ねむれば、だいたい なおるんだよ。')] },
     { id: 'mio_shiomi', w: 'mio', when: c => c.place === 'shiomi', pri: 4, s: () => [W('mio', 'sad', 'シオミの 人たち、リクの こと「疫病神」って 呼んでたんだって。'), W('mio', 'determined', 'こわいと、人は だれかの せいに したくなるの。 ……わかるけど、ゆるさない。')] },
@@ -41,13 +41,13 @@
     { id: 'mio_sky', w: 'mio', when: c => c.sky, pri: 3, s: () => [W('mio', 'surprised', '雲の 上って、音が すくないね。 自分の 心臓の 音が 聞こえる。'), W('mio', 'smile', '……ここで 歌ったら、どこまで とどくかな。')] },
     { id: 'mio_sea', w: 'mio', when: c => c.sea, pri: 3, s: () => [W('mio', 'worried', '海の底は まっくら……と 思ってたけど、光る ものが いっぱい いるね。'), W('mio', 'smile', 'くらい ところにも、ちゃんと 灯は あるんだ。')] },
     { id: 'mio_mons', w: 'mio', when: c => c.mons.length >= 2, pri: 2, s: c => [W('mio', 'grin', `${K.nameOf(c.mons[0])}が「ごはん まだ？」って 言ってるよ。`), W('mio', 'smile', '……ほんとだよ？ わたしの 耳は うそ つかないもん。')] },
-    { id: 'mio_fear_dark', w: 'mio', when: c => c.place === 'beacon' || c.place === 'lh', pri: 3, s: () => [W('mio', 'worried', '灯台の 中って、階段の 音が ひびくね……。'), W('mio', 'determined', 'だいじょうぶ。 {name}の うしろ、ちゃんと ついていく。')] },
+    { id: 'mio_fear_dark', w: 'mio', when: c => c.place === 'beacon' || c.place === 'lh', pri: 3, s: () => [W('mio', 'worried', '灯の樹の 中って、階段の 音が ひびくね……。'), W('mio', 'determined', 'だいじょうぶ。 {name}の うしろ、ちゃんと ついていく。')] },
     { id: 'mio_after_c1', w: 'mio', when: c => c.f.cleared && !c.f.c2done, pri: 2, s: () => [W('mio', 'smile', 'カイトさん、帰ってきて よかったね。'), W('mio', 'neutral', '……でも あの 夜から、{name}、ときどき とおくを 見てる。 まだ なにか、気に なってる？')] },
     // ===== リク =====
     { id: 'riku_join', w: 'riku', when: c => c.ch === 1, pri: 3, s: () => [W('riku', 'smirk', 'おい 甘ちゃん。 さっきの たたかい、目 つぶってたろ。'), W('sora', 'surprised', 'つ、つぶってないよ！'), W('riku', 'grin', '……ま、逃げなかったのは みとめてやる。')] },
     { id: 'riku_shiomi', w: 'riku', when: c => c.place === 'shiomi', pri: 6, s: () => [W('riku', 'neutral', '……この 町の 坂、石が よく 転がってたろ。'), W('riku', 'smirk', 'おれに 向かってな。 ……気に すんな。 もう 痛くねえよ。'), W('mio', 'sad', '……リク。')] },
     { id: 'riku_shiomi2', w: 'riku', when: c => c.place === 'shiomi' && c.f.cleared, pri: 4, s: () => [W('riku', 'neutral', 'リョウの やつ、頭 さげに 来やがった。'), W('riku', 'smirk', '……ゆるしたかって？ さあな。 でも、魚は うまかった。')] },
-    { id: 'riku_home', w: 'riku', when: c => c.r === 0 && c.night, pri: 2, s: () => [W('riku', 'sad', 'おれの 町も、こんな 夜に 闇に 喰われた。'), W('riku', 'determined', '……だから 灯台は きらいじゃねえ。 あれが あれば、迷子が 帰ってこれる。')] },
+    { id: 'riku_home', w: 'riku', when: c => c.r === 0 && c.night, pri: 2, s: () => [W('riku', 'sad', 'おれの 町も、こんな 夜に 闇に 喰われた。'), W('riku', 'determined', '……だから 灯の樹は きらいじゃねえ。 あれが あれば、迷子が 帰ってこれる。')] },
     { id: 'riku_sana_search', w: 'riku', when: c => c.r === 1 && !c.f.c2done, pri: 5, s: () => [W('riku', 'determined', 'サナは この 大陸の どこかに いる。 星読みの 巫女なんて、目立つはずだ。'), W('riku', 'angry', '……見つけたら、二度と 手を はなさねえ。')] },
     { id: 'riku_after_sana', w: 'riku', need: ['sana'], when: c => c.f.c2done, pri: 4, s: () => [W('riku', 'smirk', 'サナの やつ、朝から おれの 槍を みがいてやがった。'), W('riku', 'neutral', '……たのんで ねえのに。 ったく。'), W('sana', 'smile', '兄さん、顔が にやけてますよ。')] },
     { id: 'riku_heights', w: 'riku', when: c => c.sky, pri: 3, s: () => [W('riku', 'grin', 'へえ、{name}。 高い ところ、にがてなんだって？'), W('sora', 'worried', 'に、にがてじゃ ないよ！ ……下を 見なければ。'), W('riku', 'smirk', '見てんじゃねえか。')] },
@@ -66,24 +66,24 @@
     // ===== ハル =====
     { id: 'haru_memory', w: 'haru', when: c => c.sky && !c.f.c3done, pri: 4, s: () => [W('haru', 'neutral', '……なにも おぼえて ないの。 自分の ほんとの 名前も。'), W('haru', 'closed', 'でも 子守歌だけ 知ってる。 だれが 歌って くれたのかは、わからない。')] },
     { id: 'haru_wind', w: 'haru', when: c => c.sky, pri: 2, s: () => [W('haru', 'neutral', '風が 西に まがった。 雨が くる。'), W('haru', 'smile', '……雲の 上の 雨は、下に ふるだけ。 ここは ぬれない。')] },
-    { id: 'haru_island', w: 'haru', when: c => c.r === 0 && c.f.c3done, pri: 5, s: () => [W('haru', 'sad', 'この 島の 風、知ってる 気が する。'), W('haru', 'closed', '……お父さんが、灯台の 上で 待ってた 風。')] },
+    { id: 'haru_island', w: 'haru', when: c => c.r === 0 && c.f.c3done, pri: 5, s: () => [W('haru', 'sad', 'この 島の 風、知ってる 気が する。'), W('haru', 'closed', '……お父さんが、灯の樹の 上で 待ってた 風。')] },
     { id: 'haru_alone', w: 'haru', when: c => c.hp < .5, pri: 5, s: () => [W('haru', 'neutral', 'わたしは へいき。 ひとりで なんとか なる。'), W('mio', 'worried', 'ハル、それ 三回目だよ。'), W('haru', 'surprised', '……そう？'), W('haru', 'smile', 'じゃあ、すこし だけ たよる。')] },
     { id: 'haru_glide', w: 'haru', when: c => c.sky && c.f.glider2, pri: 2, s: () => [W('haru', 'grin', '{name}の 風布、さいしょより ずっと うまく なった。'), W('haru', 'smile', '落ちる まえに 風を つかむ。 それだけ。 ……かんたんでしょ？')] },
     // ===== カイト =====
     { id: 'kaito_sorry', w: 'kaito', when: c => c.ch === 4, pri: 5, s: () => [W('kaito', 'sad', '三年も 家を あけた 父親が、いまさら いっしょに 旅か。'), W('kaito', 'neutral', '……ユイには 頭が あがらん。 {name}、おまえにもだ。'), W('sora', 'smile', 'じゃあ、帰ったら いっしょに あやまろう。')] },
-    { id: 'kaito_light', w: 'kaito', when: c => c.place === 'lh', pri: 6, s: () => [W('kaito', 'determined', '沈んだ 灯台にも、灯の 道は のこってる。'), W('kaito', 'smile', '灯は、帰る場所の しるしだ。 ……海の底の 連中にも、帰る 場所は あっていい。')] },
+    { id: 'kaito_light', w: 'kaito', when: c => c.place === 'lh', pri: 6, s: () => [W('kaito', 'determined', '沈んだ 灯の樹にも、灯の 道は のこってる。'), W('kaito', 'smile', '灯は、帰る場所の しるしだ。 ……海の底の 連中にも、帰る 場所は あっていい。')] },
     { id: 'kaito_gen', w: 'kaito', when: c => c.r === 0, pri: 3, s: () => [W('kaito', 'neutral', '兄貴の 打った いかりは、いまでも 手に なじむ。'), W('kaito', 'grin', '……本人には 言うなよ。 調子に のる。')] },
     { id: 'kaito_teach', w: 'kaito', when: c => c.lb && c.lb.res === 'win', pri: 3, s: () => [W('kaito', 'smile', 'いい 間合いだった、{name}。 足が ふるえて なかった。'), W('sora', 'joy', 'ほんと！？'), W('kaito', 'grin', '……すこしだけ ふるえてた。')] },
     { id: 'kaito_sea', w: 'kaito', when: c => c.sea && c.night, pri: 2, s: () => [W('kaito', 'neutral', 'この 底で 三年、空の かわりに 泡を 見てた。'), W('kaito', 'sad', '……夜に なると、ユイの 薬草の においを 思いだした。')] },
     // ===== ソラ と みんな（かけあい） =====
     { id: 'all_first_talk', w: 'sora', need: ['mio'], when: () => true, pri: 9, s: () => [W('sora', 'smile', 'ねえ、ミオ。 旅って、思ってたより しずかだね。'), W('mio', 'smile', 'うん。 でも わたしは すき。 歩きながら、いろんな 話が できるから。'), '（メニューの「はなす」で、いつでも 仲間と 話せる）'] },
     { id: 'all_rain_lunch', w: 'mio', need: ['riku'], when: c => c.place === 'field' && !c.night, pri: 2, s: () => [W('mio', 'smile', 'ねえ、お昼 どうする？'), W('riku', 'neutral', '干し肉。'), W('mio', 'sad', '……昨日も 干し肉だった。'), W('riku', 'smirk', 'あしたも 干し肉だ。')] },
-    { id: 'all_sleep_talk', w: 'riku', need: ['mio'], when: c => c.night, pri: 2, s: () => [W('riku', 'smirk', 'ゆうべ、甘ちゃんが ねごとで「灯台…… のぼれない……」って 言ってた。'), W('sora', 'surprised', 'い、言ってないよ！'), W('mio', 'grin', '言ってたよ。 三回。')] },
+    { id: 'all_sleep_talk', w: 'riku', need: ['mio'], when: c => c.night, pri: 2, s: () => [W('riku', 'smirk', 'ゆうべ、甘ちゃんが ねごとで「灯の樹…… のぼれない……」って 言ってた。'), W('sora', 'surprised', 'い、言ってないよ！'), W('mio', 'grin', '言ってたよ。 三回。')] },
     { id: 'all_sana_riku', w: 'sana', need: ['riku'], when: c => c.f.c2done && c.place === 'town', pri: 3, s: () => [W('sana', 'smile', '兄さん、むかしは 町で いちばん 甘いもの すきでしたよね。'), W('riku', 'angry', 'よけいな こと 言うな。'), W('mio', 'joy', 'リクの すきな もの、はじめて 知った！')] },
     { id: 'all_haru_kurou', w: 'sora', need: ['haru'], when: c => c.f.c3reunion, pri: 4, s: () => [W('sora', 'neutral', 'ハル。 クロウさんと、話せた？'), W('haru', 'closed', '……まだ うまく 話せない。 四十年は、ながい。'), W('haru', 'smile', 'でも、子守歌を 歌ったら、泣いてた。 ……わたしも。')] },
     { id: 'all_kaito_riku', w: 'kaito', need: ['riku'], when: c => c.ch === 4, pri: 3, s: () => [W('kaito', 'neutral', 'リク。 {name}の そばに いて くれて、ありがとう。'), W('riku', 'surprised', '……べ、べつに。 こいつが 危なっかしいだけだ。'), W('kaito', 'grin', '知ってる。 おれの 子だからな。')] },
     // ===== 場所・場面 =====
-    { id: 'pl_beacon_sora', w: 'sora', when: c => c.place === 'beacon', pri: 3, s: () => [W('sora', 'determined', 'ここの 灯台、てっぺんまで のぼるの…… ちょっと こわい。'), W('sora', 'smile', 'でも、父さんも のぼってたんだ。 ぼくだって。')] },
+    { id: 'pl_beacon_sora', w: 'sora', when: c => c.place === 'beacon', pri: 3, s: () => [W('sora', 'determined', 'ここの 灯の樹、てっぺんまで のぼるの…… ちょっと こわい。'), W('sora', 'smile', 'でも、父さんも のぼってたんだ。 ぼくだって。')] },
     { id: 'pl_shrine', w: 'sora', when: c => c.place === 'shrine', pri: 3, s: () => [W('sora', 'neutral', '祠の 試練って、力より 頭を つかうんだね。'), has('mio') ? W('mio', 'smile', '箱を おす 順番、いっしょに 考えよ。 まちがえたら「ぬけだす」で やりなおせるよ。') : null] },
     { id: 'pl_tower', w: 'sora', when: c => c.place === 'tower', pri: 4, s: () => [W('sora', 'worried', '星巣の 塔……。 下から 見ると、空に ささってる みたい。'), has('haru') ? W('haru', 'determined', 'てっぺんで 待ってる ものが いる。 風が そう 言ってる。') : null] },
     { id: 'pl_palace', w: 'sora', when: c => c.place === 'palace', pri: 4, s: () => [W('sora', 'worried', 'ここが 深淵の宮……。 しずかすぎて、耳が きーんと する。'), has('kaito') ? W('kaito', 'determined', '深みの王は、ここで 灯を 喰ってる。 三年ぶんの 借りを 返す。') : null] },
@@ -105,7 +105,7 @@
       () => '旅の 日記を つけています。 今日は「みんな 元気」と 書きます。', c => c.town ? 'この 町の 星図、あとで 見せて もらいたいです。' : '足もとの 花、薬に なります。 すこし つんで いきますね。'],
     haru: [() => '風、かわった。', c => c.sky ? '雲の 上は、おちつく。' : '地面は まだ、ちょっと ゆれてる 気が する。', () => '……ん。 なんでもない。',
       c => c.night ? '夜風は、すこし さびしい におい。' : '光が まぶしい。 ……でも、きらいじゃない。', () => 'みんなの 足音、おぼえた。 目を とじても わかる。'],
-    kaito: [() => '足もとに 気を つけろ。', c => c.night ? '夜の 海を 見ると、つい 灯台を さがしちまう。' : 'いい 天気だ。 船を 出したく なる。', () => '……ユイに 手紙でも 書くか。',
+    kaito: [() => '足もとに 気を つけろ。', c => c.night ? '夜の 海を 見ると、つい 灯の樹を さがしちまう。' : 'いい 天気だ。 船を 出したく なる。', () => '……ユイに 手紙でも 書くか。',
       () => '{name}、背が のびたな。 三年は、ながかった。', c => c.sea ? '海の底の 道は、おれが 知ってる。 ついてこい。' : '兄貴の 店に、また 顔を 出さないとな。'],
     sora: [() => 'よし、行こう！', c => c.night ? '星、きれいだな……。' : 'つぎの 灯、どこかな。', c => c.hp < .6 ? 'ちょっと 休憩、しよっか。' : 'みんなが いると、こわくないや。'],
   };
@@ -185,7 +185,7 @@
   addT("sora_02", () => isNight() && K.G.region === 0 && !F().cleared, "sora", "smile", "よるの うみは くらいね。 とうだいの あかりを とりもどしたいな。");
   addT("sora_03", () => inTown() && K.G.region === 0 && isNight(), "sora", "smile", "むらの あかりを みると ほっとするよ。 かえりみちを たしかめよう。");
   addT("sora_04", () => isLowHp(K.member("sora")), "sora", "worried", "うう…… さすがに すこし からだが おもいな。 どこかで ひとやすみ したいよ。");
-  addT("sora_05", () => recentBattle()?.res === "win", "sora", "joy", "みんな、 ケガは なかった？ かげものたち、 ちゃんと ひかりへ かえれたかな。");
+  addT("sora_05", () => recentBattle()?.res === "win", "sora", "joy", "みんな、 ケガは なかった？ まものたち、 ちゃんと すみかへ かえれたかな。");
   addT("sora_06", () => K.G.region === 1, "sora", "surprised", "たいりくの さばくは ひろいなぁ。 みわたす かぎり すなばかりで、 まいごに なりそうだよ。");
   addT("sora_07", () => K.G.region === 2, "sora", "worried", "あしの したに くもが あるなんて、 まだ しんじられないよ。 おちないように きをつけなきゃ。");
   addT("sora_08", () => K.G.region === 3, "sora", "surprised", "うみの そこなのに いきが できるなんて、 あわのすずの ちからって ほんとうに ふしぎだな。");
@@ -279,7 +279,7 @@
     "kaito", "smile", "おもたいから こそ、 うでっぷしが なまらねえのさ。 おまえの やりも いい こうだな。",
     "who(\"riku\",\"smile\",\"……ほんどの かじやに とくちゅうで うたせた わざものだ。 そまつには あつかわねえよ。\")");
   addT("riku_25", () => inTown() && K.G.region === 1, "riku", "neutral", "港町ミナトの ほしさかな、 しおの ききが ちょうど いい。 10ひきくらい かいだめしとくか。");
-  addT("riku_26", () => isNight(), "riku", "neutral", "やえいの ときは、 ひの ばんを こうたいで やるぞ。 ゆだんした やつから かげに くわれる。");
+  addT("riku_26", () => isNight(), "riku", "neutral", "やえいの ときは、 ひの ばんを こうたいで やるぞ。 ゆだんした やつから まものに くわれる。");
   addT("riku_27", () => recentBattle()?.res === "flee", "riku", "neutral", "チッ…… にげるなんざ せいに あわねえが、 ぜんめつするよりは マシだ。");
   addT("riku_28", () => isLowHp(K.member("sora")), "riku", "worried", "おい あまちゃん、 ふらついてんぞ！ まえを みて あるけ、 まえを！");
   addT("riku_29", () => K.G.gold < 100, "riku", "neutral", "おいおい、 しょじきんが そこをつきかけてんぞ。 ギルドの いらいでも こなして かせぐか。");

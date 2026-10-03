@@ -55,7 +55,7 @@ body.modal .ob-hint,body.inbattle .ob-hint{opacity:0!important}
       let e = K.enemies.find(x => x.tut);
       if (!e && !tutSpawned) { const p = tutSpot(); if (p) { tutSpawned = true; e = { x: p.x, z: p.z, y: K.hAt(p.x, p.z), hx: p.x, hz: p.z, yaw: 0, tut: true, group: [{ sp: 'watapoko', lv: 1, shiny: false }], tx: p.x, tz: p.z, wt: 99 }; K.enemies = [...K.enemies, e]; } }
       if (e) { e.wt = 99; e.tx = e.hx; e.tz = e.hz; // うろつかず 道の 上で 待つ
-        const d = Math.hypot(P.x - e.x, P.z - e.z); if (d < 14) K.tip('<b>かげものだ！</b><span>ふれると バトル。「たたかう」→ 技を えらんで こうげき。 HPが へったら「どうぐ」で 回復。</span>', 'tutFoe'); }
+        const d = Math.hypot(P.x - e.x, P.z - e.z); if (d < 14) K.tip('<b>まものだ！</b><span>ふれると バトル。「たたかう」→ 技を えらんで こうげき。 HPが へったら「どうぐ」で 回復。</span>', 'tutFoe'); }
       else if (tutSpawned && !(document.body.classList.contains('inbattle'))) { F.tut1 = 1; K.tip('<b>はじめての 勝利！</b><span>勝つと 経験値と お金が もらえる。 ユイの 家で「やすむ」と 全回復＋記録。</span>', 'tutWin'); }
     }
   });

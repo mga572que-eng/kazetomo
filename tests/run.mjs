@@ -27,10 +27,10 @@ test('町のくらし：昼と夜', async ({ page }) => {
 });
 test('家の中：入る・しらべる・外へ', async ({ page }) => {
   await page.evaluate(async () => { const t = KZ.REG[0].town; await KZ.travel(0, t.x + 2, t.z + 4); KZ.G.tod = .45; }); await idle(page);
-  act(page, `() => KZ.HOOK.acts.inEnter(KZ.interior.houses(0)[0])`); await idle(page); ok(await page.evaluate(() => !!KZ.interior.cur), '家に 入れない');
+  act(page, `() => KZ.HOOK.acts.inEnter(KZ.interior.houses(0)[0])`); await idle(page); ok(await page.evaluate(() => !!KZ.interior.cur), '家に 入れない'); ok(await page.evaluate(() => !!(KZ.HOOK.noClimb && KZ.HOOK.noClimb())), '家の 中で かべを 登れて しまう');
   const before = await page.evaluate(() => Object.keys(KZ.G.searched || {}).length); act(page, `() => KZ.interior.search(KZ.interior.cur.props.find(q => q.kind && q.kind !== 'garden'))`); await idle(page);
   ok(await page.evaluate(() => Object.keys(KZ.G.searched || {}).length) === before + 1, 'しらべた 記録が ふえない');
-  act(page, `() => KZ.interior.leave()`); await idle(page); ok(await page.evaluate(() => !KZ.interior.cur), '外へ 出られない');
+  act(page, `() => KZ.interior.leave()`); await idle(page); ok(await page.evaluate(() => !KZ.interior.cur), '外へ 出られない'); ok(await page.evaluate(() => !(KZ.HOOK.noClimb && KZ.HOOK.noClimb())), '外に 出ても 登れない まま');
 });
 test('カジノ：コイン・スロット', async ({ page }) => {
   await page.evaluate(() => { KZ.casino.C().coin = 50; }); act(page, `() => KZ.casino.slot()`); await page.waitForTimeout(500);
@@ -97,7 +97,7 @@ test('最初の灯台の 案内：野原の灯台（方角の 食いちがい �
     G.order = 0; G.req = G.req || {}; G.req.k0 = { s: 'a', step: 0 }; G.trial[0].shards = 0; G.trial[0].got = []; const a = K.HOOK.beaconObj();
     G.trial[0].shards = 3; const b = K.HOOK.beaconObj(); const o = JSON.parse(save); G.order = o.order; G.req = o.req; G.trial[0] = o.t0;
     return { a: a && a.t, b: b && b.t, bAt: !!(b && b.p === b0), name: DATA.trials[0].name, sw: b0.x > 0 && b0.z > 0 }; });
-  ok(/野原の灯台/.test(r.a), '欠片の 案内に 野原の灯台が ない：' + r.a); ok(/野原の灯台の 扉/.test(r.b) && r.bAt, '扉の 案内が 野原の灯台を さしていない：' + r.b); ok(r.name === '野原の灯台', '灯台の 名前が ちがう');
+  ok(/野原の灯の樹/.test(r.a), '欠片の 案内に 野原の灯の樹が ない：' + r.a); ok(/野原の灯の樹の 扉/.test(r.b) && r.bAt, '扉の 案内が 野原の灯の樹を さしていない：' + r.b); ok(r.name === '野原の灯の樹', '灯台の 名前が ちがう');
 });
 
 test('風見の村→野原の灯台の 道：歩ける・木が ない・道しるべ', async ({ page }) => {
@@ -130,7 +130,7 @@ test('道の 見晴らし：灯台を 向く・ごほうびは 1回だけ', asyn
   ok(await page.evaluate(() => { const v = KZ.road0.viewAt(), P = KZ.player; P.x = v.x - 1; P.z = v.z + 1; P.y = KZ.surfaceAt(P.x, P.z, 99); __dbg.sim(3); return document.getElementById('btnActLabel').textContent; }) === 'あたりを 見わたす', '見晴らしを しらべられない');
   const m0 = await page.evaluate(() => KZ.G.inv.mi || 0);
   act(page, `() => KZ.HOOK.acts.road0View()`); await idle(page);
-  const r = await page.evaluate(m0 => { const b = KZ.REG[0].beacons[0], P = KZ.player, want = Math.atan2(P.x - b.x, P.z - b.z), d = Math.abs(((KZ.cam.yaw - want) % 6.283 + 9.42) % 6.283 - 3.14); return { got: (KZ.G.inv.mi || 0) - m0, flag: KZ.G.flags.road0View, d }; }, m0);
+  const r = await page.evaluate(m0 => { const b = KZ.REG[0].beacons[0], P = KZ.player, want = Math.atan2(b.x - P.x, b.z - P.z), d = Math.abs(((KZ.cam.yaw - want) % 6.283 + 9.42) % 6.283 - 3.14); return { got: (KZ.G.inv.mi || 0) - m0, flag: KZ.G.flags.road0View, d }; }, m0); // cam.yaw は 見る 方向（画面への 投影で 確認ずみ）
   ok(r.got === 2 && r.flag === 1, '1回めの ごほうびが ちがう：' + r.got); ok(r.d < .3, 'カメラが 灯台を 向いていない');
   const m1 = await page.evaluate(() => KZ.G.inv.mi || 0); act(page, `() => KZ.HOOK.acts.road0View()`); await idle(page);
   ok(await page.evaluate(m1 => (KZ.G.inv.mi || 0) === m1, m1), '2回めも ごほうびが でる');
@@ -140,6 +140,51 @@ test('最初の町：入口の 目じるし（食堂・工房・家）と 通り
   await page.evaluate(async () => { await KZ.travel(0, 2, 2); }); await idle(page);
   const r = await page.evaluate(() => KZ.road0.fronts().map(f => { const dx = Math.sin(f.yaw), dz = Math.cos(f.yaw), x = f.dx + dx * 1.2, z = f.dz + dz * 1.2; return [f.k, KZ.blocked(x, z, KZ.surfaceAt(x, z, 99) + .1)]; }));
   ok(r.length === 5 && ['cook', 'smith', 'home', 'inn', 'shop'].every(k => r.some(([kk]) => kk === k)), '目じるしが 5軒に ない：' + JSON.stringify(r)); ok(r.every(([, b]) => !b), '入口の 前が ふさがれている');
+});
+
+test('戦闘：2Dの 絵＋3Dの けしき（標準）・HPバーが 1体ずつ 分かれる', async ({ page }) => {
+  await page.evaluate(async () => { await KZ.travel(0, 30, 40); }); await idle(page);
+  await page.evaluate(() => { KZ.G.auto = false; window.__r = null; KZ.runBattle([{ sp: 'watapoko', lv: 3 }, { sp: 'iwanoko', lv: 3 }, { sp: 'mizumochi', lv: 3 }]).then(r => window.__r = r); });
+  await page.waitForSelector('#bCmd .m-battle:not(.one) .m-item', { timeout: 90000 }); await page.waitForTimeout(3500);
+  const r = await page.evaluate(() => { const b = document.getElementById('battle'), bars = [...document.querySelectorAll('.foe .bar')].map(e => e.getBoundingClientRect()).sort((a, c) => a.left - c.left);
+    return { mix: KZ.HOOK.OPT.mix, bg: b.classList.contains('bg3d'), shown: !b.hidden, stage: !!KZ.B.stage, d3: !!KZ.B.d3, gaps: bars.slice(1).map((q, i) => q.left - bars[i].right) }; });
+  ok(r.mix && r.bg && r.shown && !r.stage && !r.d3, '2D＋3Dの けしきに なっていない：' + JSON.stringify(r)); ok(r.gaps.length === 2 && r.gaps.every(g => g >= 8), 'HPバーが つながっている：' + r.gaps);
+  await page.evaluate(() => { KZ.G.auto = true; }); for (let i = 0; i < 80 && !(await page.evaluate(() => window.__r)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(250); } await idle(page);
+  ok(await page.evaluate(() => !document.getElementById('battle').classList.contains('bg3d')), '戦闘の あとに 3Dの けしきの 設定が のこる');
+}, { render: true });
+
+test('灯の樹：島の 5本が 樹に なる・幹は 通りぬけない・灯は 花の 位置', async ({ page }) => {
+  await page.evaluate(async () => { const b = KZ.REG[0].beacons[0]; await KZ.travel(0, b.x - 12, b.z - 12); }); await idle(page); await page.evaluate(() => __dbg.sim(3));
+  const r = await page.evaluate(() => { const B = KZ.REG[0].beacons, b = B[0]; return { trees: B.map(x => KZ.tomoTree.isTree(x) && KZ.HOOK.beaconScale(x) === 0), wall: KZ.blocked(b.x, b.z, b.y + 1), fire: b.fireAt[1] - b.y, top: [1, 4].map(i => B[i].act.top && Math.hypot(B[i].fireAt[0] - B[i].x, B[i].fireAt[2] - B[i].z) > 2) }; });
+  ok(r.trees.every(Boolean), '島の 5本が 樹に なっていない：' + JSON.stringify(r.trees)); ok(r.top.every(Boolean), 'ふたご・崖の 灯が 塔・浮き足場に ない'); ok(r.wall, '幹を 通りぬけられる'); ok(r.fire > 7, '灯の 位置が 花の 高さに ない：' + r.fire);
+});
+
+test('灯の樹の 実り：ともすと 花と しげみ・木の実は 1日1回', async ({ page }) => {
+  await page.evaluate(async () => { const b = KZ.REG[0].beacons[0]; b.lit = false; await KZ.travel(0, b.x - 10, b.z - 14); }); await idle(page);
+  const n0 = await page.evaluate(() => { __dbg.sim(3); return KZ.tomoTree.bloomN; });
+  const r = await page.evaluate(() => { const b = KZ.REG[0].beacons[0]; b.lit = true; b.t = 99; __dbg.sim(3); const S = KZ.tomoTree.bloomSpots(b); return { n: KZ.tomoTree.bloomN, fl: S.fl.length, bu: S.bu.length, s: S.bu[0] }; });
+  ok(n0 === 0, 'ともす前から 花が ある'); ok(r.n > 50 && r.fl > 50 && r.bu === 3, '実りが 出ない：' + JSON.stringify({ n: r.n, fl: r.fl, bu: r.bu }));
+  const m0 = await page.evaluate(() => KZ.G.inv.mi || 0);
+  act(page, `s => KZ.HOOK.acts.treeFruit({ s })`, r.s); await idle(page); act(page, `s => KZ.HOOK.acts.treeFruit({ s })`, r.s); await idle(page);
+  ok(await page.evaluate(m0 => (KZ.G.inv.mi || 0) - m0, m0) === 1, '1日に 2回 つめる／つめない');
+});
+
+test('灯の樹の 根の道：ともした 樹から 樹へ', async ({ page }) => {
+  const m = await page.evaluate(async () => { const B = KZ.REG[0].beacons; [0, 2].forEach(i => { B[i].lit = true; KZ.G.lit[i] = 1; }); const m = KZ.tomoTree.rootMouth(B[0]); await KZ.travel(0, m.x, m.z); return [0, 2].map(i => { const q = KZ.tomoTree.rootMouth(B[i]), y = KZ.surfaceAt(q.x, q.z, 99); return !KZ.blocked(q.x, q.z, y + .1) && Math.abs(y - KZ.hAt(q.x, q.z)) < 1.5; }); }); await idle(page);
+  ok(m.every(Boolean), '根の口に 立てない：' + m);
+  ok(await page.evaluate(() => { const m = KZ.tomoTree.rootMouth(KZ.REG[0].beacons[0]), P = KZ.player; P.x = m.x; P.z = m.z; P.y = KZ.surfaceAt(m.x, m.z, 99); __dbg.sim(3); return document.getElementById('btnActLabel').textContent; }) === '根の道を とおる', '根の道を しらべられない');
+  act(page, `() => KZ.HOOK.acts.treeRoot({ b: KZ.REG[0].beacons[0] })`); await page.waitForTimeout(800);
+  const k = await page.evaluate(() => [...document.querySelectorAll('.m-item')].findIndex(e => /岩山/.test(e.textContent))); ok(k > 0, '行き先に 岩山の 灯の樹が ない');
+  for (let i = 0; i < k; i++) { await page.keyboard.press('ArrowDown'); await page.waitForTimeout(120); } await page.keyboard.press('Enter'); await idle(page);
+  ok(await page.evaluate(() => { const q = KZ.tomoTree.rootMouth(KZ.REG[0].beacons[2]), P = KZ.player; return Math.hypot(P.x - q.x, P.z - q.z) < 4; }), '岩山の 灯の樹へ 行けない');
+});
+
+test('海の さんごの 樹：石の 塔が なくなり、幹は 通りぬけない・灯の 高さは そのまま', async ({ page }) => {
+  const r = await page.evaluate(() => KZ.REG[3].lh.map(l => ({ top: Math.abs(l.coralY + 10.4 - l.fire[1]) < .01 })));
+  ok(r.every(x => x.top), 'さんごの 樹の 高さが 灯と あわない');
+  await page.evaluate(async () => { const L = KZ.REG[3].lh[0]; await KZ.travel(3, L.x + 3, L.z + 16); }); await idle(page);
+  const w = await page.evaluate(() => KZ.REG[3].lh.map(l => [KZ.blocked(l.x + .5, l.z + .5, l.coralY + 1), World.Blocks.get(Math.floor(l.x) + 2, Math.floor(l.y) + 4, Math.floor(l.z)) == null]));
+  ok(w.every(([wall, gone]) => wall && gone), '幹の かべ／石の 塔の とりのぞきが ちがう：' + JSON.stringify(w));
 });
 
 let fail = 0;

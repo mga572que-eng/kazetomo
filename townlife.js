@@ -7,7 +7,7 @@
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
   // ---------- 町の 設定（本編の 設定に あわせた にぎわい・物価） ----------
   const TOWNS = [
-    { key: 'kazami', pre: 'k', r: 0, name: '風見の村', at: () => K.REG[0].town, pop: 40, lv: 2, price: .9, school: true, farm: true, extras: 3, note: '灯台守と 漁師の 小さな 村' },
+    { key: 'kazami', pre: 'k', r: 0, name: '風見の村', at: () => K.REG[0].town, pop: 40, lv: 2, price: .9, school: true, farm: true, extras: 3, note: '灯守りと 漁師の 小さな 村' },
     { key: 'shiomi', pre: 's', r: 0, name: '潮見の町 シオミ', at: () => K.shiomi, pop: 60, lv: 1, price: 1.2, school: false, farm: false, extras: 4, note: '半年前の 火事から 立ちなおり中。 物が 足りず 値が 高い' },
     { key: 'minato', pre: 'm', r: 1, name: '港町ミナト', at: () => K.REG[1].town, pop: 320, lv: 5, price: 1.1, school: true, farm: false, extras: 7, stalls: 4, note: '霧の大陸の 玄関口。 交易で にぎわう' },
     { key: 'oasis', pre: 'o', r: 1, name: 'オアシスの村 サラム', at: () => K.oasis, pop: 70, lv: 2, price: 1.25, school: false, farm: true, extras: 3, stalls: 1, note: '砂漠の 水場。 品物を 運ぶのが たいへんで 値が 高い' },
@@ -115,7 +115,7 @@
     if (rain && !['guard', 'shop', 'teacher'].includes(R) && !night) { if (R === 'kid' || R === 'elder') return { to: home, act: h < 20 ? 'stand' : 'home' }; if (i % 2) return { to: pick(S.food, i) || home, act: 'stand' }; p.umb = true; }
     if (R === 'guard') { const k = Math.floor(h * 1.5 + i) % S.walk.length; return { to: S.walk[k] || plaza, act: 'stand' }; }
     if (R === 'mail') { if (h < 8 || h >= 17) return { to: home, act: 'home' }; return { to: pick([...S.homes, ...S.market, ...S.food], Math.floor(h * 2) + i), act: 'stand' }; }
-    if (R === 'teacher') { if (S.school && h >= 8 && h < 15 && !(h >= 12 && h < 13)) return { to: S.school, act: 'stand', yaw: S.schoolYaw + Math.PI }; if (h >= 15 && h < 18) return { to: market, act: 'stand' }; return { to: home, act: h < 20 ? 'stand' : 'home' }; }
+    if (R === 'teacher') { if (S.school && h >= 8 && h < 15 && !(h >= 12 && h < 13)) return { to: S.school, act: 'stand', yaw: S.schoolYaw + Math.PI }; if (h >= 15 && h < 18) return { to: market, act: 'stand' }; return { to: home, act: h >= 6 && h < 20 ? 'stand' : 'home' }; } // 夜中（0〜6時）も 家に 入る
     if (R === 'kid') { if (h < 6.5 || h >= 20) return { to: home, act: 'home' }; if (S.school && ((h >= 8 && h < 12) || (h >= 13 && h < 15))) return { to: S.seats[i % S.seats.length], act: 'sit', yaw: S.schoolYaw };
       if (!S.school && h >= 8 && h < 12) return { to: pick(S.market, i) || work, act: 'stand' }; if (h >= 15 && h < 18) return { to: pick(S.walk, i + Math.floor(h * 6)), act: 'stand', run: true }; return { to: home, act: 'stand' }; }
     if (R === 'elder') { if (h < 6 || h >= 20.5) return { to: home, act: 'home' }; if ((h >= 9 && h < 12) || (h >= 14 && h < 17)) return { to: pick(S.walk, i + Math.floor(h)), act: h < 12 ? 'stand' : 'sit', slow: true }; return { to: home, act: 'sit' }; }
@@ -148,7 +148,7 @@
     else p.moving = false;
     if(neighbours.some(q=>dist(q,n)<1.4)){const away=near(S.r,n,1.8,5,p.i+719,1,neighbours)[0];if(away){n.x=away.x;n.z=away.z;}else{n.indoor=true;n.placed=false;p.goal=null;return;}}
     if(!okSpot(S.r,n.x,n.z)){n.indoor=true;n.placed=false;p.goal=null;return;}
-    n.indoor = P.act === 'home' && d < 1.2; if (P.act === 'home' && far) n.indoor = true;
+    n.indoor = P.act === 'home' && (d < 1.2 || dist(n, P.to) < 2.5); /* 戸口が こんでいて ずらした 行き先でも、自分の 家の 戸口に 着けば 家に 入る */ if (P.act === 'home' && far) n.indoor = true;
     if (!p.moving) n.yaw = P.yaw != null ? P.yaw : (dist(n, pl) < 5 ? Math.atan2(pl.x - n.x, pl.z - n.z) : (n.baseYaw || n.yaw || 0));
     p.pose = p.moving ? ((Math.floor((p.walk || 0) / .42) % 2) ? 'walkA' : 'walkB') : P.act === 'sit' ? 'sit' : P.act === 'work' ? ((Math.floor(T * 2.2 + p.i) % 2) ? 'work' : 'stand') : 'stand'; p.act = P.act; }
   // ---------- 毎フレーム ----------

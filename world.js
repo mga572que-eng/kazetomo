@@ -773,8 +773,8 @@ void main(){
     const OVS = `#version 300 es
 layout(location=0) in vec3 aP; layout(location=1) in vec3 aN; layout(location=2) in vec4 aC;
 layout(location=3) in vec3 iP; layout(location=4) in float iS; layout(location=5) in float iR;
-uniform mat4 uVP; uniform float uT; uniform float uSway; out vec3 vW; out vec3 vN; out vec4 vC;
-void main(){ float shiny=iR>50.?1.:0.; float rr=iR-shiny*100.; float c=cos(rr), s=sin(rr); float sc=abs(iS); vec3 p=aP*sc; p=vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); vec3 n=vec3(c*aN.x+s*aN.z, aN.y, -s*aN.x+c*aN.z);
+uniform mat4 uVP; uniform float uT; uniform float uSway; uniform float uOut; out vec3 vW; out vec3 vN; out vec4 vC;
+void main(){ float shiny=iR>50.?1.:0.; float rr=iR-shiny*100.; float c=cos(rr), s=sin(rr); float sc=abs(iS); vec3 p=aP*sc+aN*uOut*sc; p=vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); vec3 n=vec3(c*aN.x+s*aN.z, aN.y, -s*aN.x+c*aN.z);
   if(uSway>0. && aP.y>1.3){ float k=(aP.y-1.3)*uSway; p.x+=sin(uT*1.4+iP.x*.23+iP.z*.1)*.13*k; p.z+=cos(uT*1.15+iP.z*.21)*.07*k; }
   vW=iP+p; vN=n; float tint=fract(sin(dot(iP.xz,vec2(12.9898,78.233)))*43758.5453);
   vec3 col=aC.rgb*mix(1.,.8+.4*tint,uSway>0.&&aC.a<.5?1.:0.); float em=aC.a;
@@ -784,7 +784,9 @@ void main(){ float shiny=iR>50.?1.:0.; float rr=iR-shiny*100.; float c=cos(rr), 
     P.obj = prog(OVS, `#version 300 es
 precision highp float; in vec3 vW; in vec3 vN; in vec4 vC; out vec4 o;
 ${COMMON}
-void main(){ vec3 n=normalize(vN); vec3 col = vC.a>.5 ? vC.rgb*(1.2+uNight*1.8) : lightIt(vC.rgb, n, vW, .25); if(vC.a>.2&&vC.a<.5) col+=vC.rgb*(uLC*.18+vec3(.1,.06,.04));
+uniform float uOut;
+void main(){ vec3 n=normalize(vN); if(uOut>0.){ if(dot(n,normalize(uCam-vW))>0.) discard; o=vec4(tone(fogIt(vec3(.07,.05,.09),vW)),1.); return; } /* A案の 輪郭線：ふくらませた 形の 裏がわだけを こい色で */
+  vec3 col = vC.a>.5 ? vC.rgb*(1.2+uNight*1.8) : lightIt(vC.rgb, n, vW, .25); if(vC.a>.2&&vC.a<.5) col+=vC.rgb*(uLC*.18+vec3(.1,.06,.04));
   float rim=pow(1.-max(dot(n,normalize(uCam-vW)),0.),3.); col+=(uSkyH*.22+uLC*.3)*rim*.45*(1.-vC.a); o=vec4(tone(fogIt(col,vW)),1.); }`);
     P.objD = prog(OVS, FS_DEPTH);
 
@@ -963,6 +965,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
     gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LEQUAL); gl.clear(gl.DEPTH_BUFFER_BIT);
     common(P.ter); gl.bindVertexArray(VAO.ter); drawTer(PlV);
     common(P.obj); for (const m of meshes) if (m.vn) { gl.uniform1f(P.obj.u.uSway, m.sway); gl.bindVertexArray(m.vao); gl.drawArraysInstanced(gl.TRIANGLES, 0, m.count, m.vn); }
+    if (P.obj.u.uOut) { for (const m of meshes) if (m.vn && m.outline) { gl.uniform1f(P.obj.u.uOut, m.outline); gl.uniform1f(P.obj.u.uSway, m.sway); gl.bindVertexArray(m.vao); gl.drawArraysInstanced(gl.TRIANGLES, 0, m.count, m.vn); } gl.uniform1f(P.obj.u.uOut, 0); } // 輪郭線（m.outline＝ふくらませる 幅）
     if (blockN) { common(P.blk); gl.uniform1f(P.blk.u.uGhost, 0); gl.uniform1f(P.blk.u.uInflate, 0); drawBlocks(PlV); }
     grassCells(PlV, player);
     if (grsN) { common(P.grs); gl.uniform3fv(P.grs.u.uPlayer, player); gl.uniform3fv(P.grs.u.uCenter, player); gl.uniform1i(P.grs.u.uG, GRID); gl.uniform1f(P.grs.u.uGsp, GSP);

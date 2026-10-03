@@ -1,6 +1,6 @@
 // ダンジョンの かくし部屋 — 面白さ部署 ④の つづき（docs/design/fun-audit.md）
 // ・試練の祠：クリアすると、祠の 奥の すみの 柱の 上に 宝箱が 見える（壁を のぼって 取る。クリア前は のぼれない）
-// ・灯台の なか：一の間の 右の 壁に「ひび」。おすと くずれて、小さな かくし部屋と 宝箱
+// ・灯の樹の なか：一の間の 右の 壁に「ひび」。おすと くずれて、小さな かくし部屋と 宝箱
 // ・宝箱は 宝箱の 演出（光）で 開く。中身は 星のかけらと お金（地方で ふえる）
 // セーブ：G.secret（開けた かくし宝箱）だけ 追加
 'use strict';
@@ -17,12 +17,12 @@
   // ---------- 試練の祠：奥の すみの 柱の 上 ----------
   const shSpot = sh => sh.pos ? { x: sh.pos.x - 7 + .5, y: sh.pos.y + 5, z: sh.pos.z - 7 + .5 } : null;
   const shDone = sh => !!((G().shrineDone || {})[sh.id]);
-  // ---------- 灯台の なか：一の間の 右の 壁の ひび ----------
+  // ---------- 灯の樹の なか：一の間の 右の 壁の ひび ----------
   const LH = () => K.lhDungeon; let broken = null; // いま くずれて いる 回廊（入りなおすと 壁は もどる）
   const crack = d => ({ x: d.x + 6.6, y: d.y + 1, z: d.z - 11.5 });
   const lhChest = d => ({ x: d.x + 9 + .5, y: d.y + 1, z: d.z - 12 + .5 });
   const lhId = d => 'lh:' + (LH() && LH().key ? LH().key(d) : d.name);
-  // かくし部屋は 回廊の 外がわ（右）に あるので、くずした 回廊の かくし部屋の 中も「いま いる 灯台」とみなす
+  // かくし部屋は 回廊の 外がわ（右）に あるので、くずした 回廊の かくし部屋の 中も「いま いる 灯の樹」とみなす
   const inAlcove = (d, p = K.player) => d && G().region === d.r && p.x > d.x + 7 && p.x < d.x + 11 && p.z > d.z - 14.5 && p.z < d.z - 9.5 && Math.abs(p.y - d.y - 1) < 3;
   const cur = () => { const d = LH() && LH().here && LH().here(); return d || (inAlcove(broken) ? broken : null); };
   function breakWall(d) { const r = d.r, prev = W.region; W.setRegion(r); try { const S = (a, h, b, t) => B.set(d.x + a, d.y + h, d.z + b, t, true, r);

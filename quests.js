@@ -1,4 +1,4 @@
-// ともしびアイランド — 町と 頼まれごと：隣町シオミ・灯台の 鍵クエスト・各町の サイドクエスト
+// ともしびアイランド — 町と 頼まれごと：隣町シオミ・灯の樹の 鍵クエスト・各町の サイドクエスト
 'use strict';
 (() => {
   const K = window.KZ; if (!K) return; const H = K.HOOK, B = World.Blocks;
@@ -51,41 +51,41 @@
     desert: { x: 105, z: 40, r: 1 },
   };
   DATA.reqs = [
-    // ---- 第1章：灯台の 鍵 ----
-    { id: 'k0', key: 0, r: 0, giver: 'gen', town: '風見の村', title: '灯台の 鍵', steps: [{ t: 'shards', n: 3, text: '野原の灯台の まわりで「灯の欠片」を 3つ 集める' }],
-      offer: [who('gen', 'neutral', '灯台の 扉は、灯の欠片を はめないと ひらかねえ。 カイトが そう 作った。 ……あいつらしい 用心だ。'), who('gen', 'neutral', '欠片は 野原の 灯台の まわりで 光ってる。 3つ そろったら、そのまま 扉に はめこめ。 それが 鍵だ。')],
-      done: [who('gen', 'grin', '……よし。 これで 鍵が 打てる。'), '「灯台の 鍵」を 手に入れた！ 灯台で 番人が まっている。'], reward: { gold: 100 } },
+    // ---- 第1章：灯の樹の 鍵 ----
+    { id: 'k0', key: 0, r: 0, giver: 'gen', town: '風見の村', title: '灯の樹の 鍵', steps: [{ t: 'shards', n: 3, text: '野原の灯の樹の まわりで「灯の欠片」を 3つ 集める' }],
+      offer: [who('gen', 'neutral', '灯の樹の 扉は、灯の欠片を はめないと ひらかねえ。 カイトが そう 作った。 ……あいつらしい 用心だ。'), who('gen', 'neutral', '欠片は 野原の 灯の樹の まわりで 光ってる。 3つ そろったら、そのまま 扉に はめこめ。 それが 鍵だ。')],
+      done: [who('gen', 'grin', '……よし。 これで 鍵が 打てる。'), '「灯の樹の 鍵」を 手に入れた！ 灯の樹で 番人が まっている。'], reward: { gold: 100 } },
     { id: 'k1a', key: 1, r: 0, giver: 'nami', town: 'シオミ', title: 'こわれた 井戸', steps: [{ t: 'collect', item: 'ishi', n: 5, text: '石を 5こ 集めて 町長ナミへ（岩を 掘る）' }],
-      offer: [nm('町長ナミ', 'ようこそ、潮見の町シオミへ……と 言いたいけれど、見ての とおりよ。 半年前、かげものに 町の 半分を 焼かれたの。'), nm('町長ナミ', '井戸も こわされて、水が くめない。 石を 5つ あつめて もらえないかしら。')],
+      offer: [nm('町長ナミ', 'ようこそ、潮見の町シオミへ……と 言いたいけれど、見ての とおりよ。 半年前、まものに 町の 半分を 焼かれたの。'), nm('町長ナミ', '井戸も こわされて、水が くめない。 石を 5つ あつめて もらえないかしら。')],
       done: [nm('町長ナミ', 'ありがとう！ これで 井戸が なおせるわ。'), who('sora', 'smile', 'よかった。 ……ほかにも こまってる 顔、してますね。')], reward: { gold: 150, give: { mi: 3 } } },
     { id: 'k1b', key: 1, r: 0, giver: 'nami', town: 'シオミ', title: 'まいごの チビ', req: 'k1a', steps: [{ t: 'visit', spot: 'forest', text: '町の 外の 森で 迷子の チビを さがす', fight: ['watapoko', 'iwanoko'] }],
       offer: [nm('町長ナミ', 'たいへん！ チビが 森へ 行ったきり 帰ってこないの。 「リクにいちゃんを さがす」って……。'), who('sora', 'determined', 'ぼくたちが さがしてくる！')],
-      visit: ['しげみの 奥で、チビが かげものに かこまれている！'],
+      visit: ['しげみの 奥で、チビが まものに かこまれている！'],
       visitDone: [nm('チビ', 'うわーん！ ……おにいちゃん、ありがと。 リクにいちゃん、町を 出ていっちゃったの。 おとなが「出ていけ」って 言ったから。'), who('mio', 'worried', '……出ていけ？'), 'チビを 町長ナミの ところへ つれて 帰ろう。'],
-      done: [nm('町長ナミ', 'チビ！ よかった……本当に ありがとう。'), nm('町長ナミ', 'リクは 海から 流れついた 子よ。 半年前 町が 焼けた とき、みんな「よそ者が かげを 連れてきた」って あの子を 責めた。'),
-        nm('町長ナミ', '……わたしは 町長なのに、止めなかった。 灯台で あの子に 会ったら、どうか 力に なってあげて。'), '「灯台の 鍵」を たくされた！ 灯台で 番人が まっている。'], reward: { gold: 200, give: { pan: 2 } } },
-    { id: 'k2', key: 2, r: 0, giver: 'ryou', town: 'シオミ', title: '港を まもれ', steps: [{ t: 'waves', spot: 'dock', n: 3, text: 'シオミの 港で おしよせる かげものを 3回 しずめる' }],
+      done: [nm('町長ナミ', 'チビ！ よかった……本当に ありがとう。'), nm('町長ナミ', 'リクは 海から 流れついた 子よ。 半年前 町が 焼けた とき、みんな「よそ者が まものを 連れてきた」って あの子を 責めた。'),
+        nm('町長ナミ', '……わたしは 町長なのに、止めなかった。 灯の樹で あの子に 会ったら、どうか 力に なってあげて。'), '「灯の樹の 鍵」を たくされた！ 灯の樹で 番人が まっている。'], reward: { gold: 200, give: { pan: 2 } } },
+    { id: 'k2', key: 2, r: 0, giver: 'ryou', town: 'シオミ', title: '港を まもれ', steps: [{ t: 'waves', spot: 'dock', n: 3, text: 'シオミの 港で おしよせる まものを 3回 しずめる' }],
       offer: [nm('漁師リョウ', '……リク。 もどって きたのか。'), who('riku', 'smirk', '用が あるのは こいつらだ。 おれじゃねえ。'),
-        nm('漁師リョウ', '……そうか。 たのみが ある。 夜ごとに 港へ かげものの 群れが 押しよせて、船が 出せねえ。 桟橋で 3回、追いはらって くれ！')],
+        nm('漁師リョウ', '……そうか。 たのみが ある。 夜ごとに 港へ まものの 群れが 押しよせて、船が 出せねえ。 桟橋で 3回、追いはらって くれ！')],
       done: [nm('漁師リョウ', 'やるじゃねえか！ これで 船が 出せる。'), nm('漁師リョウ', '……リク。 あの日、「出ていけ」って 石を 投げたのは おれだ。 家を 焼かれて、だれかの せいに したかった。 ……すまなかった。'),
         who('riku', 'sad', '…………。 ……干し魚。 あとで 持ってこい。 それで ちゃらだ。'), who('sora', 'smile', '（リク、ちょっと 笑ってる……）'),
-        nm('漁師リョウ', 'ああ、山ほど な。 ……これは 灯台の 鍵だ。 岩山の 灯台は 地ひびきの 番人が 守ってる。 気をつけな。')], reward: { gold: 300, give: { shizuku: 2 } } },
+        nm('漁師リョウ', 'ああ、山ほど な。 ……これは 灯の樹の 鍵だ。 岩山の 灯の樹は 地ひびきの 番人が 守ってる。 気をつけな。')], reward: { gold: 300, give: { shizuku: 2 } } },
     { id: 'k3', key: 3, r: 0, giver: 'nagi', town: '風見の村', title: '月光花の 灯', steps: [{ t: 'visit', spot: 'hill', night: true, text: '夜に 島の 高い 丘で「月光花」を つむ' }],
-      offer: [who('nagi', 'smile', 'ねえ {name}。 夜の 灯台の 火皿はね、月光花の 花粉で しか ひらかないの。'), who('nagi', 'determined', '島で いちばん 高い 丘に、夜だけ 咲くのよ。 つんで きてくれる？')],
+      offer: [who('nagi', 'smile', 'ねえ {name}。 夜の 灯の樹の 灯の花はね、月光花の 花粉で しか ひらかないの。'), who('nagi', 'determined', '島で いちばん 高い 丘に、夜だけ 咲くのよ。 つんで きてくれる？')],
       visit: ['月あかりの 下、青白く 光る 花が 咲いている……。'], visitDone: ['「月光花」を つんだ！ ナギに とどけよう。'],
-      done: [who('nagi', 'joy', 'きれい……！ これで 夜の 灯台が ひらくわ。'), '夜の 灯台の 鍵を 手に入れた！（夜に 番人が あらわれる）'], reward: { gold: 350, give: { shizuku: 2 } } },
-    { id: 'k4', key: 4, r: 0, giver: 'ryou', town: 'シオミ', title: '崖の 灯台への 道', steps: [{ t: 'collect', item: 'ha', n: 5, text: '葉っぱ 5こ（木を 切る）' }, { t: 'collect', item: 'shizuku', n: 1, text: '夜露の しずく 1こ' }],
-      offer: [nm('漁師リョウ', '最後の 灯台は 崖の 先の 浮き足場だ。 おれの 網を 直した 帆布で、足場への 綱を 張ってやる。'), nm('漁師リョウ', '葉っぱ 5つと 夜露の しずく 1つ。 たのんだぜ。')],
-      done: [nm('漁師リョウ', 'よし、綱を 張った！ 風布が あれば 滑空で、なければ ブロックの 橋で わたれ。'), '崖の 灯台の 鍵を 手に入れた！'], reward: { gold: 400, give: { ganbari: 2 } } },
+      done: [who('nagi', 'joy', 'きれい……！ これで 夜の 灯の樹が ひらくわ。'), '夜の 灯の樹の 鍵を 手に入れた！（夜に 番人が あらわれる）'], reward: { gold: 350, give: { shizuku: 2 } } },
+    { id: 'k4', key: 4, r: 0, giver: 'ryou', town: 'シオミ', title: '崖の 灯の樹への 道', steps: [{ t: 'collect', item: 'ha', n: 5, text: '葉っぱ 5こ（木を 切る）' }, { t: 'collect', item: 'shizuku', n: 1, text: '夜露の しずく 1こ' }],
+      offer: [nm('漁師リョウ', '最後の 灯の樹は 崖の 先の 浮き足場だ。 おれの 網を 直した 帆布で、足場への 綱を 張ってやる。'), nm('漁師リョウ', '葉っぱ 5つと 夜露の しずく 1つ。 たのんだぜ。')],
+      done: [nm('漁師リョウ', 'よし、綱を 張った！ 風布が あれば 滑空で、なければ ブロックの 橋で わたれ。'), '崖の 灯の樹の 鍵を 手に入れた！'], reward: { gold: 400, give: { ganbari: 2 } } },
     // ---- サイドクエスト ----
     { id: 's_chibi', r: 0, giver: 'chibi', town: 'シオミ', title: 'チビの いきもの図鑑', req: 'k1b', steps: [{ t: 'dex', n: 6, text: 'いきもの図鑑を 6種 うめて チビに 見せる' }],
       offer: [nm('チビ', 'ねえねえ、いきもの図鑑 もってるの？ 6しゅるい うまったら 見せて！')], done: [nm('チビ', 'すごーい！ おれいに これ あげる！')], reward: { give: { nakayoshi: 2 } } },
     { id: 's_ryou', r: 0, giver: 'ryou', town: 'シオミ', title: '大漁 祈願', req: 'k4', steps: [{ t: 'collect', item: 'sakana', n: 3, text: '魚を 3びき（釣りざおで 釣る）' }],
       offer: [nm('漁師リョウ', 'ひさしぶりに 魚が 食いてえ。 3びき 釣ってきて くれねえか？')], done: [nm('漁師リョウ', 'うまそうだ！ ほら、礼だ。')], reward: { gold: 600 } },
-    { id: 's_don', r: 1, giver: 'ryou', town: '港町ミナト', title: '倉庫の かげもの', steps: [{ t: 'hunt', region: 1, n: 6, text: '霧の大陸で かげものを 6回 たおす' }],
-      offer: [nm('港の 漁師ドン', '倉庫の まわりに かげものが 住みついちまった。 大陸で 6回 追いはらって くれ。')], done: [nm('港の 漁師ドン', 'たすかったぜ！')], reward: { gold: 900, give: { shizuku: 2 } } },
+    { id: 's_don', r: 1, giver: 'ryou', town: '港町ミナト', title: '倉庫の まもの', steps: [{ t: 'hunt', region: 1, n: 6, text: '霧の大陸で まものを 6回 たおす' }],
+      offer: [nm('港の 漁師ドン', '倉庫の まわりに まものが 住みついちまった。 大陸で 6回 追いはらって くれ。')], done: [nm('港の 漁師ドン', 'たすかったぜ！')], reward: { gold: 900, give: { shizuku: 2 } } },
     { id: 's_ruru', r: 1, giver: 'chibi', town: '港町ミナト', title: '砂漠の 星砂', steps: [{ t: 'visit', spot: 'desert', text: '東の 砂漠で 星砂を ひろう', fight: ['sunawani', 'hibana'] }],
-      offer: [nm('港の 子 ルル', '砂漠にはね、星の かけらが まざった 砂が あるんだって。 ほしいなあ……。')], visit: ['砂の 中で、ちいさな 星が きらめいている！ ……かげものが 気づいた！'], visitDone: ['「星砂」を ひろった！ ルルに とどけよう。'],
+      offer: [nm('港の 子 ルル', '砂漠にはね、星の かけらが まざった 砂が あるんだって。 ほしいなあ……。')], visit: ['砂の 中で、ちいさな 星が きらめいている！ ……まものが 気づいた！'], visitDone: ['「星砂」を ひろった！ ルルに とどけよう。'],
       done: [nm('港の 子 ルル', 'わあ、きらきら！ ありがとう！ これ、宝物の はんぶん あげる！')], reward: { give: { hoshikake: 2 } } },
     { id: 's_wata', r: 2, giver: 'nami', town: '雲の里ククル', title: '雲わたの 布', steps: [{ t: 'collect', item: 'kumowata', n: 5, text: '雲わた 5こ（空の いきもの・雲の 茂み）' }],
       offer: [nm('雲の 織り手 ワタ', '里の みんなの 冬の 布団が 足りないの。 雲わたを 5つ あつめて くれない？')], done: [nm('雲の 織り手 ワタ', 'ふかふかの 布団が できるわ！ お礼に 雲の ブロックを どうぞ。')], reward: { gold: 1500, blocks: { 11: 20 } } },
@@ -114,8 +114,8 @@
   K.oasis = oasis; K.hayate = hayate;
   const F = () => G().flags;
   DATA.reqs.push(
-    { id: 'c2a', gate: 2, r: 1, giver: 'ushio', town: 'サラム', title: '埋まった 井戸', when: () => F().c2rumor, steps: [{ t: 'collect', item: 'ishi', n: 6, text: '石を 6こ（井戸の 石組みに）' }, { t: 'hunt', region: 1, n: 3, text: '村の まわりの かげものを 3回 しずめる' }],
-      offer: [nm('村長ハッサン', '旅の 方か。 すまんが 宿も 満足に 出せん。 砂嵐で 井戸が 埋まり、かげものが 水場を 荒らしておる。'), nm('村長ハッサン', '石を 6つ、それと 村の まわりの かげものを 3度 追いはらって くれんか。'),
+    { id: 'c2a', gate: 2, r: 1, giver: 'ushio', town: 'サラム', title: '埋まった 井戸', when: () => F().c2rumor, steps: [{ t: 'collect', item: 'ishi', n: 6, text: '石を 6こ（井戸の 石組みに）' }, { t: 'hunt', region: 1, n: 3, text: '村の まわりの まものを 3回 しずめる' }],
+      offer: [nm('村長ハッサン', '旅の 方か。 すまんが 宿も 満足に 出せん。 砂嵐で 井戸が 埋まり、まものが 水場を 荒らしておる。'), nm('村長ハッサン', '石を 6つ、それと 村の まわりの まものを 3度 追いはらって くれんか。'),
         who('sora', 'determined', 'まかせて！ ……ところで、紺色の 髪の 女の子を 見ませんでしたか？'), nm('村長ハッサン', '……知っておるよ。 じゃが ただで 話すほど、砂漠の 水は 安くない。 井戸が 直ったら、話して やろう。'),
         who('sora', 'worried', '（……けっこう ちゃっかり してる）')],
       done: [nm('村長ハッサン', '水が 出た！ 村の 恩人じゃ。'), nm('村長ハッサン', 'あの 子の ことは ウララに 聞きなされ。 ずっと 気に かけておったよ。')], reward: { gold: 500, give: { shizuku: 2 } } },
@@ -123,7 +123,7 @@
       offer: [nm('星占いの ウララ', 'サナちゃんは 毎晩 砂丘で 星を 読んでいたわ。 あの子の 読みは よく 当たった。 ……当たりすぎた。'),
         nm('星占いの ウララ', 'わたし、あの子の 読んだ「星の 落ちる 場所」を、港の 星拾いたちに 売っていたの。 あの子が「星が 泣いてる」って 言うのも 聞かずに。'),
         nm('星占いの ウララ', '遺跡へ 行くと 言った 夜も……止めなかった。 あの 砂丘に 行けば、あの子が 見た ものが わかるかも しれない。')],
-      visit: ['星空の 下、砂の 上に 星の 図形が 刻まれている……。 サナの 字だ。「遺跡の 扉は 星の 歌で ひらく」', '……砂の 中から かげものが 飛びだした！'],
+      visit: ['星空の 下、砂の 上に 星の 図形が 刻まれている……。 サナの 字だ。「遺跡の 扉は 星の 歌で ひらく」', '……砂の 中から まものが 飛びだした！'],
       visitDone: ['サナが 残した「星の 歌」を おぼえた！ ウララに 知らせよう。'],
       done: [nm('星占いの ウララ', '星の 歌……！ これで 遺跡の 扉が ひらくはずよ。'), nm('星占いの ウララ', '……あやまる 資格なんて ないけど。 どうか あの子を 連れて 帰って きてね。'),
         who('riku', 'angry', '……あんたの ためじゃ ねえ。'), '遺跡の 扉を ひらく 手がかりを 得た！'], reward: { gold: 600, give: { hoshikake: 1 } } },
@@ -132,10 +132,10 @@
         nm('風車守り カザミ', 'ふん。 風の 道を 知れば、おまえは 下へ 行っちまう。 ……だが 星が 消えるのは 困る。 帆が やぶれて 止まってるんだ。 雲わたを 3つ たのむ。')],
       done: [nm('風車守り カザミ', 'よし、帆が 直った！ あとは てっぺんの 羽根を 回して くれ。')], reward: { gold: 900 } },
     { id: 'c3b', gate: 3, r: 2, giver: 'ryou', town: 'ハヤテ', title: '風車の 羽根', req: 'c3a', steps: [{ t: 'visit', spot: 'mill', text: '風車の 下で 羽根を 回す', fight: ['amatsubame', 'kumomo'] }],
-      offer: [nm('風車守り カザミ', '羽根の 軸に かげものが からみついてる。 追いはらって 回して くれ！')], visit: ['風車の 軸に かげものが からみついている！'], visitDone: ['羽根が 回りだした！ 空に 三つの 風の 道が 光った！'],
+      offer: [nm('風車守り カザミ', '羽根の 軸に まものが からみついてる。 追いはらって 回して くれ！')], visit: ['風車の 軸に まものが からみついている！'], visitDone: ['羽根が 回りだした！ 空に 三つの 風の 道が 光った！'],
       done: [nm('風車守り カザミ', '見えるか？ 東・南西・西……あれが 風の 祠への 道だ。'), nm('風車守り カザミ', '……ハル。 下へ 行っても、たまには 風を 送れよ。'), who('haru', 'smile', '……うん。 行こう！ 祠に 風を 通せる。'), '風の 祠に 挑めるように なった！'], reward: { gold: 1200, give: { ganbari: 2 } } },
-    { id: 's_sorane', r: 2, giver: 'chibi', town: 'ハヤテ', title: '空の 花', steps: [{ t: 'hunt', region: 2, n: 5, text: '天空の浮島で かげものを 5回 しずめる' }],
-      offer: [nm('ハヤテの 子 ソラネ', 'かげものが こわくて、花を つみに 行けないの……。')], done: [nm('ハヤテの 子 ソラネ', 'ありがとう！ これ、お守り！')], reward: { give: { hoshikake: 1, nakayoshi: 2 } } },
+    { id: 's_sorane', r: 2, giver: 'chibi', town: 'ハヤテ', title: '空の 花', steps: [{ t: 'hunt', region: 2, n: 5, text: '天空の浮島で まものを 5回 しずめる' }],
+      offer: [nm('ハヤテの 子 ソラネ', 'まものが こわくて、花を つみに 行けないの……。')], done: [nm('ハヤテの 子 ソラネ', 'ありがとう！ これ、お守り！')], reward: { give: { hoshikake: 1, nakayoshi: 2 } } },
     { id: 's_kai', r: 3, giver: 'kai', town: 'アワの里', title: '光る ヒトデ', steps: [{ t: 'seen', sp: 'hitoden', text: '夜の さんご礁で ヒトデンを 見つける（図鑑に 登録）' }],
       offer: [nm('アワの子 カイ', '夜に 光る ヒトデが いるんだって！ 見つけたら 教えて！')], done: [nm('アワの子 カイ', 'ほんとに いたんだ！ はい、しんじゅ！')], reward: { give: { shinju: 2 } } },
   );
@@ -192,7 +192,7 @@
   H.labels.qspot = t => { const s = t.o.Q.steps[q(t.o.Q.id).step || 0]; return s.t === 'waves' ? '群れを むかえうつ' : 'しらべる'; };
   H.acts.qspot = async ({ Q }) => { const st = q(Q.id), s = Q.steps[st.step || 0];
     if (s.night && World.skyInfo(G().tod).night < .5) { const c = await K.menu({ title: 'いまは 昼。 夜にしか 見つからない ようだ。', items: [{ label: '夜まで 待つ' }, { label: 'やめておく' }] }); if (c !== 0) return; await K.fade(true); G().tod = .82; await K.wait(300); await K.fade(false); }
-    if (s.t === 'waves') { if (!(await K.confirm(`かげものの 群れが せまってくる。（推奨Lv${LV()}） 迎えうつ？`))) return;
+    if (s.t === 'waves') { if (!(await K.confirm(`まものの 群れが せまってくる。（推奨Lv${LV()}） 迎えうつ？`))) return;
       for (let w = st.w || 0; w < s.n; w++) { await K.say([`第${w + 1}波！`]); const lv = Math.max(1, LV() - 3 + w); const pool = ['watapoko', 'iwanoko', 'mizumochi', 'hanapokke', 'tsuchimogu'];
         const res = await K.runBattle(Array.from({ length: 2 + (w > 0 ? 1 : 0) }, () => ({ sp: pool[Math.floor(K.R() * pool.length)], lv })), { noFlee: true }); if (res !== 'win') return K.defeated(); st.w = w + 1; K.save(); }
       st.v = 1; await K.say(['群れを しりぞけた！（依頼人に 報告しよう）']); advance(Q); K.save(); return; }
@@ -204,19 +204,19 @@
   // ---- 討伐 カウント ----
   H.battleEnd.push(async (res, specs) => { if (res !== 'win' || specs.some(s => s.boss)) return; for (const Q of DATA.reqs) { const st = q(Q.id); if (st.s !== 'a') continue; const s = Q.steps[st.step || 0]; if (s && s.t === 'hunt' && G().region === s.region) st.c = (st.c || 0) + 1; } });
 
-  // ---- 灯台の 門番（鍵が ないと ひらかない）と 目的 ----
-  DATA.trials.forEach((T, i) => { T.text = '灯台の 奥で、闇に のまれた 番人が 灯を ふさいでいる。'; T.name = ['野原の灯台', '双塔の灯台', '岩山の灯台', '月夜の灯台', '崖の灯台'][i] || T.name; });
-  // 第1灯台：欠片が 3つ そろっていれば ゲンへ 報告に もどらず、扉で そのまま 鍵に なる
+  // ---- 灯の樹の 門番（鍵が ないと ひらかない）と 目的 ----
+  DATA.trials.forEach((T, i) => { T.text = '灯の樹の 奥で、闇に のまれた 番人が 灯を ふさいでいる。'; T.name = ['野原の灯の樹', 'ふたごの灯の樹', '岩山の灯の樹', '月夜の灯の樹', '崖の灯の樹'][i] || T.name; });
+  // 第1灯の樹：欠片が 3つ そろっていれば ゲンへ 報告に もどらず、扉で そのまま 鍵に なる
   const autoKey0 = () => { const Q = DATA.reqs.find(x => x.key === 0); if (!Q || done(Q.id) || G().order !== 0 || (G().trial[0].shards || 0) < 3) return false; const st = q(Q.id); st.s = 'd'; st.step = Q.steps.length; G().gold += (Q.reward || {}).gold || 0; Music.sfx('friend'); K.toast(`灯の欠片を 扉に はめこんだ！ 扉が ひらいた<br><span style="font-size:.6em">【依頼 達成】${Q.title}（+${(Q.reward || {}).gold || 0}G）</span>`, 2600); K.save(); K.hud(); return true; };
   H.beaconGate = b => { const k = G().order; if (keyDone(k)) return null; if (k === 0 && b && b.i === 0 && autoKey0()) return null; const Q = DATA.reqs.find(x => x.key === k && !done(x.id));
-    return ['灯台の 扉は かたく 閉ざされている……。', Q ? `（${Q.town}の ${giverName(Q)}が 鍵の ことを 知っているようだ）` : '（まだ 鍵が ない）']; };
+    return ['灯の樹の 扉は かたく 閉ざされている……。', Q ? `（${Q.town}の ${giverName(Q)}が 鍵の ことを 知っているようだ）` : '（まだ 鍵が ない）']; };
   H.beaconObj = () => { const k = G().order; if (keyDone(k)) return null; const Q = DATA.reqs.find(x => x.key === k && !done(x.id)); if (!Q) return null; const st = q(Q.id); const lv = DATA.guardLv[k];
-    if (!st.s) { const n = giverNpc(Q); return { t: `【灯台 ${k}/5・推奨Lv${lv}】${Q.town}の ${giverName(Q)}に 話を 聞こう`, p: n ? { x: n.x, z: n.z } : null }; }
+    if (!st.s) { const n = giverNpc(Q); return { t: `【灯の樹 ${k}/5・推奨Lv${lv}】${Q.town}の ${giverName(Q)}に 話を 聞こう`, p: n ? { x: n.x, z: n.z } : null }; }
     const fin = isReady(Q); const s = Q.steps[st.step || 0];
-    if (fin && k === 0) return { t: `【灯台 0/5・推奨Lv${lv}】野原の灯台の 扉に 欠片を はめこもう`, p: R0.beacons[0] };
-    if (fin) { const n = giverNpc(Q); return { t: `【灯台 ${k}/5】${Q.town}の ${giverName(Q)}に 報告しよう`, p: n ? { x: n.x, z: n.z } : null }; }
+    if (fin && k === 0) return { t: `【灯の樹 0/5・推奨Lv${lv}】野原の灯の樹の 扉に 欠片を はめこもう`, p: R0.beacons[0] };
+    if (fin) { const n = giverNpc(Q); return { t: `【灯の樹 ${k}/5】${Q.town}の ${giverName(Q)}に 報告しよう`, p: n ? { x: n.x, z: n.z } : null }; }
     const p = s && (s.t === 'visit' || s.t === 'waves') ? spotOf(s) : s && s.t === 'shards' ? (() => { const b0 = R0.beacons[0]; const got = G().trial[0].got || []; const sh = b0.shards.find((_, i) => !got.includes(i)); return sh; })() : null;
-    return { t: `【灯台 ${k}/5・${Q.title}】${stepTxt(Q, st)}`, p }; };
+    return { t: `【灯の樹 ${k}/5・${Q.title}】${stepTxt(Q, st)}`, p }; };
   const gateDone = n => DATA.reqs.filter(x => x.gate === n).every(x => done(x.id));
   H.gate2 = () => (F().c2mid || gateDone(2)) ? null : ['遺跡の 奥の 扉は 星の 紋様で 閉ざされている……。', '（東の 砂漠の オアシスの村「サラム」で 手がかりを さがそう）'];
   H.gate3 = () => (G().wind.some(Boolean) || gateDone(3)) ? null : ['祠の 風は よどんでいて、道が 見えない……。', '（西の 小島「ハヤテ」の 風車守りが 風の 道を 読めるらしい。 上昇気流で わたろう）'];

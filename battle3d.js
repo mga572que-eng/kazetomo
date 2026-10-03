@@ -110,7 +110,7 @@
     const put = (x, el) => { const st = S.get(x); if (!st) return; animate(x, st, el, dt, T); const me = meshOf(x); const px = st.bx + st.ox, pz = st.bz + st.oz, py = st.by + st.oy + (st.oyy || 0);
       const c = x.foe ? pc : fc; const yaw = yawTo(px, pz, c[0], c[2]) + (st.yo || 0); const sc = sizeOf(x) * (st.sq || 1) * (x.foe ? 1 - (st.gone || 0) : 1);
       st.mesh = !!me && sc > .02; if (me && sc > .02) { if (me.h) { me.h.set(0, px, py, pz, sc, yaw); me.h.n = 1; }
-        else if (me.m.n < 14) { const legend = sp => K.SPC[sp] && K.SPC[sp].legend; const neg = x.foe && !x.boss && !legend(me.sp) ? -1 : 1; me.m.set(me.m.n++, px, py, pz, neg * sc, yaw + (x.shiny ? 100 : 0)); } }
+        else if (me.m.n < 14) { const legend = sp => K.SPC[sp] && K.SPC[sp].legend; const neg = 1; /* 敵も 本来の 色（「かげ」の 紺紫は やめた） */ me.m.set(me.m.n++, px, py, pz, neg * sc, yaw + (x.shiny ? 100 : 0)); } }
       st.sx = px; st.sy = py; st.sz = pz; };
     P.forEach((m, i) => put(m, $('al' + i))); F.forEach((m, i) => put(m, $('foe' + i)));
     // カメラ

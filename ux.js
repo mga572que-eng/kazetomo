@@ -31,10 +31,10 @@
   // ---------- 1. 地名を 画面の まんなかに ----------
   function areas() { const r = K.REG[G().region], out = [], rg = G().region;
     out.push({ id: 't' + rg, x: r.town.x, z: r.town.z, r: 30, n: K.townName(rg), s: K.regionName(rg) });
-    if (rg === 0) { r.beacons.forEach(b => out.push({ id: 'b' + b.i, x: b.x, z: b.z, r: 15, n: DATA.trials[b.i].name, s: b.lit ? '灯が ともっている' : 'ボスが まちうける 灯台' })); if (G().order >= 5 && r.shrine) out.push({ id: 'sh', x: r.shrine.x, z: r.shrine.z, r: 16, n: '宵の祠', s: '風灯の島' }); if (K.baseSite) out.push({ id: 'base', x: K.baseSite.x, z: K.baseSite.z, r: 11, n: 'わが家', s: G().baseLv ? `レベル${G().baseLv}` : '建設予定地（立て札を しらべよう）' }); }
+    if (rg === 0) { r.beacons.forEach(b => out.push({ id: 'b' + b.i, x: b.x, z: b.z, r: 15, n: DATA.trials[b.i].name, s: b.lit ? '灯が ともっている' : 'ボスが まちうける 灯の樹' })); if (G().order >= 5 && r.shrine) out.push({ id: 'sh', x: r.shrine.x, z: r.shrine.z, r: 16, n: '宵の祠', s: '風灯の島' }); if (K.baseSite) out.push({ id: 'base', x: K.baseSite.x, z: K.baseSite.z, r: 11, n: 'わが家', s: G().baseLv ? `レベル${G().baseLv}` : '建設予定地（立て札を しらべよう）' }); }
     if (rg === 1) out.push({ id: 'ru', x: World.RUINS1[0], z: World.RUINS1[1], r: 34, n: '星の遺跡', s: '霧の大陸' });
     if (rg === 2) { (r.shrines || []).forEach(sh => out.push({ id: 'w' + sh.i, x: sh.x, z: sh.z, r: 14, n: DATA.windTrials[sh.i].name, s: '風の祠' })); if (r.tower) out.push({ id: 'tw', x: r.tower.x, z: r.tower.z, r: 30, n: '星巣の塔', s: '天空の浮島' }); }
-    if (rg === 3) { (r.lh || []).forEach(L => out.push({ id: 'l' + L.i, x: L.x, z: L.z, r: 16, n: ['藻の灯台', '甲羅の灯台', '雷の灯台'][L.i], s: 'ボスが まちうける 沈んだ灯台' })); if (r.palace) out.push({ id: 'pl', x: r.palace.x, z: r.palace.z, r: 24, n: '深淵の宮', s: '海の底' }); if (r.trench) out.push({ id: 'tr', x: r.trench.x, z: r.trench.z, r: 30, n: '深淵の谷', s: '海の底' }); }
+    if (rg === 3) { (r.lh || []).forEach(L => out.push({ id: 'l' + L.i, x: L.x, z: L.z, r: 16, n: ['藻の灯の樹', '甲羅の灯の樹', '雷の灯の樹'][L.i], s: 'ボスが まちうける 沈んだ灯の樹' })); if (r.palace) out.push({ id: 'pl', x: r.palace.x, z: r.palace.z, r: 24, n: '深淵の宮', s: '海の底' }); if (r.trench) out.push({ id: 'tr', x: r.trench.x, z: r.trench.z, r: 30, n: '深淵の谷', s: '海の底' }); }
     for (const a of K.extraAreas || []) if (a.rg === rg) out.push(a);
     for (const sh of DATA.shrines || []) if (sh.r === rg && sh.pos) out.push({ id: 's' + sh.id, x: sh.pos.x, z: sh.pos.z, r: 10, n: sh.name, s: '試練の祠' });
     return out; }
@@ -44,7 +44,7 @@
   let bnPend = null;
   const DESC = { t0: '〜 風と 灯が めぐる 岬の 村 〜', t1: '〜 霧に けむる 交易の 港 〜', t2: '〜 雲の 上に ただよう 里 〜', t3: '〜 泡に まもられた 海底の 里 〜', shiomi: '〜 焼け跡から 立ち上がる 潮の 町 〜', oasis: '〜 砂漠の オアシス 〜', hayate: '〜 風車が うたう 空の 小島 〜',
     ru: '〜 星の 落ちる 砂の 遺跡 〜', tw: '〜 星を 抱く 天空の 塔 〜', pl: '〜 光の とどかぬ 宮殿 〜', tr: '〜 海の いちばん 深い 場所 〜', sh: '〜 宵闇の 祀られた 丘 〜', base: '〜 自分だけの 居場所 〜',
-    b0: '〜 野に 立つ 最初の 灯台 〜', b1: '〜 ふたつの 塔が そびえる 灯台 〜', b2: '〜 岩山に きざまれた 灯台 〜', b3: '〜 月夜にだけ ひらく 灯台 〜', b4: '〜 断崖の 先の 灯台 〜', l0: '〜 藻に しずんだ 灯台 〜', l1: '〜 甲羅に まもられた 灯台 〜', l2: '〜 雷の ねむる 灯台 〜' };
+    b0: '〜 野に 立つ 最初の 灯の樹 〜', b1: '〜 ふたごの 幹が そびえる 灯の樹 〜', b2: '〜 岩山に 根を はる 灯の樹 〜', b3: '〜 月夜にだけ ひらく 灯の樹 〜', b4: '〜 断崖の 先の 灯の樹 〜', l0: '〜 藻に しずんだ 灯の樹 〜', l1: '〜 甲羅に まもられた 灯の樹 〜', l2: '〜 雷の ねむる 灯の樹 〜' };
   const descOf = a => DESC[a.id] || (a.id[0] === 's' && a.id.length > 1 ? '〜 試練の 祠 〜' : a.id[0] === 'w' ? '〜 風の 祠 〜' : '');
   K.areaDesc = DESC;
   function banner(n, s, d, first) { if (d !== undefined) { const reg = s; s = d; d = reg; } return banner0(n, s, d, first); }
@@ -165,10 +165,10 @@
 
   // ---------- 7. ストーリー と クエスト（メニューから・追跡できる） ----------
   const CH = [
-    { k: 'cleared', t: '第1章　ともしびの継ぎ手', s: '三年前、灯台守の 父カイトは 夜の海へ 消えた。 {name}は 幼なじみの ミオ、槍使いの リクと 島の 五つの 灯台に 火を ともし、宵の祠で 影の王を しずめた。' },
+    { k: 'cleared', t: '第1章　ともしびの継ぎ手', s: '三年前、灯守りの 父カイトは 夜の海へ 消えた。 {name}は 幼なじみの ミオ、槍使いの リクと 島の 五つの 灯の樹に 灯を ともし、宵の祠で 影の王を しずめた。' },
     { k: 'c2done', t: '第2章　星くずの大陸', s: '船乗りバルドの 船で 霧の大陸へ。 港町ミナトで 星読みの サナ、学者の ツムギと 出会い、星の遺跡の 祭壇で 星を 食らう 影を うちはらった。' },
     { k: 'c3done', t: '第3章　天空の星巣', s: '星笛に よばれた くじらに のって 天空の浮島へ。 風読みの ハルと 三つの 風の祠を ひらき、星巣の塔の 頂で 天喰みを たおした。 そして 島で、ついに 父と 再会した。' },
-    { k: 'c4done', t: '第4章　海の底', s: '父から 託された「あわの鈴」で 海の底へ。 アワの里の 長老ウシオに たのまれ、沈んだ 三つの 灯台に 灯を ともし、深淵の宮で 深みの王を 光へ かえした。' } ];
+    { k: 'c4done', t: '第4章　海の底', s: '父から 託された「あわの鈴」で 海の底へ。 アワの里の 長老ウシオに たのまれ、沈んだ 三つの 灯の樹に 灯を ともし、深淵の宮で 深みの王を 光へ かえした。' } ];
   function quests() { const Q = [], g = G();
     Q.push({ id: 'main', n: 'メインストーリー', d: K.objective().t, p: K.objective().p });
     if (K.reqList) Q.push(...K.reqList());

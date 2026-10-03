@@ -4,23 +4,23 @@ const DATA = {
   cast: {
     sora: { name: 'ソラ', role: '主人公', age: 16, title: '灯守りの家の子',
       look: '栗色のツンツン頭に、父のおさがりの橙色のマフラー。腰には小さな灯の短剣。',
-      body: 'まっすぐで お人よし。こわがりだけれど、だれかが 困っていると 考えるより先に 体が動く。高いところが 苦手（灯台守の 家なのに）。',
-      past: '三年前、父カイトが 夜の海へ 消えた日から、毎晩 岬で 消えた灯台を 見上げている。',
+      body: 'まっすぐで お人よし。こわがりだけれど、だれかが 困っていると 考えるより先に 体が動く。高いところが 苦手（灯守りの 家なのに）。',
+      past: '三年前、父カイトが 夜の海へ 消えた日から、毎晩 岬で 消えた灯の樹を 見上げている。',
       like: '夕焼け／母のスープ／ワタポコの もふもふ', line: '「灯は、帰る場所の しるしなんだ。父さんが そう言ってた」' },
     mio: { name: 'ミオ', role: 'ヒロイン', age: 16, title: '村の歌い手',
       look: '夕焼け色の 長い髪に、白い花の髪飾り。緑のベストは 母の形見。',
       body: '明るくて おしゃべり。いきものの「こえ」が きこえる ふしぎな子。そのぶん、だれかの 悲しみにも 気づいてしまう。実は 暗闇が こわい。',
       past: '幼いころ 海で 溺れかけたところを、ソラの父カイトに 助けられた。その恩を、ずっと 返したいと 思っている。',
-      like: '歌／ナギの 木の実パイ／星', line: '「きこえるの。灯台の ほうで、だれかが 泣いてる」' },
+      like: '歌／ナギの 木の実パイ／星', line: '「きこえるの。灯の樹の ほうで、だれかが 泣いてる」' },
     riku: { name: 'リク', role: '仲間', age: 17, title: '流れ者の槍使い',
       look: '紺の髪に 赤いバンダナ。頬の傷と、使いこんだ 長槍。',
       body: '口が悪く ひねくれ者。でも 一度 決めたことは 曲げない。ソラを「甘ちゃん」と 呼ぶ。',
       past: '本土の 港町の生まれ。ある夜、町の灯が すべて 喰われ、家族と 離ればなれに なった。闇の王を 追って 島へ 渡ってきた。',
       like: '干し魚／静かな 夜明け', line: '「火をつけりゃ、あいつが 来る。……それでも やるのか？」' },
-    kaito: { name: 'カイト', role: '父', age: 42, title: '島いちばんの灯台守',
-      look: '紺の 灯台守の外套に 金のボタン。無精ひげ。',
+    kaito: { name: 'カイト', role: '父', age: 42, title: '島いちばんの灯守り',
+      look: '紺の 灯守りの外套に 金のボタン。無精ひげ。',
       body: '厳しくて、でも 笑うと 子どもみたいな人。口ぐせは「灯は、帰る場所の しるしだ」。',
-      past: '三年前「海の向こうで 光が 喰われている」と 言い残し、小舟で 夜の海へ。五つの灯台に、ソラへの 手紙を 隠していった。',
+      past: '三年前「海の向こうで 光が 喰われている」と 言い残し、小舟で 夜の海へ。五つの灯の樹に、ソラへの 手紙を 隠していった。',
       like: '妻の いれる 薬草茶／星を 読むこと', line: '「待っている。おまえなら、きっと ここまで 来る」' },
     yui: { name: 'ユイ', role: '母', age: 40, title: '村の薬師',
       look: '栗色の 三つ編みを 肩に流し、若草色の服に 生成りの前掛け。',
@@ -40,7 +40,7 @@ const DATA = {
     yomi: { name: 'ヨミカゲ', role: 'ラスボス', age: '？', title: '宵闇の王',
       look: '白銀の髪に 闇の王冠。消えた ランタンを 手に さげている。',
       body: '島の 五つの灯を 喰らい、永遠の 夜で 島を 閉ざそうとする者。その声は、いつも どこか 悲しげ。',
-      past: '正体は かつての 灯台守 クロウ。カイトの 師匠。四十年前の 嵐の夜、灯が 消えていたせいで、娘ハルを 海で 失った。「灯があるから 人は 海へ出る。ならば 永遠の夜で、だれも 旅立たせない」——悲しみが 闇を まとい、王となった。',
+      past: '正体は かつての 灯守り クロウ。カイトの 師匠。四十年前の 嵐の夜、灯が 消えていたせいで、娘ハルを 海で 失った。「灯があるから 人は 海へ出る。ならば 永遠の夜で、だれも 旅立たせない」——悲しみが 闇を まとい、王となった。',
       like: '——', line: '「灯を ともして 何になる。灯があるから、人は 帰ってこない」' },
   },
   party: {
@@ -87,17 +87,17 @@ const DATA = {
     mi: { name: '木の実', heal: 25, desc: 'HPを 25 かいふく' },
     pan: { name: '実のパン', heal: 80, desc: 'HPを 80 かいふく（ナギの お手製）' },
     shizuku: { name: '夜露のしずく', mp: 15, desc: 'MPを 15 かいふく' },
-    maki: { name: '薪', mat: true, desc: '灯台に 火を ともすのに 3つ いる。ブロックにも なる' },
+    maki: { name: '薪', mat: true, desc: '灯の樹に 灯を ともすのに 3つ いる。ブロックにも なる' },
     ishi: { name: '石', mat: true, desc: 'ゲンに 渡すと 武具になる。ブロックにも なる' },
   },
   weapons: [{ name: '灯の短剣', atk: 0 }, { name: '石の剣', atk: 7, cost: { ishi: 5, maki: 3 } }, { name: '灯の剣', atk: 16, cost: { ishi: 10, maki: 6, shizuku: 2 } }],
   armors: [{ name: '旅の服', def: 0 }, { name: '木の胸当て', def: 4, cost: { maki: 5, ishi: 2 } }, { name: '石の よろい', def: 9, cost: { ishi: 12, maki: 4 } }],
   enemies: {
-    kage_wata: { name: 'かげワタポコ', art: ['watapoko', 1], hp: 16, atk: 9, def: 3, spd: 7, exp: 6, drop: [['mi', .4]], join: 'watapoko', joinRate: .3 },
-    kage_iwa: { name: 'かげイワノコ', art: ['iwanoko', 1], hp: 24, atk: 11, def: 9, spd: 4, exp: 9, drop: [['ishi', .5]], join: 'iwanoko', joinRate: .28 },
-    kage_mizu: { name: 'かげミズモチ', art: ['mizumochi', 1], hp: 20, atk: 10, def: 5, spd: 9, exp: 8, drop: [['mi', .3]], join: 'mizumochi', joinRate: .3, acts: [['atk', .7], ['e_mizu', .3]] },
+    kage_wata: { name: 'ワタポコ', art: ['watapoko', 1], hp: 16, atk: 9, def: 3, spd: 7, exp: 6, drop: [['mi', .4]], join: 'watapoko', joinRate: .3 },
+    kage_iwa: { name: 'イワノコ', art: ['iwanoko', 1], hp: 24, atk: 11, def: 9, spd: 4, exp: 9, drop: [['ishi', .5]], join: 'iwanoko', joinRate: .28 },
+    kage_mizu: { name: 'ミズモチ', art: ['mizumochi', 1], hp: 20, atk: 10, def: 5, spd: 9, exp: 8, drop: [['mi', .3]], join: 'mizumochi', joinRate: .3, acts: [['atk', .7], ['e_mizu', .3]] },
     koumori: { name: 'ヨルコウモリ', art: ['koumori', 1], hp: 17, atk: 12, def: 4, spd: 15, exp: 10, drop: [['shizuku', .3]] },
-    kage_hoshi: { name: 'かげホシカゲ', art: ['hoshikage', 1], hp: 28, atk: 13, def: 7, spd: 12, exp: 16, drop: [['shizuku', .5]], join: 'hoshikage', joinRate: .35, acts: [['atk', .6], ['e_hoshi', .4]] },
+    kage_hoshi: { name: 'ホシカゲ', art: ['hoshikage', 1], hp: 28, atk: 13, def: 7, spd: 12, exp: 16, drop: [['shizuku', .5]], join: 'hoshikage', joinRate: .35, acts: [['atk', .6], ['e_hoshi', .4]] },
     tsutakage: { name: 'ツタカゲ', art: ['tsutakage', 1], hp: 110, atk: 15, def: 8, spd: 6, exp: 70, boss: true, acts: [['atk', .6], ['karami', .4]] },
     rikuDuel: { name: 'リク', portrait: 'riku', hp: 130, atk: 19, def: 11, spd: 14, exp: 100, boss: true, acts: [['atk', .65], ['tsuranuki_e', .35]] },
     iwaoni: { name: 'イワオニ', art: ['iwaoni', 1], hp: 210, atk: 25, def: 18, spd: 5, exp: 160, boss: true, acts: [['atk', .6], ['jinarashi', .4]] },
@@ -110,7 +110,7 @@ const DATA = {
   letters: [
     ['ソラへ。この手紙を 読んでいるなら、おまえは 最初の 灯を ともしたんだな。……えらいぞ。', '灯は、帰る場所の しるしだ。船乗りにとっても、いきものにとっても、そして 父さんにとっても。'],
     ['海の向こうで、光が 喰われている。黒い霧の中に、見覚えのある 背中を 見た。', 'まさか……師匠？'],
-    ['クロウ師匠は、四十年前の 嵐の夜に、娘のハルを 失った。あの夜、灯台の火は 消えていた。', '師匠は ずっと、自分を 責めていたんだ。'],
+    ['クロウ師匠は、四十年前の 嵐の夜に、娘のハルを 失った。あの夜、灯の樹の火は 消えていた。', '師匠は ずっと、自分を 責めていたんだ。'],
     ['父さんは 闇の中で、師匠と 話し続けている。悲しみは、力ずくでは 晴れない。', 'だが ひとりで 抱えるには、夜は 長すぎる。'],
     ['五つの灯が そろえば、道が 見える。ソラ、母さんを たのむ。', '……いや、おまえなら きっと ここまで 来てしまうな。待っている。'],
   ],
@@ -273,7 +273,7 @@ Object.assign(DATA.skills.issen, { desc: '敵全体に ひかりの 斬撃（闇
 Object.assign(DATA.skills.kenbu, { desc: '敵全体に 強力な ほのおの 斬撃' });
 Object.assign(DATA.skills.iyashi, { desc: '味方全員の HPを かいふく' });
 Object.assign(DATA.skills.nemuri, { desc: '敵1体を 2〜3ターン ねむらせる（ボスには きかない）' });
-Object.assign(DATA.skills.kiyome, { desc: '敵1体に ひかりの 魔法（かげものに 大ダメージ）' });
+Object.assign(DATA.skills.kiyome, { desc: '敵1体に ひかりの 魔法（まものに 大ダメージ）' });
 Object.assign(DATA.skills.hagemashi, { desc: '3ターン 味方全員の こうげき ×1.4' });
 Object.assign(DATA.skills.hoshiuta, { desc: '敵全体に ひかりの 魔法' });
 Object.assign(DATA.skills.tsuranuki, { desc: '敵1体に 強烈な 一突き' });
@@ -302,7 +302,7 @@ DATA.boards = {
     { id: 'b1', name: '歌声', desc: '最大MP +15%', cost: 1, eff: { mp: .15 } },
     { id: 'b2', name: 'ねむりの歌', desc: '技：敵1体を ねむらせる', cost: 1, skill: 'nemuri' },
     { id: 'b3', name: '癒し手', desc: '回復量 +25%', cost: 2, eff: { healUp: .25 }, req: 'b1' },
-    { id: 'b4', name: 'きよめの歌', desc: '技：ひかりの 魔法（かげものに 大ダメージ）', cost: 2, skill: 'kiyome', req: 'b2' },
+    { id: 'b4', name: 'きよめの歌', desc: '技：ひかりの 魔法（まものに 大ダメージ）', cost: 2, skill: 'kiyome', req: 'b2' },
     { id: 'b5', name: 'はげましの歌', desc: '技：3ターン 味方の こうげき ×1.4', cost: 3, skill: 'hagemashi', req: 'b3' },
     { id: 'b6', name: '息つぎ上手', desc: '消費MP −25%', cost: 2, eff: { mpSave: .25 }, req: 'b3' },
     { id: 'b7', name: '星の歌', desc: '技：敵全体に ひかりの 魔法', cost: 3, skill: 'hoshiuta', req: 'b4' },
@@ -334,10 +334,10 @@ IM('pan', { cat: 'heal', src: 'ナギの かざみ亭（木の実3）・道具�
 IM('shizuku', { cat: 'heal', src: '夜の いきもの・道具屋', use: 'MP回復／灯の剣の 材料' });
 IM('nakayoshi', { cat: 'heal', src: '道具屋・依頼の ごほうび', use: 'せんとう中に つかうと いきものが なかまに なりやすい' });
 IM('hane', { cat: 'heal', src: '道具屋', use: 'いまの 地方の 町へ ワープ' });
-IM('maki', { cat: 'mat', src: '木を 切る（Eを 3回）', use: '灯台の 燃料／クラフト（板・丸太）／ゲンの 武具' });
+IM('maki', { cat: 'mat', src: '木を 切る（Eを 3回）', use: '灯の樹の 燃料／クラフト（板・丸太）／ゲンの 武具' });
 IM('ishi', { cat: 'mat', src: '岩を 掘る（Eを 3回）', use: 'クラフト（石・石レンガ）／ゲンの 武具' });
 IM('suna', { cat: 'mat', src: '砂浜や 砂漠で Eを 押す', use: 'クラフト（ガラス・しっくい・砂）' });
-IM('ha', { cat: 'mat', src: '木を 切ると ときどき', use: '灯台の 燃料／クラフト（葉っぱ）／がんばり串' });
+IM('ha', { cat: 'mat', src: '木を 切ると ときどき', use: '灯の樹の 燃料／クラフト（葉っぱ）／がんばり串' });
 IM('kinoko', { cat: 'mat', src: '森の 木の根もと', use: '料理（きのこ汁・がんばり串・シチュー）' });
 IM('hoshikake', { cat: 'mat', src: '大陸の 岩・遺跡・光の いきもの', use: '高く 売れる／星のシチュー' });
 IM('yakimi', { cat: 'food', src: 'たき火で 料理', use: 'HP 60 回復' });
@@ -346,16 +346,16 @@ IM('ganbari', { cat: 'food', src: 'たき火で 料理', use: 'がんばりゲ�
 IM('stew', { cat: 'food', src: 'たき火で 料理', use: '全員 HP・MP 全回復' });
 DATA.itemCats = { heal: 'かいふく・べんり', food: '料理', mat: '素材' };
 
-// 灯台の試練（場所ごとに ちがう）と 燃料
+// 灯の樹の試練（場所ごとに ちがう）と 燃料
 DATA.trials = [
-  { name: '灯の欠片', text: '灯台の まわりに 散らばった「灯の欠片」を 3つ 集める', fuel: { maki: 3 } },
-  { name: '天をつく塔', text: '灯台の 横の 塔の てっぺんへ 登る（がんばり・ブロックで 足場）', fuel: { maki: 3, ishi: 2 } },
-  { name: '三連戦', text: 'おしよせる かげものを 3回 しずめる', fuel: { maki: 4 } },
-  { name: '夜の灯', text: '夜にだけ 火皿が ひらく（「夜まで 待つ」も できる）', fuel: { maki: 2, shizuku: 1 } },
+  { name: '灯の欠片', text: '灯の樹の まわりに 散らばった「灯の欠片」を 3つ 集める', fuel: { maki: 3 } },
+  { name: '天をつく塔', text: '灯の樹の 横の 塔の てっぺんへ 登る（がんばり・ブロックで 足場）', fuel: { maki: 3, ishi: 2 } },
+  { name: '三連戦', text: 'おしよせる まものを 3回 しずめる', fuel: { maki: 4 } },
+  { name: '夜の灯', text: '夜にだけ 灯の花が ひらく（「夜まで 待つ」も できる）', fuel: { maki: 2, shizuku: 1 } },
   { name: '風の足場', text: '崖の 先の 浮き足場へ わたる（滑空・ブロックで 橋）', fuel: { maki: 3, ha: 2 } },
 ];
 DATA.beaconRewards = [
-  { text: '灯台と 村の あいだを ワープ できるように なった！（地図から）／がんばりの 上限 +20', kind: 'warp' },
+  { text: '灯の樹と 村の あいだを ワープ できるように なった！（地図から）／がんばりの 上限 +20', kind: 'warp' },
   { text: 'スキルポイント +2', kind: 'sp' },
   { text: '父の「風布」を 手に入れた！（空中で もう一度 ジャンプで 滑空）', kind: 'glider' },
   { text: '灯の加護：みんなの 最大HP +10%', kind: 'hp' },
@@ -469,8 +469,8 @@ DATA.windRewards = [
   { text: 'スキルポイント +3（全員）', kind: 'sp' },
 ];
 DATA.haruMem = [
-  ['……ちいさな 灯台の 下。 だれかが、わたしに 歌を 教えてくれた。', '大きな 手。 煙草と、潮の におい……。'],
-  ['嵐の 夜。 灯台の 灯が、消えていた。', '冷たい 海の 中で、大きな 星の 光が わたしを すくいあげた……。'],
+  ['……ちいさな 灯の樹の 下。 だれかが、わたしに 歌を 教えてくれた。', '大きな 手。 煙草と、潮の におい……。'],
+  ['嵐の 夜。 灯の樹の 灯が、消えていた。', '冷たい 海の 中で、大きな 星の 光が わたしを すくいあげた……。'],
   ['「ハル」って 呼ぶ こえ。 何度も、何度も。', '……おとう、さん……？'],
 ];
 DATA.dexRewards.push({ n: 33, text: '雲わた ×10 と 星のシチュー ×2', give: { kumowata: 10, stew: 2 } }, { n: 38, text: '8000ゴールド と 称号「空の博士」', gold: 8000, title: '空の博士' });
@@ -524,8 +524,8 @@ Object.assign(DATA.items, {
   awanosuzu: { name: 'あわの鈴', key: true, desc: '鳴らすと 泡の 道が ひらき、海の底へ もぐれる' },
 });
 Object.assign(DATA.skills, {
-  // カイト（灯台守）
-  toudai: { type: 'light', name: '灯台の光', mp: 5, tg: 'enemy', power: 1.8, magic: true, verb: 'てらした', fx: 'light', desc: '敵1体に ひかりの 魔法' },
+  // カイト（灯守り）
+  toudai: { type: 'light', name: '灯の樹の光', mp: 5, tg: 'enemy', power: 1.8, magic: true, verb: 'てらした', fx: 'light', desc: '敵1体に ひかりの 魔法' },
   ikari: { type: 'water', name: 'いかり投げ', mp: 4, tg: 'enemy', power: 1.9, verb: 'なげた', fx: 'water', desc: '敵1体に みずの 大ダメージ' },
   shiosai: { name: 'しおさいの守り', mp: 6, tg: 'party', buff: 'def', verb: 'となえた', fx: 'heal', desc: '3ターン 味方全員の ぼうぎょ ×1.5' },
   oonamigiri: { type: 'water', name: '大波斬り', mp: 10, tg: 'enemies', power: 1.55, verb: 'はなった', fx: 'water', desc: '敵全体に みずの 大ダメージ' },
@@ -571,19 +571,19 @@ DATA.gear.mio.push({ name: '真珠の竪琴', atk: 36, price: 7600, sea: true })
 DATA.gear.riku.push({ name: '海槍ワダツミ', atk: 44, price: 8200, sea: true });
 DATA.gear.sana.push({ name: '潮見の杖', atk: 32, price: 7200, sea: true });
 DATA.gear.haru.push({ name: '潮風の扇', atk: 36, price: 7800, sea: true });
-DATA.gear.kaito = [{ name: '灯台守の いかり', atk: 30 }, { name: '深海の いかり', atk: 46, price: 8400, sea: true }];
+DATA.gear.kaito = [{ name: '灯守りの いかり', atk: 30 }, { name: '深海の いかり', atk: 46, price: 8400, sea: true }];
 DATA.armor.push({ name: '人魚の鱗よろい', def: 36, price: 7400, sea: true });
-// カイト（父・灯台守）
+// カイト（父・灯守り）
 DATA.party.kaito = { base: { hp: 46, mp: 18, atk: 16, def: 12, spd: 12 }, grow: { hp: 7.4, mp: 2.8, atk: 2.9, def: 2.2, spd: 1.3 }, skills: [['toudai', 1], ['ikari', 1], ['shiosai', 1]] };
 DATA.boards.kaito = [
-  { id: 'k1', name: '灯台守の腕', desc: 'こうげき +10%', cost: 1, eff: { atk: .1 } },
+  { id: 'k1', name: '灯守りの腕', desc: 'こうげき +10%', cost: 1, eff: { atk: .1 } },
   { id: 'k2', name: '海の男', desc: 'HP +12%', cost: 1, eff: { hp: .12 } },
   { id: 'k3', name: '大波斬り', desc: '技：敵全体に みずの 大ダメージ', cost: 2, skill: 'oonamigiri', req: 'k1' },
   { id: 'k4', name: '父の背中', desc: 'ぼうぎょ +15%', cost: 2, eff: { def: .15 }, req: 'k2' },
   { id: 'k5', name: '見張り', desc: '会心の 確率 アップ', cost: 2, eff: { crit: .06 }, req: 'k3' },
   { id: 'k6', name: 'ふんばり', desc: 'HP・ぼうぎょ +10%', cost: 3, eff: { hp: .1, def: .1 }, req: 'k4' },
   { id: 'k7', name: '導きの灯', desc: '技：敵全体に ひかりの 大魔法', cost: 4, skill: 'tomoshibi', req: 'k5' },
-  { id: 'k8', name: '灯台の誇り', desc: 'こうげき・HP +12%', cost: 4, eff: { atk: .12, hp: .12 }, req: 'k6' } ];
+  { id: 'k8', name: '灯守りの誇り', desc: 'こうげき・HP +12%', cost: 4, eff: { atk: .12, hp: .12 }, req: 'k6' } ];
 DATA.combos.push({ id: 'cb_oyako', a: 'kaito', b: 'sora', name: '親子の灯', mp: 12, tg: 'enemies', power: 2.3, type: 'light', magic: true, buff: 'def', fx: 'light', desc: 'カイト＋ソラ：敵全体に 光の 大ダメージ＋みんなの ぼうぎょ アップ' });
 DATA.skills.cb_oyako = { ...DATA.combos[DATA.combos.length - 1], mp: 0, verb: 'くりだした' };
 
@@ -622,7 +622,7 @@ for (const [id, L] of Object.entries(DATA.innate)) if (DATA.party[id]) DATA.part
   RB('riku', 'c3', { name: '風の構え', desc: 'すばやさ +10%', eff: { spd: .1 } }); RB('riku', 'c7', { name: '嵐の心得', desc: '会心の 確率 アップ', eff: { crit: .04 } });
   RB('sana', 'd3', { name: '星の導き', desc: '最大MP +10%', eff: { mp: .1 } }); RB('sana', 'd7', { name: '星雲の加護', desc: '回復量 +15%', eff: { healUp: .15 } });
   RB('haru', 'e3', { name: '風読み', desc: 'こうげき +6%', eff: { atk: .06 } }); RB('haru', 'e4', { name: '風の癒し', desc: '毎ターン HP 3% 回復', eff: { regen: .03 } }); RB('haru', 'e7', { name: '天風', desc: 'こうげき +8%', eff: { atk: .08 } });
-  RB('kaito', 'k3', { name: '潮の力', desc: 'こうげき +6%', eff: { atk: .06 } }); RB('kaito', 'k7', { name: '灯台の目', desc: '最大MP +12%', eff: { mp: .12 } }); }
+  RB('kaito', 'k3', { name: '潮の力', desc: 'こうげき +6%', eff: { atk: .06 } }); RB('kaito', 'k7', { name: '灯守りの目', desc: '最大MP +12%', eff: { mp: .12 } }); }
 // 技の 名前（キーは そのまま・表示名だけ 系統に そろえる）
 DATA.skillNames = {
   // ほのお

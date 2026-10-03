@@ -27,12 +27,12 @@ try {
   return {collecting:!!collecting.p,firstLocked,nextIsFirst:next.p===r.beacons[0],nav:{...nav,p:norm(nav.p)},b0:norm(r.beacons[0])};
  });
  assert.ok(result.collecting,'Missing-shard objective needs coordinates');assert.ok(result.firstLocked,'Completed key/guard must keep first lighthouse');assert.equal(result.nextIsFirst,false,'After lighting advance normally');
- assert.deepEqual(result.nav.p,result.b0);assert.equal(result.nav.name,'野原の灯台');assert.ok(result.nav.distance>0);
+ assert.deepEqual(result.nav.p,result.b0);assert.equal(result.nav.name,'野原の灯の樹');assert.ok(result.nav.distance>0);
  for(const width of [844,667]){
   await s.page.setViewportSize({width,height:width===844?390:375});
   await s.page.waitForFunction(()=>document.querySelector('#mmap').dataset.marker==='edge');
   const box=await s.page.locator('#mapGoalText').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width,'Destination label within viewport');
-  assert.match(await s.page.locator('#mapGoalText').innerText(),/野原の灯台/);
+  assert.match(await s.page.locator('#mapGoalText').innerText(),/野原の灯の樹/);
   await s.page.screenshot({path:out+`NAVIGATION_${width}.png`});
  }
  await s.page.evaluate(()=>{const b=KZ.REG[0].beacons[0];KZ.player.x=b.x-12;KZ.player.z=b.z;});

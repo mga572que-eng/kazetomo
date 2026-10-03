@@ -39,3 +39,24 @@
   H.frame.push(() => { if (wired || !K.townLife || !K.townLife.people.length) return; wired = true; const p = K.townLife.people.find(q => q.town.key === 'brave' && q.npc && q.npc.nm === '道場の 師範'); if (p) H.talks[p.id] = dojo; });
   K.funPlus = { dojo, DAN };
 })();
+
+// ---------------- 戦闘の 表示「2Dの 絵＋3Dの けしき」（2026-10-03） ----------------
+// 2Dの 戦闘（敵の 絵・味方の 丸・数字）は そのまま。うしろの 平面の 背景の かわりに、いま いる 場所の 3Dの けしきを 映す。
+// 3Dの 敵・味方の 形は 映さない（2Dの 絵と かさならないように）。設定「戦闘の 表示」で 立体（3D）・平面（2D）に もどせる。
+(() => {
+  const K = window.KZ; if (!K || !K.HOOK) return; const H = K.HOOK;
+  const css = document.createElement('style'); css.textContent = `
+  #battle.bg3d{background:linear-gradient(rgba(6,10,24,.38),rgba(6,10,24,0) 28%,rgba(6,10,24,0) 58%,rgba(6,10,24,.5))!important}
+  #battle.bg3d #bStage{display:none!important}
+  #battle.bg3d .foe-art{filter:drop-shadow(0 6px 4px rgba(0,0,0,.45)) drop-shadow(0 0 1px rgba(0,0,0,.6))}
+  /* 2Dの 敵の HPバー：敵の 幅より みじかく、ふちを つけて 1体ずつ 分ける（ならぶと 1本に つながって 見えていた） */
+  #battle:not(.b3d) .foe .bar{width:clamp(80px,20vh,130px);height:7px;border:1px solid rgba(0,0,0,.65);border-radius:4px;box-shadow:0 1px 0 rgba(255,255,255,.15)}
+  #battle:not(.b3d) .foe.boss .bar{width:clamp(160px,36vh,280px)}`; document.head.appendChild(css);
+  let cam = null;
+  H.bgStart = opts => { if (!(H.OPT && H.OPT.mix) || !K.player || (typeof __norender !== 'undefined' && __norender)) return false; const p = K.player, y = K.cam.yaw, f = [Math.sin(y), Math.cos(y)]; // いま 見ている 方向（cam.yaw は 見る 方向）
+    cam = { p: [p.x, p.y, p.z], f, boss: !!opts.boss }; document.getElementById('battle').classList.add('bg3d'); return true; };
+  H.bgCam = (dt, T) => { if (!cam) return null; for (const k in K.mSp) K.mSp[k].n = 0; for (const k in K.mH) if (k !== 'statue') { K.mH[k].n = 0; if (K.poseHide) K.poseHide(k); }
+    const [x, y, z] = cam.p, f = cam.f, s = Math.sin(T * .2) * .35, back = cam.boss ? 2.6 : 2.0;
+    return { eye: [x - f[0] * back, y + 1.75, z - f[1] * back], tgt: [x + f[0] * 10 - f[1] * s, y + (cam.boss ? 2.2 : 1.4), z + f[1] * 10 + f[0] * s] }; };
+  H.bgEnd = () => { cam = null; const b = document.getElementById('battle'); if (b) b.classList.remove('bg3d'); };
+})();

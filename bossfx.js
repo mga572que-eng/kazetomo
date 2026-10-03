@@ -9,7 +9,7 @@
   const K = window.KZ; if (!K) return; const H = K.HOOK;
   const EPI = { tsutakage: '森を からめる 影', rikuDuel: 'さすらいの 槍使い', iwaoni: '岩山の 地ひびき', umikage: '夜の 波に ひそむ 影', tobaridori: '夜を つれてくる 翼', yomikage: '宵の 祠に 待つ 者',
     yoiyami: '夜を まとう 王', ishigakiG: '遺跡を まもる 石の 巨人', sanaShadow: '星の 声に のまれた 巫女', hoshikui: '星を 飲みこむ 影', tsumujikaze: '祠を うずまく あらし', kumokurage: '雲を ただよう しびれ',
-    hoshigarasu: '星を ついばむ 黒い 翼', seishouG: '塔を まもる 星晶の 巨人', amahami: '天を 喰らう もの', hoshimoriB: '消えるものを しまう 守り手', kaisouG: '藻の 灯台の 番人', kaniG: '甲羅の 灯台の 番人', ikaG: '雷の 灯台の 番人',
+    hoshigarasu: '星を ついばむ 黒い 翼', seishouG: '塔を まもる 星晶の 巨人', amahami: '天を 喰らう もの', hoshimoriB: '消えるものを しまう 守り手', kaisouG: '藻の 灯の樹の 番人', kaniG: '甲羅の 灯の樹の 番人', ikaG: '雷の 灯の樹の 番人',
     fukami: '光の とどかぬ 底の 王', shinen: '深淵に ねむる 古き 主' };
   const css = document.createElement('style'); css.textContent = `
   #bfx2{position:fixed;inset:0;z-index:57;display:none;align-items:center;justify-content:center;flex-direction:column;background:#000;pointer-events:auto!important;opacity:0;transition:opacity .35s}

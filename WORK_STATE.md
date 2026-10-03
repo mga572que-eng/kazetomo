@@ -18,3 +18,11 @@ iPhone実機・PC全章通しを予定や公開条件に戻さない。既存ID�
 
 公開先: https://mga572que-eng.github.io/kazetomo/
 PR: https://github.com/mga572que-eng/kazetomo/pull/59
+
+## 2026-10-03 18:00 Claude：統合PR（work/release-1003）
+- 基準：main 401f4ec（Codex の #59・#61 で 戦闘UI・案内・家とダンジョンの屋根・work/tonight-all までの Claude 分が 公開ずみ）
+- この PR で 追加：#48〜#60 の Claude 分（戦闘の 下段を 小さく・2Dの絵＋3Dのけしき・敵を 本来の 色＋輪郭線・まもの・家の中で 登らない・町のくらしの 夜の 不具合・灯の樹 P1〜P5）
+- 重なりの 解決：battle3d.js の 名札の 位置・tests/lib.mjs・tests/ui-p1.mjs・戦闘の さくせんボタンは Codex の 新しい 版を 採用。index.html の 横の短い画面の 戦闘は Claude の 小さい 下段を 採用（3体の 名札の ずらしは Codex の 間隔の 計算と 重なるので 外した）
+- tests/navigation.mjs の 期待値を「野原の灯の樹」に（開発者の 決定による 名前の 変更）
+- 版番号 20261003175157。npm run test 24件・navigation・architecture-budget/houses/dungeons・main-dungeon-roofs・field-recovery すべて成功（PCのChromium。実機未確認）
+- のこり：Codex に「樹のなか（幹の中）」への 作りかえ と lighthouses.js 16か所・interiors.js 1か所の 言葉の 置きかえを 依頼。地図の ワープを 根の道の 演出に そろえる
