@@ -1,7 +1,7 @@
 # 作業の再開
 
-更新: 2026-10-03 17:40（JST）／担当: Claude
-最新の枝: work/tree-roots（work/tonight-all → #48 → … → #57 → #58 の順に積んだ先頭。これを使えば全部が入る）
+更新: 2026-10-03 18:10（JST）／担当: Claude
+最新の枝: work/tree-coral（work/tonight-all → #48 → … → #58 → #59 の順に積んだ先頭。これを使えば全部が入る）
 ブランチ: work/tonight-all（今夜の4件と #39 をまとめて、いっしょに動くか検査した枝）
 基準: PR #38 の work/economy-2 e86749d（PR38 が main 未統合。main は f36a44b のまま＝カジノ・宝箱・ボス・ダンジョンの演出と重さの記録が抜けた版）
 
@@ -32,7 +32,8 @@
 - #56 tomotree.js：島の5本すべてを灯の樹に（ふたご・岩山・月夜・崖で形を変える）。
 - #57 tomotree.js：灯の樹 P3 実り（ともした樹のまわりに花畑16か所・灯の実のしげみ3つ、木の実は1日1回・G.treeFruit）。
 - #58 tomotree.js：灯の樹 P4 根の道（根の口から ほかのともした樹・村へ。地図のワープの演出化は Codex の地図改善の受け取り後）。
-- 回帰テストは23件。テストごとに描画ありを指定できるようにした。
+- #59 tomotree.js：灯の樹 P5 海の底の3本を さんごの樹に（石の塔のブロックを とりのぞく）。灯の樹の段階は P1〜P5 まで完了。
+- 回帰テストは24件。テストごとに描画ありを指定できるようにした。
 
 ## 検査
 - work/tonight-all：npm run check、git diff --check、npm run test 19件すべて成功（PCのChromium・844×390）。
@@ -40,7 +41,7 @@
 - iPhone 実機：未確認（記録のみ。予定・依頼・公開条件には入れない）。PC の全章通しも行わない。
 
 ## 未解決
-- 灯の樹（docs/design/tomoshibi-tree.md）：P5 海のさんごの樹。Codex には「樹のなか（幹の中）」への作りかえと、lighthouses.js 16か所・interiors.js 1か所の言葉の置きかえを依頼予定。ふたごの「となりの塔」（ブロック）は残した。
+- 灯の樹（docs/design/tomoshibi-tree.md）：P1〜P5 完了。のこりは地図のワープの演出化（Codex の地図改善の受け取り後）。Codex には「樹のなか（幹の中）」への作りかえと、lighthouses.js 16か所・interiors.js 1か所の言葉の置きかえを依頼予定。ふたごの「となりの塔」（ブロック）は残した。
 - キャラクターの一新：A案（太い線のアニメ調）。主要6人の見た目案をチャットで提示（2026-10-03 朝）。開発者の確認後に設定画→顔の絵（art_face.js）→2Dの戦闘の丸→3D の順。
 - 担当分け（23:01）：Codex＝interiors.js・townbuildings.js・lighthouses.js（家と室内・灯台ダンジョン・統合検査）。Claude はこの3ファイルを受領まで変更しない。#43 の名前札は interiors.js にあり、Codex が把握ずみ。
 - Codex のミニマップ（b8ee9d7、基準 60c1175）・戦闘UIの修正版・家と灯台内部（d1c78d9：閉じた天井・壁・梁・壁灯・カメラ、灯台内部8区間の屋根・高窓・太柱・4階への階段・進捗表示）：どれも Codex のPC内だけ（GitHub未送信）。開発者がPCに戻って添付してから統合する。それまで interiors.js・townbuildings.js・lighthouses.js は変更しない・同じ改善を作り直さない。
