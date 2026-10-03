@@ -76,7 +76,7 @@
   H.frame.push((dt, T) => { for (const m of mF) m.n = 0; mBush.n = mBushE.n = 0; if (K.G.region !== 0 || K.phase !== 'field') return; const R = K.REG[0], pl = K.player; if (!R || !R.beacons) return;
     for (const b of R.beacons) { if (!b.lit) { litAt[b.i] = null; continue; } if (Math.hypot(b.x - pl.x, b.z - pl.z) > 110) continue; const S = spotsOf(b); if (!S) continue;
       if (litAt[b.i] == null) litAt[b.i] = b.t != null && b.t < 2 ? T : -1e9; const grow = Math.min(1, (T - litAt[b.i]) / 3) * 40; // 根元から 外へ
-      for (const f of S.fl) { if (f.d - 8 > grow) continue; const m = mF[f.c]; if (m.n < m.maxN) m.set(m.n++, f.x, f.y, f.z, 1.5 * f.s * Math.min(1, (grow - f.d + 8) / 4), f.c); /* 草より 高く */ }
+      for (const f of S.fl) { if (f.d - 8 > grow) continue; const m = mF[f.c]; if (m.n < m.maxN) m.set(m.n++, f.x, f.y, f.z, 2.1 * f.s * Math.min(1, (grow - f.d + 8) / 4), f.c); /* 草より 高く */ }
       for (const s of S.bu) { if (s.d - 8 > grow) continue; const m = picked(s) ? mBushE : mBush; m.set(m.n++, s.x, s.y, s.z, 1.5, s.d); } } });
   H.target.push(cand => { if (K.G.region !== 0) return; for (const b of K.REG[0].beacons || []) { if (!b.lit || !spots[b.i]) continue; for (const s of spots[b.i].bu) cand({ s }, 'treeFruit', s.x, s.z, 1.8); } });
   H.labels.treeFruit = t => picked(t.o.s) ? '灯の実の しげみ（また あした）' : '灯の実を つむ';
