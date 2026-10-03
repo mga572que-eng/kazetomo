@@ -159,6 +159,16 @@ test('灯の樹：島の 5本が 樹に なる・幹は 通りぬけない・灯
   ok(r.trees.every(Boolean), '島の 5本が 樹に なっていない：' + JSON.stringify(r.trees)); ok(r.top.every(Boolean), 'ふたご・崖の 灯が 塔・浮き足場に ない'); ok(r.wall, '幹を 通りぬけられる'); ok(r.fire > 7, '灯の 位置が 花の 高さに ない：' + r.fire);
 });
 
+test('灯の樹の 実り：ともすと 花と しげみ・木の実は 1日1回', async ({ page }) => {
+  await page.evaluate(async () => { const b = KZ.REG[0].beacons[0]; b.lit = false; await KZ.travel(0, b.x - 10, b.z - 14); }); await idle(page);
+  const n0 = await page.evaluate(() => { __dbg.sim(3); return KZ.tomoTree.bloomN; });
+  const r = await page.evaluate(() => { const b = KZ.REG[0].beacons[0]; b.lit = true; b.t = 99; __dbg.sim(3); const S = KZ.tomoTree.bloomSpots(b); return { n: KZ.tomoTree.bloomN, fl: S.fl.length, bu: S.bu.length, s: S.bu[0] }; });
+  ok(n0 === 0, 'ともす前から 花が ある'); ok(r.n > 50 && r.fl > 50 && r.bu === 3, '実りが 出ない：' + JSON.stringify({ n: r.n, fl: r.fl, bu: r.bu }));
+  const m0 = await page.evaluate(() => KZ.G.inv.mi || 0);
+  act(page, `s => KZ.HOOK.acts.treeFruit({ s })`, r.s); await idle(page); act(page, `s => KZ.HOOK.acts.treeFruit({ s })`, r.s); await idle(page);
+  ok(await page.evaluate(m0 => (KZ.G.inv.mi || 0) - m0, m0) === 1, '1日に 2回 つめる／つめない');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
