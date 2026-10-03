@@ -153,10 +153,10 @@ test('戦闘：2Dの 絵＋3Dの けしき（標準）・HPバーが 1体ずつ 
   ok(await page.evaluate(() => !document.getElementById('battle').classList.contains('bg3d')), '戦闘の あとに 3Dの けしきの 設定が のこる');
 }, { render: true });
 
-test('灯の樹（試作）：野原の灯台が 樹に なる・幹は 通りぬけない・灯は 花の 位置', async ({ page }) => {
+test('灯の樹：島の 5本が 樹に なる・幹は 通りぬけない・灯は 花の 位置', async ({ page }) => {
   await page.evaluate(async () => { const b = KZ.REG[0].beacons[0]; await KZ.travel(0, b.x - 12, b.z - 12); }); await idle(page); await page.evaluate(() => __dbg.sim(3));
-  const r = await page.evaluate(() => { const b = KZ.REG[0].beacons[0], b1 = KZ.REG[0].beacons[1]; return { tree: KZ.tomoTree.isTree(b), scale0: KZ.HOOK.beaconScale(b), scale1: KZ.HOOK.beaconScale(b1), wall: KZ.blocked(b.x, b.z, b.y + 1), fire: b.fireAt[1] - b.y }; });
-  ok(r.tree && r.scale0 === 0 && r.scale1 === 1, '野原だけ 樹に なっていない：' + JSON.stringify(r)); ok(r.wall, '幹を 通りぬけられる'); ok(r.fire > 7, '灯の 位置が 花の 高さに ない：' + r.fire);
+  const r = await page.evaluate(() => { const B = KZ.REG[0].beacons, b = B[0]; return { trees: B.map(x => KZ.tomoTree.isTree(x) && KZ.HOOK.beaconScale(x) === 0), wall: KZ.blocked(b.x, b.z, b.y + 1), fire: b.fireAt[1] - b.y, top: [1, 4].map(i => B[i].act.top && Math.hypot(B[i].fireAt[0] - B[i].x, B[i].fireAt[2] - B[i].z) > 2) }; });
+  ok(r.trees.every(Boolean), '島の 5本が 樹に なっていない：' + JSON.stringify(r.trees)); ok(r.top.every(Boolean), 'ふたご・崖の 灯が 塔・浮き足場に ない'); ok(r.wall, '幹を 通りぬけられる'); ok(r.fire > 7, '灯の 位置が 花の 高さに ない：' + r.fire);
 });
 
 let fail = 0;
