@@ -26,3 +26,11 @@ PR: https://github.com/mga572que-eng/kazetomo/pull/59
 - tests/navigation.mjs の 期待値を「野原の灯の樹」に（開発者の 決定による 名前の 変更）
 - 版番号 20261003175157。npm run test 24件・navigation・architecture-budget/houses/dungeons・main-dungeon-roofs・field-recovery すべて成功（PCのChromium。実機未確認）
 - のこり：Codex に「樹のなか（幹の中）」への 作りかえ と lighthouses.js 16か所・interiors.js 1か所の 言葉の 置きかえを 依頼。地図の ワープを 根の道の 演出に そろえる
+
+## 2026-10-03 18:45 Claude：公開・分担
+- 公開ずみ：main 7271325（PR #62 統合＋#63 地図から灯の樹へのワープも根の道）。版 20261003183335。Game checks と Pages 成功（公開URLは Claude の環境から開けないため直接は未確認）。実機未確認。
+- 古いPR #35〜#60 は main に含まれることを確認して閉じた。
+- 分担（開発者の指示：ChatGPT と分けて進める）
+  - ChatGPT：文と設定の担当。(1) 灯の樹・まもの・根の道・実りに合わせた台詞の点検（「灯台」の名残・言い方の食い違い・難しい漢字）、(2) 仲間の新しい会話案（JSON）、(3) 主要6人の設定画の説明文（A案）。コードは書かない。
+  - Claude：ChatGPT の出力を照合して実装・検査・PR。並行して キャラ一新（A案）の 顔の絵・2D戦闘の丸 から。
+  - Codex：樹のなか（幹の中）への作りかえ、lighthouses.js 16か所・interiors.js 1か所の言葉の置きかえ。
