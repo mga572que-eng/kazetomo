@@ -85,3 +85,31 @@
   H.load.push(g => { g.treeFruit = g.treeFruit || {}; });
   K.tomoTree = Object.assign(K.tomoTree || {}, { bloomSpots: spotsOf, day }); Object.defineProperty(K.tomoTree, 'bloomN', { get: () => mF.reduce((a, m) => a + m.n, 0) + mBush.n + mBushE.n });
 })();
+
+// ---------------- 灯の樹 P4：根の道（ともした 灯の樹どうしは 根で つながる） ----------------
+// ・ともした 樹の 根元に 光る 根の 口。しらべると「根の道」で、ほかの ともした 樹・村へ 行ける（いまの ワープと 同じ 行き先・同じ 条件）
+// ・とおるあいだは 根の 中を 光が 走る 演出（タップで とばせる）。セーブ・進行は かえない
+(() => {
+  const K = window.KZ; if (!K || typeof World === 'undefined') return; const W = World, H = K.HOOK;
+  const C = (c, e = 0) => () => [c[0], c[1], c[2], e];
+  const rg = W.Geo(); for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283 + .3, L = 4.2 + (k % 2) * 1.2; W.seg(rg, [Math.cos(a) * 1.6, .05, Math.sin(a) * 1.6], [Math.cos(a) * L, -.05, Math.sin(a) * L], .16, .06, 5, C([1, .82, .45], .9)); }
+  const mRoot = W.makeMesh(rg, 5);
+  const TS = 1.8, mouth = b => { const a = Math.atan2(-b.z, -b.x); return { x: b.x + Math.cos(a) * 3.4 * TS, z: b.z + Math.sin(a) * 3.4 * TS }; }; // 村が わの 根元
+  const lit = () => (K.REG[0].beacons || []).filter(b => b.lit);
+  H.frame.push((dt, T) => { mRoot.n = 0; if (K.G.region !== 0 || K.phase !== 'field') return; for (const b of lit()) mRoot.set(mRoot.n++, b.x, b.y, b.z, TS * (1 + Math.sin(T * 2 + b.i) * .03), b.i * .7); });
+  H.target.push(cand => { if (K.G.region !== 0) return; for (const b of lit()) { const m = mouth(b); cand({ b }, 'treeRoot', m.x, m.z, 2.4); } });
+  H.labels.treeRoot = '根の道を とおる';
+  const css = document.createElement('style'); css.textContent = `#rootfx{position:fixed;inset:0;z-index:57;display:none;pointer-events:auto!important;background:radial-gradient(circle at 50% 50%,#3b2a14 0,#120b05 70%);overflow:hidden}
+  #rootfx.on{display:block}#rootfx i{position:absolute;left:50%;top:50%;width:6px;height:46vh;border-radius:6px;background:linear-gradient(transparent,#ffd98a,transparent);transform-origin:50% 0;animation:rfx 1.1s linear infinite;opacity:.8}
+  #rootfx b{position:absolute;left:0;right:0;bottom:16%;text-align:center;color:#ffe8b0;font:700 18px var(--ui);text-shadow:0 2px 6px #000}
+  @keyframes rfx{0%{transform:rotate(var(--a)) translateY(2vh) scaleY(.2)}100%{transform:rotate(var(--a)) translateY(40vh) scaleY(1.2);opacity:0}}`; document.head.appendChild(css);
+  const fx = document.createElement('div'); fx.id = 'rootfx'; fx.innerHTML = Array.from({ length: 14 }, (_, k) => `<i style="--a:${k * 360 / 14}deg;animation-delay:${(k % 5) * .2}s"></i>`).join('') + '<b></b>'; document.body.appendChild(fx);
+  async function travel(to) { fx.querySelector('b').textContent = `根の道を とおって ${to.n}へ……`; fx.classList.add('on'); try { Music.sfx('magic'); } catch (_) {}
+    await new Promise(r => { const t = setTimeout(r, (H.OPT && H.OPT.calm) ? 500 : 1500); fx.onpointerdown = () => { clearTimeout(t); r(); }; });
+    await K.warpTo(to.x, to.z); fx.classList.remove('on'); }
+  H.acts.treeRoot = async ({ b }) => { const R = K.REG[0], dest = lit().filter(x => x !== b).map(x => { const m = mouth(x); return { n: DATA.trials[x.i].name, x: m.x + 1, z: m.z + 1 }; });
+    dest.unshift({ n: '風見の村', x: R.town.x + 2, z: R.town.z + 4 });
+    if (dest.length === 1 && !(K.G.warp)) { await K.say(['根は 地面の 下で、まだ どこにも つながっていない……。', '（ほかの 灯の樹を ともすと、根の道で 行き来 できる）']); return; }
+    const i = await K.menu({ title: '根の道 — どこへ 行く？', items: dest.map(d => ({ label: d.n })), where: 'side' }); if (i < 0) return; await travel(dest[i]); };
+  K.tomoTree = K.tomoTree || {}; K.tomoTree.rootMouth = mouth; K.tomoTree.rootTravel = travel;
+})();

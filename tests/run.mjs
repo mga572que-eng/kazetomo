@@ -169,6 +169,16 @@ test('灯の樹の 実り：ともすと 花と しげみ・木の実は 1日1�
   ok(await page.evaluate(m0 => (KZ.G.inv.mi || 0) - m0, m0) === 1, '1日に 2回 つめる／つめない');
 });
 
+test('灯の樹の 根の道：ともした 樹から 樹へ', async ({ page }) => {
+  const m = await page.evaluate(async () => { const B = KZ.REG[0].beacons; [0, 2].forEach(i => { B[i].lit = true; KZ.G.lit[i] = 1; }); const m = KZ.tomoTree.rootMouth(B[0]); await KZ.travel(0, m.x, m.z); return [0, 2].map(i => { const q = KZ.tomoTree.rootMouth(B[i]), y = KZ.surfaceAt(q.x, q.z, 99); return !KZ.blocked(q.x, q.z, y + .1) && Math.abs(y - KZ.hAt(q.x, q.z)) < 1.5; }); }); await idle(page);
+  ok(m.every(Boolean), '根の口に 立てない：' + m);
+  ok(await page.evaluate(() => { const m = KZ.tomoTree.rootMouth(KZ.REG[0].beacons[0]), P = KZ.player; P.x = m.x; P.z = m.z; P.y = KZ.surfaceAt(m.x, m.z, 99); __dbg.sim(3); return document.getElementById('btnActLabel').textContent; }) === '根の道を とおる', '根の道を しらべられない');
+  act(page, `() => KZ.HOOK.acts.treeRoot({ b: KZ.REG[0].beacons[0] })`); await page.waitForTimeout(800);
+  const k = await page.evaluate(() => [...document.querySelectorAll('.m-item')].findIndex(e => /岩山/.test(e.textContent))); ok(k > 0, '行き先に 岩山の 灯の樹が ない');
+  for (let i = 0; i < k; i++) { await page.keyboard.press('ArrowDown'); await page.waitForTimeout(120); } await page.keyboard.press('Enter'); await idle(page);
+  ok(await page.evaluate(() => { const q = KZ.tomoTree.rootMouth(KZ.REG[0].beacons[2]), P = KZ.player; return Math.hypot(P.x - q.x, P.z - q.z) < 4; }), '岩山の 灯の樹へ 行けない');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
