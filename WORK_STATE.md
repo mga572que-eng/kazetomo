@@ -34,3 +34,10 @@ PR: https://github.com/mga572que-eng/kazetomo/pull/59
   - ChatGPT：文と設定の担当。(1) 灯の樹・まもの・根の道・実りに合わせた台詞の点検（「灯台」の名残・言い方の食い違い・難しい漢字）、(2) 仲間の新しい会話案（JSON）、(3) 主要6人の設定画の説明文（A案）。コードは書かない。
   - Claude：ChatGPT の出力を照合して実装・検査・PR。並行して キャラ一新（A案）の 顔の絵・2D戦闘の丸 から。
   - Codex：樹のなか（幹の中）への作りかえ、lighthouses.js 16か所・interiors.js 1か所の言葉の置きかえ。
+
+## 2026-10-03 20:20 Claude：本編の新しい階（work/main-floors）
+- 追加：星の遺跡 2階「星見の間」と 謎「光の かがみ」（mainfloors.js・docs/design/main-floors.md）。北の 石段→屋根→2階。とけると 星見の台で ほうび 1回。進行・宝箱・祭壇・中ボスの 位置は そのまま。新しい 記録は G.flags.ruinsStar だけ。
+- 変更：index.html と sw.js に mainfloors.js を 1行ずつ 登録、版 20261003202056。game.js・world.js・Codex の 3ファイルは 変更なし。
+- 検査：npm run check・npm run test 全件・architecture-budget・navigation・field-recovery 成功。main-dungeon-roofs は 祭壇の 撮影で カメラ距離が ときどき 足りず 失敗（この 変更なしでも 同じ カメラの ちぢみを 観測。Codex の 検査の 不安定として 別件）。PCの Chromium で 撮影確認。実機未確認。
+- 基準：main f7e0895（Codex の 幹の中 #65・#66 を ふくむ）
+- 次の一手：PR の 確認・統合（開発者の 指示で）。つぎは 星巣の塔「星座の 床」。ヒント文の 点検は ChatGPT。

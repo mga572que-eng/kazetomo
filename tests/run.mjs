@@ -193,6 +193,28 @@ test('地図から 灯の樹へ：根の道の 演出で 移動', async ({ page 
   ok(r.shown && r.near && r.off, '根の道の 演出で 移動しない：' + JSON.stringify(r));
 });
 
+test('星の遺跡 2階「星見の間」：石段で のぼれる・光の かがみの 謎・ほうびは 1回', async ({ page }) => {
+  await page.evaluate(async () => { const R = KZ.mainFloors.ruins; delete KZ.G.flags.ruinsStar; await KZ.travel(1, R.stairs.x - 3, R.stairs.z); }); await idle(page);
+  const r0 = await page.evaluate(() => { const R = KZ.mainFloors.ruins; return { door: R.starDoor.every(c => World.Blocks.get(...c) === 7), hit: R.trace().hit }; });
+  ok(r0.door && !r0.hit, '最初から 扉が ひらいている／光が とどいている：' + JSON.stringify(r0));
+  await page.evaluate(() => { const P = KZ.player; P.yaw = Math.PI / 2; KZ.cam.yaw = Math.PI / 2; }); await page.keyboard.down('KeyW');
+  for (let i = 0; i < 40; i++) { await page.evaluate(() => __dbg.sim(6)); if (await page.evaluate(() => KZ.player.x > KZ.mainFloors.ruins.landing.x - 1)) break; } await page.keyboard.up('KeyW');
+  const p = await page.evaluate(() => { const R = KZ.mainFloors.ruins, P = KZ.player; return { y: P.y, fy: R.room.y, x: P.x, lx: R.landing.x }; });
+  ok(Math.abs(p.y - p.fy) < .6 && p.x > p.lx - 2, '石段で 2階の 高さまで のぼれない：' + JSON.stringify(p));
+  const g0 = await page.evaluate(() => KZ.G.gold); act(page, `() => KZ.HOOK.acts.ruDais({})`); await idle(page);
+  ok(await page.evaluate(() => !KZ.G.flags.ruinsStar) && await page.evaluate(() => KZ.G.gold) === g0, '謎を とかずに ほうびが もらえる');
+  for (const i of [0, 1, 2, 3]) await page.evaluate(i => { const R = KZ.mainFloors.ruins, m = R.mirrors[i], P = KZ.player; Object.assign(P, { x: R.wx(m.a) + .5, z: R.wz(m.b) + 1.5, y: R.room.y }); return KZ.HOOK.acts.ruMirror({ i }); }, i);
+  await page.evaluate(() => __dbg.sim(3)); await idle(page);
+  const r1 = await page.evaluate(() => { const R = KZ.mainFloors.ruins; return { f: KZ.G.flags.ruinsStar, open: R.starDoor.every(c => !World.Blocks.has(...c)), hit: R.trace().hit }; });
+  ok(r1.f === 1 && r1.open && r1.hit, 'かがみを こたえに しても 扉が ひらかない：' + JSON.stringify(r1));
+  await page.evaluate(() => { const R = KZ.mainFloors.ruins, P = KZ.player; Object.assign(P, { x: R.dais.x, z: R.dais.z - 1.2, y: R.room.y }); });
+  for (let k = 0; k < 2; k++) { act(page, `() => KZ.HOOK.acts.ruDais({})`); await idle(page); }
+  const r2 = await page.evaluate(g0 => ({ f: KZ.G.flags.ruinsStar, d: KZ.G.gold - g0 }), g0); ok(r2.f === 2 && r2.d === 1500, 'ほうびが 1回だけで ない：' + JSON.stringify(r2));
+  // 旧セーブ（記録なし）へ もどすと 扉が しまり、光は とどかない
+  await page.evaluate(() => { delete KZ.G.flags.ruinsStar; const R = KZ.mainFloors.ruins; R.st.s = R.mirrors.map(m => m.s0); __dbg.sim(2); });
+  ok(await page.evaluate(() => KZ.mainFloors.ruins.starDoor.every(c => World.Blocks.get(...c) === 7)), '記録の ない セーブで 扉が しまらない');
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
