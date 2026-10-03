@@ -1,7 +1,7 @@
 # 作業の再開
 
-更新: 2026-10-03 08:10（JST）／担当: Claude
-最新の枝: work/battle-2d3d（work/tonight-all → #48 → #49 → #50 → #51 → #52 → #53 の順に積んだ先頭。これを使えば全部が入る）
+更新: 2026-10-03 10:00（JST）／担当: Claude
+最新の枝: work/tree-concept（work/tonight-all → #48 → … → #53 → #54 の順に積んだ先頭。これを使えば全部が入る）
 ブランチ: work/tonight-all（今夜の4件と #39 をまとめて、いっしょに動くか検査した枝）
 基準: PR #38 の work/economy-2 e86749d（PR38 が main 未統合。main は f36a44b のまま＝カジノ・宝箱・ボス・ダンジョンの演出と重さの記録が抜けた版）
 
@@ -27,7 +27,8 @@
 - #51 文言：「かげもの」→「まもの」（32か所）と意味が変わる8か所。決定は docs/design/enemy-style.md。
 - #52 townlife.js：夜中に外に立つ先生・戸口がこんで家に入れない住人を直す（テスト不安定の原因）。
 - #53 settings.js・funplus.js・game.js 3行：戦闘「2Dの絵＋3Dのけしき」を標準に／2Dの敵のHPバーを1体ずつ分ける。
-- 回帰テストは20件。テストごとに描画ありを指定できるようにした。
+- #54 tomotree.js（新規）・game.js 1行・index.html/sw.js：灯の樹（H案・全面）の設計書と、野原の灯台を大樹にする試作。あわせて cam.yaw の向きの不具合（#45 見晴らし・#53 戦闘の背景が逆向き）を修正。
+- 回帰テストは21件。テストごとに描画ありを指定できるようにした。
 
 ## 検査
 - work/tonight-all：npm run check、git diff --check、npm run test 19件すべて成功（PCのChromium・844×390）。
@@ -35,6 +36,7 @@
 - iPhone 実機：未確認（記録のみ。予定・依頼・公開条件には入れない）。PC の全章通しも行わない。
 
 ## 未解決
+- 灯の樹（docs/design/tomoshibi-tree.md）：P2 言葉の置きかえ（約180か所、lighthouses.js は Codex）・のこり4本の見た目・P3 実り・P4 根の道・P5 海のさんごの樹。Codex には「樹のなか（幹の中）」への作りかえを依頼予定。
 - キャラクターの一新：A案（太い線のアニメ調）。主要6人の見た目案をチャットで提示（2026-10-03 朝）。開発者の確認後に設定画→顔の絵（art_face.js）→2Dの戦闘の丸→3D の順。
 - 担当分け（23:01）：Codex＝interiors.js・townbuildings.js・lighthouses.js（家と室内・灯台ダンジョン・統合検査）。Claude はこの3ファイルを受領まで変更しない。#43 の名前札は interiors.js にあり、Codex が把握ずみ。
 - Codex のミニマップ（b8ee9d7、基準 60c1175）・戦闘UIの修正版・家と灯台内部（d1c78d9：閉じた天井・壁・梁・壁灯・カメラ、灯台内部8区間の屋根・高窓・太柱・4階への階段・進捗表示）：どれも Codex のPC内だけ（GitHub未送信）。開発者がPCに戻って添付してから統合する。それまで interiors.js・townbuildings.js・lighthouses.js は変更しない・同じ改善を作り直さない。
