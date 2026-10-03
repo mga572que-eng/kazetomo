@@ -18,12 +18,12 @@
   #saveChip{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:61;background:rgba(12,18,40,.88);border:1px solid rgba(143,224,106,.6);color:#bff0a8;border-radius:999px;padding:4px 12px;font-family:var(--pixel);font-size:12px;opacity:0;transition:opacity .4s;pointer-events:none}
   #saveChip.on{opacity:1}
   #mmap{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(56px + env(safe-area-inset-top,0px));width:clamp(92px,24vh,132px);height:clamp(92px,24vh,132px);border-radius:50%;pointer-events:auto;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.45);border:2px solid rgba(244,240,230,.75);background:#0b1016}
-  .qtabs{display:flex;gap:6px;margin:4px 0 10px;flex-wrap:wrap;padding-right:48px}.qtabs button{min-height:44px;border:1px solid rgba(244,240,230,.3);background:transparent;border-radius:999px;padding:5px 16px;font-family:var(--pixel);font-size:13px;color:#f4f0e6;cursor:pointer}.qtabs button.on{background:var(--gold);color:#1a1208;border-color:var(--gold)}
-  .qrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--card-line);border-radius:var(--r2);padding:7px 8px 7px 12px;margin-bottom:6px;font-size:14px;line-height:1.45}
-  .qrow small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.qrow.tr{border-color:var(--gold);background:rgba(243,193,90,.08)}
-  .qrow button{border:1px solid var(--gold);background:transparent;color:var(--gold);border-radius:999px;padding:5px 16px;font-family:var(--pixel);font-size:13px;min-height:44px;min-width:88px;white-space:nowrap;cursor:pointer}.qrow.tr button{background:var(--gold);color:#241a08}
-  .story p{line-height:1.8;font-size:14px;margin:0 0 10px}.story h4{margin:10px 0 4px;color:var(--gold);font-family:var(--pixel);font-weight:400}
-  .forge .qrow .cmp{font-family:var(--pixel);font-size:13px}.forge .fg-up{color:#8fe06a;display:inline}.forge .fg-ng{color:#e8857a;display:inline}.forge .cmp{display:inline}`;
+  .qtabs{display:flex;gap:6px;margin:4px 0 10px;flex-wrap:wrap;padding-right:48px}.qtabs button{min-height:44px;border:1px solid rgba(244,240,230,.3);background:transparent;border-radius:999px;padding:5px 16px;font-family:var(--ui);font-size:var(--text-detail);color:#f4f0e6;cursor:pointer}.qtabs button.on{background:var(--gold);color:#1a1208;border-color:var(--gold)}
+  .qrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--card-line);border-radius:var(--r2);padding:7px 8px 7px 12px;margin-bottom:6px;font-size:var(--text-body);line-height:1.5}
+  .qrow small{display:block;color:var(--muted);font-size:var(--text-detail);line-height:1.5;margin-top:2px}.qrow.tr{border-color:var(--gold);background:rgba(243,193,90,.08)}
+  .qrow button{border:1px solid var(--gold);background:transparent;color:var(--gold);border-radius:999px;padding:5px 16px;font-family:var(--ui);font-size:var(--text-detail);min-height:44px;min-width:88px;white-space:nowrap;cursor:pointer}.qrow.tr button{background:var(--gold);color:#241a08}
+  .story p{line-height:1.6;font-size:var(--text-body);margin:0 0 10px}.story h4{margin:10px 0 4px;color:var(--gold);font-family:var(--pixel);font-weight:400}
+  .forge .qrow .cmp{font-family:var(--ui);font-size:var(--text-detail)}.forge .fg-up{color:#8fe06a;display:inline}.forge .fg-ng{color:#e8857a;display:inline}.forge .cmp{display:inline}`;
   document.head.appendChild(css);
   const mk = (id, tag = 'div') => { const e = document.createElement(tag); e.id = id; document.body.appendChild(e); return e; };
   const bn = mk('areaBn'), hint = mk('matHint'), chip = mk('saveChip');
@@ -114,6 +114,26 @@
   const hud = $('hud'); if (hud) { hud.appendChild(mm); hud.appendChild(goalText); }
   mm.addEventListener('click', e => { e.stopPropagation(); if (K.phase === 'field' && !K.busy) K.run(K.mapPanel); });
   const imgs = {}; const mapImg = rg => { if (imgs[rg]) return imgs[rg]; const i = new Image(); i.src = K.mapImage(); imgs[rg] = i; return i; };
+  // Display-only navigation: use the same tracked objective as the full map.
+  function navigationGoal(P = K.player) {
+    const ob = (H.track && H.track()) || K.objective();
+    const p = ob.p && Number.isFinite(ob.p.x) && Number.isFinite(ob.p.z) ? ob.p : null;
+    let name = ob.t.replace(/^【[^】]*】/, '').trim();
+    if (p) {
+      const near = (a) => a && Math.hypot(a.x-p.x,a.z-p.z)<.1;
+      const r=K.REG[G().region];
+      const b=(r.beacons||[]).find(near);
+      const shard=(r.beacons||[]).some(b=>(b.shards||[]).some(near));
+      const n=K.NPCS.find(n=>n.r===G().region&&near(n));
+      if(b) name=DATA.trials[b.i].name;
+      else if(shard) name='灯の欠片';
+      else if(n) name=n.nm||n.name||name;
+    }
+    const dx=p?p.x-P.x:0,dz=p?p.z-P.z:0,distance=p?Math.round(Math.hypot(dx,dz)):null;
+    const direction=p&&distance>2?['北','北東','東','南東','南','南西','西','北西'][(Math.round(Math.atan2(dx,-dz)/(Math.PI/4))+8)%8]:p?'すぐ近く':'';
+    return {t:ob.t,p,name,distance,direction,detail:ob.detail};
+  }
+  K.navigationGoal=navigationGoal;
   let mT = 0;
   H.frame.push(dt => { mT -= dt; if (mT > 0 || K.phase !== 'field' || hud.hidden) return; mT = .1; const c = mm.getContext('2d'), S = 200, P = K.interior && K.interior.cur ? {...K.player,...K.interior.cur.back} : K.player, rg = G().region; const img = mapImg(rg);
     const yaw = K.cam2.yaw; const zoom = 2.6; const ppu = 180 / 540 * zoom; // 地図1ワールド単位あたりの px（画像 180px=540）
@@ -123,10 +143,20 @@
     const dot = (x, z, col, r = 4) => { c.beginPath(); c.arc((x - P.x) * ppu, (z - P.z) * ppu, r, 0, 7); c.fillStyle = col; c.fill(); };
     for (const e of K.enemies) if (Math.hypot(e.x - P.x, e.z - P.z) < 60) dot(e.x, e.z, e.legend ? '#ffd24a' : '#ff5b5b', 3.2);
     for (const n of K.NPCS) if (n.r === rg && (!n.show || n.show()) && Math.hypot(n.x - P.x, n.z - P.z) < 70) dot(n.x, n.z, '#8fd8ff', 3);
-    const ob = (H.track && H.track()) || K.objective(); mm.title = ob.t + (ob.p ? ` ・あと ${Math.round(Math.hypot(ob.p.x-P.x,ob.p.z-P.z))}m` : ''); mm.setAttribute('aria-label',mm.title+'（タップで 地図）'); goalText.textContent = ob.p ? `★ あと ${Math.round(Math.hypot(ob.p.x-P.x,ob.p.z-P.z))}m` : ob.t; if (ob && ob.p) { const dx = (ob.p.x - P.x) * ppu, dz = (ob.p.z - P.z) * ppu, d = Math.hypot(dx, dz), mx = 86; const k = d > mx ? mx / d : 1;
-      c.beginPath(); c.moveTo(0,0); c.lineTo(dx*k,dz*k); c.strokeStyle='#ffe38a'; c.lineWidth=3; c.setLineDash([6,4]); c.stroke(); c.setLineDash([]);
-      c.save(); c.translate(dx * k, dz * k); c.rotate(-th); c.font = 'bold 22px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#ffd24a'; c.strokeStyle = '#3a2208'; c.lineWidth = 4; c.strokeText('★', 0, 0); c.fillText('★', 0, 0); c.restore(); }
+    const ob = navigationGoal(P);
+    const detail=ob.p?`${ob.direction} ・あと ${ob.distance}m`: ob.detail || '場所は クエストで かくにん';
+    mm.title=`${ob.t} ・${detail}`;mm.setAttribute('aria-label',mm.title+'（タップで 地図）');
+    goalText.replaceChildren();const title=document.createElement('b'),sub=document.createElement('span');
+    title.textContent=`★ ${ob.name}`;sub.textContent=detail;goalText.append(title,sub);goalText.title=mm.title;
+    const off=!!ob.p&&Math.hypot(ob.p.x-P.x,ob.p.z-P.z)*ppu>68;
+    mm.dataset.goal=ob.name;mm.dataset.marker=ob.p?(off?'edge':'star'):'none';
+    if (ob.p) { const dx=(ob.p.x-P.x)*ppu,dz=(ob.p.z-P.z)*ppu,d=Math.hypot(dx,dz),k=d>68?68/d:1;
+      c.beginPath();c.moveTo(0,0);c.lineTo(dx*k,dz*k);c.strokeStyle='#ffe38a';c.lineWidth=3;c.setLineDash([6,4]);c.stroke();c.setLineDash([]);
+      c.save();c.translate(dx*k,dz*k);
+      if(off){c.rotate(Math.atan2(dz,dx));c.beginPath();c.moveTo(10,0);c.lineTo(-7,-7);c.lineTo(-3,0);c.lineTo(-7,7);c.closePath();c.fillStyle='#ffd24a';c.strokeStyle='#241a08';c.lineWidth=3;c.stroke();c.fill();}
+      else {c.rotate(-th);c.font='bold 22px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#ffd24a';c.strokeStyle='#241a08';c.lineWidth=4;c.strokeText('★',0,0);c.fillText('★',0,0);}c.restore(); }
     c.restore();
+    c.beginPath();c.arc(100,100,15,0,7);c.fillStyle='#12344e';c.fill();c.strokeStyle='#83e7ff';c.lineWidth=3;c.stroke();
     { const [vx, vy] = rot(Math.sin(P.yaw), Math.cos(P.yaw)); c.save(); c.translate(100, 100); c.rotate(Math.atan2(vy, vx) + Math.PI / 2); c.beginPath(); c.moveTo(0, -11); c.lineTo(8, 9); c.lineTo(0, 4); c.lineTo(-8, 9); c.closePath(); c.fillStyle = '#fff'; c.strokeStyle = '#1a1208'; c.lineWidth = 3; c.stroke(); c.fill(); c.restore(); }
     c.save(); c.translate(100, 100); c.font = 'bold 20px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
     for (const [t, dx, dz, col] of [['北', 0, -1, '#ff6b5b'], ['東', 1, 0, '#f4f0e6'], ['南', 0, 1, '#f4f0e6'], ['西', -1, 0, '#f4f0e6']]) { const [x, y] = rot(dx * 82, dz * 82);

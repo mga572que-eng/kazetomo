@@ -45,6 +45,20 @@
     for (const [a, h, b] of P.door) S(a, h, b, 6);
     if (P.door.length) for (let a = -6; a <= 6; a++) if (Math.abs(a) > 1) for (let h = 1; h <= 3; h++) S(a, h, -4, 6);
     if (sh.kind !== 'climb') S(0, 1, -6, 7);
+    // Flight/building trials need taller halls; leave the existing gate and all parts intact.
+    const ceiling = sh.kind === 'climb' ? 19 : sh.kind === 'rings' ? 25 : 10;
+    for (let a = -7; a <= 7; a++) for (let b = -7; b <= 7; b++) {
+      const edge = Math.abs(a) === 7 || Math.abs(b) === 7;
+      if (edge) for (let h = 5; h < ceiling; h++) {
+        if (b === 7 && Math.abs(a) <= 1 && h < 7) continue;
+        S(a, h, b, h === ceiling - 3 && (a + b) % 3 === 0 ? 7 : 6);
+      }
+      S(a, ceiling, b, Math.abs(a) <= 1 && Math.abs(b) <= 1 ? 7 : 6);
+    }
+    for (const a of [-7, 7]) for (const b of [-7, 7]) S(a, ceiling + 1, b, 8);
+    S(-2, 4, 8, 2); S(2, 4, 8, 2);
+    sh.ceiling = y + ceiling;
+
   }
   for (const sh of DATA.shrines) place(sh);
   World.setRegion(0);
