@@ -111,6 +111,7 @@
     dest.unshift({ n: '風見の村', x: R.town.x + 2, z: R.town.z + 4 });
     if (dest.length === 1 && !(K.G.warp)) { await K.say(['根は 地面の 下で、まだ どこにも つながっていない……。', '（ほかの 灯の樹を ともすと、根の道で 行き来 できる）']); return; }
     const i = await K.menu({ title: '根の道 — どこへ 行く？', items: dest.map(d => ({ label: d.n })), where: 'side' }); if (i < 0) return; await travel(dest[i]); };
+  H.rootWarp = w => travel({ n: w.n.replace(/^灯の樹：/, ''), x: w.x, z: w.z }); // 地図から 灯の樹へ 行くときも 根の道
   K.tomoTree = K.tomoTree || {}; K.tomoTree.rootMouth = mouth; K.tomoTree.rootTravel = travel;
 })();
 

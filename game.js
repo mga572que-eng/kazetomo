@@ -2150,7 +2150,7 @@ function mapPanel() { return new Promise(res => {
     <div class="mapside"><h3>地図：${REGION_NAME[G.region]}</h3><p class="q-now">★ ${esc(ob.t)}</p>${here !== player ? '<p>いえの なか：入口を 表示</p>' : ''}<p class="map-legend"><span><b>▲</b> いま</span><span><b class="g">★</b> 目的地</span>${warps.length ? '<span><b class="g">◆</b> ピンを タップで ワープ</span>' : ''}</p>
       ${warps.length ? `<details class="wdet"><summary>ワープ先 一覧（${warps.length}）</summary><div class="wlist">${warps.map((w, i) => `<button class="t-btn wbtn" type="button" data-i="${i}">${w.n}</button>`).join('')}</div></details>` : '<p class="st-eq">最初の 灯の樹を ともすと ワープが つかえる。</p>'}</div></div>`;
   const M = { el, panel: true, items: [], res }; el.querySelector('.m-x').addEventListener('click', () => { Music.sfx('cancel'); closeMenu(M, -1); });
-  el.querySelectorAll('.wbtn,.wp').forEach(b => b.addEventListener('click', async () => { const w = warps[+b.dataset.i]; M.res = () => {}; closeMenu(M, -1); Music.sfx('magic'); await warpTo(w.x, w.z); res('warped'); }));
+  el.querySelectorAll('.wbtn,.wp').forEach(b => b.addEventListener('click', async () => { const w = warps[+b.dataset.i]; M.res = () => {}; closeMenu(M, -1); Music.sfx('magic'); if (HOOK.rootWarp && /^灯の樹：/.test(w.n)) await HOOK.rootWarp(w); else await warpTo(w.x, w.z); res('warped'); })); /* 灯の樹への ワープは 根の道の 演出（tomotree.js） */
   $('ui').appendChild(el); MENUS.push(M); layoutPins(el.querySelector('.map')); }); }
 // ワープピンの ラベルが 重ならないよう 上→下→右→左 の 順に 置き場所を さがす（地図の 外にも はみ出さない）
 function layoutPins(map) { if (!map) return; const mr = map.getBoundingClientRect(); const placed = [], pad = 3;
