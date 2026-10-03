@@ -113,3 +113,29 @@
     const i = await K.menu({ title: '根の道 — どこへ 行く？', items: dest.map(d => ({ label: d.n })), where: 'side' }); if (i < 0) return; await travel(dest[i]); };
   K.tomoTree = K.tomoTree || {}; K.tomoTree.rootMouth = mouth; K.tomoTree.rootTravel = travel;
 })();
+
+// ---------------- 灯の樹 P5：海の 底の「さんごの 樹」（藻・甲羅・雷） ----------------
+// ・沈んだ 石の 塔（ブロック）を とりのぞき、枝わかれした さんごの 樹に。灯は いまと 同じ 高さ（L.fire）で ともる
+// ・ともる前は 色が くすみ、ともると あざやかに 光る（G.lh）。根元の しらべる 場所・番人・セーブは かえない
+(() => {
+  const K = window.KZ; if (!K || typeof World === 'undefined') return; const W = World, H = K.HOOK;
+  const R3 = K.REG && K.REG[3]; if (!R3 || !R3.lh) return;
+  const COL = [[[.22, .62, .48], [.55, .95, .6]], [[.8, .3, .22], [1, .38, .26]], [[.6, .45, .12], [1, .82, .2]]]; // 藻・甲羅・雷
+  const tip = [[1, 1, .9], [1, .85, .7], [.95, .8, 1]];
+  function coral(c, lit) { const g = W.Geo(), sh = W.shade(lit ? c[1] : c[0].map(v => v * .7), .1, lit ? .25 : 0);
+    W.seg(g, [0, -.4, 0], [0, 4, 0], 1.1, .75, 8, sh);
+    const br = (p, a, t, len, r, d) => { const q = [p[0] + Math.cos(a) * Math.sin(t) * len, p[1] + Math.cos(t) * len, p[2] + Math.sin(a) * Math.sin(t) * len]; W.seg(g, p, q, r, r * .7, 6, sh);
+      if (d > 0) for (const k of [-1, 1]) br(q, a + k * .9, t * .8 + .15, len * .78, r * .7, d - 1); else W.ico(g, r * 1.6, q, () => [...tip[0], lit ? 1 : .2], 0, 0, 1); };
+    for (let k = 0; k < 4; k++) br([0, 3.8, 0], k * 1.571 + .4, .55, 3.4, .5, 2);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; W.seg(g, [Math.cos(a) * .6, .4, Math.sin(a) * .6], [Math.cos(a) * 2.6, -.3, Math.sin(a) * 2.6], .45, .15, 6, sh); }
+    return W.makeMesh(g, 1); }
+  const M = COL.map((c, i) => [coral(c, false), coral(c, true)]);
+  // 石の 塔を とりのぞいて、幹に 見えない かべ（地方3の ブロックだけ。ほかの 地方は さわらない）
+  for (const L of R3.lh) { const cx = Math.floor(L.x), cz = Math.floor(L.z), b = Math.floor(L.y);
+    for (let y = b; y <= b + 11; y++) for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) W.Blocks.rm(cx + dx, y, cz + dz, 3);
+    for (let y = b; y <= b + 5; y++) for (let dx = -1; dx <= 0; dx++) for (let dz = -1; dz <= 0; dz++) W.Blocks.set(cx + dx + 1, y, cz + dz + 1, 19, true, 3);
+    L.coralY = L.fire[1] - 10.4; } // 灯（L.fire）が さんごの てっぺん（約10.4）に くる 根元の 高さ
+  H.frame.push(() => { for (const p of M) { p[0].n = 0; p[1].n = 0; } if (K.G.region !== 3) return; const lh = K.G.lh || [];
+    for (const L of R3.lh) { const m = M[L.i][lh[L.i] ? 1 : 0]; m.set(m.n++, L.x + .5, L.coralY, L.z + .5, 1, L.i * 1.1); } });
+  K.tomoTree = K.tomoTree || {}; K.tomoTree.coral = { lit: i => !!(K.G.lh || [])[i] };
+})();

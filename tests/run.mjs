@@ -179,6 +179,14 @@ test('灯の樹の 根の道：ともした 樹から 樹へ', async ({ page }) 
   ok(await page.evaluate(() => { const q = KZ.tomoTree.rootMouth(KZ.REG[0].beacons[2]), P = KZ.player; return Math.hypot(P.x - q.x, P.z - q.z) < 4; }), '岩山の 灯の樹へ 行けない');
 });
 
+test('海の さんごの 樹：石の 塔が なくなり、幹は 通りぬけない・灯の 高さは そのまま', async ({ page }) => {
+  const r = await page.evaluate(() => KZ.REG[3].lh.map(l => ({ top: Math.abs(l.coralY + 10.4 - l.fire[1]) < .01 })));
+  ok(r.every(x => x.top), 'さんごの 樹の 高さが 灯と あわない');
+  await page.evaluate(async () => { const L = KZ.REG[3].lh[0]; await KZ.travel(3, L.x + 3, L.z + 16); }); await idle(page);
+  const w = await page.evaluate(() => KZ.REG[3].lh.map(l => [KZ.blocked(l.x + .5, l.z + .5, l.coralY + 1), World.Blocks.get(Math.floor(l.x) + 2, Math.floor(l.y) + 4, Math.floor(l.z)) == null]));
+  ok(w.every(([wall, gone]) => wall && gone), '幹の かべ／石の 塔の とりのぞきが ちがう：' + JSON.stringify(w));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
