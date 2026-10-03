@@ -103,6 +103,22 @@ const REG = [{}, {}, {}, {}];
   const loot = [{ gear: ['sora', 4] }, { gold: 800 }, { give: { hoshikake: 2 } }, { give: { nakayoshi: 3 } }, { gear: ['mio', 2] }, { give: { shizuku: 3 } }];
   r.chests = ends.slice(0, 6).map(([x, z], i) => ({ id: 'r' + i, ...cellW(x, z), loot: loot[i] }));
   r.ruinsEntrance = { x: ox - 2, z: oz + 5 * CS + 2 };
+  // Keep the seeded maze and every story target; enclose it in a tall stone hall.
+  const roofY = base + 11;
+  for (let i = 0; i < G1; i++) for (let j = 0; j < G1; j++) {
+    const edge = i === 0 || j === 0 || i === G1 - 1 || j === G1 - 1;
+    if (edge) for (let h = 3; h < 11; h++) {
+      if (i === 0 && j >= 16 && j <= 17 && h < 6) continue;
+      Blocks.set(ox + i, base + h, oz + j, h === 7 && (i + j) % 6 === 0 ? 7 : 6, true);
+    }
+    Blocks.set(ox + i, roofY, oz + j, i % 6 === 2 && j % 6 === 2 ? 7 : 6, true);
+    if (edge && (i + j) % 6 === 0) Blocks.set(ox + i, roofY + 1, oz + j, 8, true);
+  }
+  for (const j of [15, 18]) for (let h = 0; h <= 11; h++) Blocks.set(ox - 1, base + h, oz + j, 8, true);
+  for (let j = 15; j <= 18; j++) Blocks.set(ox - 1, base + 7, oz + j, 8, true);
+  for (let j = 3; j < G1 - 2; j += 6) for (const i of [0, G1 - 1]) Blocks.set(ox + i, base + 5, oz + j, 2, true);
+  r.ruinsRoof = { x: ox, z: oz, size: G1, y: roofY };
+
 }
 // ================= region 2: 天空の浮島 =================
 {
@@ -171,6 +187,22 @@ const REG = [{}, {}, {}, {}];
     for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) Blocks.set(Math.floor(L.x) + dx, b + 10, Math.floor(L.z) + dz, 7, true); L.fire = [L.x + .5, b + 10.6, L.z + .5]; L.top = b + 10; }
   const [PX, PZ] = World.PALACE3; r.palace = { x: PX, z: PZ, y: hAt(PX, PZ) };
   { const b = Math.floor(r.palace.y); for (let a = 0; a < 16; a++) { const an = a / 16 * Math.PI * 2; const x = Math.round(PX + Math.cos(an) * 14), z = Math.round(PZ + Math.sin(an) * 14); if (Math.abs(an - Math.PI / 2) < .3) continue; for (let y = b; y < b + 7 + (a % 2) * 2; y++) Blocks.set(x, y, z, a % 2 ? 6 : 4, true); Blocks.set(x, b + 7 + (a % 2) * 2, z, 7, true); } }
+  // The palace keeps its original interaction point and chapter sequence.
+  { const b = Math.floor(r.palace.y), roofY = b + 16;
+    for (let dx = -16; dx <= 16; dx++) for (let dz = -16; dz <= 16; dz++) {
+      if (dx * dx + dz * dz > 256) continue;
+      Blocks.set(PX + dx, roofY, PZ + dz, Math.abs(dx) <= 2 && Math.abs(dz) <= 2 ? 7 : 6, true);
+      if (dx * dx + dz * dz < 225) continue;
+      for (let h = 0; h < 16; h++) {
+        if (dz > 0 && Math.abs(dx) <= 3 && h < 9) continue;
+        Blocks.set(PX + dx, b + h, PZ + dz, h >= 8 && h <= 10 && (dx + dz) % 5 === 0 ? 7 : 6, true);
+      }
+    }
+    for (const dx of [-4, 4]) for (let h = 0; h <= 16; h++) for (let dz = 15; dz <= 16; dz++) Blocks.set(PX + dx, b + h, PZ + dz, 8, true);
+    for (let dx = -4; dx <= 4; dx++) Blocks.set(PX + dx, b + 10, PZ + 16, 8, true);
+    for (const dx of [-4, 4]) Blocks.set(PX + dx, b + 7, PZ + 17, 2, true);
+    r.palaceRoof = { x: PX, z: PZ, radius: 16, y: roofY };
+  }
   const [RX, RZ] = World.TRENCH3; r.trench = { x: RX, z: RZ, y: hAt(RX, RZ) };
 }
 let bridgeBuilt = false;
@@ -514,7 +546,7 @@ function menu({ title, items, where = 'center', cancel = true, cols = 0, cls = '
     host.appendChild(el); MENUS.push(M); paint(M);
   });
 }
-function paint(M) { M.el.querySelectorAll('.m-item').forEach((b, i) => b.classList.toggle('on', i === M.sel)); const on = M.el.querySelectorAll('.m-item')[M.sel]; on && on.scrollIntoView && on.scrollIntoView({ block: 'nearest' }); }
+function paint(M) { M.el.querySelectorAll('.m-item').forEach((b, i) => b.classList.toggle('on', i === M.sel)); const on = M.el.querySelectorAll('.m-item')[M.sel]; on && on.scrollIntoView && on.scrollIntoView({ block: 'nearest' }); if(M.preview)M.preview(); }
 function closeMenu(M, v) { M.el.remove(); MENUS.splice(MENUS.indexOf(M), 1); M.res(v); }
 function menuKey(e) { const M = MENUS[MENUS.length - 1]; if (!M) return;
   if (e.target?.closest?.('.ranch-filters,.ranch-pager') && ['Tab', 'Space', 'Enter'].includes(e.code)) return; if (M.key) { M.key(e); return; }
@@ -549,7 +581,7 @@ function hud() {
 }
 function stamHud() { const s = $('stam'), f = Math.max(0, Math.min(1,G.stam/G.stamMax));
   s.style.setProperty('--f',f.toFixed(3)); s.classList.toggle('low',f<.25||player.tired); s.classList.remove('full');
-  s.style.left='';s.style.top='';const key=Math.ceil(G.stam)+':'+G.stamMax;if(s.dataset.value===key)return;s.dataset.value=key;s.innerHTML=`<span>がんばり ${Math.ceil(G.stam)} / ${G.stamMax}　${Math.floor(G.stamMax/20)}こ</span><i style="width:${Math.min(300,G.stamMax)/3}%"><b style="width:${f*100}%"></b></i>`;
+  s.style.left='';s.style.top='';const key=Math.ceil(G.stam)+':'+G.stamMax;if(s.dataset.value===key)return;s.dataset.value=key;s.setAttribute('role','progressbar');s.setAttribute('aria-label','がんばり');s.setAttribute('aria-valuemin','0');s.setAttribute('aria-valuemax',G.stamMax);s.setAttribute('aria-valuenow',Math.max(0,Math.min(G.stamMax,Math.ceil(G.stam))));s.innerHTML=`<span>がんばり ${Math.ceil(G.stam)} / ${G.stamMax}　${Math.floor(G.stamMax/20)}こ</span><i style="width:${Math.min(300,G.stamMax)/3}%;--stam-unit:${2000/G.stamMax}%"><b style="width:${f*100}%"></b></i>`;
 }
 
 
@@ -578,7 +610,7 @@ function objective() {
   if (!F.mio) return { t: '広場の ミオに 声を かけよう', p: npcAt('mio', 0) };
   if (G.order < 5) { if (G.region !== 0) return { t: '風灯の島へ もどろう', p: npcAt('baldo', 1) };
     if (HOOK.beaconObj) { const o = HOOK.beaconObj(); if (o) return o; }
-    let best = null, bd = 1e9; for (const b of r0.beacons) if (!b.lit) { const d = Math.hypot(b.x - player.x, b.z - player.z); if (d < bd) { bd = d; best = b; } }
+    let best = G.order === 0 && !r0.beacons[0].lit ? r0.beacons[0] : null, bd = 1e9; for (const b of r0.beacons) if (!(G.order === 0 && !r0.beacons[0].lit) && !b.lit) { const d = Math.hypot(b.x - player.x, b.z - player.z); if (d < bd) { bd = d; best = b; } }
     const T = DATA.trials[best.i], st = G.trial[best.i]; const lv = DATA.guardLv[G.order];
     let step; if (!st.seen) step = `「${T.name}」の 番人を たおす`; else if (!HOOK.beaconGate && !trialDone(best)) step = best.i === 0 ? `灯の欠片を 集める ${st.shards || 0}/3` : `群れを しずめる ${st.waves || 0}/3`;
     else if (!best.guard) step = best.i === 3 ? '夜に 灯台の 番人と たたかう' : best.act.top ? `${best.i === 1 ? '塔の てっぺん' : '浮き足場'}で 番人と たたかう` : '灯台の 番人と たたかう';
@@ -1235,9 +1267,9 @@ async function credits(ch) {
 // ================= battle =================
 const B = { active: false }; let bSkip = false;
 $('bMsg').addEventListener('pointerdown', () => { bSkip = true; });
-const AUTO_STRATEGIES = [{id:'balance',name:'バランス'}, {id:'attack',name:'せめる'}, {id:'heal',name:'かいふく優先'}, {id:'save',name:'MPせつやく'}];
+const AUTO_STRATEGIES = [{id:'balance',name:'バランス',desc:'こうげきと かいふくを 使い分ける'}, {id:'attack',name:'せめる',desc:'こうげきを 優先。ピンチのときは かいふく'}, {id:'heal',name:'かいふく優先',desc:'HPが へった仲間を 早めに かいふく'}, {id:'save',name:'MPせつやく',desc:'MPを おさえて 戦う。かいふくは ピンチのとき'}];
 function strategy() { return AUTO_STRATEGIES.find(s => s.id === G.strategy) || AUTO_STRATEGIES[0]; }
-$('bStrategy').addEventListener('click', () => { G.strategy = AUTO_STRATEGIES[(AUTO_STRATEGIES.indexOf(strategy()) + 1) % AUTO_STRATEGIES.length].id; $('bStrategy').textContent = `さくせん：${strategy().name}`; if (!B.active) save(); });
+$('bStrategy').addEventListener('click', () => { G.strategy = AUTO_STRATEGIES[(AUTO_STRATEGIES.indexOf(strategy()) + 1) % AUTO_STRATEGIES.length].id; $('bStrategy').textContent = `さくせん：${strategy().name}`; $('bStrategy').title = strategy().desc; toast(strategy().name+'：'+strategy().desc,2200); if (!B.active) save(); });
 $('bSpd').addEventListener('click', () => { G.speed = G.speed === 1 ? 2 : G.speed === 2 ? 3 : 1; $('bSpd').textContent = `はやさ ×${G.speed}`; $('battle').style.setProperty('--bs', G.speed); $('bfx').style.setProperty('--bs', G.speed); });
 // バトル画面の どこを タップしても 演出を とばせる（コマンド・ボタン類は のぞく）／ 右クリックで もどる
 $('battle').addEventListener('pointerdown', e => { if (!e.target.closest('.menu,.bctl,.bnav')) bSkip = true; });
@@ -1250,7 +1282,7 @@ const CONF = ['#ffd36a', '#ff7fb0', '#8fe06a', '#7fd0ff', '#fff6c9', '#b98cff', 
 function confetti(n, o = {}) { let h = ''; for (let i = 0; i < n; i++) { const a = (o.a0 ?? -Math.PI) + R() * (o.arc ?? Math.PI), d = (o.d || 160) * (.4 + R() * .8);
   h += `<i class="${o.cls || 'cf'}" style="--x:${Math.cos(a) * d * 1.6}px;--y:${Math.sin(a) * d}px;--fall:${60 + R() * 120}px;--r:${Math.round(R() * 720 - 360)}deg;--c:${CONF[i % CONF.length]};--dl:${(R() * .25).toFixed(2)}s;--sz:${4 + R() * 6}px">${o.ch || ''}</i>`; } return h; }
 function cryOf(f, o = {}) { try { if (f.sp) return Music.cry(f.sp, { shadow: !SPC[f.sp].legend, ...o }); if (f.bid) return Music.cry(f.bid, { boss: true, ...o }); } catch (e) { console.error(e); } return 0; }
-$('bAuto').addEventListener('click', () => { G.auto = !G.auto; $('bStrategy').textContent = `さくせん：${strategy().name}`; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF';
+$('bAuto').addEventListener('click', () => { G.auto = !G.auto; $('bStrategy').textContent = `さくせん：${strategy().name}`; $('bStrategy').title = strategy().desc; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF';
   if (G.auto) for (const M of MENUS.slice().reverse()) if (M.el.classList.contains('m-battle')) closeMenu(M, 'auto'); });
 function wildLevel(x, z) { if (G.region === 0) return Math.max(1, 1 + G.order * 3 + (G.flags.cleared ? 4 : 0) + Math.floor(R() * 2));
   if (G.region === 3) { const b = World.biomeAt(x, z); return ({ sand: 40, kelp: 41, coral: 42, rock: 44, trench: 47 }[b] || 40) + Math.floor(R() * 3) + (G.flags.c4done ? 5 : 0); }
@@ -1288,7 +1320,7 @@ function drawParty(P, ai = -1) {
     const nmH = `${esc(nameOf(m))}<small>Lv${m.lv}</small>`; const stH = stBadges(m); const stEl = el.querySelector('.pc-st'); if (stEl.dataset.k !== stH) { stEl.dataset.k = stH; stEl.innerHTML = stH; }
     const nmEl = el.querySelector('.pc-name'); if (nmEl.innerHTML !== nmH) nmEl.innerHTML = nmH;
     const [hb, mb] = el.querySelectorAll('.bar'); setBar(hb, m.hp / m.st.hp * 100); setBar(mb, m.st.mp ? m.mp / m.st.mp * 100 : 0);
-    el.querySelector('.pc-num').innerHTML = `HP <b>${m.hp}</b>/${m.st.hp}　MP <b>${m.mp}</b>/${m.st.mp}`; }); }
+    el.querySelector('.pc-num').innerHTML = `HP<b>${m.hp}</b>/${m.st.hp} MP<b>${m.mp}</b>/${m.st.mp}`; }); }
 function drawFoes(F) {
   const host = $('bFoes');
   if (host.children.length !== F.length || [...host.children].some((e, i) => e.id !== 'foe' + i))
@@ -1649,7 +1681,7 @@ async function runBattle(specs, opts = {}) {
   F.forEach(f => { if (f.sp) G.dex.seen[f.sp] = 1; });
   P.forEach(m => { m.defUp = 0; m.atkUp = 0; m.spdUp = 0; m.sleep = 0; m.guard = false; m.slow = 0; m.ail = null; });
   let friendBoost = 1;
-  $('bStrategy').textContent = `さくせん：${strategy().name}`; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF'; $('bSpd').textContent = `はやさ ×${G.speed || 1}`;
+  $('bStrategy').textContent = `さくせん：${strategy().name}`; $('bStrategy').title = strategy().desc; $('bAuto').textContent = G.auto ? 'おまかせ ON' : 'おまかせ OFF'; $('bSpd').textContent = `はやさ ×${G.speed || 1}`;
   if (!G.tips.battle1) tip('<b>バトルの コツ</b><span>敵の 下の「弱点」タイプの 技は 1.5倍。「おまかせ」で 自動、「はやさ」で 倍速に できる。</span>', 'battle1');
   $('bMsg').innerHTML = ''; buildStage(opts); B.d3 = false; try { B.d3 = !!(HOOK.b3dStart && HOOK.b3dStart(opts, P, F)); } catch (e) { console.error(e); } if (B.d3) B.stage = false; $('battle').hidden = false; $('battle').classList.toggle('isboss', !!opts.boss);
   const redraw = (ai = -1) => { drawParty(P, ai); drawAllies(P, ai); drawFoes(F); };
@@ -1676,7 +1708,10 @@ async function runBattle(specs, opts = {}) {
     const nav = bAdd('bnav', `${back ? '<button type="button" class="bback" aria-label="もどる">◀ もどる</button>' : ''}<span class="bcrumb">${crumb}</span>`, $('bCmd'));
     const bb = nav.querySelector('.bback'); if (bb) bb.addEventListener('click', e => { e.stopPropagation(); if (!MENUS.includes(M)) return; Music.sfx('cancel'); closeMenu(M, -1); });
     return pr.then(v => { nav.remove(); return v; }); };
-  const pickFoe = async (type, who = '') => { const A = aliveF(); if (A.length === 1) return A[0]; const i = await bmenu(A.map(f => ({ label: f.name + effMark(type, f), sub: `HP ${Math.ceil(f.hp / f.max * 100)}%` })), `${who} ▸ <b>どの 敵に？</b>`); return i === 'auto' ? 'auto' : i < 0 ? null : A[i]; };
+  const pickFoe = async (type, who = '') => { const A = aliveF(); if (A.length === 1) return A[0]; const pr=bmenu(A.map(f => ({ label: f.name + effMark(type, f), sub: `HP ${Math.ceil(f.hp / f.max * 100)}%` })), `${who} ▸ <b>どの 敵に？</b>`), M=MENUS[MENUS.length-1];
+    const preview=()=>A.forEach((f,j)=>{const e=bElOf(f);if(e)e.classList.toggle('preview',j===M.sel);});
+    M.preview=preview;M.el.querySelectorAll('.m-item').forEach((b,j)=>b.addEventListener('pointerenter',()=>{M.sel=j;paint(M);}));preview();
+    try{const i=await pr;return i==='auto'?'auto':i<0?null:A[i];}finally{A.forEach(f=>{const e=bElOf(f);if(e)e.classList.remove('preview');});} };
   const pickAlly = async (who = '') => { const A = P.filter(m => m.hp > 0); const i = await bmenu(A.map(m => ({ label: nameOf(m), sub: `HP ${m.hp}/${m.st.hp}` })), `${who} ▸ <b>だれに？</b>`); return i === 'auto' ? 'auto' : i < 0 ? null : A[i]; };
   const battleItems = () => Object.keys(DATA.items).filter(k => (G.inv[k] || 0) > 0 && (DATA.items[k].heal || DATA.items[k].mp || DATA.items[k].healAll || DATA.items[k].battle || DATA.items[k].cure));
   const setAil = async (t, ail, ch) => { if (!ail || !t || t.hp <= 0 || t.ail || R() >= ch * (t.boss ? .45 : 1)) return; t.ail = ail; redraw(); ailFx(t, ail); await bmsg(`${nameOr(t)}は ${DATA.ailName[ail]}に なった！`, 300);
@@ -2015,6 +2050,7 @@ async function skillMenu() {
       if (!(await confirm(`${n.name}：${n.desc}\n${n.cost}SPで 覚えますか？`))) continue;
       G.sp[m.id] -= n.cost; own.push(n.id); const r = m.hp / m.st.hp; calc(m); m.hp = Math.round(m.st.hp * r); m.mp = Math.min(m.mp, m.st.mp); Music.sfx('friend'); toast(`${nameOf(m)}は ${n.name}を 覚えた！`, 1500); hud(); } } }
 function useItemField(k, m) { const it = DATA.items[k]; if (!it || !(G.inv[k] > 0) || m.hp <= 0 || !((it.heal && m.hp < m.st.hp) || (it.mp && m.mp < m.st.mp))) return false; G.inv[k]--; if (it.heal) m.hp = Math.min(m.st.hp, m.hp + it.heal); if (it.mp) m.mp = Math.min(m.st.mp, m.mp + it.mp); Music.sfx('heal'); hud(); save(); return true; }
+function fieldSkillUseful(s,t) { return t.hp <= 0 ? !!s.revive : !!((s.heal && t.hp < t.st.hp) || (s.cure && (t.ail || t.sleep > 0))); }
 function fieldSkillTargets(s, P, target) {
   return s.tg === 'party' ? P : target ? [target] : [];
 }
@@ -2023,7 +2059,7 @@ function useFieldSkill(m, sid, target, P = battleParty()) {
   if (!s || !m.skills.includes(sid) || m.hp <= 0 || !['ally','party'].includes(s.tg) || !(s.heal || s.revive || s.cure) || s.power || s.gold || m.mp < costOf(m,sid)) return false;
   const T = fieldSkillTargets(s,P,target);
   if (!T.length || T.some(t => !P.includes(t))) return false;
-  const useful = T.some(t => t.hp <= 0 ? !!s.revive : (s.heal && t.hp < t.st.hp) || (s.cure && (t.ail || t.sleep > 0)));
+  const useful = T.some(t => fieldSkillUseful(s,t));
   if (!useful) return false;
   m.mp -= costOf(m,sid);
   for (const t of T) {
@@ -2040,9 +2076,9 @@ async function fieldSpellMenu() {
     if (!casters.length) { await panel('<h3>じゅもん・とくぎ</h3><p>移動中に つかえる わざを まだ おぼえていない。</p>'); return; }
     const i=await menu({title:'だれが つかう？',items:casters.map(m=>({label:nameOf(m),sub:`MP ${m.mp}/${m.st.mp}`})),where:'side'}); if(i<0)return;
     const m=casters[i], skills=m.skills.filter(sid=>{const s=DATA.skills[sid];return s&&!s.power&&!s.gold&&['ally','party'].includes(s.tg)&&(s.heal||s.revive||s.cure);});
-    const j=await menu({title:nameOf(m)+'の わざ',items:skills.map(sid=>({label:DATA.skills[sid].name,sub:`MP ${costOf(m,sid)} / ${DATA.skills[sid].tg==='party'?'みんな':'ひとり'}`,hint:DATA.skills[sid].desc,disabled:m.mp<costOf(m,sid)})),where:'side'}); if(j<0)continue;
+    const j=await menu({title:nameOf(m)+'の わざ',items:skills.map(sid=>({label:DATA.skills[sid].name,sub:`MP ${costOf(m,sid)} / ${DATA.skills[sid].tg==='party'?'みんな':'ひとり'}`,hint:DATA.skills[sid].desc,disabled:m.mp<costOf(m,sid)||!P.some(t=>fieldSkillUseful(DATA.skills[sid],t))})),where:'side'}); if(j<0)continue;
     const sid=skills[j], s=DATA.skills[sid]; let target=null;
-    if(s.tg==='ally'){const k=await menu({title:'だれに？',items:P.map(t=>({label:nameOf(t),sub:`HP ${t.hp}/${t.st.hp}`,disabled:t.hp<=0&&!s.revive})),where:'side'});if(k<0)continue;target=P[k];}
+    if(s.tg==='ally'){const k=await menu({title:'だれに？',items:P.map(t=>({label:nameOf(t),sub:`HP ${t.hp}/${t.st.hp}`,disabled:!fieldSkillUseful(s,t)})),where:'side'});if(k<0)continue;target=P[k];}
     toast(useFieldSkill(m,sid,target,P)?s.name+'で かいふくした！':'いまは かいふくが いらない',1200);
   }
 }
@@ -2051,6 +2087,13 @@ async function fieldMPMenu() {
   if(!(G.inv[k]>0)){await panel('<h3>MPかいふく</h3><p>夜露のしずくは 各町の どうぐ屋で 買える。1こ40G・MP30。宿や 道の駅でも みんなの MPが もどる。</p>');return;}
   const i=await menu({title:'MPを かいふくする',items:P.map(m=>({label:nameOf(m),sub:`MP ${m.mp}/${m.st.mp} → ${Math.min(m.st.mp,m.mp+DATA.items[k].mp)}`,disabled:m.hp<=0||m.mp>=m.st.mp})),where:'side'});
   if(i>=0){useItemField(k,P[i]);save();}
+}
+function useSharedRecoveryField(k) {
+  const it=DATA.items[k]; if(!it||!(G.inv[k]>0))return false;
+  if(it.stam){if(G.stam>=G.stamMax)return false;G.stam=G.stamMax;player.tired=false;}
+  else if(it.healAll){const P=allMembers();if(!P.some(m=>m.hp<m.st.hp||m.mp<m.st.mp))return false;P.forEach(m=>{m.hp=m.st.hp;m.mp=m.st.mp;});}
+  else return false;
+  G.inv[k]--;Music.sfx('heal');hud();save();return true;
 }
 async function itemMenu() {
   while (true) {
@@ -2067,11 +2110,11 @@ async function itemMenu() {
       const i = await menu({ title: DATA.itemCats[cat], items: ks.map(k => ({ label: DATA.items[k].name, sub: `×${G.inv[k]}` })), where: 'side' });
       if (i < 0) break; const k = ks[i], it = DATA.items[k];
       const usable = it.heal || it.mp || it.stam || it.healAll || it.warp;
-      const a = await menu({ title: `${it.name}　×${G.inv[k]}`, items: [{ label: usable ? 'つかう' : it.battle ? 'バトルで つかう' : 'つかえない（素材）', disabled: !usable }, { label: `効果：${it.desc}`, disabled: true }, { label: `入手：${it.src || '—'}`, disabled: true }, { label: `使いみち：${it.use || '—'}`, disabled: true }], where: 'side' });
+      const a = await menu({ title: `${it.name}　×${G.inv[k]}`, items: [{ label: usable ? 'つかう' : it.battle ? 'バトルで つかう' : 'つかえない（素材）', disabled: !usable || (it.stam && G.stam>=G.stamMax) || (it.healAll && !allMembers().some(m=>m.hp<m.st.hp||m.mp<m.st.mp)), hint:it.stam&&G.stam>=G.stamMax?'がんばりは まんたん':it.healAll&&!allMembers().some(m=>m.hp<m.st.hp||m.mp<m.st.mp)?'みんな HP・MPは まんたん':'' }, { label: `効果：${it.desc}`, disabled: true }, { label: `入手：${it.src || '—'}`, disabled: true }, { label: `使いみち：${it.use || '—'}`, disabled: true }], where: 'side' });
       if (a !== 0) continue;
       if (it.warp) { G.inv[k]--; await warpTo(REGr().town.x + 2, REGr().town.z + 3); return 'warped'; }
-      if (it.stam) { G.inv[k]--; G.stam = G.stamMax; player.tired = false; Music.sfx('heal'); toast('がんばりが 全回復した！', 1200); continue; }
-      if (it.healAll) { G.inv[k]--; allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); Music.sfx('heal'); toast('みんな 全回復した！', 1200); hud(); continue; }
+      if (it.stam) { if(useSharedRecoveryField(k))toast('がんばりが 全回復した！',1200); continue; }
+      if (it.healAll) { if(useSharedRecoveryField(k))toast('みんな 全回復した！',1200); continue; }
       const P = battleParty(); const j = await menu({ title: `だれに つかう？`, items: P.map(m => ({ label: nameOf(m), sub: `HP ${m.hp}/${m.st.hp}  MP ${m.mp}/${m.st.mp}`, disabled: m.hp <= 0 || !((it.heal && m.hp < m.st.hp) || (it.mp && m.mp < m.st.mp)) })), where: 'side' });
       if (j >= 0) useItemField(k, P[j]); } } }
 async function travel(dest, x, z, yaw = Math.PI, cine = null) { await fade(true); G.region = dest; World.setRegion(dest); enemies = []; player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); player.vx = player.vz = player.vy = 0; player.glide = false; trail.length = 0; cam.yaw = yaw; camFrame(yaw); player.yaw = cam.yaw; player.safe = { x, z }; if (cine) await cinematic(cine.kind, cine.title || REGION_NAME[dest], cine.sub); Music.play(fieldSong(), { restart: true }); await wait(cine ? 250 : 400); await fade(false); save(); }
@@ -2569,7 +2612,7 @@ function frameBody(now) {
     if (target) { const y = target.type === 'npc' ? surfaceAt(target.x, target.z, hAt(target.x,target.z)+2) + 2.3 : target.type === 'wshrine' || target.type === 'altar3' ? target.o.y + 2.4 : target.type === 'whale' ? player.y + 2.2 : target.type === 'beacon' ? target.o.y + 5 : target.type === 'shrine' ? r.shrine.y + 4 : (target.o.y ?? surfaceAt(target.x, target.z, 99)) + 2.2;
       const s = World.project([target.x, y, target.z]); if (s) { lab.hidden = false; lab.style.transform = `translate(${s[0]}px,${s[1]}px) translate(-50%,-100%)`; lab.innerHTML = `${COARSE ? '' : '<kbd>E</kbd> '}${actLabel(target)}`; } else lab.hidden = true; }
     else lab.hidden = true;
-    $('btnAct').classList.toggle('ready', !!target); $('btnActLabel').textContent = target ? actLabel(target) : 'しらべる';
+    $('btnAct').classList.toggle('ready', !!target); $('btnActLabel').textContent = target ? (target.type === 'npc' ? 'はなす' : actLabel(target)) : 'しらべる';
     $('btnJump').textContent = !player.ground && G.flags.glider ? (player.glide ? 'とじる' : '滑空') : '跳ぶ';
     const ob = (HOOK.track && HOOK.track()) || objective(); if (ob.t !== frameBody.obj) { frameBody.obj = ob.t; $('obj').innerHTML = objHTML(ob.t); const o = $('obj'); o.classList.remove('fresh'); void o.offsetWidth; o.classList.add('fresh'); clearTimeout(frameBody.objT); frameBody.objT = setTimeout(() => o.classList.remove('fresh'), 6000); }
     if (ob.p) { const d = Math.hypot(ob.p.x - player.x, ob.p.z - player.z); const ang = Math.atan2(ob.p.x - player.x, ob.p.z - player.z) - cam.yaw;

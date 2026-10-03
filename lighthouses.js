@@ -1,6 +1,6 @@
 // 灯台ダンジョン（任意）— 灯を ともした 灯台の「なかの回廊」。3つの しかけを こえて いちばん うえの ひざらへ。
 // 方針：本編の進行（灯台の試練・点火）は変えない。点火ずみの 灯台から 入れる 寄り道。セーブは G.lhDun と帰還先 G.lhDunExit を追加。
-// 設計：docs/design/lighthouses.md（Gemini 提案）を、回廊型（カメラが 見失わない 屋根なし・横並び）に 落としこんだもの。
+// 設計：docs/design/lighthouses.md。高い天井の3つの間と、さいごの4階ひざら。保存キー・既存の3しかけは維持。
 'use strict';
 (() => {
   const K = window.KZ; if (!K || typeof World === 'undefined') return; const H = K.HOOK, B = World.Blocks;
@@ -54,9 +54,24 @@
       const edge = Math.abs(a) === 7 || b === 1 || b === -45;
       if (edge) for (let h = fh + 1; h <= fh + (fh === 4 ? 9 : 6); h++) S(d, a, h, b, (h - fh) === 3 && (a + b) % 4 === 0 ? T.lamp : T.wall);
     }
+    // 石の天井とひさし。第三人称カメラと最高の足場の上に6m以上の余白を残す。
+    // 屋根は保護ブロックなので外からも実在し、掘ったり登ったりしてしかけを飛ばせない。
+    d.architecture = { floors: 4, roof: [], bounds: { x: d.x, z: d.z, y: d.y } };
+    for (let b = 2; b >= -46; b--) {
+      const roofH = b >= -28 ? 13 : 16;
+      for (let a = -8; a <= 8; a++) { S(d, a, roofH, b, T.wall); d.architecture.roof.push([d.x + a, d.y + roofH, d.z + b]); }
+      // 太いリブと高窓のある外壁。柱は通路の外側、動く足場や押しブロックには触れない。
+      for (const a of [-7, 7]) for (let h = fhOf(b) + 1; h < roofH; h++) {
+        S(d, a, h, b, h >= roofH - 3 && b % 6 >= -1 ? T.glass : T.wall);
+      }
+      if (b === 1 || b === -45) for (let a = -6; a <= 6; a++) for (let h = fhOf(b) + 1; h < roofH; h++) S(d, a, h, b, h === roofH - 2 && Math.abs(a) <= 1 ? T.glass : T.wall);
+      if (b % 6 === 0) for (const a of [-8, 8]) for (let h = 0; h <= roofH; h++) S(d, a, h, b, T.wall);
+    }
+    // 高い天井へ切り替わる面も閉じ、段差のすきまから空が見えないようにする。
+    for (let a = -7; a <= 7; a++) for (let h = 14; h <= 15; h++) S(d, a, h, -28, T.wall);
     // 間の しきり（とびらつき）
     const P = d.parts = { pit: [], hop: [], plates: [[-4, -24], [4, -24]], movs: [[-3, -19], [3, -20]], door1: [], door2: [], door3: [], shards: [], goal: [0, -42] };
-    const wallAt = (b, hNext, door) => { for (let a = -6; a <= 6; a++) for (let h = 1; h <= hNext + 5; h++) { if (Math.abs(a) <= 1 && h > hNext && h <= hNext + 3) { door.push([a, h, b]); S(d, a, h, b, T.door); } else if (h > hNext || Math.abs(a) > 1) S(d, a, h, b, T.wall); }
+    const wallAt = (b, hNext, door) => { for (let a = -6; a <= 6; a++) for (let h = 1; h < 13; h++) { if (Math.abs(a) <= 1 && h > hNext && h <= hNext + 3) { door.push([a, h, b]); S(d, a, h, b, T.door); } else if (h > hNext || Math.abs(a) > 1) S(d, a, h, b, T.wall); }
       for (let a = -1; a <= 1; a++) for (let h = 1; h <= hNext; h++) S(d, a, h, b, T.floor); };
     // 段差（一→二、二→三）：とびらの 手前に 1段ずつの 階段
     for (let a = -1; a <= 1; a++) { S(d, a, 1, -13, T.floor); S(d, a, 3, -27, T.floor); }
@@ -75,9 +90,13 @@
     P.shards = [[-5, -34, 4 + 3 + 1], [5, -39, 4 + 4 + 1], [0, -35, 4 + 2 + 1]];
     // ひざらの 前の とびら（かけら 3つで ひらく）
     for (let a = -2; a <= 2; a++) for (let h = 5; h <= 8; h++) { S(d, a, h, -40, T.door); P.door3.push([a, h, -40]); }
-    for (let a = -6; a <= 6; a++) if (Math.abs(a) > 2) for (let h = 5; h <= 8; h++) S(d, a, h, -40, T.wall);
-    S(d, 0, 5, -42, T.goal); S(d, -1, 5, -42, T.wall); S(d, 1, 5, -42, T.wall);
-    d.gate = { x: d.x + .5, z: d.z + .5, y: d.y + 1 }; d.goalP = { x: d.x + .5, z: d.z - 41.5, y: d.y + 5 };
+    for (let a = -6; a <= 6; a++) for (let h = 5; h <= 15; h++) if (Math.abs(a) > 2 || h >= 9) S(d, a, h, -40, T.wall);
+    // 第4階：かけらの扉の先だけにある上り階段と、ひざらの台。
+    // 1段1m。既存の判定（3しかけ完了）と報酬はそのまま、追加の保存フラグはない。
+    for (let b = -41; b >= -44; b--) for (let a = -1; a <= 1; a++) for (let h = 5; h <= -b - 36; h++) S(d, a, h, b, T.floor);
+    // ひざらの床も同じ高さ。最後だけ2mの段差にして歩行を止めない。
+    S(d, 0, 8, -44, T.goal); S(d, -1, 8, -44, T.lamp); S(d, 1, 8, -44, T.lamp);
+    d.gate = { x: d.x + .5, z: d.z + .5, y: d.y + 1 }; d.goalP = { x: d.x + .5, z: d.z - 43.5, y: d.y + 9 };
     if (d.theme) {
       for (const [a, b] of P.movs) Rm(d, a, 3, b);
       P.controls = [[-4, -19], [0, -21], [4, -19]];
@@ -88,6 +107,10 @@
   build(DUNS[0]);
   const inD = (d, p = K.player) => K.G.region === d.r && Math.abs(p.x - d.x - .5) < 8 && p.z < d.z + 2.5 && p.z > d.z - 46 && p.y > d.y - 6 && p.y < d.y + 20;
   const here = () => { const d = active[K.G.region]; return d && inD(d) ? d : null; };
+  const floorOf = (d, p = K.player) => p.z <= d.z - 41 && p.y >= d.y + 8.6 ? 4 : p.z < d.z - 28 ? 3 : p.z < d.z - 14 ? 2 : 1;
+  const progress = d => { const s = st[key(d)] || {}; return `${floorOf(d)}かい / ${!s.o1 ? 'ひかる あしばを わたる' : !s.o2 ? d.theme ? `しかけ ${s.sequence || 0}/${d.sequence.length}` : 'おもしを 2つ おす' : (s.got || []).length < 3 ? `かけら ${(s.got || []).length}/3` : '4かいの ひざらへ'}`; };
+  const previousTrack = H.track;
+  H.track = (...args) => { const d = here(); return d ? { t: `${d.name}・${progress(d)}`, p: null, detail: 'ヒントは メニューから' } : previousTrack ? previousTrack(...args) : null; };
   K.extraAreas = K.extraAreas || []; for (const r of [0, 3]) K.extraAreas.push({ rg: r, id: 'lhdroom' + r, x: 228, z: 206, r: 30, n: '灯台の なか', s: '灯台の なか（寄り道）' });
   const prevNoClimb = H.noClimb; H.noClimb = () => !!here() || !!(prevNoClimb && prevNoClimb());
   function reset(d) { build(d); const P = d.parts; for (const [a, h, b] of [...P.door1, ...P.door2, ...P.door3]) S(d, a, h, b, T.door);
@@ -136,7 +159,7 @@
   H.acts.lhdIn = async d => { if (!(await K.confirm(done(d) ? `${d.name}へ 入りますか？（クリアずみ）` : '灯台の 足もとに 小さな とびらが ある。 中へ 入りますか？（寄り道・いつでも 出られる）'))) return; await enter(d); };
   H.acts.lhdOut = async d => { const c = await K.menu({ title: d.name, items: [{ label: '外へ 出る' }, { label: 'しかけを リセット' }, { label: 'やめる' }] }); if (c === 0) await leave(d); else if (c === 1) { const back = st[key(d)]?.back; reset(d); st[key(d)].back = back; K.player.x = d.gate.x; K.player.z = d.gate.z - 1; K.player.y = d.gate.y + .05; K.player.vx = K.player.vy = K.player.vz = 0; K.toast('しかけを もとに もどした', 1200); } };
   H.menu.push(() => { const d = here(); return d ? { label: '灯台の しかけ', sub: 'ヒント・やりなおし・そとへ', fn: async () => {
-    const c = await K.menu({ title: d.name, items: [{ label: 'ヒントを よむ' }, { label: 'やりなおす・そとへ' }, { label: 'やめる' }] });
+    const c = await K.menu({ title: `${d.name}・${floorOf(d)}かい`, items: [{ label: 'ヒントを よむ', sub: progress(d) }, { label: 'やりなおす・そとへ' }, { label: 'やめる' }] });
     if (c === 0) await K.say(d.hint); else if (c === 1) { await H.acts.lhdOut(d); return 'close'; }
   } } : null; });
   H.acts.lhdGoal = async d => { const s = st[key(d)] || {}; if ((!s.o1 || !s.o2 || (s.got || []).length < 3) && !done(d)) { await K.say(['ひざらは まだ 冷たい。 かけらの 光が 足りない。']); return; }
@@ -155,5 +178,5 @@
     p.x = b.x + 3; p.z = b.z + 3; p.y = K.surfaceAt(p.x, p.z, 99); p.vx = p.vy = p.vz = 0; K.trail.length = 0;
   });
   H.mapMarks.push((r, pos) => DUNS.filter(d => d.r === r && source(d) && lit(d)).map(d => { const b = source(d); return `<span class="mk${done(d) ? ' lit' : ''}" style="${pos(b.x + 6, b.z + 6)}" title="${d.name}">${done(d) ? '✦' : '▣'}</span>`; }));
-  K.lhDuns = DUNS; K.lhSt = st; K.lhDungeon = { here, enter, leave, reset, key, source, lit };
+  K.lhDuns = DUNS; K.lhSt = st; K.lhDungeon = { here, enter, leave, reset, key, source, lit, floorOf, progress };
 })();

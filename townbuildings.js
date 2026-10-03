@@ -55,11 +55,20 @@
       // 閉じた屋根にし、室内へ雨が抜ける穴を作らない。
       for (let y = 0; y <= height; y++) put(x, fy + 3 + y, z, type);
     }
+    // 閉屋根の軒を木の縁でそろえ、壁との境目を見分けやすくする。
+    for (let a = -4; a <= 4; a++) {
+      put(a, fy + 3, -4, 5); put(a, fy + 3, 4, 5);
+      put(-4, fy + 3, a, 5); put(4, fy + 3, a, 5);
+    }
+    if (profile.form === 'gable' || profile.form === 'patch' || profile.form === 'stripe') {
+      const axis = profile.form === 'stripe' ? 1 : profile.axis;
+      for (let a = -4; a <= 4; a++) put(axis ? a : 0, fy + 7, axis ? 0 : a, 5);
+    }
     if (town.key === 'hayate') { // 風車の町の小さな風見
       for (let y = 0; y < 3; y++) put(0, fy + 7 + y, 0, 5);
       for (let a = -1; a <= 1; a++) { put(a, fy + 8, 0, 0); put(0, fy + 8 + a, 0, 0); }
     }
-    buildings.push({ id: h.id, town: town.key, r: town.r, form: profile.form, npc: { ...h.npc } });
+    buildings.push({ id: h.id, town: town.key, r: town.r, form: profile.form, roofClosed: true, npc: { ...h.npc } });
   }
   const originalRegion = World.region;
   for (let r = 0; r < K.REG.length; r++) {
