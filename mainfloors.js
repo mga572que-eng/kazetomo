@@ -151,3 +151,60 @@
   H.quest.push(() => K.G.flags && K.G.flags.c3bridge ? `<li>星巣の塔「星座の間」${flag() >= 2 ? '（クリア）' : '：塔の 階段の 中ほど'}</li>` : '');
   K.mainFloors = K.mainFloors || {}; K.mainFloors.tower = { WX, WZ, PY, FY, stars: STARS, decoys: DECOY, st, tablet: TAB, reset: () => resetStars() };
 })();
+
+// ===== 3件目：深淵の宮 屋上「潮の間」と 潮の 流れの 謎 =====
+// ・宮の 西の 外がわの 石段 → 屋根 → 屋上の 部屋（内がわ 13×13）。決戦の 扉・宮の 中・第4章の 流れは そのまま
+// ・謎：青い 床（潮の 流れ）に のると 矢印の 向きへ 運ばれる。一方通行を 見きわめて、北東の「潮の 真珠の 台」へ
+// ・記録は G.flags.palaceTide（2＝ほうびずみ）だけ。部屋の 中では かべを 登れない
+(() => {
+  const K = window.KZ; if (!K || typeof World === 'undefined') return; const W = World, H = K.HOOK, B = W.Blocks;
+  const R3 = K.REG[3], pr = R3 && R3.palaceRoof; if (!pr) return;
+  const C = (h, e = 0) => { const n = parseInt(h.slice(1), 16); return () => [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255, e]; };
+  const PX = pr.x, PZ = pr.z, RY = pr.y, b0 = RY - 16, FY = RY + 1;
+  const MAP = ['....#...#....', '....#...#..G.', '....<...<....', '....#...#....', '....#...#....', '....#...####^', 'S...#.v.#....', '....#.v.#....', '....#.v.>....', '....#.v.#....', '....>.v.#....', '....#.v.#....', '....#...#....'];
+  const DIR = { '>': [1, 0], '<': [-1, 0], '^': [0, -1], v: [0, 1] }, cx = i => PX + i - 6, cz = j => PZ + j - 6, at = (i, j) => (MAP[j] || '')[i] || '#';
+  const S = (x, y, z, t) => B.set(x, y, z, t, true, 3);
+  W.setRegion(3);
+  // 石段（西の 外がわ、南から 北へ のぼる）と 踊り場
+  for (let k = 0; k <= 16; k++) for (const x of [PX - 17, PX - 18]) { const z = PZ + 17 - k, g = Math.min(b0, Math.floor(K.hAt(x + .5, z + .5))); for (let y = g; y <= b0 + k; y++) S(x, y, z, y === b0 + k ? 1 : 6); }
+  for (const z of [PZ, PZ - 1]) for (const x of [PX - 17, PX - 18]) { const g = Math.min(b0, Math.floor(K.hAt(x + .5, z + .5))); for (let y = g; y <= RY; y++) S(x, y, z, y === RY ? 1 : 6); }
+  for (const z of [PZ + 18, PZ - 2]) { for (let h = 1; h <= 3; h++) S(PX - 19, (z === PZ - 2 ? RY : b0) + h, z, h === 3 ? 2 : 6); } // 石段の 灯
+  // 部屋（かべ 7段・天井）と 中の かべ（3段）・潮の 床（ガラス）
+  for (let dx = -7; dx <= 7; dx++) for (let dz = -7; dz <= 7; dz++) { const x = PX + dx, z = PZ + dz, edge = Math.abs(dx) === 7 || Math.abs(dz) === 7;
+    if (edge) { for (let h = 0; h < 7; h++) { if (dx === -7 && Math.abs(dz) <= 1 && h < 3) continue; S(x, FY + h, z, h === 3 && (dx + dz) % 3 === 0 ? 2 : Math.abs(dx) === 7 && Math.abs(dz) === 7 ? 4 : 6); } S(x, FY + 7, z, 6); continue; }
+    S(x, FY + 7, z, Math.abs(dx) <= 1 && Math.abs(dz) <= 1 ? 7 : 6); const c = at(dx + 6, dz + 6);
+    if (c === '#') for (let h = 0; h < 3; h++) S(x, FY + h, z, h === 2 ? 4 : 6); else if (DIR[c]) S(x, RY, z, 7); }
+  W.setRegion(0);
+  const flag = () => (K.G.flags || {}).palaceTide || 0;
+  const GOAL = (() => { for (let j = 0; j < 13; j++) for (let i = 0; i < 13; i++) if (at(i, j) === 'G') return { x: cx(i) + .5, z: cz(j) + .5 }; })();
+  const inRoom = () => K.G.region === 3 && Math.abs(K.player.x - PX - .5) < 7.4 && Math.abs(K.player.z - PZ - .5) < 7.4 && K.player.y > FY - 1.5 && K.player.y < FY + 7;
+  const prevNC = H.noClimb; H.noClimb = () => inRoom() || !!(prevNC && prevNC());
+  // 潮の 流れ：床の 上（とんでいる ときも 低ければ）矢印の 向きへ 運ぶ
+  const SP = 7;
+  H.frame.push(dt => { if (!inRoom() || K.phase !== 'field') return; const P = K.player; if (P.y > FY + 2.6) return;
+    const i = Math.floor(P.x) - PX + 6, j = Math.floor(P.z) - PZ + 6, d = DIR[at(i, j)]; if (!d) return; const step = Math.min(dt, .05) * SP;
+    const mx = cx(i) + .5, mz = cz(j) + .5, wall = at(i + d[0], j + d[1]) === '#';
+    if (d[0]) { let nx = P.x + d[0] * step; if (wall && (nx - mx) * d[0] > 0) nx = mx; P.x = nx; P.z += (mz - P.z) * Math.min(1, dt * 8); }
+    else { let nz = P.z + d[1] * step; if (wall && (nz - mz) * d[1] > 0) nz = mz; P.z = nz; P.x += (mx - P.x) * Math.min(1, dt * 8); } });
+  // ---- 見た目：流れの 矢印・真珠の 台 ----
+  const gArr = W.Geo(); W.seg(gArr, [-.28, 0, -.12], [0, 0, .16], .05, .05, 4, C('#7fe8ff', .65)); W.seg(gArr, [.28, 0, -.12], [0, 0, .16], .05, .05, 4, C('#7fe8ff', .65));
+  const gPearl = W.Geo(); W.prism(gPearl, .5, .55, 0, .7, 8, C('#6f8fa0')); W.ico(gPearl, .32, [0, 1.05, 0], C('#fff6ee', .7), .05, 1, 1);
+  const cells = []; for (let j = 0; j < 13; j++) for (let i = 0; i < 13; i++) if (DIR[at(i, j)]) cells.push([i, j, DIR[at(i, j)]]);
+  const mArr = W.makeMesh(gArr, cells.length * 2), mPearl = W.makeMesh(gPearl, 1);
+  H.frame.push((dt, T) => { mArr.n = mPearl.n = 0; if (K.G.region !== 3 || K.phase !== 'field' || Math.hypot(K.player.x - PX, K.player.z - PZ) > 60) return;
+    for (const [i, j, d] of cells) for (const o of [0, .5]) { const f = ((T * 1.2 + o) % 1) - .5; mArr.set(mArr.n++, cx(i) + .5 + d[0] * f * .8, FY + .08, cz(j) + .5 + d[1] * f * .8, 1, Math.atan2(d[0], d[1])); }
+    if (flag() < 2) mPearl.set(mPearl.n++, GOAL.x, FY, GOAL.z, 1, T * .4); });
+  // ---- しらべる ----
+  const TAB = { x: cx(1) + .5, z: cz(5) + .5 };
+  W.setRegion(3); S(cx(1), FY, cz(4), 6); W.setRegion(0); // 石版の 台（入口の 近く）
+  H.target.push(cand => { if (!inRoom()) return; cand({}, 'tdTablet', TAB.x, TAB.z - .6, 1.6); if (Math.hypot(K.player.x - GOAL.x, K.player.z - GOAL.z) < 3) cand({}, 'tdPearl', GOAL.x, GOAL.z, 1.8); });
+  H.labels.tdTablet = '潮の 石版を しらべる'; H.labels.tdPearl = t => flag() >= 2 ? '潮の 真珠の 台（から）' : '潮の 真珠の 台を しらべる';
+  H.acts.tdTablet = async () => { await K.say(['【潮の間】', '石版：「潮は ひとつの 向きにしか ながれない。 ながれに のって 真珠の 台へ」', '（青い 床に のると、矢印の 向きへ 運ばれる）']); };
+  H.acts.tdPearl = async () => { const G = K.G; G.flags = G.flags || {}; if (flag() >= 2) { await K.say(['台の 上には もう 何も ない。 潮の 音だけが きこえる。']); return; }
+    G.flags.palaceTide = 2; G.gold += 3000; K.gain('stew', 2); K.gain('shizuku', 3); Music.jingle('light', K.fieldSong());
+    await K.say(['潮の 真珠に ふれると、やわらかな 光が ひろがった。', '3000ゴールドを 手に入れた！', `${DATA.items.stew.name}を 2こ 手に入れた！`, '夜露のしずくを 3こ 手に入れた！']); K.save(); K.hud(); };
+  const seen = () => (K.G.lh || []).some(Boolean) || K.G.region === 3;
+  H.mapMarks.push((r, pos) => r === 3 ? [`<span class="mk${flag() >= 2 ? ' lit' : ''}" style="${pos(PX - 18, PZ + 8)}" title="潮の間（宮の 屋上）">${flag() >= 2 ? '✦' : '◈'}</span>`] : []);
+  H.quest.push(() => seen() ? `<li>深淵の宮 屋上「潮の間」${flag() >= 2 ? '（クリア）' : '：宮の 西の 石段から'}</li>` : '');
+  K.mainFloors = K.mainFloors || {}; K.mainFloors.palace = { PX, PZ, FY, RY, map: MAP, cx, cz, goal: GOAL, stairs: { x: PX - 17, z: PZ + 18.5 }, door: { x: PX - 7.5, z: PZ + .5 }, inRoom };
+})();

@@ -41,7 +41,7 @@
     if (G.region === 0 && F().c4start && G.inv.awanosuzu) cand(cape, 'dive', cape.x, cape.z, 3.2);
     if (G.region === 3) { cand(R3.pier, 'surface', R3.pier.x, R3.pier.z, 3);
       for (const L of R3.lh) if (!lit(L.i)) cand(L, 'lh', L.x + .5, L.z + 3.5, 3.2);
-      if (litN() === 3 && !F().c4done) cand(R3.palace, 'palace', R3.palace.x, R3.palace.z + 4, 4.5);
+      if (litN() === 3 && !F().c4done && Math.abs(K.player.y - R3.palace.y) < 8 /* 屋根の 上の 潮の間からは 呼ばない */) cand(R3.palace, 'palace', R3.palace.x, R3.palace.z + 4, 4.5);
       if (F().c4done && !F().superDone) cand(R3.trench, 'abyss', R3.trench.x, R3.trench.z, 5); } });
   H.labels.dive = 'あわの鈴を 鳴らす'; H.labels.surface = '泡に のって 地上へ'; H.labels.lh = t => `${LH_NAME[t.o.i]}を しらべる`; H.labels.palace = '深淵の宮の 扉'; H.labels.abyss = '深淵を のぞきこむ';
   H.acts.dive = async () => { if (!(await K.confirm('あわの鈴を 鳴らして 海の底へ もぐる？'))) return; Music.sfx('magic');
