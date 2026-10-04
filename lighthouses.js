@@ -6,7 +6,7 @@
   const K = window.KZ; if (!K || typeof World === 'undefined') return; const H = K.HOOK, B = World.Blocks;
   // 幹の中の 置き場所：島から 遠い 海の 上空（下は 海なので まものは わかない）
   const DUNS = [
-    { i: 0, r: 0, name: '野原の灯の樹・幹の中', x: 228, z: 228, y: 70,
+    { i: 0, r: 0, name: '野原の灯の樹・幹の中', look: 'grove', x: 228, z: 228, y: 70,
       hint: ['【野原の灯の樹：幹の中】', '一の間「ひかる あしば」：光る 足場が あらわれる 間に わたれ。', '二の間「おもしのスイッチ」：おもしを スイッチへ おせ。', '三の間「ひかりの かけら」：段を のぼって 3つの かけらに ふれよ。'],
       reward: { gold: 600, give: { shizuku: 2, pan: 2 } } },
   ];
@@ -20,7 +20,7 @@
     [3, 2, 'かみなりのさんごの樹', 'charge', ['みずを とめる', 'でんきを つなぐ', 'ぼうへ ながす'], [0, 1, 2], 'みずを とめる → でんきを つなぐ → ぼうへ ながす。 じゅんばんを まもろう。'],
   ];
   for (const [r, i, name, theme, controls, sequence, clue] of themes) DUNS.push({
-    r, i, name, theme, controls, sequence, clue, x: 228, z: 228, y: 70,
+    r, i, name, theme, look: theme, controls, sequence, clue, x: 228, z: 228, y: 70,
     hint: [`【${name}の なか】`, 'ひかる あしばで あなを わたろう。', clue, 'さいごに 3つの ひかりを あつめよう。'],
     reward: { gold: r === 3 ? 1000 : 450 /* 島は 第1章の 寄り道なので ひかえめ（docs/reports/economy.md） */, give: { shizuku: 2, pan: 2 } }
   });
@@ -42,6 +42,31 @@
   const Rm = (d, a, h, b) => { if (B.isProt(d.x + a, d.y + h, d.z + b)) B.rm(d.x + a, d.y + h, d.z + b, d.r); };
   const Get = (d, a, h, b) => B.get(d.x + a, d.y + h, d.z + b);
   const fhOf = b => b >= -13 ? 0 : b >= -27 ? 2 : 4; // 床の 高さ（一 0・二 2・三 4）
+  // 通路としかけの外側にだけ置く、8本それぞれの輪郭。進行判定・座標・報酬には使わない。
+  function landmarks(d) {
+    const put = (a, h, b, t) => S(d, a, fhOf(b) + h, b, t);
+    let n = 0;
+    const add = (...v) => { put(...v); n++; };
+    if (d.look === 'grove') { // 若葉の輪と、太い根
+      for (const b of [-3, -12, -30]) for (const a of [-6, 6]) { add(a, 2, b, T.leaf); add(a, 3, b, T.leaf); }
+      for (const a of [-6, 6]) for (let b = -34; b >= -38; b--) add(a, 1, b, T.wall);
+    } else if (d.look === 'bridge') { // ふたごの幹を結ぶ二つの枝橋
+      for (const b of [-12, -34]) for (let a = -6; a <= 6; a++) if (Math.abs(a) >= 3) add(a, 6, b, T.wall);
+    } else if (d.look === 'rock') { // 岩を抱えた根
+      for (const [a, b] of [[-6,-7],[6,-12],[-6,-31],[6,-37]]) for (let h = 1; h <= 3; h++) add(a, h, b, T.glass);
+    } else if (d.look === 'mirror') { // 月明かりを返す鏡の列
+      for (const b of [-5, -11, -18, -25, -33, -38]) { add(-6, 3, b, T.glass); add(6, 3, b, T.glass); }
+    } else if (d.look === 'wind') { // らせんに舞う風の葉
+      for (let k = 0; k < 8; k++) add(k % 2 ? 6 : -6, 2 + k % 4, -4 - k * 5, T.leaf);
+    } else if (d.look === 'kelp') { // 上から垂れる藻
+      for (const b of [-6, -17, -32, -38]) for (const a of [-6, 6]) for (let h = 5; h <= 8; h++) add(a, h, b, T.leaf);
+    } else if (d.look === 'shell') { // 甲羅の節のような横骨
+      for (const b of [-8, -20, -35]) for (let a = -6; a <= 6; a++) if (Math.abs(a) >= 4) add(a, 5, b, T.coral);
+    } else if (d.look === 'charge') { // 雷を受ける光の柱
+      for (const [a,b] of [[-6,-8],[6,-18],[-6,-32],[6,-39]]) for (let h = 2; h <= 6; h++) add(a, h, b, h % 2 ? T.glass : T.lamp);
+    }
+    d.architecture.look = d.look; d.architecture.landmarks = n;
+  }
   function build(d) {
     const oldRegion = World.region;
     World.setRegion(d.r);
@@ -108,6 +133,7 @@
       P.controls = [[-4, -19], [0, -21], [4, -19]];
       P.controls.forEach(([a, b], i) => S(d, a, 3, b, [2, 7, 10][i]));
     }
+    landmarks(d);
     World.setRegion(oldRegion);
   }
   build(DUNS[0]);
