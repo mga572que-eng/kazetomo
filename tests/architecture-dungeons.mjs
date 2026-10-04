@@ -20,9 +20,11 @@ const K={HOOK:H,G:{region:0,lh:[1,1,1],gold:0},REG:[{beacons},{},{},{lh:beacons}
 const World={Blocks,get region(){return region;},setRegion:r=>region=r};
 vm.runInNewContext(fs.readFileSync(new URL('../lighthouses.js',import.meta.url),'utf8'),{window:{KZ:K},World,Music:{sfx:()=>{},jingle:()=>{}},DATA:{items:{shizuku:{name:'s'},pan:{name:'p'}}}});
 assert.equal(K.lhDuns.length,8);
+assert.equal(new Set(K.lhDuns.map(d=>d.look)).size,8,'all eight trees have a distinct visual profile');
 for(const d of K.lhDuns){
  region=d.r;K.G.region=d.r;K.lhDungeon.reset(d);
  assert.equal(d.architecture.floors,4);
+ assert.equal(d.architecture.look,d.look);assert.ok(d.architecture.landmarks>=8,'recognisable landmarks');
  assert.equal(d.parts.shards.length,3);
  assert.equal(d.parts.hop.length,4);
  for(const b of [1,-45]){const roofH=b===1?13:16;assert.ok(Blocks.has(d.x,d.y+roofH-1,d.z+b),'end walls meet ceiling');}
