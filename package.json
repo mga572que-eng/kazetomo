@@ -8,6 +8,7 @@
     "resume": "node checkpoint.mjs --status",
     "checkpoint": "node checkpoint.mjs",
     "test": "node tests/run.mjs",
+    "chapters": "node tests/chapter-gates.mjs",
     "economy": "node tests/economy.mjs"
   },
   "engines": {
