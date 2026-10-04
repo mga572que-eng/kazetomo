@@ -13,4 +13,4 @@
 準備：`npm i -D playwright` と `npx playwright install chromium`（Codespaces など）。全体に 入れた playwright も 使える（NODE_PATH）。Chromium の 場所を 指定する ときは `PW_CHROMIUM=/path/to/chrome`。
 描画は 切って 速く 動かす（`window.__norender`）。画面写真が 必要な ときは `boot({ render: true })`。
 
-本編屋根の専用確認: `node tests/main-dungeon-roofs.mjs`（入口/章の対象位置/宝箱/7祠の高さ/PCカメラ3位置。画像はtests/out）。実機・全章通しの代替ではない。
+本編屋根の専用確認: `node tests/main-dungeon-roofs.mjs`（入口/章の対象位置/宝箱/7祠の高さ/PCカメラ3位置。画像はtests/out）。カメラは安全距離へ戻って5回続けて安定してから撮影する。実機・全章通しの代替ではない。

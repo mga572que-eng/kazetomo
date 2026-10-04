@@ -29,8 +29,11 @@ try {
  const cameras=[];
  for(const v of views){await s.page.evaluate(r=>KZ.travel(r,KZ.REG[r].town.x,KZ.REG[r].town.z),v.r);await idle(s.page);
   await s.page.evaluate(code=>{const a=(0,eval)('('+code+')')();Object.assign(KZ.player,a,{vy:0,ground:true});Object.assign(KZ.cam,{yaw:a.yaw,pitch:.35,dist:6});delete window.__norender;},v.get.toString());
-  await s.page.waitForTimeout(1200);cameras.push(await s.page.evaluate(()=>({cd:KZ.cam.cd,y:KZ.player.y})));
-  await s.page.screenshot({path:path.join(out,`main-${v.name}.png`)});await s.page.evaluate(()=>window.__norender=1);
+  // 迷路の壁にカメラが当たると距離はすぐ縮み、離れた後はゆっくり戻る。
+  // 固定時間では描画速度により撮影位置が変わるため、安全距離が5回続くまで待つ。
+  await s.page.waitForFunction(()=>{const safe=Number.isFinite(KZ.cam.cd)&&KZ.cam.cd>=1.2;window.__roofCamStable=safe?(window.__roofCamStable||0)+1:0;return window.__roofCamStable>=5;},{},{polling:100,timeout:10000});
+  await s.page.evaluate(()=>{window.__roofCamStable=0;});cameras.push(await s.page.evaluate(()=>({cd:KZ.cam.cd,y:KZ.player.y})));
+  await s.page.screenshot({path:path.join(out,`main-${v.name}.png`),timeout:60000});await s.page.evaluate(()=>window.__norender=1);
  }
  assert(cameras.every(c=>Number.isFinite(c.cd)&&c.cd>=1.2),JSON.stringify(cameras));
  assert.equal(s.errors.length,0,s.errors.join('\n'));
