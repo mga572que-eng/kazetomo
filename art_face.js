@@ -26,6 +26,33 @@
     elder: { dx: 20, cy: 111, rx: 6.6, ry: 6.4, lw: 3.2, bl: 0, bw: 5, bean: true },
   };
 
+  // ---- A案（太い線のアニメ調）：人ごとに あご・目・背景の 模様を かえる（同じ型の 顔に 見えないように） ----
+  const JAW = {
+    round: 'M56 100 C56 66 76 50 100 50 C124 50 144 66 144 100 C144 124 136 138 124 146 C116 151 108 153 100 153 C92 153 84 151 76 146 C64 138 56 124 56 100 Z',
+    sharp: 'M58 96 C58 66 76 50 100 50 C124 50 142 66 142 96 C142 114 138 126 128 138 C118 149 108 157 100 159 C92 157 82 149 72 138 C62 126 58 114 58 96 Z',
+    long: 'M59 96 C59 64 77 48 100 48 C123 48 141 64 141 96 C141 120 137 136 127 147 C118 156 109 160 100 160 C91 160 82 156 73 147 C63 136 59 120 59 96 Z' };
+  const W5 = (d, w = 5, o = .4) => `<path d="${d}" fill="none" stroke="#fff" stroke-width="${w}" stroke-linecap="round" opacity="${o}"/>`;
+  const MOTIF = {
+    wind: W5('M8 64 Q46 44 84 60 Q104 68 120 56') + W5('M120 150 Q150 134 196 146', 4) + W5('M14 150 Q34 140 52 148', 3.4),
+    petal: [[30, 52, 0], [168, 60, 40], [24, 150, 80], [176, 150, 20], [150, 28, 60]].map(([x, y, a]) => `<ellipse cx="${x}" cy="${y}" rx="9" ry="5" transform="rotate(${a} ${x} ${y})" fill="#fff" opacity=".45"/>`).join(''),
+    speed: [[-10, 40], [10, 70], [150, 20], [170, 60], [140, 150]].map(([x, y]) => W5(`M${x} ${y + 40} L${x + 40} ${y}`, 6, .22)).join(''),
+    stars: [[30, 50, 7], [170, 44, 5], [160, 150, 6], [26, 140, 4.5], [140, 22, 3.5]].map(([x, y, r]) => star(x, y, r * 1.3, '#fff', .75)).join(''),
+    cloud: [[34, 58], [166, 54], [170, 150]].map(([x, y]) => `<g fill="#fff" opacity=".5"><circle cx="${x}" cy="${y}" r="10"/><circle cx="${x + 11}" cy="${y + 3}" r="8"/><circle cx="${x - 11}" cy="${y + 4}" r="7"/></g>`).join(''),
+    rays: [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i / 8 * 6.283 + .2; return W5(`M${r1(100 + Math.cos(a) * 70)} ${r1(100 + Math.sin(a) * 70)} L${r1(100 + Math.cos(a) * 98)} ${r1(100 + Math.sin(a) * 98)}`, 6, .2); }).join(''),
+    leaf: [[30, 56, 30], [170, 58, -30], [28, 148, -20], [172, 150, 20]].map(([x, y, a]) => `<path d="M${x - 10} ${y} Q${x} ${y - 9} ${x + 10} ${y} Q${x} ${y + 9} ${x - 10} ${y} Z" transform="rotate(${a} ${x} ${y})" fill="#fff" opacity=".45"/>`).join(''),
+  };
+  // 目：rx/ry/dx/cy（大きさ・はなれ・高さ）と tilt（目じりの 上がり 度。＋＝つり目、−＝たれ目）
+  const LOOK = {
+    sora: { ey: { rx: 11.2, ry: 10.6 }, motif: 'wind' },
+    mio: { ey: { tilt: 9, ry: 9.4 }, jaw: 'round', motif: 'petal' },
+    riku: { ey: { tilt: 15, ry: 7.6, rx: 10.6, cy: 111 }, jaw: 'sharp', motif: 'speed' },
+    sana: { ey: { tilt: -10, ry: 9.2, dx: 21 }, motif: 'stars' },
+    haru: { ey: { rx: 11.6, ry: 11.2, dx: 19 }, jaw: 'round', motif: 'cloud' },
+    kaito: { ey: { tilt: 4, ry: 7, rx: 9.6 }, jaw: 'long', motif: 'rays' },
+    yui: { ey: { tilt: -4, ry: 7.6 }, jaw: 'long', motif: 'leaf' },
+  };
+  const OUT = 4.2; // 外がわの 線（太く）
+
   // ---------------- cast ----------------
   const C = {
     sora: { t: 'kid', bl: .22, skin: '#fde2cb', line: '#5a3424', hair: ['#a0643a', '#77462a', '#d49a62'], eye: '#3f8ad6', disc: ['#ffe0a8', '#f0a040'],
@@ -201,7 +228,7 @@
     const pup = mix(c.eye, '#0c0610', .78);
     for (const s of [-1, 1]) {
       const x = 100 + s * dx; const yi = r1(u[0] * k), yc = r1(u[1] * k), yo = r1(u[2] * k), E = rx + 1;
-      let g = `<g transform="translate(${x} ${cy}) scale(${s} 1)"><g clip-path="url(#${id}c)">`;
+      let g = `<g transform="translate(${x} ${cy}) scale(${s} 1)${T.tilt ? ` rotate(${-T.tilt})` : ''}"><g clip-path="url(#${id}c)">`;
       g += `<ellipse rx="${rx}" ry="${ry}" fill="#fffdf8"/>`;
       const icy = T.bean ? 0 : r1(ry * .1);
       g += `<ellipse cy="${icy}" rx="${r1(irx)}" ry="${r1(iry)}" fill="url(#${id}g)" stroke="${mix(c.eye, '#10081a', .6)}" stroke-width="1.1"/>`;
@@ -261,18 +288,18 @@
   }
 
   function draw(who, ex) {
-    const c0 = C[who]; const c = Object.assign({}, c0, { line: mix(c0.line, '#0a0706', .6) }); const T = Object.assign({}, TYPES[c.t]); const I = 'af' + (++uid);
+    const c0 = C[who], lk = LOOK[who] || {}; const c = Object.assign({}, c0, { line: mix(c0.line, '#0a0706', .6) }); const T = Object.assign({}, TYPES[c.t], lk.ey || {}); const I = 'af' + (++uid);
     const h = c.hair, line = c.line, skin = c.skin, sk2 = c.sk2 || mix(skin, '#b0504a', .26), my = c.my || 0;
-    const HT = c.noBody ? '' : ' transform="translate(100 66) scale(.84) translate(-100 -66)"';
-    const faceD = c.faceD || FACE; const bl = c.bl != null ? c.bl : T.bl;
+    const HT = c.noBody ? '' : ` transform="translate(100 66) scale(${lk.motif ? .9 : .84}) translate(-100 -66)"`; /* A案は 顔を すこし 大きく */
+    const faceD = c.faceD || (lk.jaw && JAW[lk.jaw]) || FACE; const bl = c.bl != null ? c.bl : T.bl;
     let s = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><radialGradient id="${I}d" cx="50%" cy="40%" r="62%"><stop offset="0" stop-color="${c.disc[0]}"/><stop offset="1" stop-color="${c.disc[1]}"/></radialGradient>` +
       `<clipPath id="${I}o"><circle cx="100" cy="100" r="98"/></clipPath><clipPath id="${I}f"><path d="${faceD}"/></clipPath>` +
       (c.back ? `<clipPath id="${I}b"><path d="${c.back}"/></clipPath>` : '') + (c.front ? `<path id="${I}h" d="${c.front}"/><clipPath id="${I}k"><use href="#${I}h"/></clipPath>` : '') + `</defs>`;
     s += `<circle cx="100" cy="100" r="98" fill="url(#${I}d)"/><circle cx="100" cy="100" r="92" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="2"/>` +
-      `<circle cx="36" cy="58" r="3" fill="#fff" opacity=".5"/><circle cx="166" cy="140" r="2.4" fill="#fff" opacity=".45"/><circle cx="160" cy="44" r="2" fill="#fff" opacity=".5"/>`;
+      (lk.motif ? `<g clip-path="url(#${I}o)">${MOTIF[lk.motif]}</g>` : `<circle cx="36" cy="58" r="3" fill="#fff" opacity=".5"/><circle cx="166" cy="140" r="2.4" fill="#fff" opacity=".45"/><circle cx="160" cy="44" r="2" fill="#fff" opacity=".5"/>`);
     s += `<g clip-path="url(#${I}o)"><g${HT}>`;
     if (c.behind) s += c.behind;
-    if (c.back) s += `<g clip-path="url(#${I}b)">` + P(c.back, h[1], 0) + `<path d="${c.back}" transform="translate(4 -3)" fill="${mix(h[1], h[0], .55)}"/></g>` + P(c.back, 'none', line, 3.4);
+    if (c.back) s += `<g clip-path="url(#${I}b)">` + P(c.back, h[1], 0) + `<path d="${c.back}" transform="translate(4 -3)" fill="${mix(h[1], h[0], .55)}"/></g>` + P(c.back, 'none', line, lk.motif ? OUT : 3.4);
     s += '</g>';
     if (!c.noBody) {
       s += P('M87 118 L86 158 L114 158 L113 118 Z', skin, line, 2.8) + P('M87 124 L113 124 L113 140 L100 150 L87 136 Z', sk2);
@@ -283,7 +310,7 @@
     // face: crisp cel shadow on the left + hard shadow under hair
     s += `<g clip-path="url(#${I}f)"><rect width="200" height="200" fill="${sk2}"/><path d="${faceD}" transform="translate(6 -3)" fill="${skin}"/>`;
     if (c.front || c.sh) s += c.sh ? P(c.sh, sk2, 0, 0, ' transform="translate(0 8)"') : `<use href="#${I}h" transform="translate(-2 7)" fill="${sk2}"/>`;
-    s += `</g><path d="${faceD}" fill="none" stroke="${line}" stroke-width="3.4"/>`;
+    s += `</g><path d="${faceD}" fill="none" stroke="${line}" stroke-width="${lk.motif ? OUT : 3.4}"/>`;
     if (c.face) s += c.face(sk2);
     if (c.freckles) s += `<g fill="#b86b46" opacity=".55">${[[71, 124], [76, 128], [67, 129], [129, 124], [124, 128], [133, 129]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.3"/>`).join('')}</g>`;
     // blush
@@ -299,7 +326,7 @@
       s += `<g clip-path="url(#${I}k)"><rect width="200" height="200" fill="${h[1]}"/><use href="#${I}h" transform="translate(4 -4)" fill="${h[0]}"/>`;
       if (c.strands) s += S(c.strands, h[1], 2.2);
       if (!c.noHl) s += S(c.hl || 'M62 72 Q100 48 138 72', h[2], 4.5, ' stroke-dasharray="3 9 12 7 5 200" opacity=".95"');
-      s += `</g><use href="#${I}h" fill="none" stroke="${line}" stroke-width="3.4" stroke-linejoin="round"/>`;
+      s += `</g><use href="#${I}h" fill="none" stroke="${line}" stroke-width="${lk.motif ? OUT : 3.4}" stroke-linejoin="round"/>`;
     }
     s += brows(c, T, ex);
     if (c.over) s += c.over(h);

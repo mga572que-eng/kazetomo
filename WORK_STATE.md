@@ -44,3 +44,8 @@ PR: https://github.com/mga572que-eng/kazetomo/pull/59
 - 不具合：#71 で index.html と sw.js が 古い 版で 上書きされ、mainfloors.js（星見の間・星座の間・潮の間）が 読みこまれていなかった。ほかの 差分は 版番号だけ。
 - 修正：2か所に 登録を もどし、版を 20261004155748 に（日付の 逆転も 解消）。check.mjs に「ルートの .js（sw.js 以外）は index.html と sw.js の CORE の 両方に ある」検査を 追加（CI の Game checks で 止まる）。
 - 検査：npm run check、新しい 3部屋の テスト 成功。実機未確認。
+
+## 2026-10-04 16:15 Claude：キャラ一新 1段目（work/face-a）
+- art_face.js：主要7人の あご・目の 形・背景の 模様・太い 外線（docs/design/characters-a.md）。ID・表情・セーブは そのまま。版 20261004160249。
+- 検査：npm run check・起動〜戦闘〜セーブの 回帰 成功。ui-p1.mjs は 画面撮影の 時間ぎれで 失敗するが、変更なしの main でも 同じく 失敗（環境の 不安定）。実機未確認。
+- 次の一手：開発者の 見た目の OK で 統合。
