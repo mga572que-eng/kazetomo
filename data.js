@@ -104,7 +104,7 @@ const DATA = {
     umikage: { name: 'ウミカゲ', art: ['umikage', 1], hp: 250, atk: 27, def: 15, spd: 12, exp: 210, boss: true, acts: [['atk', .55], ['tsunami', .45]] },
     tobaridori: { name: 'トバリドリ', art: ['tobaridori', 1], hp: 300, atk: 30, def: 17, spd: 18, exp: 280, boss: true, acts: [['atk', .5], ['tobari', .5]] },
     yomikage: { name: 'ヨミカゲ', art: ['yomikage', 1], hp: 380, atk: 33, def: 20, spd: 16, exp: 0, boss: true, acts: [['atk', .4], ['yaminohonoo', .35], ['tomoshikui', .25]] },
-    yoiyami: { name: '宵闇の王', art: ['yoiyami', 1], hp: 560, atk: 37, def: 22, spd: 18, exp: 0, boss: true, twice: true, acts: [['atk', .35], ['tokoyo', .35], ['nageki', .3]] },
+    yoiyami: { name: 'よいやみの王', art: ['yoiyami', 1], hp: 560, atk: 37, def: 22, spd: 18, exp: 0, boss: true, twice: true, acts: [['atk', .35], ['tokoyo', .35], ['nageki', .3]] },
   },
   guards: ['tsutakage', 'rikuDuel', 'iwaoni', 'umikage', 'tobaridori'],
   letters: [
@@ -205,7 +205,7 @@ DATA.friendInfo = new Proxy({}, { get: (_, k) => DATA.species[k] ? { name: DATA.
 Object.assign(DATA.enemies, {
   ishigakiG: { name: 'イシガキの番人', spArt: 'ishigaki', type: 'earth', hp: 460, atk: 34, def: 26, spd: 6, exp: 420, gold: 300, boss: true, acts: [['atk', .6], ['jishin_e', .4]] },
   sanaShadow: { name: 'サナ', portrait: 'sana', type: 'light', hp: 520, atk: 31, def: 20, spd: 20, exp: 480, gold: 0, boss: true, acts: [['atk', .4], ['hoshi_e', .35], ['nageki', .25]] },
-  hoshikui: { name: '星喰い', art: ['hoshikui', 1], type: 'dark', hp: 980, atk: 42, def: 26, spd: 18, exp: 1400, gold: 1000, boss: true, twice: true, acts: [['atk', .35], ['ryuusei', .35], ['tomoshikui', .15], ['nageki', .15]] },
+  hoshikui: { name: '星くい', art: ['hoshikui', 1], type: 'dark', hp: 980, atk: 42, def: 26, spd: 18, exp: 1400, gold: 1000, boss: true, twice: true, acts: [['atk', .35], ['ryuusei', .35], ['tomoshikui', .15], ['nageki', .15]] },
 });
 
 Object.assign(DATA.items, {
