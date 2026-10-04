@@ -39,3 +39,8 @@ PR: https://github.com/mga572que-eng/kazetomo/pull/59
   - ChatGPT：文と設定の担当。(1) 灯の樹・まもの・根の道・実りに合わせた台詞の点検（「灯台」の名残・言い方の食い違い・難しい漢字）、(2) 仲間の新しい会話案（JSON）、(3) 主要6人の設定画の説明文（A案）。コードは書かない。
   - Claude：ChatGPT の出力を照合して実装・検査・PR。並行して キャラ一新（A案）の 顔の絵・2D戦闘の丸 から。
   - Codex：樹のなか（幹の中）への作りかえ、lighthouses.js 16か所・interiors.js 1か所の言葉の置きかえ。
+
+## 2026-10-04 16:00 Claude：公開版の 修正（mainfloors.js の 読みこみ）
+- 不具合：#71 で index.html と sw.js が 古い 版で 上書きされ、mainfloors.js（星見の間・星座の間・潮の間）が 読みこまれていなかった。ほかの 差分は 版番号だけ。
+- 修正：2か所に 登録を もどし、版を 20261004155748 に（日付の 逆転も 解消）。check.mjs に「ルートの .js（sw.js 以外）は index.html と sw.js の CORE の 両方に ある」検査を 追加（CI の Game checks で 止まる）。
+- 検査：npm run check、新しい 3部屋の テスト 成功。実機未確認。
