@@ -7,9 +7,9 @@ import path from 'node:path';
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const GAME = pathToFileURL(path.join(ROOT, 'index.html')).href;
 // ゲームを 開いて、第3章の デバッグ開始で フィールドに 立つ（描画なしで 速く）
-export async function boot({ render = false, chapter = '#btnCh3' } = {}) {
+export async function boot({ render = false, chapter = '#btnCh3', viewport = { width: 844, height: 390 } } = {}) {
   const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true }); const page = await ctx.newPage(); const errors = [];
+  const ctx = await browser.newContext({ viewport, hasTouch: true, isMobile: true }); const page = await ctx.newPage(); const errors = [];
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   page.on('pageerror', e => errors.push(e.message));
   await ctx.addInitScript(r => { localStorage.setItem('kz-guide-seen', 'x'); if (!r) window.__norender = 1; }, render);
