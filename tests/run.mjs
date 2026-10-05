@@ -325,14 +325,14 @@ test('ボスの 間：しかけの しくみ（石盤・レバー・灯の 順�
 });
 
 test('ボスの 間：海の さんごの樹と 風の祠も 奥で 戦って もどる', async ({ page }) => {
-  const run1 = async (setup, after) => { await page.evaluate(setup); await idle(page); for (let i = 0; i < 20 && !(await page.evaluate(() => !!KZ.bossDun.cur)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); } await idle(page);
+  const run1 = async (setup, after) => { await page.evaluate(() => KZ.G.party.forEach(m => { m.lv = Math.max(m.lv, 70); KZ.calc(m); m.hp = m.st.hp; m.mp = m.st.mp; })); /* 戦いは 勝てる 強さで（流れだけを 見る） */ await page.evaluate(setup); await idle(page); for (let i = 0; i < 20 && !(await page.evaluate(() => !!KZ.bossDun.cur)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); } await idle(page);
     const site = await page.evaluate(() => { const c = KZ.bossDun.cur; if (!c) return null; c.gims.forEach(() => 0); const B = World.Blocks; c.open = false; const g = KZ.G; g.bossDun = g.bossDun || {}; for (const d of c.door) B.rm(...d, c.r); c.open = true; const P = KZ.player; Object.assign(P, { x: c.O.x + 10.5, z: c.O.z - 6, y: c.O.y + 1 }); __dbg.sim(2); return c.site; });
     act(page, `() => KZ.HOOK.acts.bdSeal({})`); for (let i = 0; i < 200 && await page.evaluate(() => !!KZ.bossDun.cur || KZ.B.active || KZ.busy); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(200); } await idle(page);
     return { site, ...(await page.evaluate(after)) }; };
   const c = await run1(async () => { const G = KZ.G; G.auto = true; G.flags.c4elder = 1; G.lh = [0, 0, 0]; const L = KZ.REG[3].lh[0]; await KZ.travel(3, L.x + 3, L.z + 4); KZ.run(() => KZ.HOOK.acts.lh(L)); },
     () => { const L = KZ.REG[3].lh[0], P = KZ.player; return { lit: KZ.G.lh[0], near: Math.hypot(P.x - L.x, P.z - L.z) < 12, cur: !!KZ.bossDun.cur }; });
   ok(c.site === 'c0' && c.lit === 1 && c.near && !c.cur, 'さんごの樹の 番人の 流れ：' + JSON.stringify(c));
-  const w = await run1(async () => { const G = KZ.G; G.flags.c3elder = 1; G.wtrial[0] = { seen: 1 }; G.wind[0] = 0; const sh = KZ.REG[2].shrines[0]; await KZ.travel(2, sh.x + 2, sh.z + 3); KZ.run(() => KZ.windEvent(sh)); },
+  const w = await run1(async () => { const G = KZ.G; G.flags.c3elder = 1; G.wtrial[0] = { seen: 1 }; G.wind = [0, 1, 0]; /* ハヤテの 前提（quests.js の gate3）を すませた 状態 */ const sh = KZ.REG[2].shrines[0]; await KZ.travel(2, sh.x + 2, sh.z + 3); KZ.run(() => KZ.windEvent(sh)); },
     () => { const sh = KZ.REG[2].shrines[0], P = KZ.player; return { wind: KZ.G.wind[0], guard: KZ.G.wtrial[0].guard, near: Math.hypot(P.x - sh.x, P.z - sh.z) < 12, cur: !!KZ.bossDun.cur }; });
   ok(w.site === 'w0' && w.guard && w.wind && w.near && !w.cur, '風の祠の 番人の 流れ：' + JSON.stringify(w));
 });
