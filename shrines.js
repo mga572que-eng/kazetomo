@@ -11,7 +11,7 @@
     { id: 's5', r: 2, kind: 'rings', name: '天輪の祠', hint: '空に うかぶ 光の輪を じゅんばんに くぐれ（45びょう）。', reward: { gold: 1500, give: { kumowata: 6 } } },
     { id: 's6', r: 2, kind: 'memory', name: '星おぼえの祠', hint: '光った スイッチの じゅんばんを おぼえて、同じ じゅんに ふめ。', reward: { gold: 1500, give: { stew: 1 } } },
   ];
-  const SHOU = [{ text: 'がんばりの 上限 +10', f: G => { G.stamMax += 10; G.stam = G.stamMax; } }, { text: 'みんなの 最大HP +4', f: G => { G.hpBonus = (G.hpBonus || 0) + 4; G.party.forEach(m => { K.calc(m); m.hp = m.st.hp; }); } }];
+  const SHOU = [{ text: 'ともしびの 上限 +10', f: G => { G.stamMax += 10; G.stam = G.stamMax; } }, { text: 'みんなの 最大HP +4', f: G => { G.hpBonus = (G.hpBonus || 0) + 4; G.party.forEach(m => { K.calc(m); m.hp = m.st.hp; }); } }];
   // ---------- 配置（地形が 平らで 施設から はなれた 場所） ----------
   function place(sh) { World.setRegion(sh.r); const reg = K.REG[sh.r]; const rn = (() => { let s = 777 + sh.id.charCodeAt(1) * 131; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; })();
     const far = (x, z) => Math.hypot(x - reg.town.x, z - reg.town.z) > 55 && (!reg.pier || Math.hypot(x - reg.pier.x, z - reg.pier.z) > 30) && !(reg.beacons || []).some(b => Math.hypot(b.x - x, b.z - z) < 30)

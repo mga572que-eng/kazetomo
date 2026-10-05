@@ -15,7 +15,7 @@
   if (!DATA.armor.some(a => a.name === '黄金の ベスト')) DATA.armor.push({ name: '黄金の ベスト', def: 24, price: 2500, ty: 'cloth', r: 1, add: true, note: 'カジノの 景品。どの 職業でも 着られる' });
   const PRIZES = [
     { id: 'hoshi', name: '星のかけら', cost: 40, give: { hoshikake: 1 }, sub: '高く 売れる きらめく かけら' },
-    { id: 'kushi', name: 'がんばり串 ×3', cost: 30, give: { ganbari: 3 }, sub: 'がんばりゲージを 全回復' },
+    { id: 'kushi', name: 'ともしび串 ×3', cost: 30, give: { ganbari: 3 }, sub: 'ともしびゲージを 全回復' },
     { id: 'stew', name: '星のシチュー', cost: 120, give: { stew: 1 }, sub: 'みんなの HP・MP 全回復' },
     { id: 'niji', name: '虹ブロック ×20', cost: 100, blocks: { 10: 20 }, sub: '夜に 光る かざり' },
     { id: 'vest', name: '黄金の ベスト', cost: 1500, armor: '黄金の ベスト', once: true, sub: 'ぼうぎょ 24・どの 職業でも' },

@@ -245,7 +245,7 @@ Object.assign(DATA.items, {
   kinoko: { name: 'キノコ', mat: true, sell: 3, desc: '森で とれる。料理の 材料' },
   yakimi: { name: '焼き木の実', heal: 60, price: 0, sell: 12, desc: 'HPを 60 かいふく（料理）' },
   kinojiru: { name: 'きのこ汁', heal: 130, sell: 25, desc: 'HPを 130 かいふく（料理）' },
-  ganbari: { name: 'がんばり串', stam: true, sell: 20, desc: 'がんばりゲージを 全回復（料理）' },
+  ganbari: { name: 'ともしび串', stam: true, sell: 20, desc: 'ともしびゲージを 全回復（料理）' },
   stew: { name: '星のシチュー', healAll: true, sell: 80, desc: 'みんなの HPと MPを 全回復（料理）' },
 });
 DATA.cook = [
@@ -337,25 +337,25 @@ IM('hane', { cat: 'heal', src: '道具屋', use: 'いまの 地方の 町へ ワ
 IM('maki', { cat: 'mat', src: '木を 切る（Eを 3回）', use: '灯の樹の 燃料／クラフト（板・丸太）／ゲンの 武具' });
 IM('ishi', { cat: 'mat', src: '岩を 掘る（Eを 3回）', use: 'クラフト（石・石レンガ）／ゲンの 武具' });
 IM('suna', { cat: 'mat', src: '砂浜や 砂漠で Eを 押す', use: 'クラフト（ガラス・しっくい・砂）' });
-IM('ha', { cat: 'mat', src: '木を 切ると ときどき', use: '灯の樹の 燃料／クラフト（葉っぱ）／がんばり串' });
-IM('kinoko', { cat: 'mat', src: '森の 木の根もと', use: '料理（きのこ汁・がんばり串・シチュー）' });
+IM('ha', { cat: 'mat', src: '木を 切ると ときどき', use: '灯の樹の 燃料／クラフト（葉っぱ）／ともしび串' });
+IM('kinoko', { cat: 'mat', src: '森の 木の根もと', use: '料理（きのこ汁・ともしび串・シチュー）' });
 IM('hoshikake', { cat: 'mat', src: '大陸の 岩・遺跡・光の いきもの', use: '高く 売れる／星のシチュー' });
 IM('yakimi', { cat: 'food', src: 'たき火で 料理', use: 'HP 60 回復' });
 IM('kinojiru', { cat: 'food', src: 'たき火で 料理', use: 'HP 130 回復' });
-IM('ganbari', { cat: 'food', src: 'たき火で 料理', use: 'がんばりゲージ 全回復（登る前に）' });
+IM('ganbari', { cat: 'food', src: 'たき火で 料理', use: 'ともしびゲージ 全回復（登る前に）' });
 IM('stew', { cat: 'food', src: 'たき火で 料理', use: '全員 HP・MP 全回復' });
 DATA.itemCats = { heal: 'かいふく・べんり', food: '料理', mat: '素材' };
 
 // 灯の樹の試練（場所ごとに ちがう）と 燃料
 DATA.trials = [
   { name: '灯の欠片', text: '灯の樹の まわりに 散らばった「灯の欠片」を 3つ 集める', fuel: { maki: 3 } },
-  { name: '天をつく塔', text: '灯の樹の 横の 塔の てっぺんへ 登る（がんばり・ブロックで 足場）', fuel: { maki: 3, ishi: 2 } },
+  { name: '天をつく塔', text: '灯の樹の 横の 塔の てっぺんへ 登る（ともしび・ブロックで 足場）', fuel: { maki: 3, ishi: 2 } },
   { name: '三連戦', text: 'おしよせる まものを 3回 しずめる', fuel: { maki: 4 } },
   { name: '夜の灯', text: '夜にだけ 灯の花が ひらく（「夜まで 待つ」も できる）', fuel: { maki: 2, shizuku: 1 } },
   { name: '風の足場', text: '崖の 先の 浮き足場へ わたる（滑空・ブロックで 橋）', fuel: { maki: 3, ha: 2 } },
 ];
 DATA.beaconRewards = [
-  { text: '灯の樹と 村の あいだを ワープ できるように なった！（地図から）／がんばりの 上限 +20', kind: 'warp' },
+  { text: '灯の樹と 村の あいだを ワープ できるように なった！（地図から）／ともしびの 上限 +20', kind: 'warp' },
   { text: 'スキルポイント +2', kind: 'sp' },
   { text: '父の「風布」を 手に入れた！（空中で もう一度 ジャンプで 滑空）', kind: 'glider' },
   { text: '灯の加護：みんなの 最大HP +10%', kind: 'hp' },
@@ -460,12 +460,12 @@ DATA.armor.push({ name: '天の羽衣', def: 28, price: 4200, sky: true });
 // 風の祠の 試練
 DATA.windTrials = [
   { name: 'ツムジの祠', where: '東の 島', text: '祠は 天を つく 岩山の 頂。 光る 風の 柱「上昇気流」に 乗って、空へ 舞いあがろう（ジャンプ→滑空）' },
-  { name: 'ミズカガミの祠', where: '南西の 島', text: '島の まわりの 空に 浮かぶ「風の羽」を 3つ 集める（上昇気流で 高さを かせいで 滑空）' },
+  { name: 'ミズカガミの祠', where: '南西の 島', text: '島の まわりの 空に 浮かぶ「風の羽」を 3つ 集める（島の ふちの「風の道」に とびこむと 羽を めぐって もどってくる）' },
   { name: 'ホシミの祠', where: '西の 島', text: '夜にだけ 祠が ひらく。 おそいくる「星の嵐」を 3回 しのぎきれ' },
 ];
 DATA.windRewards = [
-  { text: '「風布・改」を 手に入れた！ 滑空が 速くなり、がんばりの 消費が 半分に', kind: 'glider2' },
-  { text: 'がんばりの 上限 +30 ／ スキルポイント +2（全員）', kind: 'stam' },
+  { text: '「風布・改」を 手に入れた！ 滑空が 速くなり、ともしびの 消費が 半分に', kind: 'glider2' },
+  { text: 'ともしびの 上限 +30 ／ スキルポイント +2（全員）', kind: 'stam' },
   { text: 'スキルポイント +3（全員）', kind: 'sp' },
 ];
 DATA.haruMem = [

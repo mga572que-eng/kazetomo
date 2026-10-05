@@ -31,14 +31,14 @@
   const rockyRide=()=>{const ref=K.fieldTravel.mountRef();return ref&&['iwanoko','iwagoron'].includes(K.member(ref)?.id);};
   function routeRule(x,z){if(K.G.region!==1||K.interior?.cur)return null;
     if(coldAt(x,z)&&!warm())return 'ゆきやまは さむい！ ミナトの ツムギから ふくを もらい、ソラに そうびしよう。';
-    if(z<60&&K.hAt(x,z)>38&&K.G.stamMax<180&&!rockyRide())return 'この やまみちは がんばり9こ（180）が ひつよう。イワノコか イワゴロンに のっても すすめる。';
+    if(z<60&&K.hAt(x,z)>38&&K.G.stamMax<180&&!rockyRide())return 'この やまみちは ともしび9こ（180）が ひつよう。イワノコか イワゴロンに のっても すすめる。';
     if(z<-100&&K.hAt(x,z)>55&&!rockyRide())return 'この ごつごつした みちは イワノコか イワゴロンに のって すすもう。';
     return null;}
   const previousMove=H.routeMove;H.routeMove=(x,z,dt)=>{if(previousMove){const a=previousMove(x,z,dt);x=a.x;z=a.z;}warning=Math.max(0,warning-dt);const rule=routeRule(x,z);if(rule&&!(coldAt(K.player.x,K.player.z)&&!warm()&&z>K.player.z)){if(!warning){K.toast(rule,3500);warning=4;}K.player.vx=K.player.vz=0;return{x:K.player.x,z:K.player.z};}return{x,z};};
   const oldSpeed=H.travelSpeed;H.travelSpeed=s=>{s=oldSpeed?oldSpeed(s):s;const n=W.nAt(K.player.x,K.player.z);if(K.G.region===1&&K.player.z<60&&n[1]<.62&&!rockyRide()&&!K.player.glide)return Math.min(s,1.8);return s;};
   const previousSurface=H.travelStamina;H.travelStamina=s=>{s=previousSurface?previousSurface(s):s;if(K.fieldTravel&&K.fieldTravel.mounted())return 0;if(K.G.region===1&&K.player.z<60&&K.player.climb&&!rockyRide())s+=18;return s;};
   // 雪原の境界に支度の案内。条件はUIでも確認できる。
-  H.menu.push(()=>({label:'たびの したく',sub:'ゆき・やま・あさいち',fn:()=>K.say(['ゆきぐにの ふく：ミナトの ツムギに はなし、ソラに そうび。','やまみち：がんばり9こ（180）か、イワノコ・イワゴロン。','きたの たかいやま：あったかい ふくと、イワノコ・イワゴロン。','さかなの あさいち：シオミ・ミナト・アワの里で あさ5じ〜10じ。'])}));
+  H.menu.push(()=>({label:'たびの したく',sub:'ゆき・やま・あさいち',fn:()=>K.say(['ゆきぐにの ふく：ミナトの ツムギに はなし、ソラに そうび。','やまみち：ともしび9こ（180）か、イワノコ・イワゴロン。','きたの たかいやま：あったかい ふくと、イワノコ・イワゴロン。','さかなの あさいち：シオミ・ミナト・アワの里で あさ5じ〜10じ。'])}));
   // 世話係は既存の家畜小屋のそばの安全な地面だけに置く。
   const carers=[],mesh=W.makeMesh(W.human({skin:'#e2b894',hair:'#5a4232',top:'#609069',bottom:'#684832',hat:true,apron:true}),8);let cryT=0;
   H.frame.push((dt)=>{mesh.n=0;if(K.phase!=='field'||K.B.active)return;cryT-=dt;
@@ -56,7 +56,7 @@
   for(let x=-156;x<-48&&!ridge;x+=12)for(let z=-100;z<-30&&!ridge;z+=12){const center={x,z};if(avoid.some(a=>dist(a,center)<(a.r||20)+38))continue;let used=false;W.Blocks.each(1,key=>{const [a,,b]=key.split(',').map(Number);if(Math.abs(a-x)<22&&Math.abs(b-z)<22)used=true;});if(!used&&K.hAt(x,z)>20)ridge={x,z,height:K.hAt(x,z)+18};}
   if(ridge){W.addTerrainPatches(1,[{kind:'cliff',...ridge,radius:20}]);K.adventureLife.ridge=ridge;
     for(const a of [...K.REG[1].trees,...K.REG[1].rocks])if(dist(a,ridge)<22){a.state='gone';a.t=-1e9;}
-    H.target.push(cand=>{if(K.G.region===1)cand(ridge,'mountainGuide',ridge.x,ridge.z+22,4);});H.labels.mountainGuide='やまみちの あんない';H.acts.mountainGuide=()=>K.say(['この さきは けわしい やまみち。がんばりを ふやし、イワノコか イワゴロンを なかまに しよう。','ゆきの ところへ いくなら、ミナトで あったかい ふくを もらって きていこう。']);}
+    H.target.push(cand=>{if(K.G.region===1)cand(ridge,'mountainGuide',ridge.x,ridge.z+22,4);});H.labels.mountainGuide='やまみちの あんない';H.acts.mountainGuide=()=>K.say(['この さきは けわしい やまみち。ともしびを ふやし、イワノコか イワゴロンを なかまに しよう。','ゆきの ところへ いくなら、ミナトで あったかい ふくを もらって きていこう。']);}
   W.setRegion(oldRegion);
   const focus=document.createElement('div');focus.id='talkFocus';focus.style.cssText='position:fixed;left:50%;bottom:105px;transform:translateX(-50%);background:#172f3feb;color:#fff;border:2px solid #ffe288;padding:6px 14px;border-radius:8px;z-index:25;pointer-events:none;font-size:13px';document.body.append(focus);
   H.frame.push(()=>{const n=H.talking?K.NPCS.find(n=>n.id===H.talking):K.target?.type==='npc'?K.target.o:null;focus.hidden=!n||K.B.active;focus.textContent=n?(H.talking?'はなしている：':'はなす あいて：')+(n.nm||DATA.cast[n.id]?.name||'ひと'):'';});

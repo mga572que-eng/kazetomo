@@ -4,7 +4,7 @@
 - `npm run test -- カジノ` … 名前に「カジノ」を ふくむ ものだけ。
 - `node tests/economy.mjs` … お金の 流れの 試算を docs/reports/economy.md に 書く。
 - `node tests/ui-p1.mjs` … PCの横画面844×390・667×375、4人MP3桁、敵3体の札・味方札・技説明を確認。画像はリポジトリ内の `tests/out/` に保存（Git対象外）。iPhone実機の検査ではない。
-- `node tests/field-recovery.mjs` … 回復の無駄消費・保存と、がんばりの値・目盛りを確認。
+- `node tests/field-recovery.mjs` … 回復の無駄消費・保存と、ともしびの値・目盛りを確認。
 - `node tests/navigation.mjs` … 第1章の灯台案内、クエスト切替、現在地・方角・距離、地図内外の目的地表示を確認。PC横画面2サイズの画像は `tests/out/`。
 - `npm run chapters` … 第1章〜第4章の開始状態、仲間・地域・重要フラグ・目的と、最終章の記録の保存復元を短時間で確認。実際の全章通しプレイではない。
 - `node tests/save-isolation.mjs` … 古いセーブに直前の持ち物・報酬・SPが混ざらないことと、現在のセーブの職業・隊列・HP/MP 0の復元を確認。独立したブラウザを使い、実セーブは操作しない。

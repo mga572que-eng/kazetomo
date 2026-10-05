@@ -3,7 +3,7 @@
 更新: 2026-10-05
 正本: GitHub main（今回の基準 feffc75 / PR #81）
 作業ブランチ: work/save-audit
-作業版: 20261005202106（統合・公開は PR と Actions の結果を確認する）
+作業版: 20261006042430（統合・公開は PR と Actions の結果を確認する）
 
 ## 現在の作業
 古いセーブを読むと、直前のプレイの持ち物・おすそわけ・お使い・SP・ボードが混ざる不具合を修正。補完元を起動時の初期状態へ変更。セーブキー・ID・保存形式は変えない。
@@ -92,3 +92,6 @@ Game checksは現在 `npm run check` と `git diff --check` のみ。PCブラウ
 
 ## 2026-10-06 Claude：がんばり v2（work/stamina）
 - docs/design/stamina-v2.md。game.js の 移動と がんばり。塔の 登りきりの 検査。実機未確認。
+
+## 2026-10-06 Claude：ともしび（work/lumen）
+- docs/design/lumen.md。がんばり→ともしび（灯りの そばで 一気に 回復）、灯の実、空の島の 風の道（風の羽 3まいは 道の 上）、ふわりの 小回り。lumen.js 新規。実機未確認。
