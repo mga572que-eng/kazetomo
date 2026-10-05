@@ -286,6 +286,20 @@ test('町：せまい 島の 町は 人を へらす・人口と 物価は 出�
   ok(!r.toasts.some(t => /人口|物価/.test(t)), '人口・物価が 出る：' + JSON.stringify(r.toasts));
 });
 
+test('家の 中：住人が いる・話・おすそわけは 1日1回・お使い・家の 中で 釣りを しない', async ({ page }) => {
+  await page.evaluate(async () => { const t = KZ.REG[0].town; await KZ.travel(0, t.x + 2, t.z + 4); KZ.G.tod = .45; KZ.G.inv.tsurizao = 1; }); await idle(page);
+  act(page, `() => KZ.HOOK.acts.inEnter(KZ.interior.houses(0)[0])`); await idle(page);
+  const r = await page.evaluate(() => { const L = KZ.homeLife, res = L.resident(); let fish = false; KZ.HOOK.target.forEach(f => f((o, k) => { if (k === 'fish') fish = true; }));
+    const c = res.c, g0 = L.giftReady(c); L.gift(c); const g1 = L.giftReady(c); const e = L.errandOf(c);
+    return { has: !!res, nm: res && res.nm, fish, g0, g1, e: { it: e.it, n: e.n, st: e.st }, news: L.news().length, hint: L.hint() }; });
+  ok(r.has && !r.fish && r.g0 && !r.g1 && r.e.n >= 3 && r.news >= 1, '家の 中の くらしが たりない：' + JSON.stringify(r));
+  // お使い：たのまれて、とどける
+  const d = await page.evaluate(() => { const L = KZ.homeLife, c = L.resident().c, e = L.errandOf(c), g = KZ.G; e.st = 'open'; g.inv[e.it] = (g.inv[e.it] || 0) + e.n; return { it: e.it, before: g.inv[e.it], gold: g.gold }; });
+  act(page, `() => KZ.HOOK.acts.hmTalk({})`); await page.waitForTimeout(400); await page.evaluate(() => { const b = [...document.querySelectorAll('.menu .mi, .menu button, .win .m-item')].find(x => /お使い/.test(x.textContent)); b && b.click(); }); await idle(page);
+  const e2 = await page.evaluate(d => { const L = KZ.homeLife, e = L.errandOf(L.resident().c); return { st: e.st, inv: KZ.G.inv[d.it], gold: KZ.G.gold - d.gold }; }, d);
+  ok(e2.st === 'done' && e2.gold > 0, 'お使いを とどけられない：' + JSON.stringify(e2));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
