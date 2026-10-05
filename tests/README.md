@@ -7,6 +7,7 @@
 - `node tests/field-recovery.mjs` … 回復の無駄消費・保存と、がんばりの値・目盛りを確認。
 - `node tests/navigation.mjs` … 第1章の灯台案内、クエスト切替、現在地・方角・距離、地図内外の目的地表示を確認。PC横画面2サイズの画像は `tests/out/`。
 - `npm run chapters` … 第1章〜第4章の開始状態、仲間・地域・重要フラグ・目的と、最終章の記録の保存復元を短時間で確認。実際の全章通しプレイではない。
+- `node tests/save-isolation.mjs` … 古いセーブに直前の持ち物・報酬・SPが混ざらないことと、現在のセーブの職業・隊列・HP/MP 0の復元を確認。独立したブラウザを使い、実セーブは操作しない。
 - `node tests/architecture-houses.mjs` … 家の閉天井、壁、家具キー、3方向のカメラと入退室を確認。
 - `node tests/architecture-dungeons.mjs` … 灯台8区間の屋根、階段、仕掛けの条件、報酬の一度だけの付与。`--render` を付けるとPCの描画・歩行も確認。
 - `node tests/architecture-budget.mjs` … 全地域の描画ブロック上限と、プレイヤー配置ブロックの保持を確認。描画検査と同時に起動せず順番に実行する。

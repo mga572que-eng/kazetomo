@@ -391,6 +391,8 @@ function fixTeam() { G.team = G.team.filter(r => member(r)); G.team = G.team.fil
 function battleParty() { fixTeam(); return G.team.map(member).filter(Boolean); }
 function allMembers() { return [...G.party, ...G.mons]; }
 G.party.push(mkHuman('sora', 1)); fixTeam();
+// 古い記録の不足項目は、直前のプレイ内容ではなく初期値で補う。
+const SAVE_DEFAULTS = JSON.stringify(G);
 const REGr = () => REG[G.region];
 
 // ================= save =================
@@ -402,10 +404,13 @@ function save() { try { const gp = (HOOK.savePosition && HOOK.savePosition()) ||
   G.placed = [Blocks.placed(0), Blocks.placed(1), Blocks.placed(2), Blocks.placed(3)]; G.lit = REG[0].beacons.map(b => b.lit ? 1 : 0); G.guard = REG[0].beacons.map(b => b.guard ? 1 : 0);
   localStorage.setItem(keyOf(SLOT), JSON.stringify({ G, uidN })); for (const f of HOOK.saved) try { f(); } catch (e) {} return true; } catch (e) { return false; } }
 function hasSave() { return [1, 2, 3].some(n => slotInfo(n)); }
-function load() { try {
+function load() { const previousG = G, previousUid = uidN; try {
   let raw = localStorage.getItem(keyOf(SLOT));
-  if (raw) { const d = JSON.parse(raw); const inv = Object.assign({}, G.inv, d.G.inv); const def = { sp: G.sp, board: G.board, trial: G.trial, itemSeen: G.itemSeen, tips: G.tips, rankClaimed: G.rankClaimed, wtrial: G.wtrial, wind: G.wind }; G = Object.assign(G, def, d.G); G.inv = inv; G.sp = Object.assign({}, def.sp, d.G.sp); G.board = Object.assign({}, def.board, d.G.board); /* 旧セーブに 後から 加わった 仲間の キーを 補う */ uidN = d.uidN || 100; }
-  else { raw = SLOT === 1 && localStorage.getItem(OLD_KEY); if (!raw) return false; const o = JSON.parse(raw);
+  if (raw) { const d = JSON.parse(raw); if (!d || !d.G || typeof d.G !== 'object' || Array.isArray(d.G)) return false;
+    const base = JSON.parse(SAVE_DEFAULTS); G = Object.assign({}, base, d.G);
+    for (const key of ['inv', 'sp', 'board', 'eq']) G[key] = Object.assign({}, base[key], d.G[key]);
+    uidN = d.uidN || 100; }
+  else { raw = SLOT === 1 && localStorage.getItem(OLD_KEY); if (!raw) return false; const o = JSON.parse(raw); G = JSON.parse(SAVE_DEFAULTS); uidN = 1;
     G.name = o.name; G.party = o.party.map(m => ({ ...m, kind: 'human' })); G.mons = Object.values(o.friends || {}).map(f => ({ ...f, uid: 'm' + (uidN++), kind: 'mon' }));
     Object.assign(G.inv, o.inv); G.flags = o.flags || {}; G.met = o.met || G.met; G.order = o.order || 0; G.tod = o.tod || .3; G.pos = o.pos;
     G.eq.sora.w = o.equip ? o.equip.w : 0; for (const k of HUMAN_IDS) G.eq[k].a = o.equip ? o.equip.a : 0; G.lit = o.lit || G.lit; G.guard = o.guard || G.guard; G.placed = [o.placed || [], []];
@@ -416,7 +421,7 @@ function load() { try {
   G.mons.forEach(m => { if (!m.iv) m.iv = { hp: 8, mp: 8, atk: 8, def: 8, spd: 8 }; if (m.bond == null) m.bond = 20; if (!m.extra) m.extra = []; calc(m); });
   for (const f of HOOK.load) f(G);
   for (const k of HUMAN_IDS) if (!G.eq[k]) G.eq[k] = { w: 0, a: 0 }; if (!G.wind) G.wind = [0, 0, 0]; if (G.wind.every(Boolean)) G.flags.c3bridge = true; if (G.flags.c3bridge) buildBridge(); G.build = false; if (G.flags.c3done && G.flags.c3reunion === undefined && G.region === 0) G.flags.c3reunion = true;
-  return true; } catch (e) { console.error(e); return false; } }
+  return true; } catch (e) { G = previousG; uidN = previousUid; console.error(e); return false; } }
 
 // ================= player =================
 const player = { x: REG[0].home.npc.x * .6, z: REG[0].home.npc.z * .6, y: 0, vx: 0, vz: 0, vy: 0, yaw: 0, ground: true, phase: 0, climb: false, glide: false, swim: false, tired: false, safe: null };
