@@ -89,3 +89,6 @@ Game checksは現在 `npm run check` と `git diff --check` のみ。PCブラウ
 
 ## 2026-10-06 Claude：祠・釣り・反応しない 不具合（work/shrine-fish）
 - docs/design/shrine-fishing-bugs.md。life.js・shrines.js・game.js（待ち時間・安全網・ダンジョン内の 自然物）・tests/run.mjs（釣りの 総点検・祠の 通し）。npm run test 38件 成功。実機未確認。
+
+## 2026-10-06 Claude：がんばり v2（work/stamina）
+- docs/design/stamina-v2.md。game.js の 移動と がんばり。塔の 登りきりの 検査。実機未確認。
