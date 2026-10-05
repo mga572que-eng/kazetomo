@@ -39,6 +39,18 @@
     else L.push('島じゅうの 灯が もどって、市場も にぎやかに なったね。 ありがとう。', '旅の 人が ふえたよ。 上位の 職業に ついた 人も いるんだって。');
     L.push(['雨の 日は 釣りが よく つれる……と おじいちゃんが 言ってた。', 'てんしょくの ぞうは、町の 石像の そばに あるよ。', '家の タンスや 樽は、しらべると なにか 入ってる ことが あるよ。'][day() % 3]);
     return L; }
+  // 役目ごとの ひとこと（日で かわる）
+  const SAY = { home: ['家の しごとは おわりが ないけど、 灯が ともってると がんばれるの。', '外は 寒くない？ あったかくして 行ってね。'],
+    smith: ['いい 武器は いい 手入れから。 刃こぼれしたら 見せにおいで。', '火の 色で 鉄の 温度が わかるんだ。 まだ 修行中だけどね。'],
+    cook: ['きょうの なべは 木の実と キノコ。 においで わかった？', '料理は 火かげんが いのち。 灯と 同じだね。'],
+    mayor: ['町の 記録を つけてるんだ。 あなたたちの ことも 書いて おくよ。', 'お使いの 話、 町の みんなが よろこんでたよ。'],
+    fisher: ['あみの やぶれは 早めに なおすのが コツ。 大物は のがさないよ。', '雨の 日の 前は、 魚が 浅い ところに よって くるんだ。'],
+    scholar: ['本で 読んだ 星座と、 空の 星を くらべるのが 楽しいんだ。', '古い 字は むずかしいけど、 少しずつ 読めるように なってきた。'],
+    elder: ['お年よりの 話は 長いけど、 ためになる ことも 多いのよ。', 'ゆっくりで いいの。 灯は にげないから。'],
+    mystic: ['うらないに よると…… きょうは 寄り道が 吉、だって。', '星の ならびが 少し かわった。 あなたたちの せいかもね。'],
+    mill: ['風車が まわると 粉が ひける。 風さまさまだよ。', '粉まみれで ごめんね。 パンは おいしく できるから！'],
+    farm: ['畑の 土は 正直だよ。 手を かけたぶん、 ちゃんと こたえて くれる。', 'まものが おとなしく なって、 畑が あらされなく なったの。'] };
+  const sayOf = c => { const L = SAY[c.kind] || SAY.home; return L[(day() + c.h.id.length) % L.length]; };
   function hint() { const o = K.objective && K.objective(); return o && o.t ? `いまは「${o.t.replace(/【[^】]*】/g, '')}」の ところ？ 地図の 目じるしを たよりに 行ってみて。` : 'つぎに どこへ 行くか まよったら、メニューの 地図を 見てみて。'; }
   // ---- おすそわけ（1日1回・1けん ずつ） ----
   const GIFT = [[['mi', 2], ['pan', 1], ['kinoko', 2]], [['pan', 1], ['suna', 2], ['shizuku', 1]], [['kumowata', 2], ['pan', 1], ['shizuku', 1]], [['shizuku', 1], ['pan', 1], ['ganbari', 1]]];
@@ -58,7 +70,7 @@
     const items = [{ label: 'はなしを きく' }, { label: ready ? 'おすそわけ？' : 'おすそわけ（また あした）', disabled: !ready },
       { label: e.st === 'open' ? `お使い：${DATA.items[e.it].name}を ${e.n}こ` : e.st === 'done' ? 'お使い（また あした）' : 'お使いを きく', disabled: e.st === 'done' }, { label: 'さようなら' }];
     const ch = await K.menu({ title: r.nm, items });
-    if (ch === 0) { const L = news(); await K.say([NM(hint()), NM(L[0]), ...(L[1] ? [NM(L[1])] : [])]); return; }
+    if (ch === 0) { const L = news(); await K.say([NM(hint()), NM(L[0]), NM(sayOf(c)), ...(L[1] ? [NM(L[1])] : [])]); return; }
     if (ch === 1 && ready) { const t = gift(c); try { Music.sfx('pick'); } catch (_) {} await K.say([NM('よかったら これ、もっていって。'), t]); K.save(); K.hud(); return; }
     if (ch === 2) { const nmI = DATA.items[e.it].name, rw = rewardOf(c, e), have = (G().inv[e.it] || 0);
       if (e.st === 'new') { if (await K.confirm(`${r.nm}：「${nmI}を ${e.n}こ あつめて きて くれない？」（おれい ${rw.gold}G と ${DATA.items[rw.item].name}）`)) { e.st = 'open'; await K.say([NM('ありがとう！ たすかるよ。 いそがなくて いいからね。')]); K.save(); } return; }
