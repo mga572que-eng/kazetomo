@@ -300,6 +300,43 @@ test('家の 中：住人が いる・話・おすそわけは 1日1回・お使
   ok(e2.st === 'done' && e2.gold > 0, 'お使いを とどけられない：' + JSON.stringify(e2));
 });
 
+test('ボスの 間：灯の樹の 番人は 屋根の ある ダンジョンの 奥・中は 一人称・しかけで 扉・封印で 戦って 樹へ もどる', async ({ page }) => {
+  await page.evaluate(async () => { const G = KZ.G, b = KZ.REG[0].beacons[0]; b.lit = false; b.guard = false; G.order = 0; G.trial[0].shards = 3; G.flags.metGen = 1; for (const [k, v] of Object.entries(DATA.trials[0].fuel)) G.inv[k] = (G.inv[k] || 0) + v; G.auto = true;
+    await KZ.travel(0, b.x + 3, b.z + 3); }); await idle(page);
+  act(page, `() => KZ.beaconEvent(KZ.REG[0].beacons[0])`); await idle(page);
+  const a = await page.evaluate(() => { __dbg.sim(3); const D = KZ.bossDun; return { site: D.cur && D.cur.site, inside: D.inside(), fp: !!KZ.cam.fp, open: D.cur && D.cur.open, gims: D.cur && D.cur.gims.length, enemies: KZ.enemies.length }; });
+  ok(a.site === 't0' && a.inside && a.fp && !a.open && a.enemies === 0, 'ダンジョンに 入れない／一人称で ない：' + JSON.stringify(a));
+  // しかけ：箱を スイッチへ（押す 代わりに 動かす）→ 扉が ひらく
+  const o = await page.evaluate(() => { const c = KZ.bossDun.cur, B = World.Blocks, O = c.O; const bs = []; for (let i = 0; i <= 20; i++) for (let j = 0; j <= 20; j++) if (B.get(O.x + i, O.y + 1, O.z + j) === 12) bs.push([i, j]);
+    const pl = []; for (let i = 0; i <= 20; i++) for (let j = 0; j <= 20; j++) if ([13, 14].includes(B.get(O.x + i, O.y, O.z + j))) pl.push([i, j]);
+    bs.forEach(([i, j], k) => B.move(O.x + i, O.y + 1, O.z + j, O.x + pl[k][0], O.y + 1, O.z + pl[k][1])); __dbg.sim(3); return { open: c.open, n: bs.length, door: c.door.every(d => !B.has(...d)) }; });
+  ok(o.open && o.n === 2 && o.door, 'しかけを といても 扉が ひらかない：' + JSON.stringify(o));
+  await page.evaluate(() => { const c = KZ.bossDun.cur, P = KZ.player; Object.assign(P, { x: c.O.x + 10.5, z: c.O.z - 6, y: c.O.y + 1 }); __dbg.sim(2); });
+  act(page, `() => KZ.HOOK.acts.bdSeal({})`); for (let i = 0; i < 160 && await page.evaluate(() => !!KZ.bossDun.cur || KZ.B.active || KZ.busy); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(200); } await idle(page);
+  const r = await page.evaluate(() => { const b = KZ.REG[0].beacons[0], P = KZ.player; return { guard: b.guard, lit: b.lit, cur: !!KZ.bossDun.cur, near: Math.hypot(P.x - b.x, P.z - b.z) < 12, fp: !!KZ.cam.fp, solved: !!(KZ.G.bossDun || {}).t0 }; });
+  ok(r.guard && !r.cur && r.near && !r.fp && r.solved, '番人を たおしても 樹へ もどらない：' + JSON.stringify(r));
+});
+test('ボスの 間：しかけの しくみ（石盤・レバー・灯の 順）', async ({ page }) => {
+  const r = await page.evaluate(() => { const MK = KZ.bossDun.MK, O = { x: 214, z: 214, y: 120 }, c = { O, r: 0, cells: [] }, a = { i0: 1, i1: 19, j0: 2, j1: 16 };
+    const L = MK.levers(c, a); const l0 = L.solved(); L.pull(1); L.pull(0); L.pull(2); const l1 = L.solved();
+    const Bz = MK.braziers(c, a); Bz.light(0); const b0 = Bz.solved(); Bz.light(1); Bz.light(3); Bz.light(0); Bz.light(2); const b1 = Bz.solved();
+    return { l0, l1, b0, b1 }; });
+  ok(!r.l0 && r.l1 && !r.b0 && r.b1, 'しかけの 判定が おかしい：' + JSON.stringify(r));
+});
+
+test('ボスの 間：海の さんごの樹と 風の祠も 奥で 戦って もどる', async ({ page }) => {
+  const run1 = async (setup, after) => { await page.evaluate(setup); await idle(page); for (let i = 0; i < 20 && !(await page.evaluate(() => !!KZ.bossDun.cur)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); } await idle(page);
+    const site = await page.evaluate(() => { const c = KZ.bossDun.cur; if (!c) return null; c.gims.forEach(() => 0); const B = World.Blocks; c.open = false; const g = KZ.G; g.bossDun = g.bossDun || {}; for (const d of c.door) B.rm(...d, c.r); c.open = true; const P = KZ.player; Object.assign(P, { x: c.O.x + 10.5, z: c.O.z - 6, y: c.O.y + 1 }); __dbg.sim(2); return c.site; });
+    act(page, `() => KZ.HOOK.acts.bdSeal({})`); for (let i = 0; i < 200 && await page.evaluate(() => !!KZ.bossDun.cur || KZ.B.active || KZ.busy); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(200); } await idle(page);
+    return { site, ...(await page.evaluate(after)) }; };
+  const c = await run1(async () => { const G = KZ.G; G.auto = true; G.flags.c4elder = 1; G.lh = [0, 0, 0]; const L = KZ.REG[3].lh[0]; await KZ.travel(3, L.x + 3, L.z + 4); KZ.run(() => KZ.HOOK.acts.lh(L)); },
+    () => { const L = KZ.REG[3].lh[0], P = KZ.player; return { lit: KZ.G.lh[0], near: Math.hypot(P.x - L.x, P.z - L.z) < 12, cur: !!KZ.bossDun.cur }; });
+  ok(c.site === 'c0' && c.lit === 1 && c.near && !c.cur, 'さんごの樹の 番人の 流れ：' + JSON.stringify(c));
+  const w = await run1(async () => { const G = KZ.G; G.flags.c3elder = 1; G.wtrial[0] = { seen: 1 }; G.wind[0] = 0; const sh = KZ.REG[2].shrines[0]; await KZ.travel(2, sh.x + 2, sh.z + 3); KZ.run(() => KZ.windEvent(sh)); },
+    () => { const sh = KZ.REG[2].shrines[0], P = KZ.player; return { wind: KZ.G.wind[0], guard: KZ.G.wtrial[0].guard, near: Math.hypot(P.x - sh.x, P.z - sh.z) < 12, cur: !!KZ.bossDun.cur }; });
+  ok(w.site === 'w0' && w.guard && w.wind && w.near && !w.cur, '風の祠の 番人の 流れ：' + JSON.stringify(w));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
