@@ -278,6 +278,14 @@ test('おまかせ v11：残り1体に 全体技を つかわない・とどめ�
   await page.evaluate(() => { KZ.G.auto = true; }); for (let i = 0; i < 80 && await page.evaluate(() => KZ.B.active); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(200); } await idle(page);
 });
 
+test('町：せまい 島の 町は 人を へらす・人口と 物価は 出さない', async ({ page }) => {
+  await page.evaluate(async () => { window.__toasts = []; const t0 = KZ.toast; KZ.toast = (m, ...a) => { window.__toasts.push(String(m)); return t0(m, ...a); }; const h = KZ.hayate; await KZ.travel(2, h.x + 1, h.z + 1); }); await idle(page);
+  await page.evaluate(() => __dbg.sim(30));
+  const r = await page.evaluate(() => { const L = KZ.townLife, P = L.people.filter(p => p.town.key === 'hayate'); return { all: P.length, shown: P.filter(p => !p.thin).length, hid: P.filter(p => p.thin).every(p => !p.npc || !p.npc.show || p.npc.show() === false), fixed: P.filter(p => p.role === 'fixed').every(p => !p.thin), toasts: window.__toasts }; });
+  ok(r.shown <= 6 && r.shown < r.all && r.hid && r.fixed, 'ハヤテの 人が へらない：' + JSON.stringify(r));
+  ok(!r.toasts.some(t => /人口|物価/.test(t)), '人口・物価が 出る：' + JSON.stringify(r.toasts));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
