@@ -438,7 +438,7 @@ const NPCS = [
   if (n.at === 'pier') { n.x = R0.pier.x + 1.8; n.z = R0.pier.z - 3; n.yaw = Math.PI; } n.yaw = n.yaw || 0; n.baseYaw = n.yaw; return n; });
 const npcNow = () => NPCS.filter(n => n.r === G.region && (!n.show || n.show()) && !(n.id === 'mio' && G.flags.mio));
 const gh0 = () => surfaceAt(player.x, player.z, player.y);
-let goodT = 0; let enemies = [], spawnT = 0, cool = 0, barrierT = 0, hudT = 0, dustT = 0, glideT = 0; const puffs = [], streaks = []; const hsp0 = () => Math.hypot(player.vx, player.vz);
+let goodT = 0; let enemies = [], spawnT = 0, cool = 0, barrierT = 0, hudT = 0, dustT = 0, glideT = 0, windT = 0; const puffs = [], streaks = []; const hsp0 = () => Math.hypot(player.vx, player.vz);
 
 // ================= input =================
 const keys = new Set();
@@ -2470,16 +2470,18 @@ function frameBody(now) {
     player.swim = G.region !== 2 && terr < -1.2 && player.y < -.5;
     const gn = nAt(player.x, player.z);
     const sprint = wantSprint && !player.tired && im > .1 && player.ground && !player.swim;
-    let speed = sprint ? 9.5 : 5.4; let climbing = false;
-    if (im > .01 && player.ground && !player.swim && player.y - terr < .25) { const upH = -(gn[0] * wx + gn[2] * wz) / Math.max(im, 1e-3);
-      if (gn[1] < .62 && upH > .35) { climbing = true; speed = 2.6; } else speed *= clamp(1 - Math.max(upH, 0) * .9, .45, 1); }
+    // がんばり v2（2026-10-06）：登りは 遅く 必死に（ぐっ、ぐっと 手足を かける リズム）、ダッシュは 速く 気持ちよく
+    const stroke = .45 + .8 * (.5 + .5 * Math.sin(T * 6.5)); // 登りの ひとかき（平均 約0.85）
+    let speed = sprint ? 10.6 : 5.4; let climbing = false, uphill = 0;
+    if (im > .01 && player.ground && !player.swim && player.y - terr < .25) { const upH = -(gn[0] * wx + gn[2] * wz) / Math.max(im, 1e-3); uphill = Math.max(0, upH) * (1 - gn[1]);
+      if (gn[1] < .62 && upH > .35) { climbing = true; speed = 2.3 * stroke; } else speed *= clamp(1 - Math.max(upH, 0) * 1.1, .4, 1); }
     if (player.swim) speed = 3.2; else if (terr < -.3) speed *= .6;
-    if (player.glide) { speed = G.flags.glider2 ? 10.5 : 8; if (im < .05) { wx = Math.sin(player.yaw); wz = Math.cos(player.yaw); im = 1; } }
+    if (player.glide) { speed = G.flags.glider2 ? 12 : 9.5; if (im < .05) { wx = Math.sin(player.yaw); wz = Math.cos(player.yaw); im = 1; } }
     if (HOOK.travelSpeed) speed = HOOK.travelSpeed(speed);
-    const acc = player.swim ? (im > .05 ? 5 : 2.5) : player.ground ? (im > .05 ? 12 : 9) : player.glide ? 12 : 3; // 止まる ときは すこし すべる・水中は ゆっくり 加速
+    const acc = player.swim ? (im > .05 ? 5 : 2.5) : player.ground ? (im > .05 ? (sprint ? 16 : 12) : 9) : player.glide ? 12 : 3; // 止まる ときは すこし すべる・水中は ゆっくり 加速
     player.vx = lerp(player.vx, wx * speed, Math.min(1, acc * dt)); player.vz = lerp(player.vz, wz * speed, Math.min(1, acc * dt));
     if (player.glide) { // 風布：慣性・旋回率の 上限・バンク・対気速度
-      const trim = G.flags.glider2 ? 10.5 : 8; if (player.gHead == null) player.gHead = hsp0() > 1 ? Math.atan2(player.vx, player.vz) : player.yaw;
+      const trim = G.flags.glider2 ? 12 : 9.5; if (player.gHead == null) player.gHead = hsp0() > 1 ? Math.atan2(player.vx, player.vz) : player.yaw;
       let turn = 0; if (im > .15) { let d = Math.atan2(wx, wz) - player.gHead; d = Math.atan2(Math.sin(d), Math.cos(d)); turn = clamp(d * 2.2, -1.45, 1.45) * Math.min(1, im * 1.3); }
       player.gHead += turn * dt; player.bank = lerp(player.bank || 0, clamp(-turn * .42, -.62, .62), Math.min(1, dt * 3.2));
       const tgtSp = trim * (.82 + .3 * Math.min(im, 1)) * (1 - Math.abs(player.bank) * .12); player.gSpd = lerp(player.gSpd ?? hsp0(), tgtSp, Math.min(1, dt * (player.gSpd > tgtSp ? .9 : 1.6)));
@@ -2498,7 +2500,7 @@ function frameBody(now) {
       const bx = blocked(nx, player.z, player.y), bz = blocked(player.x, nz, player.y), il = Math.max(Math.hypot(wx, wz), 1e-3);
       const into = bx && !bz ? Math.abs(wx) / il : !bx && bz ? Math.abs(wz) / il : bx ? 1 : 0;
       const canClimb = im > .3 && !player.tired && md === 'field' && !player.swim && !(HOOK.noClimb && HOOK.noClimb()) && into > .55 && !blocked(player.x, player.z, player.y + 2.6 * dt + .02);
-      if (canClimb) { wallClimb = true; player.y += 2.6 * dt; player.vy = 0; if (blocked(nx, nz, player.y)) { nx = player.x; nz = player.z; } }
+      if (canClimb) { wallClimb = true; player.y += 2.3 * stroke * dt; player.vy = 0; if (stroke > 1.15 && !player.sq) player.sq = .12; /* ぐっと 体を 引きあげる */ if (blocked(nx, nz, player.y)) { nx = player.x; nz = player.z; } }
       else if (!bx) nz = player.z; else if (!bz) nx = player.x; else { nx = player.x; nz = player.z; } }
     if (climbing && player.tired) { const tx = player.x + gn[0] * 2.5 * dt, tz = player.z + gn[2] * 2.5 * dt; if (!blocked(tx, tz, player.y)) { nx = tx; nz = tz; } }
     else if (!climbing && player.ground && !player.swim && gn[1] < .56 && footAt(player.x, player.z, player.y) - terr < .05) { const k = (.62 - gn[1]) * 9 * dt, tx = nx + gn[0] * k, tz = nz + gn[2] * k; if (!blocked(tx, tz, player.y)) { nx = tx; nz = tz; } } // 急な 斜面は ずり落ちる
@@ -2523,7 +2525,7 @@ function frameBody(now) {
     if (inUD && !player.ground && !player.glide && G.flags.glider && !player.tired && G.stam > 1 && !wallClimb && player.vy < 2) { player.glide = true; player.deploy = 0; Music.sfx('wind'); }
     if (wallClimb) player.ground = false;
     else if (player.glide) { player.deploy = Math.min(1, (player.deploy || 0) + dt / .45); const base = G.flags.glider2 ? 1.25 : 1.6;
-      const sink = -(base + Math.pow(Math.abs(player.bank || 0), 1.4) * 2.6 + Math.max(0, (player.gSpd || 0) - (G.flags.glider2 ? 10.5 : 8)) * .35) * (player.y - gh < 1.6 ? .45 : 1);
+      const sink = -(base + Math.pow(Math.abs(player.bank || 0), 1.4) * 2.6 + Math.max(0, (player.gSpd || 0) - (G.flags.glider2 ? 12 : 9.5)) * .35) * (player.y - gh < 1.6 ? .45 : 1);
       if (inUD) player.vy = Math.min(player.vy + 30 * dt * player.deploy, 9.5); else player.vy = lerp(player.vy, sink, Math.min(1, dt * (player.vy < sink ? 2.6 + 3 * player.deploy : 1.4)));
       player.y += player.vy * dt; }
     else { player.vy -= (G.region === 3 ? 11 : 22) * dt; if (G.region === 3) player.vy = Math.max(player.vy, -7); player.y += player.vy * dt; }
@@ -2537,11 +2539,15 @@ function frameBody(now) {
     else if (player.y > gh + .15) player.ground = false;
     if (player.sq > 0) player.sq = Math.max(0, player.sq - dt * 4);
     dustT -= dt; if (sprint && player.ground && hsp0() > 6 && dustT <= 0) { dustT = .2; puffs.push({ x: player.x - Math.sin(player.yaw) * .4, y: player.y + .05, z: player.z - Math.cos(player.yaw) * .4, t: 0 }); }
-    if (player.glide) { glideT -= dt; if (glideT <= 0) { glideT = .06; const rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw); for (const sx of [-1, 1]) streaks.push({ x: player.x + rx * sx * 1.3, y: player.y + 2.5, z: player.z + rz * sx * 1.3, t: 0 }); } }
-    let using = (sprint ? 14 : 0) + ((climbing && im > .1) || wallClimb ? 12 : 0) + (player.glide && !G.flags.glider3 ? (G.flags.glider2 ? 2.2 : 4.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
+    if (sprint && player.ground && hsp0() > 9) { glideT -= dt; if (glideT <= 0) { glideT = .09; const rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw); for (const sx of [-1, 1]) streaks.push({ x: player.x + rx * sx * .9 - Math.sin(player.yaw) * .4, y: player.y + 1.1, z: player.z + rz * sx * .9 - Math.cos(player.yaw) * .4, t: 0 }); } } // ダッシュの 風の すじ
+    if (player.glide) { glideT -= dt; if (glideT <= 0) { glideT = .045; windT = (windT || 0) - .045; if (windT <= 0) { windT = 1.4; try { Music.sfx('wind'); } catch (e) {} } const rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw); for (const sx of [-1, 1]) streaks.push({ x: player.x + rx * sx * 1.3, y: player.y + 2.5, z: player.z + rz * sx * 1.3, t: 0 }); } }
+    // 使う 量：ダッシュ 11・坂の ダッシュは さらに・急な 坂を 歩く 4〜・斜面と かべを 登る 15／13・滑空 5.5（よい 風布 3）・泳ぎ 7
+    // 上限が ふえても 長く なりすぎない（インフレ防止）：使う 量に √(上限/100) を かける。上限 2倍 → 長さ 約1.4倍
+    let using = (sprint ? 11 + uphill * 40 : 0) + (!sprint && !climbing && uphill > .12 && im > .1 ? 4 + uphill * 20 : 0) + (climbing && im > .1 ? 15 : 0) + (wallClimb ? 13 : 0) + (player.glide && !G.flags.glider3 ? (G.flags.glider2 ? 3 : 5.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
+    using *= Math.sqrt(Math.max(1, G.stamMax / 100));
     if (HOOK.travelStamina) using = HOOK.travelStamina(using);
     if (window.KZ && KZ.fieldTravel && KZ.fieldTravel.mounted()) { using = 0; player.tired = false; }
-    if (using > 0) G.stam = Math.max(0, G.stam - using * dt); else if (player.ground && !player.swim) G.stam = Math.min(G.stamMax, G.stam + (moved < .01 ? 40 : 26) * dt);
+    if (using > 0) G.stam = Math.max(0, G.stam - using * dt); else if (player.ground && !player.swim) G.stam = Math.min(G.stamMax, G.stam + (moved < .01 ? 40 : 20) * Math.sqrt(Math.max(1, G.stamMax / 100)) * dt); // 回復は 上限に あわせる（満タンまでの 時間は ほぼ 同じ）
     if (G.stam <= 0) { player.tired = true; player.glide = false; } if (player.tired && G.stam > G.stamMax * .35) player.tired = false;
     if (player.swim && G.stam <= 0) { toast('おぼれかけて、岸に もどった……', 1600); const s = player.safe || r.pier; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99); G.stam = G.stamMax * .5; player.tired = false; }
     if (player.ground && !player.swim && terr > (G.region === 2 ? 3 : .2) && !blocked(player.x, player.z, player.y)) player.safe = { x: player.x, z: player.z };
