@@ -89,8 +89,13 @@
       S.pens = T.farm ? near(r, c, 16, 26, S.seed + 6, 2, [...S.homes, ...S.lamps]) : [];
       S.hens = S.pens.flatMap((p, i) => Array.from({ length: 3 }, (_, k) => ({ x: p.x + (k - 1) * .6, z: p.z + (i % 2 ? .4 : -.4), yaw: k * 2.1, home: p, goat: k === 0 && T.key === 'oasis', cow:k===0&&T.key!=='oasis', sheep:k===1 })));
       S.walk = [...S.plaza, ...S.lamps, ...S.market];
+      thin(T, c, r);
       towns[T.key] = S; return S;
     } finally { W.setRegion(prev); } }
+  // ---------- せまい 町は 人を へらす（歩ける 広さ ÷14 人まで。名前の ある 役目の 人と 店番は のこす） ----------
+  function thin(T, c, r) { let ok = 0; for (let a = -30; a <= 30; a += 3) for (let b = -30; b <= 30; b += 3) if (a * a + b * b <= 900 && okSpot(r, c.x + a, c.z + b)) ok++;
+    const P = people.filter(p => p.town === T), cap = Math.max(6, Math.round(ok / 14)); let over = P.length - cap; if (over <= 0) return;
+    for (const p of [...P.filter(p => p.row).reverse(), ...P.filter(p => p.extra && p.role !== 'fixed' && !p.work).reverse()]) { if (over-- <= 0) break; p.thin = true; const n = npcOf(p); if (n) { n.thin = true; n.show = () => false; } } }
   // ---------- 住人の 役割 ----------
   const CRAFT = /だいく|きこり|かじ|はたけ|あみ|おりて|こなひき|わた|ふねだいく|きんづち/;
   const SHOP = /や[の ]|みせ|おかみ|やど|マスター|うり|しょうにん/;
@@ -128,7 +133,7 @@
   const okStep = (r, x, z, y) => K.hAt(x, z) >= thr(r) && !K.blocked(x, z, y) && Math.abs(K.surfaceAt(x, z, y + 1.1) - y) < .6;
   const npcOf = p => p.npc || (p.npc = K.NPCS.find(n => n.id === p.id));
   let profileShown = null;
-  function step(p, S, h, dt, T) { const n = npcOf(p); if (!n) return; if (p.row && n.mobVisible === false) return; if (H.talking === n.id) { p.moving=false;p.pose='stand';n.yaw=Math.atan2(K.player.x-n.x,K.player.z-n.z);return; } if(!n.placed){p.missingT=(p.missingT||0)-dt;if(p.missingT>0)return;p.missingT=2;p.goal=null;} const P = plan(p, h, S); let to = P.to || S.c;
+  function step(p, S, h, dt, T) { const n = npcOf(p); if (!n || p.thin) return; if (p.row && n.mobVisible === false) return; if (H.talking === n.id) { p.moving=false;p.pose='stand';n.yaw=Math.atan2(K.player.x-n.x,K.player.z-n.z);return; } if(!n.placed){p.missingT=(p.missingT||0)-dt;if(p.missingT>0)return;p.missingT=2;p.goal=null;} const P = plan(p, h, S); let to = P.to || S.c;
     const neighbours=people.filter(q=>q!==p&&q.town===p.town).map(npcOf).filter(q=>q&&q.placed&&!q.indoor);
     const goalKey=to.x.toFixed(2)+':'+to.z.toFixed(2);p.pickT=(p.pickT||0)-dt;
     if(!p.goal||p.goalKey!==goalKey||p.pickT<=0){
@@ -168,11 +173,11 @@
       for (const e of S.hens) { if (!night) { e.yaw += (Math.sin(T * .7 + e.x) * .8) * dt; const nx = e.x + Math.sin(e.yaw) * .25 * dt, nz = e.z + Math.cos(e.yaw) * .25 * dt; if (dist({ x: nx, z: nz }, e.home) < 2.2 && okSpot(S.r, nx, nz)) { e.x = nx; e.z = nz; } else e.yaw += 2; }
         const m = e.cow ? M.cow : e.sheep ? M.sheep : e.goat ? M.goat : M.hen; if (m.n < m.maxN) m.set(m.n++, e.x, K.surfaceAt(e.x, e.z, 99) + (night ? 0 : Math.abs(Math.sin(T * 6 + e.x)) * .03), e.z, 1, e.yaw); } }
     // 住人を 描く
-    for (const p of people) { if (p.town.r !== r) continue; const n = npcOf(p); if (!n || !n.placed || n.indoor || (p.row && n.mobVisible === false) || dist(n, pl) > 85) continue;
+    for (const p of people) { if (p.town.r !== r || p.thin) continue; const n = npcOf(p); if (!n || !n.placed || n.indoor || (p.row && n.mobVisible === false) || dist(n, pl) > 85) continue;
       const m = meshOf(p.type, p.look, p.pose || 'stand'), py = K.surfaceAt(n.x, n.z, K.hAt(n.x,n.z)+2) + (p.pose === 'sit' ? -.32 : 0); if (m.n < m.maxN) m.set(m.n++, n.x, py, n.z, 1, n.yaw || 0);
       if (p.umb) { const u = M['umb' + (p.i % 3)]; if (u.n < u.maxN) u.set(u.n++, n.x, py + (p.type === 'boy' || p.type === 'girl' ? 1.25 : 1.55), n.z, 1, n.yaw || 0); } }
     // 町に 入ったら ようすを 一言
-    if (here && profileShown !== here.key) { profileShown = here.key; K.toast(`${here.name}　人口 およそ${here.pop}人・${LV[here.lv]}・物価 ${PRICE(here.price)}`, 2600); } else if (!here && profileShown && !TOWNS.some(t => t.key === profileShown && t.r === r && dist(t.at() || { x: 1e9, z: 1e9 }, pl) < 60)) profileShown = null;
+    if (here && profileShown !== here.key) { profileShown = here.key; K.toast(here.name, 2000); /* 人口・物価は 出さない */ } else if (!here && profileShown && !TOWNS.some(t => t.key === profileShown && t.r === r && dist(t.at() || { x: 1e9, z: 1e9 }, pl) < 60)) profileShown = null;
   });
   // ---------- 物価（宿・道具屋の 買値に かける） ----------
   K.townHere = () => { const r = K.G.region, pl = K.player; return TOWNS.find(t => t.r === r && t.at() && dist(t.at(), pl) < 45) || null; };
