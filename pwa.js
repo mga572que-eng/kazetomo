@@ -1,7 +1,7 @@
 // ともしびアイランド — アプリ化（ホーム画面に追加の案内・全画面・自動アップデート・画面スリープ防止）
 'use strict';
 (() => {
-  const BUILD = '20261005225514';
+  const BUILD = '20261006005208';
   const ua = navigator.userAgent;
   const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isAndroid = /Android/.test(ua);

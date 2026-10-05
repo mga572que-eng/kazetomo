@@ -25,6 +25,7 @@
   function build(sh, reg) { const { x: cx, z: cz, y } = sh.pos; const r = sh.r; const S = (a, h, b, t) => B.set(cx + a, y + h, cz + b, t, true, r);
     reg.trees.forEach(t => { if (Math.hypot(t.x - cx, t.z - cz) < 11) t.state = 'gone', t.t = -1e9; }); reg.rocks.forEach(t => { if (Math.hypot(t.x - cx, t.z - cz) < 11) t.state = 'gone', t.t = -1e9; });
     reg.bushes = reg.bushes.filter(t => Math.hypot(t.x - cx, t.z - cz) >= 10);
+    if (reg.shrooms) reg.shrooms = reg.shrooms.filter(t => Math.hypot(t.x - cx, t.z - cz) >= 11); // キノコも どける（証の台より キノコが 先に えらばれていた）
     for (let a = -7; a <= 7; a++) for (let b = -7; b <= 7; b++) { const g0 = Math.floor(K.hAt(cx + a + .5, cz + b + .5)) - y - 1; for (let h = Math.min(-1, g0); h <= 0; h++) S(a, h, b, h === 0 ? ((a + b) & 1 ? 6 : 1) : 1);
       for (let h = 1; h <= 8; h++) B.rm(cx + a, y + h, cz + b, r);
       const edge = Math.abs(a) === 7 || Math.abs(b) === 7; if (edge && !(b === 7 && Math.abs(a) <= 1)) { for (let h = 1; h <= 4; h++) S(a, h, b, (Math.abs(a) === 7 && Math.abs(b) === 7) ? 5 : 6); if ((a + b) % 3 === 0) S(a, 5, b, 6); } }

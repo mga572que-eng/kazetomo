@@ -343,6 +343,49 @@ test('会話の 追加：仲間の 新しい 会話が 登録され、条件で 
   ok(r.n >= 20 && r.ok && r.lines >= 1, '新しい 会話が 出ない：' + JSON.stringify(r));
 });
 
+test('釣り：ダンジョン・祠・家・ボスの間・新しい部屋・屋根の下では 出ない／浜べでは 出る', async ({ page }) => {
+  const bad = [];
+  const sweep = async (label) => { const r = await page.evaluate(() => { const P = KZ.player, y0 = P.yaw, out = []; for (let k = 0; k < 8; k++) { P.yaw = k * .785; if (KZ.canFish()) out.push(k); let fish = false; KZ.HOOK.target.forEach(f => f((o, t) => { if (t === 'fish') fish = true; })); if (fish) out.push('c' + k); } P.yaw = y0; return out; }); if (r.length) bad.push(label + ':' + r.join('')); };
+  await page.evaluate(() => { KZ.G.inv.tsurizao = 1; });
+  // ボスの間（4地方 × 14か所の 代表 4か所 × 3点）
+  for (const r of [0, 1, 2, 3]) { await page.evaluate(async r => { if (KZ.bossDun.cur) await KZ.bossDun.leave(); const t = KZ.REG[r].town; await KZ.travel(r, t.x + 2, t.z + 4); }, r); await idle(page);
+    for (const site of ['t3', 'w1', 'c0', 'ab']) { await page.evaluate(s => { KZ.run(() => KZ.bossDun.enter(s, 'test', 0, null)); }, site); await idle(page);
+      for (const [i, j] of [[10, 18], [3, 9], [17, 4], [10, -8]]) { await page.evaluate(([i, j]) => { const c = KZ.bossDun.cur, P = KZ.player; Object.assign(P, { x: c.O.x + i + .5, z: c.O.z + j + .5, y: c.O.y + 1, vx: 0, vy: 0, vz: 0 }); P.ground = true; }, [i, j]); await sweep(`r${r}/${site}/${i},${j}`); } } }
+  await page.evaluate(async () => { if (KZ.bossDun.cur) await KZ.bossDun.leave(); }); await idle(page);
+  // 試練の祠 7
+  for (let k = 0; k < 7; k++) { await page.evaluate(async k => { const sh = DATA.shrines[k]; await KZ.travel(sh.r, sh.gate.x, sh.gate.z + 1); const P = KZ.player; Object.assign(P, { x: sh.pos.x + .5, z: sh.pos.z + 2.5, y: sh.pos.y + 1 }); P.ground = true; }, k); await idle(page); await sweep('shrine' + k); }
+  // 新しい 3部屋・家の 中
+  for (const k of ['ruins', 'tower', 'palace']) { await page.evaluate(async k => { const M = KZ.mainFloors[k], r = { ruins: 1, tower: 2, palace: 3 }[k]; const t = KZ.REG[r].town; await KZ.travel(r, t.x + 2, t.z + 4); KZ.G.flags.c3bridge = true; const P = KZ.player;
+      if (k === 'ruins') Object.assign(P, { x: M.room.x0 + 9.5, z: M.room.z0 + 9.5, y: M.room.y }); if (k === 'tower') Object.assign(P, { x: M.WX + .5, z: M.WZ + .5, y: M.FY }); if (k === 'palace') Object.assign(P, { x: M.PX + .5, z: M.PZ + .5, y: M.FY }); P.ground = true; }, k); await idle(page); await sweep(k); }
+  await page.evaluate(async () => { const t = KZ.REG[0].town; await KZ.travel(0, t.x + 2, t.z + 4); }); await idle(page);
+  act(page, `() => KZ.HOOK.acts.inEnter(KZ.interior.houses(0)[0])`); await idle(page); await sweep('house'); act(page, `() => KZ.interior.leave()`); await idle(page);
+  ok(!bad.length, '釣りが 出ては いけない 場所で 出る：' + bad.join(' '));
+  // 浜べ（村の 桟橋の 先・海を 向く）では 出る
+  const ok1 = await page.evaluate(async () => { const t = KZ.REG[0].town; await KZ.travel(0, t.x + 2, t.z + 4); const P = KZ.player; for (let a = -220; a <= 220; a += 2) for (let b = -220; b <= 220; b += 2) { const x = t.x + a, z = t.z + b, h = KZ.hAt(x, z); if (h < -.2 || h > 3) continue; Object.assign(P, { x, z, y: h }); P.ground = true; for (let k = 0; k < 8; k++) { P.yaw = k * .785; if (KZ.canFish()) return true; } } return false; });
+  ok(ok1, '浜べで 釣りが できない');
+});
+test('試練の祠：7つの しかけを 実際に 解いて 証が とれる（途中で 止まらない）', async ({ page }) => {
+  const res = [];
+  for (let k = 0; k < 7; k++) {
+    await page.evaluate(async k => { const sh = DATA.shrines[k]; const g = KZ.G; g.shrineDone = g.shrineDone || {}; delete g.shrineDone[sh.id]; await KZ.travel(sh.r, sh.gate.x, sh.gate.z + 1); KZ.G.party.forEach(m => { m.lv = Math.max(m.lv, 70); KZ.calc(m); m.hp = m.st.hp; }); KZ.G.auto = true; }, k); await idle(page);
+    const kind = await page.evaluate(k => DATA.shrines[k].kind, k);
+    const step = (a, b, h = 1) => page.evaluate(([k, a, b, h]) => { const sh = DATA.shrines[k], P = KZ.player; Object.assign(P, { x: sh.pos.x + a + .5, z: sh.pos.z + b + .5, y: sh.pos.y + h, vx: 0, vy: 0, vz: 0 }); P.ground = true; __dbg.sim(2); }, [k, a, b, h]);
+    if (kind === 'push') await page.evaluate(k => { const sh = DATA.shrines[k], B = World.Blocks, X = a => sh.pos.x + a, Z = b => sh.pos.z + b, Y = sh.pos.y + 1; sh.parts.movs.forEach(([a, b], i) => { const [pa, pb] = sh.parts.plates[i]; if (B.get(X(a), Y, Z(b)) === 12) B.move(X(a), Y, Z(b), X(pa), Y, Z(pb)); }); __dbg.sim(3); }, k);
+    if (kind === 'dash') for (const [a, b] of await page.evaluate(k => DATA.shrines[k].parts.plates, k)) await step(a, b);
+    if (kind === 'brazier') { const order = await page.evaluate(k => DATA.shrines[k].parts.braz.map((b, i) => [b[2], i]).sort((x, y) => x[0] - y[0]).map(x => x[1]), k); for (const i of order) { act(page, `() => KZ.HOOK.acts.brazier({ sh: DATA.shrines[${k}], i: ${i} })`); await idle(page); } }
+    if (kind === 'memory') { await step(0, 2); for (let w = 0; w < 30 && await page.evaluate(k => { const s = KZ.shrineSt[DATA.shrines[k].id]; return !s || !s.seq; }, k); w++) await page.evaluate(() => __dbg.sim(5));
+      await page.evaluate(() => __dbg.sim(400)); const seq = await page.evaluate(k => KZ.shrineSt[DATA.shrines[k].id].seq, k); const P = await page.evaluate(k => DATA.shrines[k].parts.plates, k);
+      for (const i of seq) { await step(0, 2); await step(P[i][0], P[i][1]); } }
+    if (kind === 'combat') { act(page, `() => KZ.HOOK.acts.shgate(DATA.shrines[${k}])`); for (let i = 0; i < 400 && await page.evaluate(() => KZ.B.active || KZ.busy || !document.getElementById('dlg').hidden || KZ.MENUS.length); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); } await idle(page); }
+    if (kind === 'rings') { act(page, `() => KZ.HOOK.acts.shgate(DATA.shrines[${k}])`); await idle(page); for (const [a, h, b] of await page.evaluate(k => DATA.shrines[k].parts.rings, k)) await step(a, b, h); }
+    if (kind === 'climb') { /* のぼる 祠：高い 台の 上で 証を とる */ }
+    const goal = await page.evaluate(k => { const sh = DATA.shrines[k], P = KZ.player; Object.assign(P, { x: sh.goal.x, z: sh.goal.z + 1.2, y: sh.goal.y, vx: 0, vy: 0, vz: 0 }); P.ground = true; __dbg.sim(3); return KZ.target && KZ.target.type; }, k);
+    act(page, `() => KZ.HOOK.acts.shgoal(DATA.shrines[${k}])`); await idle(page);
+    res.push({ k, kind, goal, done: await page.evaluate(k => !!(KZ.G.shrineDone || {})[DATA.shrines[k].id], k) });
+  }
+  ok(res.every(r => r.done && r.goal === 'shgoal'), '祠の しかけが 最後まで 解けない：' + JSON.stringify(res));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }

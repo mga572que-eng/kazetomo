@@ -8,10 +8,8 @@ if (!World.init(cv, COARSE || DEBUG)) { document.getElementById('fallback').hidd
 const { hAt, nAt, surfaceAt, Blocks, V, clamp, lerp, smooth } = World;
 const $ = id => document.getElementById(id);
 function portraitBlocked() { return innerHeight > innerWidth; }
-const wait = ms => new Promise(resolve => setTimeout(() => {
-  const resume = () => { if (portraitBlocked()) return; removeEventListener('resize', resume); removeEventListener('orientationchange', resume); resolve(); };
-  if (portraitBlocked()) { addEventListener('resize', resume); addEventListener('orientationchange', resume); } else resolve();
-}, ms));
+// 縦向きの 間は 待つ。知らせ（resize）を 取りこぼしても 止まらないよう 0.25秒ごとに 見なおす（前は 知らせ だけを 待ち、取りこぼすと 動かなくなった）
+const wait = ms => new Promise(resolve => setTimeout(function check() { if (portraitBlocked()) setTimeout(check, 250); else resolve(); }, ms));
 const R = Math.random;
 const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const SPC = DATA.species;
@@ -503,7 +501,7 @@ tapBtn('btnBuild', () => toggleBuild()); tapBtn('btnPlace', () => place()); tapB
 $('btnMute').addEventListener('click', () => { const m = Music.toggleMute(); $('btnMute').textContent = m ? '♪ OFF' : '♪ ON'; });
 
 // ================= modes =================
-let phase = 'splash', busy = false;
+let phase = 'splash', busy = false, busyIdle = 0;
 function mode() { if (phase !== 'field') return phase; if (B.active) return 'battle'; if (D.active || MENUS.length || busy) return 'busy'; return 'field'; }
 async function run(fn) { if (busy || (DEBUG && window.__noEvents)) return; busy = true; releaseInputs(); try { await fn(); } catch (e) { console.error(e); } finally { busy = false; } }
 
@@ -662,10 +660,11 @@ function findTarget() {
   const r = REGr(); const px = player.x, pz = player.z, fx = Math.sin(player.yaw), fz = Math.cos(player.yaw); let best = null, bs = 1e9;
   const cand = (o, type, x, z, rng) => { if (Math.abs(x - px) > rng + 1 || Math.abs(z - pz) > rng + 1) return; const dx = x - px, dz = z - pz, d = Math.hypot(dx, dz); if (d > rng) return; const f = (dx * fx + dz * fz) / (d || 1); const sc = d - f * 1.3; if (type === 'npc' && (f < .25 || Math.abs(player.y - (o.y ?? surfaceAt(x, z, hAt(x,z) + 2))) > 3)) return; if (sc < bs) { bs = sc; best = { o, type, x, z }; } };
   for (const n of npcNow()) cand(n, 'npc', n.x, n.z, 3);
-  for (const t of r.trees) if (t.state === 'ok') cand(t, 'tree', t.x, t.z, 2.2 + t.s * .3);
+  const nature = !cam.fp && Math.abs(player.y - hAt(px, pz)) < 2.5; // ダンジョンの 中や 建物の 上では 木・岩・実・キノコを えらばない（しかけより 先に えらばれるのを ふせぐ）
+  if (nature) { for (const t of r.trees) if (t.state === 'ok') cand(t, 'tree', t.x, t.z, 2.2 + t.s * .3);
   for (const k of r.rocks) if (k.state === 'ok') cand(k, 'rock', k.x, k.z, 1.9 + k.s * .8);
   for (const b of r.bushes) if (b.has) cand(b, 'bush', b.x, b.z, 2);
-  for (const s of r.shrooms) if (s.has) cand(s, 'shroom', s.x, s.z, 1.6);
+  for (const s of r.shrooms) if (s.has) cand(s, 'shroom', s.x, s.z, 1.6); }
   for (const c of r.chests) if (!G.chests[c.id]) cand(c, 'chest', c.x, c.z, 2.2);
   cand(r.statue, 'statue', r.statue.x, r.statue.z, 2.6); cand(r.fire, 'fire', r.fire.x, r.fire.z, 2.6); if (r.board) cand(r.board, 'board', r.board.x, r.board.z, 2.6);
   if (G.region === 0) { for (const b of r.beacons) if (!b.lit) { cand(b, 'beacon', b.x, b.z, 4.4); if (b.act.top && Math.abs(player.y - b.act.y) < 2.5) { const bs0 = bs; cand(b, 'beacontop', b.act.x, b.act.z, 2.6); } } if (G.order >= 5 && !G.flags.cleared) cand(r.shrine, 'shrine', r.shrine.x, r.shrine.z, 6); }
@@ -2444,6 +2443,8 @@ function frame(now) { if (DEBUG && window.__norender) setTimeout(() => frame(per
 function frameBody(now) {
   if (portraitBlocked()) { last = now; return; }
   const dt = Math.min((now - last) / 1000, .05); last = now; T += dt;
+  // 安全網：「処理中」の まま 会話・メニュー・戦闘・暗転・演出が どれも 出ていない 状態が 30秒 つづいたら 解除（どこを しらべても 反応しない を ふせぐ）
+  if (busy && phase === 'field' && !D.active && !MENUS.length && !B.active && !$('fade').classList.contains('on') && !document.querySelector('.cine,.tcard,#dgx.on,#fishUI:not([hidden])')) { busyIdle += dt; if (busyIdle > 30) { busy = false; busyIdle = 0; console.warn('busy watchdog: released'); (HOOK.busyFreed || []).forEach(f => { try { f(); } catch (e) {} }); } } else busyIdle = 0;
   const md = mode();
   document.body.classList.toggle('modal', phase === 'field' && md !== 'field'); document.body.classList.toggle('inbattle', B.active);
   if (phase === 'field' && !B.active) { G.tod = (G.tod + dt / 480) % 1; G.play += dt; }

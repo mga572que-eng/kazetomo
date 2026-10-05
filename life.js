@@ -30,11 +30,17 @@
   H.icons = Object.assign(H.icons || {}, { tsurizao: ['feather', '#c9a064'], esa: ['fruit', '#c07a5a'], sakana: ['feather', '#9fd0ff'], nushiuroko: ['star', '#9ff0ff'], yakizakana: ['bowl', '#d08a4a'], sakanajiru: ['bowl', '#e0c090'], kaisendon: ['bowl', '#ff9a7a'] });
   H.shopExtra = r => r === 2 ? ['esa'] : ['tsurizao', 'esa'];
   // ---------------- fishing ----------------
-  const waterAhead = () => { const p = K.player, fx = Math.sin(p.yaw), fz = Math.cos(p.yaw); const r = K.G.region;
-    for (const d of [2.2, 3.2, 4.2]) { const h = K.hAt(p.x + fx * d, p.z + fz * d); if (r === 2 ? h < -18 : h < -.8) return true; } return false; };
-  const inside = () => !!((K.interior && K.interior.cur) || (K.lhDungeon && K.lhDungeon.here && K.lhDungeon.here())); // 家の 中・樹の 中では 釣りを しない
-  H.target.push((cand) => { const G = K.G; if (!(G.inv.tsurizao > 0) || G.region === 3 || !K.player.ground || K.player.swim || inside()) return; if (G.region !== 2 && K.hAt(K.player.x, K.player.z) < -.2) return;
-    if (waterAhead()) { const p = K.player; cand({ fish: true, y: p.y }, 'fish', p.x + Math.sin(p.yaw) * .01, p.z + Math.cos(p.yaw) * .01, 5); } });
+  // 釣りが できる 場所（2026-10-05 作りなおし：ダンジョン・家・祠・建物の 中や 屋根の 下、高い 足場では 出さない）
+  // ・前方 2〜4m に 水（雲海）が あり、そこまで かべが ない
+  // ・自然の 地面か 海べの 低い 足場（桟橋）に 立っている。屋根の 下でない。一人称の ダンジョン・家の 中・樹の 中・ボスの 間でない
+  const B = World.Blocks;
+  const waterAhead = () => { const p = K.player, fx = Math.sin(p.yaw), fz = Math.cos(p.yaw), r = K.G.region, fy = Math.floor(p.y + .6);
+    for (const d of [2.2, 3.2, 4.2]) { const x = p.x + fx * d, z = p.z + fz * d; if (B.has(Math.floor(x), fy, Math.floor(z)) || B.has(Math.floor(x), fy - 1, Math.floor(z))) return false; const h = K.hAt(x, z); if (r === 2 ? h < -18 : h < -.8) return true; } return false; };
+  const roofed = () => { const p = K.player, x = Math.floor(p.x), z = Math.floor(p.z); for (let y = Math.floor(p.y) + 2; y <= Math.floor(p.y) + 14; y++) if (B.has(x, y, z)) return true; return false; };
+  const inside = () => !!((K.interior && K.interior.cur) || (K.lhDungeon && K.lhDungeon.here && K.lhDungeon.here()) || (K.bossDun && K.bossDun.inside && K.bossDun.inside()) || (K.HOOK.fpv || []).some(f => { try { return f(); } catch (e) { return false; } }));
+  const footing = () => { const p = K.player, h = K.hAt(p.x, p.z); if (Math.abs(p.y - h) < .7) return true; return K.G.region !== 2 && p.y < 3.2; }; // 自然の 地面か、海べの 低い 足場
+  K.canFish = () => { const G = K.G, p = K.player; return G.inv.tsurizao > 0 && G.region !== 3 && p.ground && !p.swim && !inside() && !roofed() && footing() && (G.region === 2 || K.hAt(p.x, p.z) >= -.2) && waterAhead(); };
+  H.target.push((cand) => { if (!K.canFish()) return; const p = K.player; cand({ fish: true, y: p.y }, 'fish', p.x + Math.sin(p.yaw) * 2.4, p.z + Math.cos(p.yaw) * 2.4, 3); }); // 前の 水面に 置く（近くの しらべる 物を 優先）
   H.labels.fish = 'つりを する';
   function pickFish(big) { const G = K.G, night = World.skyInfo(G.tod).night > .5;
     const pool = DATA.fish.filter(f => f.r === G.region && (f.t === 'any' || (f.t === 'night') === night) && (!f.bait || (big && G.order >= 5)));
