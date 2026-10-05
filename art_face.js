@@ -43,13 +43,13 @@
   };
   // 目：rx/ry/dx/cy（大きさ・はなれ・高さ）と tilt（目じりの 上がり 度。＋＝つり目、−＝たれ目）
   const LOOK = {
-    sora: { ey: { rx: 11.2, ry: 10.6 }, motif: 'wind' },
-    mio: { ey: { tilt: 9, ry: 9.4 }, jaw: 'round', motif: 'petal' },
-    riku: { ey: { tilt: 15, ry: 7.6, rx: 10.6, cy: 111 }, jaw: 'sharp', motif: 'speed' },
-    sana: { ey: { tilt: -10, ry: 9.2, dx: 21 }, motif: 'stars' },
-    haru: { ey: { rx: 11.6, ry: 11.2, dx: 19 }, jaw: 'round', motif: 'cloud' },
-    kaito: { ey: { tilt: 4, ry: 7, rx: 9.6 }, jaw: 'long', motif: 'rays' },
-    yui: { ey: { tilt: -4, ry: 7.6 }, jaw: 'long', motif: 'leaf' },
+    sora: { tilt: 2, ey: { rx: 11.2, ry: 10.6 }, motif: 'wind' },
+    mio: { tilt: -4, ey: { tilt: 9, ry: 9.4 }, jaw: 'round', motif: 'petal' },
+    riku: { tilt: 3, ey: { tilt: 15, ry: 7.6, rx: 10.6, cy: 111 }, jaw: 'sharp', motif: 'speed' },
+    sana: { tilt: -2, ey: { tilt: -10, ry: 9.2, dx: 21 }, motif: 'stars' },
+    haru: { tilt: 5, ey: { rx: 11.6, ry: 11.2, dx: 19 }, jaw: 'round', motif: 'cloud' },
+    kaito: { tilt: 0, ey: { tilt: 4, ry: 7, rx: 9.6 }, jaw: 'long', motif: 'rays' },
+    yui: { tilt: -3, ey: { tilt: -4, ry: 7.6 }, jaw: 'long', motif: 'leaf' },
   };
   const OUT = 4.2; // 外がわの 線（太く）
 
@@ -290,7 +290,7 @@
   function draw(who, ex) {
     const c0 = C[who], lk = LOOK[who] || {}; const c = Object.assign({}, c0, { line: mix(c0.line, '#0a0706', .6) }); const T = Object.assign({}, TYPES[c.t], lk.ey || {}); const I = 'af' + (++uid);
     const h = c.hair, line = c.line, skin = c.skin, sk2 = c.sk2 || mix(skin, '#b0504a', .26), my = c.my || 0;
-    const HT = c.noBody ? '' : ` transform="translate(100 66) scale(${lk.motif ? .9 : .84}) translate(-100 -66)"`; /* A案は 顔を すこし 大きく */
+    const HT = c.noBody ? '' : ` transform="${lk.tilt ? `rotate(${lk.tilt} 100 150) ` : ''}translate(100 66) scale(${lk.motif ? .9 : .84}) translate(-100 -66)"`; /* 2段目：人ごとの 首の かしげ */ /* A案は 顔を すこし 大きく */
     const faceD = c.faceD || (lk.jaw && JAW[lk.jaw]) || FACE; const bl = c.bl != null ? c.bl : T.bl;
     let s = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><radialGradient id="${I}d" cx="50%" cy="40%" r="62%"><stop offset="0" stop-color="${c.disc[0]}"/><stop offset="1" stop-color="${c.disc[1]}"/></radialGradient>` +
       `<clipPath id="${I}o"><circle cx="100" cy="100" r="98"/></clipPath><clipPath id="${I}f"><path d="${faceD}"/></clipPath>` +
@@ -325,7 +325,13 @@
     if (c.front) {
       s += `<g clip-path="url(#${I}k)"><rect width="200" height="200" fill="${h[1]}"/><use href="#${I}h" transform="translate(4 -4)" fill="${h[0]}"/>`;
       if (c.strands) s += S(c.strands, h[1], 2.2);
-      if (!c.noHl) s += S(c.hl || 'M62 72 Q100 48 138 72', h[2], 4.5, ' stroke-dasharray="3 9 12 7 5 200" opacity=".95"');
+      if (!c.noHl && lk.motif) { // 2段目：天使の輪（とがった つやの かけら 3つ）と その下の 影
+        const m = /M([\d.]+) ([\d.]+) Q([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)/.exec(c.hl || 'M62 72 Q100 48 138 72'), [x0, y0, qx, qy, x1, y1] = m.slice(1).map(Number);
+        const pt = t => [(1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * qx + t * t * x1, (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * qy + t * t * y1];
+        for (const [a, b, wd] of [[.16, .3, 3.2], [.38, .6, 4.6], [.68, .8, 3]]) { const A = pt(a), Bp = pt(b), M = pt((a + b) / 2);
+          s += `<path d="M${r1(A[0])} ${r1(A[1])} Q${r1(M[0])} ${r1(M[1] - wd)} ${r1(Bp[0])} ${r1(Bp[1])} Q${r1(M[0])} ${r1(M[1] + wd * .4)} ${r1(A[0])} ${r1(A[1])}Z" fill="${h[2]}" opacity=".95"/>`; }
+        s += S(`M${x0 + 4} ${y0 + 9} Q${qx} ${qy + 9} ${x1 - 4} ${y1 + 9}`, h[1], 2.4, ' opacity=".55" stroke-dasharray="10 6"'); }
+      else if (!c.noHl) s += S(c.hl || 'M62 72 Q100 48 138 72', h[2], 4.5, ' stroke-dasharray="3 9 12 7 5 200" opacity=".95"');
       s += `</g><use href="#${I}h" fill="none" stroke="${line}" stroke-width="${lk.motif ? OUT : 3.4}" stroke-linejoin="round"/>`;
     }
     s += brows(c, T, ex);

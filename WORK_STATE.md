@@ -83,3 +83,6 @@ Game checksは現在 `npm run check` と `git diff --check` のみ。PCブラウ
 - talkplus.js：仲間の 新しい 会話 22（上位職・新しい 部屋・ボスの 間・お使い・地方ごとの 掛けあい）。
 - homelife.js：家の 人の 役目ごとの ひとこと（10種×2）。
 - 技の 名前は 名前の法則どおりで 確認（同じ 名前は 別の 職業どうしのみ）。
+
+## 2026-10-05 23:10 Claude：キャラ一新 2段目（work/face-b）
+- 首の かしげ（人ごと）と 髪の つや（天使の輪）。docs/design/characters-a.md。実機未確認。
