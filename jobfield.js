@@ -18,7 +18,7 @@
   const log = () => { const g = G(); if (!g.jobLog || typeof g.jobLog !== 'object') g.jobLog = { steal: { try: 0, ok: 0, items: {} }, bossSteal: {} }; return g.jobLog; };
   let okThisBattle = 0;
   // 盗賊の あいだ「ぬすむ」を つかえる（職業ツリーとは 別。転職すると 消える）
-  H.calc.push((m, st, mul, pas, extra) => { if (m.kind !== 'human') return; const r = G().job && G().job[m.id]; if (r && r.cur === 'touzoku' && !extra.includes('j_nusumu')) extra.push('j_nusumu'); });
+  H.calc.push((m, st, mul, pas, extra) => { if (m.kind !== 'human') return; const r = G().job && G().job[m.id]; if (r && (r.cur === 'touzoku' || r.cur === 'shinobi') && !extra.includes('j_nusumu')) extra.push('j_nusumu'); });
   H.steal = async (a, t, bmsg, U) => { const L = log(); L.steal.try++;
     if (t.hp <= 0) { await bmsg('しかし あいては もう たおれていた。', 250); return; }
     if (t.stolen) { await bmsg(`${t.name}は もう なにも もっていない！`, 300); return; }
@@ -41,8 +41,8 @@
     minarai: '地図に まだ 開けていない 宝箱が 出る', senshi: '岩を 少ない 回数で こわせる', mahou: '夜の 灯りが 広くなる', souryo: '歩くと 少しずつ HPが 回復',
     touzoku: '戦闘で「ぬすむ」・ときどき 戦利品', butouka: 'がんばりの 回復が はやい', ginyuu: '敵に 追いかけられにくい', yuutou: '歩くと 少し 回復・戦いの 稼ぎ +10%',
     shounin: '売値が 5割に・戦いの 稼ぎ +25%', kariudo: '採取で 1つ 多く 手に入る' };
-  for (const j of DATA.jobs || []) if (PERK[j.id] && !j.desc.includes('【仲間に いると】')) j.desc += `　【仲間に いると】${PERK[j.id]}`;
-  const jobPerk = id => { const g = G(); if (!g || !g.party || !g.job) return false; return g.party.some(m => m.kind === 'human' && g.job[m.id] && g.job[m.id].cur === id); };
+  for (const j of DATA.jobs || []) { const pk = PERK[j.id] || PERK[j.up]; if (pk && !j.desc.includes('【仲間に いると】')) j.desc += `　【仲間に いると】${pk}`; }
+  const jobPerk = id => { const g = G(); if (!g || !g.party || !g.job) return false; return g.party.some(m => { if (m.kind !== 'human' || !g.job[m.id]) return false; const c = g.job[m.id].cur, j = (DATA.jobs || []).find(x => x.id === c); return c === id || !!(j && j.up === id); }); }; // 上位職は もとの 職業の 支援も もつ
   K.jobPerk = jobPerk; K.jobPerkText = PERK;
   // 歩くと 回復（4m ごとに 僧侶 2%・勇灯 1%）・がんばり（武闘家）
   let walkAcc = 0, lastX = null, lastZ = null, wasBattle = false, g0 = 0;

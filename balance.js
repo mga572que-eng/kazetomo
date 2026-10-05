@@ -34,9 +34,9 @@
   // 職業ごとの 防具（見習いと 勇灯は ぜんぶ）。ふくは 全職業
   const JOB_A = { minarai: ['cloth', 'light', 'heavy', 'robe'], senshi: ['cloth', 'light', 'heavy'], mahou: ['cloth', 'robe'], souryo: ['cloth', 'robe'],
     touzoku: ['cloth', 'light'], butouka: ['cloth', 'light'], shounin: ['cloth', 'light', 'robe'], kariudo: ['cloth', 'light'], ginyuu: ['cloth', 'light', 'robe'], yuutou: ['cloth', 'light', 'heavy', 'robe'] };
-  for (const j of DATA.jobs || []) j.eqA = JOB_A[j.id] || ['cloth', 'light', 'heavy', 'robe'];
+  for (const j of DATA.jobs || []) j.eqA = JOB_A[j.id] || JOB_A[j.up] || ['cloth', 'light', 'heavy', 'robe'];
   const jobOf = m => (G().job && G().job[m.id] && G().job[m.id].cur) || 'minarai';
-  const canWear = (m, ai, jid) => { const a = DATA.armor[ai]; if (!a) return false; if (!HUMANS.includes(m.id)) return true; return (JOB_A[jid || jobOf(m)] || JOB_A.minarai).includes(a.ty); };
+  const canWear = (m, ai, jid) => { const a = DATA.armor[ai]; if (!a) return false; if (!HUMANS.includes(m.id)) return true; const id = jid || jobOf(m), jb = (DATA.jobs || []).find(j => j.id === id); return (JOB_A[id] || (jb && JOB_A[jb.up]) || JOB_A.minarai).includes(a.ty); };
 
   // ---------- 袋（G.bag） ----------
   const bag = () => { const g = G(); if (!g.bag || typeof g.bag !== 'object') g.bag = {}; const b = g.bag; if (!b.w || typeof b.w !== 'object') b.w = {}; if (!b.a || typeof b.a !== 'object') b.a = {};
@@ -162,7 +162,7 @@
         return `<div class="who"><span class="ic">${CAT_ICON[a.ty]}</span><span>${a.name}<small class="ty">${CAT[a.ty]}${n}</small>　${ok ? `<small>ぼうぎょ ${m.st.def} → ${delta(m.st.def, d1)}</small>` : `<span class="no">${jn}は 着られない</span>`}</span>${on ? '<span class="eq">そうび中</span>' : `<button data-a="${i}" ${ok ? '' : 'disabled'}>${armed === 'a' + i ? '本当に？' : 'そうび'}</button>`}</div>`; };
       el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button><h3>そうび <small>袋の 中から つけかえる（外した ものは 袋へ）</small></h3>
         <div class="tabs">${hs.map((p, i) => `<button class="tab${i === mi ? ' on' : ''}" data-m="${i}">${K.esc(K.nameOf(p))}</button>`).join('')}</div>
-        <div class="hint">${K.esc(K.nameOf(m))}：${jn}　着られる 防具：${catNames(JOB_A[jobOf(m)])}</div>
+        <div class="hint">${K.esc(K.nameOf(m))}：${jn}　着られる 防具：${catNames(JOB_A[jobOf(m)] || JOB_A[((DATA.jobs || []).find(j => j.id === jobOf(m)) || {}).up] || JOB_A.minarai)}</div>
         <div class="shop-body"><div class="sdet"><b>武器</b>${ws.map(wRow).join('')}</div><div class="sdet"><b>防具</b>${as.map(aRow).join('')}</div></div>`;
       el.querySelector('.m-x').onclick = () => { Music.sfx('cancel'); K.closeMenu(M, -1); K.hud(); K.save(); };
       el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mi = +b.dataset.m; armed = null; Music.sfx('cursor'); paint(); });

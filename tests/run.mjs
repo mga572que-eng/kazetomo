@@ -249,6 +249,35 @@ test('深淵の宮 屋上「潮の間」：石段で のぼる・潮は 一方�
   const r = await page.evaluate(g0 => ({ f: KZ.G.flags.palaceTide, d: KZ.G.gold - g0 }), g0); ok(r.f === 2 && r.d === 3000, 'ほうびが 1回だけで ない：' + JSON.stringify(r));
 });
 
+test('職業 v11：職業の 経験は ふつうの 経験値と いっしょ・上位職・支援の 引きつぎ', async ({ page }) => {
+  const r = await page.evaluate(() => { const K = KZ, G = K.G, m = G.party.find(x => x.id === 'sora'); G.flags.cleared = true; const rec = K.jobOf('sora');
+    rec.cur = 'senshi'; rec.lv.senshi = 1; rec.xp = { senshi: 0 }; rec.seen = null; K.jobTier.feedJob(m); // 基準
+    const need = Math.round(10 * Math.pow(m.lv, 1.5)); m.exp += need; const up1 = K.jobTier.feedJob(m); const lv1 = rec.lv.senshi;
+    m.exp += 3; const up2 = K.jobTier.feedJob(m);
+    rec.lv.senshi = 9; const lock = K.jobTier.unlocked('sora', 'kengou'); rec.lv.senshi = 10; const open = K.jobTier.unlocked('sora', 'kengou');
+    const ch = !!K.changeJob(m, 'kengou', { free: true }); const perk = K.jobPerk('senshi'); const nUp = DATA.jobs.filter(j => j.up).length;
+    const allSk = DATA.jobs.every(j => j.sk.every(([, s]) => DATA.skills[s] && DATA.skills[s].name)); const tiers = DATA.jobs.filter(j => j.up).every(j => DATA.skills[j.sk[4][1]].tier === 5);
+    return { up1, lv1, up2, lock, open, ch, perk, nUp, allSk, tiers, cur: rec.cur }; });
+  ok(r.up1 === 1 && r.lv1 === 2 && r.up2 === 0, '1レベル分の 経験で 職業Lvが 1 あがらない／少しで あがる：' + JSON.stringify(r));
+  ok(!r.lock && r.open && r.ch && r.cur === 'kengou', '戦士 マスターで 剣豪に なれない：' + JSON.stringify(r));
+  ok(r.perk && r.nUp === 10 && r.allSk && r.tiers, '上位職・技・支援の 引きつぎが たりない：' + JSON.stringify(r));
+});
+test('おまかせ v11：残り1体に 全体技を つかわない・とどめは 安い 手・同じ 敵を ねらいすぎない', async ({ page }) => {
+  await page.evaluate(() => { KZ.G.auto = false; window.__b = KZ.runBattle([{ sp: 'watapoko', lv: 3 }, { sp: 'watapoko', lv: 3 }], { noFlee: true }); });
+  for (let i = 0; i < 40 && !(await page.evaluate(() => KZ.B.active && KZ.B.aiPlan && document.querySelector('#battle .m-battle, #bmenu, .bmenu'))); i++) await page.waitForTimeout(250);
+  const r = await page.evaluate(() => { const B = KZ.B, F = B.F, P = B.P.filter(m => m.kind === 'human'), a = P[0], b = P[1] || P[0];
+    a.skills = ['j_nagi', 'j_kabuto', 'j_gekiretsu']; b.skills = ['j_nagi', 'j_kabuto']; a.mp = b.mp = 99;
+    // 1体が ほぼ たおれ、もう1体は 元気：1人目は 安く とどめ、2人目は もう1体へ
+    F[0].hp = 1; F[1].hp = F[1].max = 9999; const p1 = B.aiPlan(a), p2 = B.aiPlan(b);
+    // 残り1体：全体技は つかわない
+    F[0].hp = 0; F[1].hp = F[1].max; const p3 = B.aiPlan(a);
+    return { p1: [p1.type, p1.s || '', F.indexOf(p1.t)], p2: [p2.type, p2.s || '', F.indexOf(p2.t)], p3: [p3.type, p3.s || ''] }; });
+  ok(r.p1[0] === 'atk' && r.p1[2] === 0, 'とどめに 技を つかう：' + JSON.stringify(r));
+  ok(r.p2[2] === 1, '2人目も 同じ 敵を ねらう：' + JSON.stringify(r));
+  ok(r.p3[1] !== 'j_nagi', '残り1体に 全体技：' + JSON.stringify(r));
+  await page.evaluate(() => { KZ.G.auto = true; }); for (let i = 0; i < 80 && await page.evaluate(() => KZ.B.active); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(200); } await idle(page);
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }
