@@ -1035,7 +1035,7 @@ async function beaconEvent(b, atTop) {
     await say(['群れを しりぞけた！']); }
   if (b.i === 3 && !b.guard && World.skyInfo(G.tod).night < .5) {
     const c = await menu({ title: '灯の花は かたく 閉じている。 夜にしか ひらかないようだ。', items: [{ label: '夜まで 待つ' }, { label: 'やめておく' }] });
-    if (c !== 0) return; await fade(true); G.tod = .82; await wait(300); await fade(false); await say(['……夜に なった。 火皿が ゆっくりと ひらいていく。']); }
+    if (c !== 0) return; await fade(true); G.tod = .82; await wait(300); await fade(false); await say(['……夜に なった。 灯の花が ゆっくりと ひらいていく。']); }
   if (!b.guard && HOOK.bossGate && await HOOK.bossGate('tree', G.order, b, atTop)) return; // 番人は ダンジョンの 奥で（bossdun.js）
   if (!b.guard) {
     const gi = G.order, gid = DATA.guards[gi]; const pre = [`（推奨Lv${DATA.guardLv[gi]}）`];

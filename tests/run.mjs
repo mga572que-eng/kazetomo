@@ -337,6 +337,12 @@ test('ボスの 間：海の さんごの樹と 風の祠も 奥で 戦って �
   ok(w.site === 'w0' && w.guard && w.wind && w.near && !w.cur, '風の祠の 番人の 流れ：' + JSON.stringify(w));
 });
 
+test('会話の 追加：仲間の 新しい 会話が 登録され、条件で 出る', async ({ page }) => {
+  const r = await page.evaluate(() => { const L = KZ.partyTalk.L, ids = L.map(x => x.id); const G = KZ.G; G.errandsDone = 1;
+    const e = L.find(x => x.id === 'cl_errand'); return { n: ids.filter(i => /^cl_/.test(i)).length, ok: !!e && !!e.when(G, G.region), lines: e && e.s().length }; });
+  ok(r.n >= 20 && r.ok && r.lines >= 1, '新しい 会話が 出ない：' + JSON.stringify(r));
+});
+
 let fail = 0;
 for (const t of T) { if (only && !t.name.includes(only)) continue; const t0 = Date.now(); let s;
   try { s = await boot(t.opts); await t.fn(s); ok(!s.errors.length, 'ページの エラー：' + s.errors.slice(0, 2).join(' / ')); console.log(`PASS  ${t.name}（${((Date.now() - t0) / 1000).toFixed(0)}秒）`); }

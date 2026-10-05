@@ -77,3 +77,9 @@ Game checksは現在 `npm run check` と `git diff --check` のみ。PCブラウ
 ## 2026-10-05 22:20 Claude：起動時・回転時の 画面の 不具合（work/viewport-fix）
 - 原因と 直し方は docs/design/viewport.md。settings.js（applyRatio 作りなおし）・world.js（resize）・index.html（字体 display=optional）・check.mjs（display=swap を 禁止）・tests/viewport.mjs。
 - 横に すると 半分が 黒い 不具合は PC で 再現 → 修正後に 解消を 確認。実機未確認。
+
+## 2026-10-05 23:00 Claude：文と 会話の 仕上げ（work/text-pass）
+- 台詞の 点検：「火皿が ひらいていく」→「灯の花が」（game.js）。ほかに「灯台」「かげ（敵）」の 名残なし（Codex の 3ファイルも 0件）。試練の祠の「火皿」は かがり火の 意味なので そのまま。
+- talkplus.js：仲間の 新しい 会話 22（上位職・新しい 部屋・ボスの 間・お使い・地方ごとの 掛けあい）。
+- homelife.js：家の 人の 役目ごとの ひとこと（10種×2）。
+- 技の 名前は 名前の法則どおりで 確認（同じ 名前は 別の 職業どうしのみ）。
