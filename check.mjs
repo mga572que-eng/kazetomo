@@ -23,6 +23,7 @@ if(build!==pwa||build!==cache)fail('PWA build mismatch');
 { /* 古い index.html／sw.js で 上書きして モジュールが 消えるのを ふせぐ：ルートの .js（sw.js 以外）は 読みこみと キャッシュの 両方に ある */
   const srcs=new Set([...html.matchAll(/<script[^>]*src="([^"?]+)/g)].map(m=>m[1].replace(/^\.\//,''))), coreL=core?[...core[1].matchAll(/'\.\/([^']+)'/g)].map(m=>m[1]):[];
   for(const f of fs.readdirSync(root).filter(f=>f.endsWith('.js')&&f!=='sw.js')){ if(!srcs.has(f))fail('Module not loaded by index.html: '+f); if(!coreL.includes(f))fail('Module missing from SW CORE: '+f); } }
+if(/fonts\.googleapis\.com[^"']*display=swap/.test(html))fail('Web font must use display=optional (display=swap moves text and buttons while fonts load)');
 for(const m of html.matchAll(/<script[^>]*src="([^"]+)"/g))if(m[1].includes('?v=')&&!m[1].endsWith('?v='+build))fail('Script build mismatch: '+m[1]);
 console.log(errors?'Check failed':'PASS: syntax, assets, PWA build '+build);
 process.exitCode=errors?1:0;

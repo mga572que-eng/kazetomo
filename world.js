@@ -872,7 +872,8 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
   let QL = 2, shOff = false, shCleared = false, partN = 260;
   // 低画質は DPR 1.0（.85 は ぼやける）→ 草・粒子・地形LOD距離で 補う
   function setQuality(q) { QL = Math.max(0, Math.min(2, q)); GRID = [76, 140, 210][QL]; GSP = [.5, .36, .31][QL]; shOff = QL === 0; shCleared = false; shValid = false; grsKey = ''; partN = [90, 200, 260][QL]; resize(); }
-  function resize() { const dpr = Math.min(devicePixelRatio || 1, [1, 1.15, COARSE ? 1.4 : 1.6][QL]); W = cv.width = Math.round((window.__vw || innerWidth) * dpr); Hh = cv.height = Math.round((window.__vh || innerHeight) * dpr); }
+  function resize() { const dpr = Math.min(devicePixelRatio || 1, [1, 1.15, COARSE ? 1.4 : 1.6][QL]); const cw = window.__vw || cv.clientWidth || innerWidth, ch = window.__vh || cv.clientHeight || innerHeight; // 実際に 見えている 大きさで（回転直後の 古い innerWidth で ひずまない）
+    const w = Math.max(1, Math.round(cw * dpr)), h = Math.max(1, Math.round(ch * dpr)); if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h; W = w; Hh = h; } // 同じ 大きさなら 代入しない（代入すると 一瞬 黒くなる）
 
   // ---------- sky palette ----------
   const mix3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
@@ -979,7 +980,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
       gl.bindVertexArray(ghostVAO); gl.drawArraysInstanced(gl.TRIANGLES, 0, 36, 1); }
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-    common(P.part); gl.uniform3fv(P.part.u.uCenter, player); gl.uniform1f(P.part.u.uPx, W / (window.__vw || innerWidth)); gl.bindVertexArray(partVAO); gl.drawArrays(gl.POINTS, 0, Math.min(PARTS, partN));
+    common(P.part); gl.uniform3fv(P.part.u.uCenter, player); gl.uniform1f(P.part.u.uPx, W / (window.__vw || cv.clientWidth || innerWidth)); gl.bindVertexArray(partVAO); gl.drawArrays(gl.POINTS, 0, Math.min(PARTS, partN));
     common(P.fx); gl.bindVertexArray(quadVAO);
     const camR = [view[0], view[4], view[8]], camU = [view[1], view[5], view[9]];
     for (const f of fx) {
@@ -994,7 +995,7 @@ precision highp float; in float vA; in vec3 vCol; out vec4 o; void main(){ float
     return { night, VP };
   }
   function project(p) { const m = lastVP; if (!m) return null; const x = m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], y = m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13], w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
-    if (w <= .1) return null; return [(x / w * .5 + .5) * (window.__vw || innerWidth), (1 - (y / w * .5 + .5)) * (window.__vh || innerHeight)]; }
+    if (w <= .1) return null; return [(x / w * .5 + .5) * (window.__vw || cv.clientWidth || innerWidth), (1 - (y / w * .5 + .5)) * (window.__vh || cv.clientHeight || innerHeight)]; }
 
   // 重さの 計測（perf.js）：描いた ブロック数・描いた 形の 種類と 数
   const stats = () => { let calls = 0, inst = 0; for (const m of meshes) if (m.vn) { calls++; inst += m.vn; } return { blocks: blockN, calls, inst, meshes: meshes.length }; };

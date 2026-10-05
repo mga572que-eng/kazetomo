@@ -15,17 +15,37 @@
     document.body.classList.toggle('lefty', !!O.lefty); document.body.classList.toggle('calm', !!O.calm);
     if (O.quality === 'auto') { if (autoQ == null) autoQ = World.quality; World.setQuality(autoQ); } else World.setQuality({ low: 0, mid: 1, high: 2 }[O.quality]);
   }
-  function applyRatio() { const r = { '16:9': 16 / 9, '19.5:9': 19.5 / 9, '4:3': 4 / 3, '3:2': 3 / 2 }[O.ratio] || 0; const vv = window.visualViewport; const iw = vv ? vv.width : innerWidth, ih = vv ? vv.height : innerHeight; const b = document.body;
-    if (!r) { window.__vw = 0; window.__vh = 0; ['position', 'left', 'top', 'width', 'height', 'transform'].forEach(k => b.style[k] = ''); document.documentElement.style.height = ''; document.documentElement.style.background = '';
-      // iOS の ホーム画面アプリで 下に 黒い帯が でる 不具合（innerHeight が 画面より 小さい）対策：画面いっぱいに 広げる
-      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
-      if (ios && standalone && screen.width && screen.height) { const land = innerWidth > innerHeight; const sw = land ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height), sh = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
-        if (sh - innerHeight > 4 || sw - innerWidth > 4) { window.__vw = sw; window.__vh = sh; document.documentElement.style.height = sh + 'px'; Object.assign(b.style, { position: 'fixed', left: '0px', top: '0px', width: sw + 'px', height: sh + 'px' }); const cvs = document.getElementById('game'); if (cvs) Object.assign(cvs.style, { width: sw + 'px', height: sh + 'px', bottom: 'auto', right: 'auto' }); } } }
-    else { let w = iw, h = iw / r; if (h > ih) { h = ih; w = ih * r; } window.__vw = Math.round(w); window.__vh = Math.round(h); Object.assign(b.style, { position: 'fixed', left: Math.round((iw - w) / 2) + 'px', top: Math.round((ih - h) / 2) + 'px', width: Math.round(w) + 'px', height: Math.round(h) + 'px', transform: 'translateZ(0)' }); document.documentElement.style.background = '#000'; }
-    const de = document.documentElement; de.style.setProperty('--app-w', (window.__vw || iw) + 'px'); de.style.setProperty('--app-h', (window.__vh || ih) + 'px');
+  // 画面の 大きさ（2026-10-05 作りなおし）
+  // ・前は 縦向きで 決めた 大きさ（px）が キャンバスに のこり、横にすると 半分が 黒くなった／測るたびに 値が かわり、文字や ボタンが 上下に ゆれた
+  // ・いまは「測る → 前と 同じなら 何もしない」。回転の あとは 数回 測りなおして 落ちつかせる。キャンバスの 大きさは いつも 同じ 方法で 決める
+  let lastKey = '';
+  function measure() { const vv = window.visualViewport, de = document.documentElement;
+    // 回転の 途中は visualViewport と innerWidth が くいちがう ことが ある → 向きが そろう 値を 使う
+    let iw = Math.round(vv ? vv.width * (vv.scale || 1) : innerWidth), ih = Math.round(vv ? vv.height * (vv.scale || 1) : innerHeight);
+    if ((iw > ih) !== (innerWidth > innerHeight)) { iw = innerWidth; ih = innerHeight; }
+    iw = Math.max(iw, de.clientWidth || 0); ih = Math.max(ih, de.clientHeight || 0);
+    return { iw, ih }; }
+  function applyRatio() { const r = { '16:9': 16 / 9, '19.5:9': 19.5 / 9, '4:3': 4 / 3, '3:2': 3 / 2 }[O.ratio] || 0; const { iw, ih } = measure(); if (!iw || !ih) return;
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+    let w = iw, h = ih, x = 0, y = 0, fixed = false;
+    if (r) { w = iw; h = iw / r; if (h > ih) { h = ih; w = ih * r; } x = (iw - w) / 2; y = (ih - h) / 2; fixed = true; }
+    else if (ios && standalone && screen.width && screen.height) { // iOS の ホーム画面アプリで 下に 黒い帯が でる 対策：いまの 向きの 画面いっぱい
+      const land = iw > ih, sw = land ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height), sh = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+      if (sh - ih > 4 || sw - iw > 4) { w = sw; h = sh; fixed = true; } }
+    w = Math.round(w); h = Math.round(h); x = Math.round(x); y = Math.round(y);
+    const key = [w, h, x, y, fixed ? 1 : 0, r].join(','); if (key === lastKey) return; lastKey = key; // 同じなら 何もしない（ゆれの もと を 断つ）
+    const b = document.body, de = document.documentElement, cvs = document.getElementById('game');
+    window.__vw = fixed ? w : 0; window.__vh = fixed ? h : 0;
+    if (fixed) { Object.assign(b.style, { position: 'fixed', left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', transform: r ? 'translateZ(0)' : '' }); de.style.height = r ? '' : h + 'px'; de.style.background = r ? '#000' : ''; }
+    else { ['position', 'left', 'top', 'width', 'height', 'transform'].forEach(k => b.style[k] = ''); de.style.height = ''; de.style.background = ''; }
+    if (cvs) { if (fixed && !r) Object.assign(cvs.style, { width: w + 'px', height: h + 'px', bottom: 'auto', right: 'auto' }); else ['width', 'height', 'bottom', 'right'].forEach(k => cvs.style[k] = ''); } // 前の 向きの px を のこさない
+    de.style.setProperty('--app-w', w + 'px'); de.style.setProperty('--app-h', h + 'px');
     try { World.resize(); } catch (e) {} }
-  K.applyRatio = applyRatio; addEventListener('resize', applyRatio); if (window.visualViewport) visualViewport.addEventListener('resize', applyRatio); addEventListener('orientationchange', () => setTimeout(applyRatio, 300));
+  // 回転・ツールバーの 出入りの あとは、すぐ・次の 描画・0.15秒・0.4秒・0.8秒で 測りなおす（同じなら 何もしない）
+  let settleT = []; const settle = () => { applyRatio(); requestAnimationFrame(applyRatio); settleT.forEach(clearTimeout); settleT = [150, 400, 800].map(ms => setTimeout(applyRatio, ms)); };
+  K.applyRatio = () => { lastKey = ''; applyRatio(); }; addEventListener('resize', settle); if (window.visualViewport) visualViewport.addEventListener('resize', settle); addEventListener('orientationchange', settle); addEventListener('pageshow', settle);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) settle(); });
   apply(); applyRatio();
   // ---- 自動画質（3秒ごとに平均FPSを見る） ----
   // ヒステリシス：一度 下げたら このセッションでは 上げない（ユーザーが 画質を えらび直すと 解除）。 計測は フィールド操作中だけ（メニュー・戦闘・会話中や 復帰直後は 捨てる）

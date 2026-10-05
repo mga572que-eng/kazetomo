@@ -73,3 +73,7 @@ Game checksは現在 `npm run check` と `git diff --check` のみ。PCブラウ
 ## 2026-10-05 19:50 Claude：ボスの 間を ダンジョンに・中は 一人称（work/boss-dungeons）
 - bossdun.js：14か所の ボスの 間（しかけ10種の 組みあわせ）、game.js の つなぎ目（bossGate／bossDone・一人称カメラ・towerGateEvent の 公開）、world.js（描く 上限を こえたら 近い 順）、塔の 頂に 屋根。
 - 記録：G.bossDun。docs/design/boss-dungeons.md。tests/main-dungeon-roofs.mjs の カメラの 期待を 一人称に。
+
+## 2026-10-05 22:20 Claude：起動時・回転時の 画面の 不具合（work/viewport-fix）
+- 原因と 直し方は docs/design/viewport.md。settings.js（applyRatio 作りなおし）・world.js（resize）・index.html（字体 display=optional）・check.mjs（display=swap を 禁止）・tests/viewport.mjs。
+- 横に すると 半分が 黒い 不具合は PC で 再現 → 修正後に 解消を 確認。実機未確認。
