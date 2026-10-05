@@ -99,6 +99,76 @@
       mul: { hp: .15, mp: .1, atk: .15, def: .1, spd: .1 }, pas: { crit: .04, regen: .02 }, mb: { hp: .05, atk: .05 }, sk: [[2, 'j_yuuki'], [4, 'j_raikou'], [6, 'j_hikaritate'], [8, 'j_tenkuu'], [10, 'j_gokui']] },
   ];
   DATA.jobs.find(j => j.id === 'souryo').sk = [[2, 'j_iyashite'], [4, 'j_kiyokaze'], [6, 'i_kaeribi'], [8, 'j_megumi'], [10, 'j_seika']];
+  // ---------- v11：技の 刷新（キーは そのまま＝セーブの 習得は 引きつぐ）・上位職・技の 格（tier 1〜5：上がるほど 演出が 豪華） ----------
+  const RV = {
+    j_hibana: ['ひばな斬り', { power: 1.7, mp: 2 }, 1], j_hotaru: ['ヌクミの灯', { heal: 30, healPct: .12, mp: 3 }, 1], j_akari: ['アカリの輪', { power: 1.3, mp: 6 }, 2], j_tomoshiuchi: ['灯守ブレイク', { power: 2.8, mp: 8 }, 3],
+    j_kabuto: ['かぶと割り', { power: 2.1, mp: 4 }, 1], j_otakebi: ['おたけび', { mp: 5 }, 1], j_nagi: ['旋風なぎはらい', { power: 1.4, mp: 6 }, 2], j_teppeki: ['鉄壁の陣', { mp: 5 }, 2], j_gekiretsu: ['大地さき', { power: 3.3, mp: 10, type: 'earth' }, 3],
+    j_hinotama: ['ホムラ', { power: 1.9, mp: 4 }, 1], j_mizutsubute: ['ミナモの渦', { power: 1.3, mp: 7 }, 1], j_raiun: ['イカヅチ', { power: 1.45, mp: 9 }, 2], j_gouka: ['ホムラの竜巻', { power: 1.8, mp: 13 }, 2], j_hoshikuzu: ['星ふる夜', { power: 2.1, mp: 17 }, 3],
+    j_iyashite: ['大ヌクミ', { heal: 40, healPct: .22, mp: 4 }, 1], j_kiyokaze: ['キヨメの風', { mp: 4 }, 1], j_megumi: ['めぐみの雨', { heal: 40, healPct: .3, mp: 11 }, 2], j_seika: ['聖なる灯の柱', { power: 1.7, mp: 12 }, 3],
+    j_kagenui: ['シガラミぬい', { power: 1.5, mp: 3 }, 1], j_hayabusa: ['はやぶさ二連', { power: 2.5, mp: 6 }, 2], j_yamiuchi: ['カゲリの一閃', { power: 3.3, mp: 9 }, 3],
+    j_seiken: ['せいけん突き', { power: 2.0, mp: 3 }, 1], j_renkyaku: ['イワネ連脚', { power: 2.4, mp: 5 }, 1], j_kikou: ['気功', { heal: 50, healPct: .25, mp: 5 }, 2], j_senpuu: ['せんぷう脚', { power: 1.5, mp: 8 }, 2], j_touken: ['灯拳・百れつ', { power: 3.5, mp: 11 }, 3],
+    j_komori: ['こもりうた', { mp: 4 }, 1], j_nagiuta: ['なぎの歌', { heal: 30, healPct: .22, mp: 9 }, 2], j_gassou: ['星灯の大合唱', { power: 1.75, mp: 15 }, 3],
+    j_yuuki: ['勇気の灯', { heal: 30, healPct: .18, mp: 10 }, 3], j_raikou: ['いなずま斬り', { power: 2.7, mp: 8 }, 3], j_hikaritate: ['ひかりの盾', { mp: 8 }, 4], j_tenkuu: ['天空の灯剣', { power: 2.0, mp: 14 }, 4], j_gokui: ['灯火の極み', { power: 4.1, mp: 16 }, 5],
+    j_koban: ['コバン投げ', { power: 2.0 }, 1], j_kobanrain: ['コバンの雨', { power: 1.45 }, 2], j_ooban: ['オオバン投げ', { power: 3.1 }, 3],
+    j_nerai: ['ねらい撃ち', { power: 2.0, mp: 4 }, 1], j_yanoame: ['矢の雨', { power: 1.35, mp: 8 }, 2], j_kariudo10: ['カザネの必中矢', { power: 3.1, mp: 14 }, 3],
+  };
+  for (const [k, [, o, tier]] of Object.entries(RV)) { const sk = DATA.skills[k]; if (!sk) continue; Object.assign(sk, o, { tier }); if (DATA.skillDesc) sk.desc = DATA.skillDesc(sk); } // 名前は names.js の 法則のまま（数値と 格だけ 刷新）
+  const U = (name, o, tier, verb = 'はなった', fx = 'light') => ({ name, tier, verb, fx, ...o });
+  const UPS = {
+    // 灯の守り手（見習い灯守の 上位）
+    u_tm1: U('オアカリ斬り', { type: 'light', power: 2.6, mp: 7, tg: 'enemy' }, 3, 'ふりぬいた'), u_tm2: U('オヌクミス', { heal: 40, healPct: .2, mp: 10, tg: 'party' }, 3, 'ひろげた', 'heal'),
+    u_tm3: U('マモリビス・キヨメ', { buff: 'def', cure: true, mp: 9, tg: 'party' }, 4, 'はった'), u_tm4: U('ゼアカリス', { type: 'light', power: 2.0, mp: 15, tg: 'enemies' }, 4, 'まきおこした'), u_tm5: U('ゼアカリス・千灯', { type: 'light', power: 2.6, mp: 22, tg: 'enemies' }, 5, 'ともした'),
+    // 剣豪（戦士の 上位）
+    u_kg1: U('いあい斬り', { power: 2.9, mp: 6, tg: 'enemy' }, 3, 'はなった', 'slash'), u_kg2: U('オフルイビ', { buff: 'atk', mp: 8, tg: 'party' }, 3, 'とった', 'song'),
+    u_kg3: U('十文字斬り', { power: 1.9, mp: 11, tg: 'enemies' }, 4, 'きりさいた', 'slash'), u_kg4: U('ゼイワネ斬り', { type: 'earth', power: 4.0, mp: 15, tg: 'enemy' }, 4, 'たたきこんだ', 'rock'), u_kg5: U('ゼむそう斬り', { power: 2.7, mp: 22, tg: 'enemies' }, 5, 'みせた', 'slash'),
+    // 大魔法使い（魔法使いの 上位）
+    u_dm1: U('ゼホムラ', { type: 'fire', power: 3.0, mp: 9, tg: 'enemy', magic: true, ail: ['burn', .3] }, 3, 'となえた', 'fire'), u_dm2: U('ゼミナモス', { type: 'water', power: 2.0, mp: 14, tg: 'enemies', magic: true }, 4, 'よびよせた', 'water'),
+    u_dm3: U('ゼカザネス・シガラミ', { type: 'wind', power: 2.2, mp: 16, tg: 'enemies', magic: true, ail: ['para', .3] }, 4, 'おとした'), u_dm4: U('ゼホムラス', { type: 'fire', power: 2.5, mp: 20, tg: 'enemies', magic: true, ail: ['burn', .25] }, 4, 'よびだした', 'fire'),
+    u_dm5: U('ゼアカリス・星くだき', { type: 'light', power: 3.0, mp: 28, tg: 'enemies', magic: true }, 5, 'ふらせた'),
+    // 聖者（僧侶の 上位）
+    u_sj1: U('ゼヌクミ', { heal: 80, healPct: .5, mp: 7, tg: 'ally' }, 3, 'かざした', 'heal'), u_sj2: U('ヌクミス・キヨメ', { heal: 20, cure: true, mp: 6, tg: 'party' }, 3, 'ふらせた', 'heal'),
+    u_sj3: U('オカエリビ', { heal: 20, revive: .6, mp: 18, tg: 'party' }, 4, 'ともした', 'heal'), u_sj4: U('ゼヌクミス・キヨメ', { heal: 60, healPct: .45, cure: true, mp: 18, tg: 'party' }, 4, 'ふらせた', 'heal'),
+    u_sj5: U('ゼアカリス・さばき', { type: 'light', power: 2.4, mp: 22, tg: 'enemies', magic: true }, 5, 'たてた'),
+    // しのび（盗賊の 上位）
+    u_sh1: U('オカゲリ斬り', { type: 'dark', power: 2.8, mp: 6, tg: 'enemy' }, 3, 'しかけた', 'dark'), u_sh2: U('ドクミス', { power: 1.4, mp: 8, tg: 'enemies', ail: ['poison', .45] }, 3, 'まいた', 'dark'),
+    u_sh3: U('ゼカザネ投げ', { type: 'wind', power: 1.9, mp: 12, tg: 'enemies' }, 4, 'なげた', 'wind'), u_sh4: U('ゼホムラの舞', { type: 'fire', power: 2.2, mp: 15, tg: 'enemies', ail: ['burn', .3] }, 4, 'くりだした', 'fire'),
+    u_sh5: U('ゼカゲリ斬り・月かげ', { type: 'dark', power: 4.4, mp: 20, tg: 'enemy' }, 5, 'はなった', 'dark'),
+    // 拳王（武闘家の 上位）
+    u_ko1: U('ばくれつ拳', { power: 3.0, mp: 5, tg: 'enemy' }, 3, 'たたきこんだ', 'slash'), u_ko2: U('オフルイビ', { buff: 'atk', mp: 7, tg: 'party' }, 3, 'はなった', 'song'),
+    u_ko3: U('ゼイワネ蹴り', { type: 'earth', power: 3.4, mp: 10, tg: 'enemy' }, 4, 'くりだした', 'rock'), u_ko4: U('ゼカザネの舞', { type: 'wind', power: 2.2, mp: 14, tg: 'enemies' }, 4, 'くりだした', 'wind'),
+    u_ko5: U('ゼホムラ拳・天元', { type: 'fire', power: 5.0, mp: 20, tg: 'enemy', ail: ['burn', .3] }, 5, 'たたきこんだ', 'fire'),
+    // 星の歌い手（吟遊詩人の 上位）
+    u_ut1: U('オフルイビ', { buff: 'atk', mp: 6, tg: 'party' }, 3, 'かなでた', 'song'), u_ut2: U('オヌクミス・キヨメ', { heal: 50, healPct: .3, cure: true, mp: 12, tg: 'party' }, 3, 'うたった', 'song'),
+    u_ut3: U('オハヤビ', { buff: 'spd', mp: 8, tg: 'party' }, 4, 'かなでた', 'song'), u_ut4: U('ゼアカリス', { type: 'light', power: 2.1, mp: 16, tg: 'enemies', magic: true }, 4, 'ひびかせた', 'song'),
+    u_ut5: U('ゼアカリス・流れ星', { type: 'light', power: 2.6, mp: 22, tg: 'enemies', magic: true, buff: 'atk' }, 5, 'うたいあげた', 'song'),
+    // 大商人（商人の 上位）：ゴールドを つかう 技が 中心
+    u_ds1: U('千両投げ', { gold: 80, mp: 0, power: 3.2, tg: 'enemy' }, 3, 'なげつけた', 'slash'), u_ds2: U('オハヤビ', { buff: 'spd', mp: 6, tg: 'party' }, 3, 'ふかせた', 'song'),
+    u_ds3: U('やとい兵の一撃', { gold: 120, mp: 0, power: 2.0, tg: 'enemies' }, 4, 'よんだ', 'slash'), u_ds4: U('金の あらし', { gold: 250, mp: 0, power: 2.6, tg: 'enemies' }, 4, 'まきあげた'),
+    u_ds5: U('黄金の 大判ぶるまい', { gold: 500, mp: 0, power: 3.4, tg: 'enemies' }, 5, 'ばらまいた'),
+    // 天の狩人（狩人の 上位）
+    u_tk1: U('オカザネ撃ち', { type: 'wind', power: 2.9, mp: 6, tg: 'enemy' }, 3, 'はなった', 'wind'), u_tk2: U('オカザネス・シガラミ', { power: 1.6, mp: 10, tg: 'enemies', ail: ['para', .3] }, 3, 'ふらせた', 'wind'),
+    u_tk3: U('ゼホムラ撃ち', { type: 'fire', power: 3.4, mp: 11, tg: 'enemy', ail: ['burn', .3] }, 4, 'はなった', 'fire'), u_tk4: U('ゼカザネス', { type: 'wind', power: 2.2, mp: 15, tg: 'enemies' }, 4, 'ふらせた', 'wind'),
+    u_tk5: U('ゼアカリ撃ち・流星', { type: 'light', power: 4.6, mp: 20, tg: 'enemy' }, 5, 'はなった'),
+    // 天灯（勇灯の 上位）
+    u_tt1: U('ゼアカリ斬り・聖剣', { type: 'light', power: 3.6, mp: 12, tg: 'enemy' }, 4, 'ふりおろした'), u_tt2: U('オヌクミス・フルイビ', { heal: 60, healPct: .35, buff: 'atk', mp: 18, tg: 'party' }, 4, 'かかげた', 'heal'),
+    u_tt3: U('ゼカザネス・シガラミ', { type: 'wind', power: 2.4, mp: 18, tg: 'enemies', ail: ['para', .25] }, 4, 'ふりぬいた'), u_tt4: U('マモリビス・キヨメ', { buff: 'def', cure: true, mp: 12, tg: 'party' }, 4, 'ひろげた'),
+    u_tt5: U('ゼアカリス・極光', { type: 'light', power: 3.2, mp: 30, tg: 'enemies' }, 5, 'はなった'),
+  };
+  for (const [k, sk] of Object.entries(UPS)) { DATA.skills[k] = sk; if (DATA.skillDesc) sk.desc = DATA.skillDesc(sk); }
+  // 上位職：もとの 職業を マスター（Lv10）すると 就ける。支援能力・防具・武器の 相性は もとの 職業を 引きつぐ
+  const UP = [
+    ['toumori', 'minarai', '灯の守り手', '🏮', '灯守の 道を きわめた 者。 ひかりの 技と まもりで 仲間を ささえる。', { hp: .1, mp: .08, atk: .08, def: .08 }, { regen: .01 }, { hp: .04 }, 'u_tm'],
+    ['kengou', 'senshi', '剣豪', '🗡', '剣の 道を きわめた 戦士。 一太刀で 戦いを かえる。', { hp: .2, atk: .25, def: .12, mp: -.2, spd: -.05 }, { crit: .04 }, { atk: .04 }, 'u_kg'],
+    ['daimahou', 'mahou', '大魔法使い', '🔮', '天の 魔法を あやつる 魔法使いの 頂点。 MPが とても おおい。', { mp: .4, atk: .05, hp: -.05, def: -.05 }, { mpSave: .15 }, { mp: .06 }, 'u_dm'],
+    ['seija', 'souryo', '聖者', '✙', '祈りで たおれた 仲間も よびもどす 聖なる 者。', { mp: .3, hp: .1, def: .1 }, { healUp: .3 }, { healUp: .06 }, 'u_sj'],
+    ['shinobi', 'touzoku', 'しのび', '🌙', 'かげに とけこむ 忍びの 者。 とても すばやく、急所を のがさない。', { spd: .35, atk: .1, hp: -.05 }, { crit: .12 }, { spd: .04 }, 'u_sh'],
+    ['kenou', 'butouka', '拳王', '👊', '拳ひとつで 山をも くだく 武の 王。', { atk: .3, spd: .2, hp: .05, mp: -.25 }, { crit: .14 }, { crit: .03 }, 'u_ko'],
+    ['utahime', 'ginyuu', '星の歌い手', '🎼', '星の 歌で 戦場を つつむ 歌い手。 味方全員が 毎ターン 回復する。', { mp: .25, spd: .15 }, { aura: .03 }, { regen: .015 }, 'u_ut'],
+    ['daishounin', 'shounin', '大商人', '💎', '島じゅうに 名を とどろかせる 大商人。 お金の 技が 豪快に なる。', { hp: .1, def: .1, atk: .05 }, {}, { def: .04 }, 'u_ds'],
+    ['tenkyuu', 'kariudo', '天の狩人', '🌠', '天を かける 矢の 名人。 ねらった 獲物は のがさない。', { spd: .2, atk: .15, mp: -.05 }, { crit: .1 }, { spd: .04 }, 'u_tk'],
+    ['tentou', 'yuutou', '天灯', '🌟', '勇灯を きわめた 者だけが とどく、天の 灯。 すべてが とても たかい。', { hp: .2, mp: .15, atk: .2, def: .15, spd: .15 }, { crit: .05, regen: .03 }, { hp: .05, atk: .05 }, 'u_tt'],
+  ];
+  for (const [id, base, name, icon, desc, mul, pas, mb, pre] of UP) DATA.jobs.push({ id, up: base, name, icon, desc, mul, pas, mb, sk: [2, 4, 6, 8, 10].map((l, i) => [l, pre + (i + 1)]) });
   // ---------- v9：職業ツリー（SPで 覚える・転職で 返金）と そうびの 種類 ----------
   // 技マス：職業Lv 2/4/6/8/10 で ひらき、1/2/2/3/4 SP。 能力マス：職業Lv3（1SP）・Lv7（2SP）
   const PASS = {
@@ -120,6 +190,12 @@
     mahou: [['staff'], ['cloth', 'robe']], souryo: [['staff', 'mace'], ['cloth', 'robe', 'shield']], touzoku: [['dagger', 'bow'], ['cloth', 'light']],
     butouka: [['fist'], ['cloth', 'light']], ginyuu: [['harp', 'fan', 'bow'], ['cloth', 'light', 'robe']], yuutou: [['sword', 'spear', 'axe', 'mace', 'staff', 'dagger'], ['light', 'heavy', 'robe', 'shield']] };
   const WPN = { shounin: 'dagger', kariudo: 'bow', minarai: 'sword', senshi: 'sword', mahou: 'staff', souryo: 'staff', touzoku: 'dagger', butouka: 'fist', ginyuu: 'harp', yuutou: 'sword' };
+  const UPASS = { toumori: [['灯の からだ', '最大HP +8%', { hp: .08 }], ['灯の 心', '毎ターン HP 2% 回復', { regen: .02 }]], kengou: [['剣の 気', 'こうげき +6%', { atk: .06 }], ['見切り', '会心の 確率 アップ', { crit: .05 }]],
+    daimahou: [['大魔力', '最大MP +12%', { mp: .12 }], ['高速詠唱', '消費MP −10%', { mpSave: .1 }]], seija: [['慈愛', '回復量 +15%', { healUp: .15 }], ['加護', '毎ターン HP 2% 回復', { regen: .02 }]],
+    shinobi: [['疾風', 'すばやさ +8%', { spd: .08 }], ['急所', '会心の 確率 アップ', { crit: .05 }]], kenou: [['剛拳', 'こうげき +7%', { atk: .07 }], ['不動', 'ぼうぎょ +6%', { def: .06 }]],
+    utahime: [['声量', '最大MP +10%', { mp: .1 }], ['合唱', '味方全員 毎ターン HP 1% 回復', { aura: .01 }]], daishounin: [['財力', 'ぼうぎょ +6%', { def: .06 }], ['旅の 達人', '最大HP +8%', { hp: .08 }]],
+    tenkyuu: [['鷹の 目', '会心の 確率 アップ', { crit: .05 }], ['風の 足', 'すばやさ +8%', { spd: .08 }]], tentou: [['天の からだ', '最大HP +6%', { hp: .06 }], ['天の 技', 'こうげき +6%', { atk: .06 }]] };
+  for (const j of DATA.jobs) if (j.up) { PASS[j.id] = UPASS[j.id] || PASS[j.up]; EQ[j.id] = EQ[j.up]; WPN[j.id] = WPN[j.up]; }
   for (const j of DATA.jobs) { const P = PASS[j.id] || [];
     j.tree = [...j.sk.map(([l, s], i) => ({ id: `${j.id}_${i}`, jl: l, cost: SKC[l] || 2, skill: s })), ...P.map(([name, desc, eff], i) => ({ id: `${j.id}_p${i}`, jl: i ? 7 : 3, cost: i ? 2 : 1, name, desc, eff }))].sort((a, b) => a.jl - b.jl);
     j.eqW = (EQ[j.id] || [[], []])[0]; j.eqA = (EQ[j.id] || [[], []])[1]; j.wpn = WPN[j.id]; }
@@ -128,6 +204,7 @@
   const AFF = { minarai: {}, senshi: { sora: 1.15, mio: .9, riku: 1.15, sana: .9, haru: .9, kaito: 1.15 }, mahou: { sora: .9, riku: .9, sana: 1.15, kaito: .9 },
     souryo: { sora: .9, riku: .9, sana: 1.15, haru: .9 }, touzoku: { sora: 1.15, mio: .9, sana: .9, haru: 1.15, kaito: .9 }, butouka: { mio: .9, sana: .9, kaito: .9 },
     ginyuu: { sora: .9, mio: 1.15, riku: .9, haru: 1.15, kaito: .9 }, shounin: { kaito: .9 }, kariudo: { riku: 1.15, haru: 1.15, sana: .9, mio: .9 }, yuutou: { sora: 1.15, riku: 1.15, kaito: 1.15 } };
+  for (const j of DATA.jobs) if (j.up) AFF[j.id] = AFF[j.up] || {};
   const affOf = (id, jid) => (AFF[jid] || {})[id] || 1;
   const affTxt = v => v > 1 ? '◎ 得意（武器の こうげき ×1.15）' : v < 1 ? '△ 苦手（武器の こうげき ×0.9）' : '○ ふつう';
   K.weaponAff = (m, jid) => affOf(m.id, jid || (rec(m.id).cur));
@@ -148,11 +225,23 @@
   const lvFromJp = jp => { let l = 1; while (l < MAXLV && jp >= NEED[l + 1]) l++; return l; };
   function rec(id, lv0) { const g = G(); if (!g.job || typeof g.job !== 'object') g.job = {};
     let r = g.job[id]; if (!r || typeof r !== 'object') { const m = (g.party || []).find(x => x.id === id); const jp0 = Math.min(NEED[MAXLV], Math.floor((lv0 || (m && m.lv) || 1) * 1.5));
-      r = g.job[id] = { cur: 'minarai', lv: { minarai: lvFromJp(jp0) }, jp: { minarai: jp0 } }; }
+      r = g.job[id] = { cur: 'minarai', lv: { minarai: lvFromJp(jp0) }, jp: { minarai: jp0 }, xp: {}, v2: 1 }; }
     if (!r.lv) r.lv = {}; if (!r.jp) r.jp = {}; if (!r.tree || typeof r.tree !== 'object') r.tree = {}; if (!JOB[r.cur]) r.cur = 'minarai'; return r; }
   const jlv = (r, j) => r.lv[j] || 1;
-  const mastered = r => DATA.jobs.filter(j => !j.adv && jlv(r, j.id) >= MAXLV).length;
-  const unlocked = (r, j) => !j.adv || mastered(r) >= j.adv;
+  const mastered = r => DATA.jobs.filter(j => !j.adv && !j.up && jlv(r, j.id) >= MAXLV).length;
+  const unlocked = (r, j) => j.up ? jlv(r, j.up) >= MAXLV : (!j.adv || mastered(r) >= j.adv);
+  const lockOf = (r, j) => j.up ? `${JOB[j.up].name}を マスター（Lv${MAXLV}）すると 就ける` : `ほかの 職業を ${j.adv}つ マスター（Lv${MAXLV}）すると 就ける（いま ${mastered(r)}/${j.adv}）`;
+  // v11：職業の 経験は、ふつうの 経験値と いっしょに たまる（別の 稼ぎ方は ない）。必要量は いまの レベルの 1レベル分 × 係数（上の 職業Lvほど 重い）
+  const needE = lv => Math.round(10 * Math.pow(lv, 1.5));
+  const totE = m => { let t = m.exp || 0; for (let l = 1; l < (m.lv || 1); l++) t += needE(l); return t; };
+  const FJ = [0, 0, 1.0, 1.1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.3, 2.6];
+  const needJ = (jid, l, lv) => { const j = JOB[jid] || {}; return Math.max(1, Math.round(needE(Math.max(1, lv)) * FJ[Math.min(MAXLV, l + 1)] * (j.up ? 1.4 : j.adv ? 1.2 : 1))); };
+  const progOf = (r, jid, m) => { const l = jlv(r, jid); if (l >= MAXLV) return 100; return Math.max(0, Math.min(99, Math.floor(((r.xp || {})[jid] || 0) / needJ(jid, l, (m && m.lv) || 1) * 100))); };
+  // 経験を 職業へ（seen＝前回 見た 経験値の 合計。差分だけ 足す）
+  function feedJob(m, r) { const t = totE(m); if (r.seen == null || t < r.seen) { r.seen = t; return 0; } const gain = t - r.seen; r.seen = t; if (!gain) return 0;
+    const id = r.cur; r.xp = r.xp || {}; r.xp[id] = (r.xp[id] || 0) + gain; let up = 0;
+    while (jlv(r, id) < MAXLV && r.xp[id] >= needJ(id, jlv(r, id), m.lv)) { r.xp[id] -= needJ(id, jlv(r, id), m.lv); r.lv[id] = jlv(r, id) + 1; up++; }
+    if (jlv(r, id) >= MAXLV) r.xp[id] = 0; return up; }
   // いまの 職業ツリーで SPを 払って 覚えた マス（転職すると 返金されて 消える）
   const ownNodes = r => ((r.tree && r.tree[r.cur]) || []).map(id => JOB[r.cur].tree.find(n => n.id === id)).filter(Boolean);
   const learnedOf = r => ownNodes(r).filter(n => n.skill && DATA.skills[n.skill]).map(n => n.skill);
@@ -184,7 +273,8 @@
   const grantJobSp = (g, id, r) => { const want = jobSp(r), got = r.spGot || 0; if (want > got) { g.sp[id] = (g.sp[id] || 0) + (want - got); r.spGot = want; return want - got; } return 0; };
   const fixAll = g => { if (!g.job || typeof g.job !== 'object') g.job = {}; if (!g.sp) g.sp = {};
     for (const m of g.party || []) { if (!HUMANS.includes(m.id)) continue; const r = rec(m.id);
-      for (const k of Object.keys(r.jp)) { if (!JOB[k]) { delete r.jp[k]; delete r.lv[k]; continue; } r.jp[k] = Math.max(0, Math.min(NEED[MAXLV], +r.jp[k] || 0)); r.lv[k] = lvFromJp(r.jp[k]); }
+      if (!r.v2) { for (const k of Object.keys(r.jp)) { if (!JOB[k]) { delete r.jp[k]; delete r.lv[k]; continue; } r.jp[k] = Math.max(0, Math.min(NEED[MAXLV], +r.jp[k] || 0)); r.lv[k] = lvFromJp(r.jp[k]); } r.v2 = 1; } /* v11：職業Lvは そのまま 引きつぐ */
+      r.xp = r.xp && typeof r.xp === 'object' ? r.xp : {}; for (const k of Object.keys(r.lv)) { if (!JOB[k]) { delete r.lv[k]; delete r.xp[k]; continue; } r.lv[k] = Math.max(1, Math.min(MAXLV, Math.floor(+r.lv[k] || 1))); }
       if (!unlocked(r, JOB[r.cur])) r.cur = 'minarai';
       for (const k of Object.keys(r.tree)) { if (!JOB[k] || k !== r.cur) { const c = treeCost(r, k); if (c) g.sp[m.id] = (g.sp[m.id] || 0) + c; delete r.tree[k]; continue; } r.tree[k] = [...new Set(r.tree[k])].filter(id => JOB[k].tree.some(n => n.id === id)); }
       grantJobSp(g, m.id, r);
@@ -204,22 +294,21 @@
     const hr = m.st.hp ? m.hp / m.st.hp : 1, mr = m.st.mp ? m.mp / m.st.mp : 1;
     if (!o.free) G().gold -= p.fee;
     if (p.refund) G().sp[m.id] = (G().sp[m.id] || 0) + p.refund; r.tree[r.cur] = []; delete r.tree[r.cur];
-    r.cur = id; if (r.jp[id] == null) { r.jp[id] = 0; r.lv[id] = 1; }
+    r.cur = id; if (r.lv[id] == null) { r.jp[id] = 0; r.lv[id] = 1; } r.xp = r.xp || {}; if (r.xp[id] == null) r.xp[id] = 0;
     const msgs = K.bal && K.bal.refit ? K.bal.refit(m) : [];
     K.calc(m); m.hp = Math.max(1, Math.min(m.st.hp, Math.round(m.st.hp * hr))); m.mp = Math.min(m.st.mp, Math.round(m.st.mp * mr)); return { ...p, msgs }; }
   const preview = (m, id) => { const r = rec(m.id), was = r.cur, t = r.tree[was]; r.cur = id; r.tree[was] = []; const c = { ...m, __eq: K.bal && K.bal.refitEq ? K.bal.refitEq(m, id) : null }; K.calc(c); r.cur = was; r.tree[was] = t; return c; };
 
   // ---------- JP：たたかいの あと ----------
   H.battleEnd.push(async (result, specs, opts, P) => { if (result !== 'win' || !open()) return;
-    const boss = !!(opts && opts.boss) || (specs || []).some(s => s && s.boss);
-    const gain = 1 + Math.min(3, (specs || []).length) + (boss ? 10 : 0);
     const lines = []; let up = false, loot = false;
     for (const m of P || []) { if (m.kind !== 'human' || !HUMANS.includes(m.id)) continue; const r = rec(m.id), id = r.cur, j = JOB[id];
-      const l0 = jlv(r, id); r.jp[id] = Math.min(NEED[MAXLV], (r.jp[id] || 0) + gain); const l1 = lvFromJp(r.jp[id]); r.lv[id] = l1;
+      const l0 = jlv(r, id); feedJob(m, r); const l1 = jlv(r, id);
       if (l1 > l0) { up = true; const hr = m.hp / m.st.hp, mr = m.st.mp ? m.mp / m.st.mp : 1; const spg = grantJobSp(G(), m.id, r); K.calc(m); m.hp = Math.max(1, Math.round(m.st.hp * hr)); m.mp = Math.round(m.st.mp * mr);
         const opened = j.tree.filter(n => n.jl > l0 && n.jl <= l1).map(nodeName);
         lines.push(`${K.esc(K.nameOf(m))}：${j.name} Lv${l1}${l1 >= MAXLV ? '（マスター！）' : ''}　<b>SP +${spg}</b>${opened.length ? `　ツリーで ひらいた：${opened.join('・')}` : ''}`);
-        if (l1 >= MAXLV && JOB.yuutou && mastered(r) === JOB.yuutou.adv && jlv(r, 'yuutou') < 2) lines.push(`${K.esc(K.nameOf(m))}は「勇灯」に 転職 できるように なった！`); }
+        if (l1 >= MAXLV && JOB.yuutou && !j.up && !j.adv && mastered(r) === JOB.yuutou.adv && jlv(r, 'yuutou') < 2) lines.push(`${K.esc(K.nameOf(m))}は「勇灯」に 転職 できるように なった！`);
+        if (l1 >= MAXLV) { const u = DATA.jobs.find(x => x.up === id); if (u) lines.push(`${K.esc(K.nameOf(m))}は 上位職「${u.name}」に 転職 できるように なった！`); } }
       if (j.loot && !loot && R() < j.loot) { loot = true; let t = R() * LOOT.reduce((a, x) => a + x[1], 0); let it = 'mi'; for (const [k, w] of LOOT) if ((t -= w) < 0) { it = k; break; }
         if (DATA.items[it]) { K.gain(it); lines.push(`${K.esc(K.nameOf(m))}は ${DATA.items[it].name}を 見つけた！（盗賊）`); } } }
     if (up) { try { Music.sfx('friend'); } catch (e) {} }
@@ -273,27 +362,27 @@
     const face = m => `<span class="fc">${Art.portrait(m.id, 'smile')}</span>`;
     const paint = () => { const m = party[mi], r = rec(m.id); if (sel < 0) sel = DATA.jobs.findIndex(j => j.id === r.cur); const j = DATA.jobs[sel], lvj = jlv(r, j.id), jp = r.jp[j.id] || 0;
       const ok = unlocked(r, j), isCur = r.cur === j.id;
-      const bar = (jj) => { const l = jlv(r, jj.id), p = r.jp[jj.id] || 0; return l >= MAXLV ? 100 : Math.max(0, Math.min(100, (p - NEED[l]) / (NEED[l + 1] - NEED[l]) * 100)); };
+      const bar = (jj) => progOf(r, jj.id, m);
       const after = isCur || !ok ? null : preview(m, j.id);
       const stRows = ['hp', 'mp', 'atk', 'def', 'spd'].map(k => { const a = m.st[k], b = after ? after.st[k] : a, d = b - a;
         return `<tr><td>${SN[k]}</td><td>${a}</td>${after ? `<td>→</td><td class="${d > 0 ? 'up' : d < 0 ? 'dn' : 'eq'}">${b}　${d > 0 ? '▲' + d : d < 0 ? '▼' + (-d) : '±0'}</td>` : '<td></td><td></td>'}</tr>`; }).join('');
       const ownIds = (r.tree[r.cur] || []);
       const skl = treeHtml(m, j, isCur, ownIds);
       const plan = !isCur && ok ? planChange(m, j.id) : null;
-      const lockTxt = !ok ? `🔒 ほかの 職業を ${j.adv}つ マスター（Lv${MAXLV}）すると 就ける（いま ${mastered(r)}/${j.adv}）` : '';
+      const lockTxt = !ok ? `🔒 ${lockOf(r, j)}` : '';
       const poor = plan && (g.gold || 0) < plan.fee;
-      const btn = isCur ? '<span class="eq">いまの 職業</span>' : !ok ? `<span class="jlock">🔒 ${j.adv}職 マスターで 解放（${mastered(r)}/${j.adv}）</span>`
+      const btn = isCur ? '<span class="eq">いまの 職業</span>' : !ok ? `<span class="jlock">🔒 ${j.up ? `${JOB[j.up].name} マスターで 解放` : `${j.adv}職 マスターで 解放（${mastered(r)}/${j.adv}）`}</span>`
         : !open() ? '<span class="jlock">第1章クリアで 転職 できる</span>'
         : !canChange() ? '<span class="eq">転職は 町の 石像の そばで</span>'
         : `<button class="buy" data-go="1" ${poor ? 'disabled' : ''}>${armed ? `本当に ${j.name}に 転職する？` : `${j.name}に 転職（${plan.fee}G）`}</button>`;
       const planHtml = plan ? `<div class="jplan"><b>転職すると</b>：SP <em class="up">+${plan.refund} もどる</em>（${JOB[r.cur].name}ツリー）　手数料 <em class="${poor ? 'dn' : ''}">${plan.fee}G</em>${plan.lost.length ? `<br>わすれる 技：${plan.lost.join('・')}` : ''}${plan.eq.length ? `<br>そうび：${plan.eq.join('／')}` : ''}<br><small>もとの 能力値・固有わざ・個性ボードは そのまま。 ${j.name}の ツリーは SPで 覚えなおす。</small></div>` : '';
       const eqCats = `<div class="st-eq" style="margin-top:0">着られる 防具：${K.bal ? K.bal.catNames(j.eqA) : j.eqA.join('・')}（武器は キャラ専用で、どの 職業でも そうびできる）</div>`;
       el.innerHTML = `<button class="m-x solo" type="button" aria-label="とじる">✕</button>
-        <h3>しょくぎょう <small>${line || (canChange() ? '転職の 石像：職業を えらんで 転職できる（覚えた 技は のこる）' : '職業レベルは たたかいに 勝つと あがる')}</small></h3>
+        <h3>しょくぎょう <small>${line || (canChange() ? '転職の 石像：職業を えらんで 転職できる（覚えた 技は のこる）' : '職業レベルは 経験値と いっしょに ゆっくり あがる')}</small></h3>
         <div class="tabs">${party.map((p, i) => `<button class="tab${i === mi ? ' on' : ''}" data-m="${i}">${face(p)}${K.esc(K.nameOf(p))}</button>`).join('')}</div>
         <div class="shop-body"><div class="slist">${DATA.jobs.map((jj, i) => { const l = jlv(r, jj.id), u = unlocked(r, jj), c = r.cur === jj.id;
-          return `<button class="srow jrow${i === sel ? ' on' : ''}${u ? '' : ' dis'}" data-i="${i}"><span class="ji">${u ? jj.icon : '🔒'}</span><span>${jj.name}${c ? '<i class="now">いま</i>' : ''}<small>${u ? (l >= MAXLV ? '★マスター' : `JP ${r.jp[jj.id] || 0}/${NEED[l + 1]}`) : `${jj.adv}職 マスターで 解放`}</small><div class="xp"><i style="width:${bar(jj)}%"></i></div></span><span class="pr">Lv${l}</span></button>`; }).join('')}</div>
-        <div class="sdet"><h4>${j.icon} ${j.name}　<small class="xpn">Lv${lvj}${lvj >= MAXLV ? '（マスター）' : `　つぎまで ${NEED[lvj + 1] - jp}JP`}</small>${btn}</h4>
+          return `<button class="srow jrow${i === sel ? ' on' : ''}${u ? '' : ' dis'}" data-i="${i}"><span class="ji">${u ? jj.icon : '🔒'}</span><span>${jj.name}${c ? '<i class="now">いま</i>' : ''}<small>${u ? (l >= MAXLV ? '★マスター' : `Lv${l}　つぎまで ${progOf(r, jj.id, m)}%`) : jj.up ? `${JOB[jj.up].name} マスターで 解放` : `${jj.adv}職 マスターで 解放`}</small><div class="xp"><i style="width:${bar(jj)}%"></i></div></span><span class="pr">Lv${l}</span></button>`; }).join('')}</div>
+        <div class="sdet"><h4>${j.icon} ${j.name}　<small class="xpn">Lv${lvj}${lvj >= MAXLV ? '（マスター）' : `　つぎの Lvまで ${progOf(r, j.id, m)}%`}</small>${btn}</h4>
           <div>${j.desc}</div>${!ok ? `<div class="jlock">${lockTxt}</div>` : ''}<div class="jeff">職業の 効果：${effTxt(j)}</div><div class="jeff">${esc0(DATA.gear[m.id] ? '武器の 相性：' + affTxt(affOf(m.id, j.id)) : '')}</div><div class="st-eq" style="margin-top:0">マスター特典（ずっと）：${mbTxt(j)}${lvj >= MAXLV ? ' ✓' : ''}</div>${eqCats}${planHtml}
           <div class="jcols"><div><div class="cmp-row">${face(m)}<span>${K.esc(K.nameOf(m))}　Lv${m.lv}<br><small class="xpn">いま：${JOB[r.cur].name} Lv${jlv(r, r.cur)}　SP ${g.sp[m.id] || 0}</small></span><span></span></div><table class="jst">${stRows}</table></div>
           <div><div class="st-eq" style="margin:0 0 2px">${isCur ? `職業ツリー（SPで 覚える・のこり <b>${g.sp[m.id] || 0}</b>SP）` : '職業ツリー（転職すると SPで 覚えられる）'}</div><ul class="jsk jtree">${skl}</ul></div></div>
@@ -352,6 +441,22 @@
     paint(); K.$('ui').appendChild(el); K.MENUS.push(M); }); }
   K.skillUI = skillUI; H.skillUI = skillUI;
 
+  // ---------- v11：技の 格（tier）の 演出：2＝光、3＝金の カットイン＋フラッシュ、4＝光の すじ＋ゆれ、5＝虹の カットイン＋大ゆれ ----------
+  const tcss = document.createElement('style');
+  tcss.textContent = `.cutin.tier3{background:linear-gradient(90deg,rgba(90,60,10,.95),rgba(255,200,80,.55) 70%,transparent)!important;box-shadow:0 0 24px #ffd36a}.cutin.tier3 b{color:#fff3c0}
+  .cutin.tier4{height:clamp(76px,26vh,116px)!important;background:repeating-linear-gradient(100deg,rgba(255,230,140,.0) 0 18px,rgba(255,230,140,.35) 18px 22px),linear-gradient(90deg,rgba(120,40,10,.95),rgba(255,150,60,.6) 70%,transparent)!important;box-shadow:0 0 34px #ffb04a}.cutin.tier4 b{font-size:clamp(18px,6vh,26px)!important;color:#fff}
+  .cutin.tier5{height:clamp(84px,30vh,130px)!important;background:linear-gradient(90deg,#ff5a7a,#ffb14a,#ffe95a,#6ae8a0,#5ab4ff,#b07aff)!important;box-shadow:0 0 44px #fff;animation-duration:1.1s!important}.cutin.tier5 b{font-size:clamp(20px,7vh,30px)!important;color:#fff;text-shadow:0 0 8px #000,0 2px 0 #000}
+  body.calm .cutin.tier4,body.calm .cutin.tier5{box-shadow:none}`;
+  document.head.appendChild(tcss);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  H.skillTier = async (a, s, U) => { const t = s.tier || 1; if (t < 2) return; const ci = [...document.querySelectorAll('#battle .cutin')].pop(); if (ci && t >= 3) ci.classList.add('tier' + Math.min(5, t));
+    const calm = document.body.classList.contains('calm');
+    try { Music.sfx(t >= 3 ? 'crit' : 'sparkle'); } catch (e) {}
+    if (t >= 3) U.screenFx('white'); U.kick(Math.min(2.2, .3 + t * .35));
+    if (t >= 4 && !calm) { U.buzz && U.buzz([40, 30, 60]); await sleep(160); U.screenFx('white'); try { Music.sfx('magic'); } catch (e) {} }
+    if (t >= 5 && !calm) { await sleep(200); U.kick(2.4); try { Music.sfx('sparkle'); } catch (e) {} await sleep(150); } };
+  K.jobTier = { needJ, progOf, feedJob: (m) => feedJob(m, rec(m.id)), unlocked: (id, jid) => unlocked(rec(id), JOB[jid]) };
+
   // ---------- メニュー ----------
   H.menu.push(() => { const s = G().party.find(m => m.id === 'sora'); const r = s ? rec('sora') : null;
     return { label: 'しょくぎょう', sub: !open() ? '第1章クリアで 解放' : r ? `${JOB[r.cur].name} Lv${jlv(r, r.cur)}` : '',
@@ -380,7 +485,7 @@
     if (!open()) { await K.say(['石像の 台座に、古い 文字が きざまれている。', '「灯の 道を ひとつ 越えし 者、ここで あらたな 道を えらべ」', '（第1章を クリアすると 転職 できるように なる）']); return; }
     const g = G(); if (!g.tips.jobIntro) { g.tips.jobIntro = 1;
       await K.say(['石像の 台座が、あたたかく 光っている……。', '【転職】 仲間の 職業を かえられる。 職業ごとに 能力と 覚える 技が ちがう。',
-        '職業レベルは たたかいに 勝つと もらえる JPで あがる（ボスは たくさん）。', '覚えた 技は 転職しても のこる。 二つの 職業を マスターすると……？']); }
+        '職業レベルは、たたかいで もらう 経験値と いっしょに ゆっくり あがる。', '職業を マスターすると、その 上位職に 就ける。 二つの 職業を マスターすると……？']); }
     await jobUI({ change: true }); K.save(); };
   H.fx.push((fx) => { if (!open()) return; const s = SPOT[G().region]; if (!s || Math.hypot(K.player.x - s.x, K.player.z - s.z) > 60) return;
     const y = K.surfaceAt(s.x, s.z, 99); fx.push({ type: 1, p: [s.x, y + .4, s.z], size: [1.6, 1.6], grow: 1.2, tint: [1, .85, .5] }); });

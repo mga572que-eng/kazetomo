@@ -1676,7 +1676,7 @@ async function runBattle(specs, opts = {}) {
   const enc = bAdd('b-enc' + (opts.boss ? ' boss' : ''), '<i></i>', document.body); enc.style.setProperty('--bs', sp0);
   setTimeout(() => Music.sfx('swoosh'), 180 / sp0); await wait((opts.boss ? 860 : 660) / sp0);
   const bsong = opts.song || (opts.boss ? 'boss' : 'battle'); if (!opts.keepMusic || Music.current !== bsong) Music.play(bsong, { restart: true, cut: true });
-  const P = battleParty(); const F = specs.map(mkFoe); B.P = P; B.F = F; B.fxSkip = false; $('bfx').style.setProperty('--bs', sp0); $('bfx').innerHTML = '';
+  const P = battleParty(); const F = specs.map(mkFoe); B.P = P; B.F = F; B.aiPlan = m => aiPlan(m); /* 検査用 */ B.fxSkip = false; $('bfx').style.setProperty('--bs', sp0); $('bfx').innerHTML = '';
   const cnt = {}; F.forEach(f => cnt[f.name] = (cnt[f.name] || 0) + 1); const seen = {}; F.forEach(f => { if (cnt[f.name] > 1) { seen[f.name] = (seen[f.name] || 0) + 1; f.name += 'ABCD'[seen[f.name] - 1]; } });
   F.forEach(f => { if (f.sp) G.dex.seen[f.sp] = 1; });
   P.forEach(m => { m.defUp = 0; m.atkUp = 0; m.spdUp = 0; m.sleep = 0; m.guard = false; m.slow = 0; m.ail = null; });
@@ -1720,7 +1720,7 @@ async function runBattle(specs, opts = {}) {
   const reviveDown = (L, s) => L.filter(t => t.hp <= 0).map(t => { t.hp = Math.max(1, Math.round(t.st.hp * (s.revive || .3))); t.ail = null; t.sleep = 0; return t; });
   const cureAll = T => { let any = false; for (const t of T) { if (t.ail || t.sleep > 0) { t.ail = null; t.sleep = 0; any = true; } } return any; };
   const combosFor = m => (DATA.combos || []).filter(c => (c.a === m.id || c.b === m.id || c.b === m.uid)).map(c => ({ c, partner: P.find(x => (x.id === (c.a === m.id ? c.b : c.a) || x.uid === (c.a === m.id ? c.b : c.a))) })).filter(o => o.partner && o.partner.hp > 0 && !(o.partner.sleep > 0) && m.mp >= o.c.mp && o.partner.mp >= o.c.mp);
-  let turnN = 0;
+  let turnN = 0; const planned = new Map(); let planTurn = -1;
   function aiPlan(m) {
     const mode = strategy().id, threshold = mode === 'heal' ? .75 : mode === 'save' ? .25 : mode === 'attack' ? .3 : .5;
     const hurt = aliveP().filter(a => a.hp < a.st.hp * threshold).sort((a,b) => a.hp/a.st.hp-b.hp/b.st.hp);
@@ -1740,15 +1740,27 @@ async function runBattle(specs, opts = {}) {
     if (mode !== 'save' && Fs.some(f => f.boss) && turnN % 3 === 2) { const cb = combosFor(m).find(o => o.c.power); if (cb) return { type: 'combo', c: cb.c, partner: cb.partner, t: Fs[0] }; }
     if (A.some(a => a.ail === 'poison' || a.ail === 'burn') && !A.some(a => a.hp < a.st.hp * .45)) { const cs = m.skills.find(sid => DATA.skills[sid].cure && can(sid)); if (cs) return { type: 'skill', s: cs, t: null }; }
     if (mode !== 'save' && mode !== 'attack' && Fs.some(f => f.boss) && !A.some(a => a.hp < a.st.hp * .45)) { for (const [sid, key] of [['mamori', 'defUp'], ['hagemashi', 'atkUp'], ['oikaze', 'spdUp']]) if (m.skills.includes(sid) && can(sid) && !A.some(a => a[key] > 1)) return { type: 'skill', s: sid, t: null }; }
-    const est = (pow, type, magic, f) => (m.st.atk * pow - f.def * (magic ? .25 : .5)) * DATA.typeMul(type, f.type);
+    // v11：むだうち しない おまかせ。とどめに 足りる いちばん 安い 手を えらび、同じ ターンに 仲間が ねらった ぶんを 差し引く。残り1体には 全体技を つかわない
+    const est = (pow, type, magic, f) => Math.max(1, ((m.atkUp > 0 ? 1.4 : 1) * m.st.atk * pow * (magic ? .95 : 1) - f.def * (magic ? .25 : .5)) * DATA.typeMul(type, f.type) * .9);
+    if (planTurn !== turnN) { planTurn = turnN; planned.clear(); }
+    const left = f => f.hp - (planned.get(f) || 0), live = Fs.filter(f => left(f) > 0), T0 = live.length ? live : Fs;
+    const book = (t, d) => { for (const f of (t ? [t] : T0)) planned.set(f, (planned.get(f) || 0) + Math.min(d, Math.max(0, left(f)))); };
+    const boss = Fs.some(f => f.boss), k = mode === 'attack' ? .025 : boss ? .02 : .06; // MPを どれだけ 惜しむか
+    const opts = [{ sid: null, cost: 0, pow: 1, type: null, magic: false, aoe: false }];
+    if (mode !== 'save') for (const sid of m.skills) { const sk = DATA.skills[sid]; if (!sk.power || !can(sid)) continue; opts.push({ sid, cost: costOf(m, sid), pow: sk.power, type: sk.type, magic: sk.magic, aoe: sk.tg === 'enemies' || sk.tg === 'all' }); }
+    const act = (o, t) => o.sid ? { type: 'skill', s: o.sid, t: o.aoe ? null : t } : { type: 'atk', t };
+    // 1) たおせる 相手が いれば、たおせる いちばん 安い 手（同じ なら 体力の 多い 相手）
+    let pick = null;
+    for (const o of opts) { if (o.aoe) continue; for (const f of T0) { const d = est(o.pow, o.type, o.magic, f); if (d >= left(f) && (!pick || o.cost < pick.o.cost || (o.cost === pick.o.cost && left(f) > left(pick.f)))) pick = { o, f, d }; } }
+    // 2) 2体以上 のこっていれば 全体技も 候補（ねらえる 体力までしか 数えない）
     let best = null, bs = -1e9;
-    for (const f of Fs) { const v = est(1, null, false, f); if (v > bs) { bs = v; best = { type: 'atk', t: f }; } }
-    const base = bs;
-    if (mode === 'save') return best;
-    for (const sid of m.skills) { const sk = DATA.skills[sid]; if (!sk.power || !can(sid)) continue;
-      if (sk.tg === 'enemies') { const v = Fs.reduce((a, f) => a + Math.max(1, est(sk.power, sk.type, sk.magic, f)), 0); if (v > bs && v > base * 1.3) { bs = v; best = { type: 'skill', s: sid, t: null }; } }
-      else for (const f of Fs) { const v = est(sk.power, sk.type, sk.magic, f); if (v > bs && v > base * 1.3) { bs = v; best = { type: 'skill', s: sid, t: f }; } } }
-    return best; }
+    for (const o of opts) { const val = o.aoe ? (T0.length >= 2 ? T0.reduce((a, f) => a + Math.min(est(o.pow, o.type, o.magic, f), left(f)), 0) : -1) : Math.max(...T0.map(f => Math.min(est(o.pow, o.type, o.magic, f), left(f))));
+      if (val <= 0) continue; const sc = val / (1 + o.cost * k); if (sc > bs) { bs = sc; best = o; } }
+    if (pick && !(best && best.aoe && T0.filter(f => est(best.pow, best.type, best.magic, f) >= left(f)).length >= 2 && best.cost <= pick.o.cost + 8)) { book(pick.f, pick.d); return act(pick.o, pick.f); }
+    if (!best) best = opts[0];
+    if (best.aoe) { for (const f of T0) book(f, est(best.pow, best.type, best.magic, f)); return act(best, null); }
+    let tf = T0[0], tv = -1; for (const f of T0) { const v = Math.min(est(best.pow, best.type, best.magic, f), left(f)) * (f.boss ? 1.1 : 1); if (v > tv) { tv = v; tf = f; } }
+    book(tf, est(best.pow, best.type, best.magic, tf)); return act(best, tf); }
   async function chooseFor(m, canBack) {
     const nm0 = esc(nameOf(m));
     while (true) {
@@ -1805,6 +1817,7 @@ async function runBattle(specs, opts = {}) {
     redraw(); actorOn(a, `${nameOr(a)}の ${s.name}！`); castStart(a, el, big); if (isFoe) cryOf(a, { vol: .8 }); if (big) screenFx(s.fx || (el === 'heal' ? 'heal' : 'light'));
     try {
     if (!isFoe && a.kind === 'human') { const ci = bAdd('cutin', `<div class="ci-face">${Art.portrait(a.id, 'determined')}</div><b>${esc(s.name)}</b>`); ci.style.setProperty('--bs', bspd()); setTimeout(() => ci.remove(), 950 / bspd()); }
+    if (!isFoe && s.tier && HOOK.skillTier) try { await HOOK.skillTier(a, s, { screenFx, kick, buzz, bAdd }); } catch (e) { console.error(e); } // v11：技の 格で 演出を 豪華に（jobs.js）
     await bmsg(`${nameOr(a)}は ${s.name}を ${s.verb || 'はなった'}！`, 250);
     const foesOf = () => isFoe ? aliveP() : aliveF(), alliesOf = () => isFoe ? aliveF() : aliveP();
     if (s.power) { const T = (s.tg === 'enemies' || s.tg === 'all') ? foesOf() : [tgt && tgt.hp > 0 && tgt.foe !== !!isFoe ? tgt : foesOf()[Math.floor(R() * foesOf().length)]];
