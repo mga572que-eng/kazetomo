@@ -584,7 +584,7 @@ function hud() {
 }
 function stamHud() { const s = $('stam'), f = Math.max(0, Math.min(1,G.stam/G.stamMax));
   s.style.setProperty('--f',f.toFixed(3)); s.classList.toggle('low',f<.25||player.tired); s.classList.remove('full');
-  s.style.left='';s.style.top='';const key=Math.ceil(G.stam)+':'+G.stamMax;if(s.dataset.value===key)return;s.dataset.value=key;s.setAttribute('role','progressbar');s.setAttribute('aria-label','がんばり');s.setAttribute('aria-valuemin','0');s.setAttribute('aria-valuemax',G.stamMax);s.setAttribute('aria-valuenow',Math.max(0,Math.min(G.stamMax,Math.ceil(G.stam))));s.innerHTML=`<span>がんばり ${Math.ceil(G.stam)} / ${G.stamMax}　${Math.floor(G.stamMax/20)}こ</span><i style="width:${Math.min(300,G.stamMax)/3}%;--stam-unit:${2000/G.stamMax}%"><b style="width:${f*100}%"></b></i>`;
+  s.style.left='';s.style.top='';const key=Math.ceil(G.stam)+':'+G.stamMax;if(s.dataset.value===key)return;s.dataset.value=key;s.setAttribute('role','progressbar');s.setAttribute('aria-label','ともしび');s.setAttribute('aria-valuemin','0');s.setAttribute('aria-valuemax',G.stamMax);s.setAttribute('aria-valuenow',Math.max(0,Math.min(G.stamMax,Math.ceil(G.stam))));s.innerHTML=`<span>ともしび ${Math.ceil(G.stam)} / ${G.stamMax}　${Math.floor(G.stamMax/20)}こ</span><i style="width:${Math.min(300,G.stamMax)/3}%;--stam-unit:${2000/G.stamMax}%"><b style="width:${f*100}%"></b></i>`;
 }
 
 
@@ -637,7 +637,7 @@ function objective() {
       if (!best) { G.flags.c3bridge = true; buildBridge(); return { t: '虹の橋を わたり、北の「星巣の塔」へ', p: r2.midboss }; }
       const i = best.i, T = DATA.windTrials[i], st = G.wtrial[i], lv = DATA.bossCfg[WIND_BOSS[i]][0]; let step, p = best;
       if (!st.seen) step = `${T.where}の「${T.name}」へ`;
-      else if (i === 1 && (st.got || []).length < 3) { step = `風の羽を 集める ${(st.got || []).length}/3`; const f = r2.feathers.find((_, k) => !(st.got || []).includes(k)); if (f) p = f; }
+      else if (i === 1 && (st.got || []).length < 3) { step = `風の羽を 集める ${(st.got || []).length}/3`; const f = r2.feathers.find((_, k) => !(st.got || []).includes(k)); const fp = window.KZ && KZ.lumen && KZ.lumen.paths && KZ.lumen.paths.find(q => q.id === 'feather'); if (f) p = fp ? fp.pts[0] : f; } // 案内は 風の道の 入口へ
       else if (i === 2 && (st.waves || 0) < 3) step = '夜に 祠で 星の嵐を しのぐ';
       else if (!st.guard) step = i === 0 ? '岩山の 頂の 祠で 番人と たたかう' : '祠の 番人と たたかう'; else step = '祠に 風を 通す';
       if (i === 0 && !st.seen) step += '（上昇気流で 頂へ）';
@@ -768,9 +768,9 @@ async function cookMenu() {
 async function statueEvent() {
   await say(['古い 石像が、やさしく 光っている。', `（ひかりの種 ${G.seeds}こ を もっている。 4こ ささげると 力を さずかる）`]);
   if (G.seeds < 4) return;
-  const c = await menu({ title: 'ひかりの種を 4こ ささげる', items: [{ label: 'がんばりの 力', sub: `がんばり ${G.stamMax}→${Math.min(300, G.stamMax + 20)}`, disabled: G.stamMax >= 300 }, { label: 'いのちの 力', sub: 'みんなの 最大HP +6' }] });
+  const c = await menu({ title: 'ひかりの種を 4こ ささげる', items: [{ label: 'ともしびの 力', sub: `ともしび ${G.stamMax}→${Math.min(300, G.stamMax + 20)}`, disabled: G.stamMax >= 300 }, { label: 'いのちの 力', sub: 'みんなの 最大HP +6' }] });
   if (c < 0) return; G.seeds -= 4; if (c === 0) { G.stamMax = Math.min(300, G.stamMax + 20); G.stam = G.stamMax; } else { G.hpBonus += 6; G.party.forEach(m => { calc(m); m.hp = m.st.hp; }); }
-  Music.jingle('levelup', fieldSong()); await say([c === 0 ? 'がんばりの 上限が あがった！' : 'みんなの いのちが 強くなった！']); hud(); save(); }
+  Music.jingle('levelup', fieldSong()); await say([c === 0 ? 'ともしびの 上限が あがった！' : 'みんなの いのちが 強くなった！']); hud(); save(); }
 
 // ================= story & NPCs =================
 async function talk(n) {
@@ -903,7 +903,7 @@ function shopUI0(kind) {
   return new Promise(res => {
     const sky = G.region === 2, sea = G.region === 3; const shopName = kind === 'armor' ? (sea ? '海の防具屋' : sky ? '空の防具屋' : '防具屋') : kind === 'weapon' ? (sea ? '海の武器屋' : sky ? '空の武器屋' : '武器屋') : (sea ? '海の道具屋' : sky ? '空の道具屋' : '道具屋');
     const tabs = kind === 'weapon' ? [['w', 'ぶき'], ['s', 'うる']] : kind === 'armor' ? [['a', 'ぼうぐ'], ['s', 'うる']] : [['i', 'かう'], ['s', 'うる']];
-    let tab = tabs[0][0], sel = 0, qty = 1, armed = null, line = kind === 'armor' ? (sea ? '人魚の 鱗は かるくて じょうぶさ。' : sky ? '雲の 糸で 織った 防具だよ。' : 'よろいは 命を まもる。 仲間の ぶんも 忘れずに！') : kind === 'weapon' ? (sky ? '雲の上の 鍛冶は 軽くて 強いのさ。' : 'いらっしゃい！ いい品が そろってるよ。') : (sky ? '空の 旅には がんばり串が 欠かせないよ。' : 'まいど！ 旅の 備えは 万全かい？');
+    let tab = tabs[0][0], sel = 0, qty = 1, armed = null, line = kind === 'armor' ? (sea ? '人魚の 鱗は かるくて じょうぶさ。' : sky ? '雲の 糸で 織った 防具だよ。' : 'よろいは 命を まもる。 仲間の ぶんも 忘れずに！') : kind === 'weapon' ? (sky ? '雲の上の 鍛冶は 軽くて 強いのさ。' : 'いらっしゃい！ いい品が そろってるよ。') : (sky ? '空の 旅には ともしび串が 欠かせないよ。' : 'まいど！ 旅の 備えは 万全かい？');
     const el = document.createElement('div'); el.className = 'win panel shop';
     const M = { el, panel: true, items: [], res }; const close = () => { closeMenu(M, -1); hud(); };
     const nameM = m => esc(nameOf(m)); const face = m => `<span class="fc">${Art.portrait(m.id, 'smile')}</span>`;
@@ -1021,7 +1021,7 @@ async function beaconEvent(b, atTop) {
   const T = DATA.trials[b.i], st = G.trial[b.i];
   if (HOOK.beaconGate) { const g = HOOK.beaconGate(b); if (g) { await say(g); return; } }
   if (!st.seen) { st.seen = 1; await say([`【灯の樹の試練　${T.name}】`, T.text, `（灯を ともす 燃料：${fuelTxt(b)}）`]); }
-  if (b.act.top && !atTop) { await say([b.i === 1 ? '灯の花は 樹ではなく、となりの 高い 塔の てっぺんに ある。 がんばりゲージが あれば 壁を よじ登れる。 ブロックで 階段を 作っても いい。'
+  if (b.act.top && !atTop) { await say([b.i === 1 ? '灯の花は 樹ではなく、となりの 高い 塔の てっぺんに ある。 ともしびゲージが あれば 壁を よじ登れる。 ブロックで 階段を 作っても いい。'
     : '灯の花は 崖の 先に 浮かぶ 足場の 上に さいている。 風布で 滑空するか、ブロックで 橋を かけよう。']); return; }
   if (!HOOK.beaconGate && b.i === 0 && (st.shards || 0) < 3) { await say([`灯の欠片が 足りない（${st.shards || 0}/3）。 灯の樹の まわりで 光っている 欠片を さがそう。`]); return; }
   if (!HOOK.beaconGate && b.i === 2 && (st.waves || 0) < 3) {
@@ -1194,7 +1194,7 @@ async function windEvent(sh) {
   const i = sh.i, T = DATA.windTrials[i], st = G.wtrial[i], F = G.flags;
   if (!F.c3elder) { await say(['祠は 静まりかえっている。', who('sora', 'neutral', '……まずは 里の 長老に 話を きこう。')]); return; }
   if (!st.seen) { st.seen = 1; await say([`【風の祠の試練　${T.name}】`, T.text]); }
-  if (i === 1 && (st.got || []).length < 3) { await say([`風の羽が 足りない（${(st.got || []).length}/3）。 島の まわりの 空に 浮かぶ 羽を さがそう。`, who('haru', 'neutral', '羽の 下には 上昇気流が ある。 崖から 飛んで、風に 乗って。')]); return; }
+  if (i === 1 && (st.got || []).length < 3) { await say([`風の羽が 足りない（${(st.got || []).length}/3）。 島の まわりの 空に 浮かぶ 羽を さがそう。`, who('haru', 'neutral', '島の ふちに 光る「風の道」が あるでしょ？ とびこめば 羽の ところまで 運んで くれるよ。')]); return; }
   if (i === 2 && (st.waves || 0) < 3) {
     if (!nightNow() && !(await waitNight('祠の 扉は 星の 光で しか ひらかない。'))) return;
     if (!(await confirm(`星の嵐が 近づいてくる。（推奨Lv${DATA.bossCfg.hoshigarasu[0] - 2}） 迎えうつ？`))) return;
@@ -1859,7 +1859,7 @@ async function runBattle(specs, opts = {}) {
       if (it.battle === 'friend') { friendBoost = 2.2; screenFx('heal'); await bmsg('あまい かおりが ただよった……（なかまに なりやすく なった）'); return; }
       if (it.healAll) { aliveP().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; fxAt(bArtOf(m), 'heal'); }); Music.sfx('heal'); tint('heal', 900); redraw(); await bmsg('みんなの HPと MPが ぜんかいふくした！'); return; }
       if (it.cure) { if (cureAll([t])) { Music.sfx('heal'); fxAt(bArtOf(t), 'heal'); redraw(); await bmsg(`${nameOf(t)}の 状態異常が なおった！`); } else await bmsg('しかし なにも おこらなかった。'); return; }
-      if (it.stam) { G.stam = G.stamMax; await bmsg('がんばりが 満タンに なった！'); return; }
+      if (it.stam) { G.stam = G.stamMax; await bmsg('ともしびが 満タンに なった！'); return; }
       if (t.hp <= 0) { await bmsg('しかし なにも おこらなかった。'); return; }
       if (it.heal) { const v = Math.min(it.heal, t.st.hp - t.hp); t.hp += v; Music.sfx('heal'); redraw(); numAt(t, '+' + v, true); fxAt(bArtOf(t), 'heal'); await bmsg(`${nameOf(t)}の HPが ${v} かいふくした！`); }
       if (it.mp) { const v = Math.min(it.mp, t.st.mp - t.mp); t.mp += v; Music.sfx('mp'); redraw(); numAt(t, '+' + v, true, 'mpn'); { const ce = bElOf(t); if (ce) { ce.classList.remove('mpglow'); void ce.offsetWidth; ce.classList.add('mpglow'); } } await bmsg(`${nameOf(t)}の MPが ${v} かいふくした！`); } return; }
@@ -2016,7 +2016,7 @@ const MENU_IC = { 'レシピ帳': '📜', 'きろく帳': '📔', 'しょくぎ�
 const tile = (ic, label, sub, o = {}) => ({ label: `<i class="ti" aria-hidden="true">${ic}</i><b>${label}</b>`, sub: sub || '', ...o });
 const howtoPanel = () => panel(`<h3>あそびかた</h3><ul class="howto"><li><b>目標</b>：左上の「▶」が いま やること。上の 矢印が 方角。メニューの「ストーリー」と「地図」で くわしく 見られる。</li>
       <li><b>成長</b>：レベルが 上がると スキルポイント（SP）。メニューの「スキル」で 技や 能力を 覚える。</li>
-      <li><b>移動</b>：画面左を ドラッグ（PCは WASD）。大きく たおすと 走る。崖や 壁は がんばりゲージで よじ登れる。</li><li><b>滑空</b>：風布を 手に入れたら、空中で もう一度 ジャンプ。</li>
+      <li><b>移動</b>：画面左を ドラッグ（PCは WASD）。大きく たおすと 走る。崖や 壁は ともしびゲージで よじ登れる。</li><li><b>滑空</b>：風布を 手に入れたら、空中で もう一度 ジャンプ。</li>
       <li><b>しらべる</b>：E／しらべる ボタン。木（薪）・岩（石）・しげみ（木の実）・キノコ・砂・宝箱・石像・たき火。</li><li><b>バトル</b>：タイプ相性 ◎は 1.5倍。「おまかせ」「倍速」ボタンで テンポよく。</li>
       <li><b>つくる</b>：クラフトで ブロックを 作り、つくる（B）→ 置く（F）・こわす（R）・切りかえ（Q）。</li><li><b>ひかりの種</b>：高台に かくれている。石像に 4こ ささげると 強くなる。</li>
       <li><b>空の島</b>：光る 風の柱（上昇気流）で ジャンプ→滑空すると 舞いあがる。雲海に 落ちると 近くの 島へ もどされる（HPが 少し へる）。</li><li><b>お店</b>：タブで ぶき／ぼうぐ／うる を切りかえ。▲▼で 今の そうびとの 差が わかる。武器は 下取り あり。</li></ul>`, 'wide');
@@ -2059,7 +2059,7 @@ async function statusPanel() {
     return `<div class="st-card"><div class="st-face">${faceOf(m)}</div><div class="st-main"><div class="st-head"><b>${esc(nameOf(m))}</b><small>Lv${m.lv}</small>${typeTag(m.type)}</div>${expBar(m)}<div class="st-next">つぎのLvまで ${need(m.lv) - m.exp} EXP${hu ? `<span>SP ${G.sp[m.id] || 0}</span>` : ''}</div></div>
     <dl class="st-stats">${cell('HP', `${m.hp}/${m.st.hp}`)}${cell('MP', `${m.mp}/${m.st.mp}`)}${cell('こうげき', m.st.atk)}${cell('ぼうぎょ', m.st.def)}${cell('すばやさ', m.st.spd)}${hu ? cell('そうび', `+${W.atk} / +${A.def}`) : cell('なつき', `${m.bond || 0}/100`)}</dl>
     <div class="st-sk">${m.skills.map(s => DATA.skills[s].name).join('・') || '—'}</div>${hu ? `<p class="st-eq"><span>ぶき　<b>${W.name}</b>（こうげき+${W.atk}）</span><span>ぼうぐ　<b>${A.name}</b>（ぼうぎょ+${A.def}）</span></p>` : ''}</div>`; }).join('')}</div>
-    <p class="st-foot"><span>がんばり <b>${Math.round(G.stamMax)}</b></span><span>ひかりの種 <b>${G.seeds}</b>こ（見つけた ${Object.keys(G.seedGot).length}/${SEED_N()}）</span><span>依頼達成 <b>${G.bountyDone}</b></span>${G.flags.glider ? '<span>風布あり</span>' : ''}</p>`, 'wide'); }
+    <p class="st-foot"><span>ともしび <b>${Math.round(G.stamMax)}</b></span><span>ひかりの種 <b>${G.seeds}</b>こ（見つけた ${Object.keys(G.seedGot).length}/${SEED_N()}）</span><span>依頼達成 <b>${G.bountyDone}</b></span>${G.flags.glider ? '<span>風布あり</span>' : ''}</p>`, 'wide'); }
 async function skillMenu() {
   if (HOOK.skillUI) { if (!G.tips.skillHelp2) { G.tips.skillHelp2 = 1; await say(['【スキル】 レベルと 職業レベルが 上がると スキルポイント（SP）が もらえる。', '固有わざ は レベルで 自動で 覚える。 SPは「個性ボード」（ずっと のこる）と「職業ツリー」（転職で 全額 もどる）に ふれる。']); } return HOOK.skillUI(); }
   if (!G.tips.skillHelp) { G.tips.skillHelp = 1; await say(['【スキル】 レベルが 上がると スキルポイント（SP）が もらえる。', 'SPを つかって、技を 覚えたり 能力を 伸ばしたり できる。 🔒は 前の マスを 覚えると ひらく。']); }
@@ -2134,10 +2134,10 @@ async function itemMenu() {
       const i = await menu({ title: DATA.itemCats[cat], items: ks.map(k => ({ label: DATA.items[k].name, sub: `×${G.inv[k]}` })), where: 'side' });
       if (i < 0) break; const k = ks[i], it = DATA.items[k];
       const usable = it.heal || it.mp || it.stam || it.healAll || it.warp;
-      const a = await menu({ title: `${it.name}　×${G.inv[k]}`, items: [{ label: usable ? 'つかう' : it.battle ? 'バトルで つかう' : 'つかえない（素材）', disabled: !usable || (it.stam && G.stam>=G.stamMax) || (it.healAll && !allMembers().some(m=>m.hp<m.st.hp||m.mp<m.st.mp)), hint:it.stam&&G.stam>=G.stamMax?'がんばりは まんたん':it.healAll&&!allMembers().some(m=>m.hp<m.st.hp||m.mp<m.st.mp)?'みんな HP・MPは まんたん':'' }, { label: `効果：${it.desc}`, disabled: true }, { label: `入手：${it.src || '—'}`, disabled: true }, { label: `使いみち：${it.use || '—'}`, disabled: true }], where: 'side' });
+      const a = await menu({ title: `${it.name}　×${G.inv[k]}`, items: [{ label: usable ? 'つかう' : it.battle ? 'バトルで つかう' : 'つかえない（素材）', disabled: !usable || (it.stam && G.stam>=G.stamMax) || (it.healAll && !allMembers().some(m=>m.hp<m.st.hp||m.mp<m.st.mp)), hint:it.stam&&G.stam>=G.stamMax?'ともしびは まんたん':it.healAll&&!allMembers().some(m=>m.hp<m.st.hp||m.mp<m.st.mp)?'みんな HP・MPは まんたん':'' }, { label: `効果：${it.desc}`, disabled: true }, { label: `入手：${it.src || '—'}`, disabled: true }, { label: `使いみち：${it.use || '—'}`, disabled: true }], where: 'side' });
       if (a !== 0) continue;
       if (it.warp) { G.inv[k]--; await warpTo(REGr().town.x + 2, REGr().town.z + 3); return 'warped'; }
-      if (it.stam) { if(useSharedRecoveryField(k))toast('がんばりが 全回復した！',1200); continue; }
+      if (it.stam) { if(useSharedRecoveryField(k))toast('ともしびが 全回復した！',1200); continue; }
       if (it.healAll) { if(useSharedRecoveryField(k))toast('みんな 全回復した！',1200); continue; }
       const P = battleParty(); const j = await menu({ title: `だれに つかう？`, items: P.map(m => ({ label: nameOf(m), sub: `HP ${m.hp}/${m.st.hp}  MP ${m.mp}/${m.st.mp}`, disabled: m.hp <= 0 || !((it.heal && m.hp < m.st.hp) || (it.mp && m.mp < m.st.mp)) })), where: 'side' });
       if (j >= 0) useItemField(k, P[j]); } } }
@@ -2470,7 +2470,7 @@ function frameBody(now) {
     player.swim = G.region !== 2 && terr < -1.2 && player.y < -.5;
     const gn = nAt(player.x, player.z);
     const sprint = wantSprint && !player.tired && im > .1 && player.ground && !player.swim;
-    // がんばり v2（2026-10-06）：登りは 遅く 必死に（ぐっ、ぐっと 手足を かける リズム）、ダッシュは 速く 気持ちよく
+    // ともしび v2（2026-10-06）：登りは 遅く 必死に（ぐっ、ぐっと 手足を かける リズム）、ダッシュは 速く 気持ちよく
     const stroke = .45 + .8 * (.5 + .5 * Math.sin(T * 6.5)); // 登りの ひとかき（平均 約0.85）
     let speed = sprint ? 10.6 : 5.4; let climbing = false, uphill = 0;
     if (im > .01 && player.ground && !player.swim && player.y - terr < .25) { const upH = -(gn[0] * wx + gn[2] * wz) / Math.max(im, 1e-3); uphill = Math.max(0, upH) * (1 - gn[1]);
@@ -2481,10 +2481,10 @@ function frameBody(now) {
     const acc = player.swim ? (im > .05 ? 5 : 2.5) : player.ground ? (im > .05 ? (sprint ? 16 : 12) : 9) : player.glide ? 12 : 3; // 止まる ときは すこし すべる・水中は ゆっくり 加速
     player.vx = lerp(player.vx, wx * speed, Math.min(1, acc * dt)); player.vz = lerp(player.vz, wz * speed, Math.min(1, acc * dt));
     if (player.glide) { // 風布：慣性・旋回率の 上限・バンク・対気速度
-      const trim = G.flags.glider2 ? 12 : 9.5; if (player.gHead == null) player.gHead = hsp0() > 1 ? Math.atan2(player.vx, player.vz) : player.yaw;
-      let turn = 0; if (im > .15) { let d = Math.atan2(wx, wz) - player.gHead; d = Math.atan2(Math.sin(d), Math.cos(d)); turn = clamp(d * 2.2, -1.45, 1.45) * Math.min(1, im * 1.3); }
-      player.gHead += turn * dt; player.bank = lerp(player.bank || 0, clamp(-turn * .42, -.62, .62), Math.min(1, dt * 3.2));
-      const tgtSp = trim * (.82 + .3 * Math.min(im, 1)) * (1 - Math.abs(player.bank) * .12); player.gSpd = lerp(player.gSpd ?? hsp0(), tgtSp, Math.min(1, dt * (player.gSpd > tgtSp ? .9 : 1.6)));
+      const trim = G.flags.glider2 ? 11 : 9; if (player.gHead == null) player.gHead = hsp0() > 1 ? Math.atan2(player.vx, player.vz) : player.yaw;
+      let turn = 0; if (im > .15) { let d = Math.atan2(wx, wz) - player.gHead; d = Math.atan2(Math.sin(d), Math.cos(d)); turn = clamp(d * 6, -4.2, 4.2) * Math.min(1, im * 1.3); } // ふわり：小回りが きく（前は 1.45）
+      player.gHead += turn * dt; player.bank = lerp(player.bank || 0, clamp(-turn * .12, -.4, .4), Math.min(1, dt * 4));
+      const tgtSp = trim * (im > .1 ? (.6 + .45 * Math.min(im, 1)) : .45); player.gSpd = lerp(player.gSpd ?? hsp0(), tgtSp, Math.min(1, dt * 3.5)); // 手を はなすと ゆっくり 止まる
       const flare = player.y - gh0() < 1.6 ? .55 : 1; player.vx = Math.sin(player.gHead) * player.gSpd * flare; player.vz = Math.cos(player.gHead) * player.gSpd * flare; }
     else { player.gHead = null; player.gSpd = null; player.bank = lerp(player.bank || 0, 0, Math.min(1, dt * 6)); }
     let nx = player.x + player.vx * dt, nz = player.z + player.vz * dt;
@@ -2523,9 +2523,11 @@ function frameBody(now) {
     }
     jumpReq = false;
     if (inUD && !player.ground && !player.glide && G.flags.glider && !player.tired && G.stam > 1 && !wallClimb && player.vy < 2) { player.glide = true; player.deploy = 0; Music.sfx('wind'); }
-    if (wallClimb) player.ground = false;
+    const wr = !player.ground && !wallClimb && HOOK.windRide ? HOOK.windRide(dt, wx, wz, im) : null; // 風の道（lumen.js）
+    if (wr) { player.glide = true; player.deploy = 1; player.vx = wr.vx; player.vz = wr.vz; player.vy = wr.vy; player.x = wr.x; player.z = wr.z; player.y = wr.y; player.gHead = Math.atan2(wr.vx, wr.vz); player.gSpd = Math.hypot(wr.vx, wr.vz); }
+    else if (wallClimb) player.ground = false;
     else if (player.glide) { player.deploy = Math.min(1, (player.deploy || 0) + dt / .45); const base = G.flags.glider2 ? 1.25 : 1.6;
-      const sink = -(base + Math.pow(Math.abs(player.bank || 0), 1.4) * 2.6 + Math.max(0, (player.gSpd || 0) - (G.flags.glider2 ? 12 : 9.5)) * .35) * (player.y - gh < 1.6 ? .45 : 1);
+      const sink = -(base * .85) * (player.y - gh < 1.6 ? .45 : 1); // ふわり：ゆっくり 落ちる（曲がっても 落ちが 速く ならない）
       if (inUD) player.vy = Math.min(player.vy + 30 * dt * player.deploy, 9.5); else player.vy = lerp(player.vy, sink, Math.min(1, dt * (player.vy < sink ? 2.6 + 3 * player.deploy : 1.4)));
       player.y += player.vy * dt; }
     else { player.vy -= (G.region === 3 ? 11 : 22) * dt; if (G.region === 3) player.vy = Math.max(player.vy, -7); player.y += player.vy * dt; }
@@ -2544,10 +2546,10 @@ function frameBody(now) {
     // 使う 量：ダッシュ 11・坂の ダッシュは さらに・急な 坂を 歩く 4〜・斜面と かべを 登る 15／13・滑空 5.5（よい 風布 3）・泳ぎ 7
     // 上限が ふえても 長く なりすぎない（インフレ防止）：使う 量に √(上限/100) を かける。上限 2倍 → 長さ 約1.4倍
     let using = (sprint ? 11 + uphill * 40 : 0) + (!sprint && !climbing && uphill > .12 && im > .1 ? 4 + uphill * 20 : 0) + (climbing && im > .1 ? 15 : 0) + (wallClimb ? 13 : 0) + (player.glide && !G.flags.glider3 ? (G.flags.glider2 ? 3 : 5.5) * (inUD ? .5 : 1) : 0) + (player.swim ? (im > .05 ? 7 : 2) : 0);
-    using *= Math.sqrt(Math.max(1, G.stamMax / 100));
+    using *= Math.sqrt(Math.max(1, G.stamMax / 100)); if (wr) using = 0;
     if (HOOK.travelStamina) using = HOOK.travelStamina(using);
     if (window.KZ && KZ.fieldTravel && KZ.fieldTravel.mounted()) { using = 0; player.tired = false; }
-    if (using > 0) G.stam = Math.max(0, G.stam - using * dt); else if (player.ground && !player.swim) G.stam = Math.min(G.stamMax, G.stam + (moved < .01 ? 40 : 20) * Math.sqrt(Math.max(1, G.stamMax / 100)) * dt); // 回復は 上限に あわせる（満タンまでの 時間は ほぼ 同じ）
+    if (using > 0) G.stam = Math.max(0, G.stam - using * dt); else if (player.ground && !player.swim) { const lit = HOOK.lightRegen ? HOOK.lightRegen() : 0; G.stam = Math.min(G.stamMax, G.stam + (lit || (moved < .01 ? 14 : 7)) * Math.sqrt(Math.max(1, G.stamMax / 100)) * dt); } // ともしび：灯りの そばで 一気に、ほかは ゆっくり // 回復は 上限に あわせる（満タンまでの 時間は ほぼ 同じ）
     if (G.stam <= 0) { player.tired = true; player.glide = false; } if (player.tired && G.stam > G.stamMax * .35) player.tired = false;
     if (player.swim && G.stam <= 0) { toast('おぼれかけて、岸に もどった……', 1600); const s = player.safe || r.pier; player.x = s.x; player.z = s.z; player.y = surfaceAt(s.x, s.z, 99); G.stam = G.stamMax * .5; player.tired = false; }
     if (player.ground && !player.swim && terr > (G.region === 2 ? 3 : .2) && !blocked(player.x, player.z, player.y)) player.safe = { x: player.x, z: player.z };
@@ -2580,7 +2582,7 @@ function frameBody(now) {
       if (Math.hypot(sh.x - player.x, sh.z - player.z) < 1.6 && Math.abs(player.y - sh.y) < 2.5 && md === 'field') { st.got.push(k); st.shards = st.got.length; Music.sfx('friend'); toast(`灯の欠片を 手に入れた！（${st.shards}/3）`, 1800); return; }
       mShard.set(mShard.n++, sh.x, sh.y + Math.sin(T * 2 + k) * .15, sh.z, 1, T); }); }
     mFeather.n = 0; if (G.region === 2 && G.flags.c3elder && !G.wind[1]) { const st = G.wtrial[1]; st.got = st.got || []; r.feathers.forEach((f, k) => { if (st.got.includes(k)) return;
-      if (Math.hypot(f.x - player.x, f.z - player.z) < 2.4 && Math.abs(player.y - f.y) < 2.8 && md === 'field') { st.got.push(k); st.seen = 1; Music.sfx('friend'); toast(`風の羽を 手に入れた！（${st.got.length}/3）`, 1800); save(); return; }
+      if (Math.hypot(f.x - player.x, f.z - player.z) < 3.6 && Math.abs(player.y - f.y) < 3.6 && md === 'field') { st.got.push(k); st.seen = 1; Music.sfx('friend'); toast(`風の羽を 手に入れた！（${st.got.length}/3）`, 1800); save(); return; }
       mFeather.set(mFeather.n++, f.x, f.y + Math.sin(T * 2 + k) * .25, f.z, 1.3, T * 1.5); }); }
     mSkyRock.n = 0; if (G.region === 2) { r.skyRocks.forEach((k, i) => mSkyRock.set(i, k.x, k.y + Math.sin(T * .3 + k.ph) * .8, k.z, k.s, k.r + T * .01)); mSkyRock.n = r.skyRocks.length; }
     if (G.region === 2 && G.flags.c3arrive) { const w = r.whale; mWhale.set(0, w.x, w.y + Math.sin(T * .7) * .6, w.z, 3.4, Math.PI / 2 + Math.sin(T * .3) * .1); mWhale.n = 1; } else mWhale.n = 0;

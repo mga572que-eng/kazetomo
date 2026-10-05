@@ -386,7 +386,7 @@ test('試練の祠：7つの しかけを 実際に 解いて 証が とれる�
   ok(res.every(r => r.done && r.goal === 'shgoal'), '祠の しかけが 最後まで 解けない：' + JSON.stringify(res));
 });
 
-test('がんばり v2：最初の 上限でも 灯の樹の 塔を 登りきれる・上限が ふえても 長さは √・ダッシュは 速い', async ({ page }) => {
+test('ともしび v2：最初の 上限でも 灯の樹の 塔を 登りきれる・上限が ふえても 長さは √・ダッシュは 速い', async ({ page }) => {
   const r = await page.evaluate(async () => { const G = KZ.G, b = KZ.REG[0].beacons[1], P = KZ.player; G.stamMax = 100; G.stam = 100; await KZ.travel(0, b.act.x, b.act.z + 3);
     // 塔の 南の かべの 前（塔は 3×3、上が b.act.y）
     const X = b.act.x, Z = b.act.z; let base = Math.floor(KZ.surfaceAt(X, Z + 2.2, 0)); Object.assign(P, { x: X, z: Z + 2.1, y: KZ.surfaceAt(X, Z + 2.1, b.act.y - 3), vx: 0, vy: 0, vz: 0 }); P.yaw = Math.PI; KZ.cam.yaw = Math.PI; return { top: b.act.y, y0: P.y }; });
@@ -395,6 +395,14 @@ test('がんばり v2：最初の 上限でも 灯の樹の 塔を 登りきれ�
   ok(top >= r.top - .2 && st.stam > 0, '最初の 上限で 塔を 登りきれない：' + JSON.stringify({ ...r, top, ...st }));
   // インフレ防止：上限 300 の とき 使う 量は √3 倍
   const k = await page.evaluate(() => { const G = KZ.G, P = KZ.player; const sp = async () => 0; G.stamMax = 300; G.stam = 300; return Math.sqrt(G.stamMax / 100); }); ok(Math.abs(k - Math.sqrt(3)) < .01, '係数');
+});
+
+test('ともしび：風の道で 風の羽が 3まい とれる・灯りの そばで 一気に 回復・灯の実', async ({ page }) => {
+  await page.evaluate(async () => { const G = KZ.G; G.flags.c3elder = 1; G.wind = [0, 0, 0]; G.wtrial[1] = { seen: 1, got: [] }; G.flags.glider = 1; const q = KZ.lumen.paths.find(p => p.id === 'feather').d[0]; await KZ.travel(2, q.x - 3, q.z); }); await idle(page);
+  const r = await page.evaluate(() => { const q = KZ.lumen.paths.find(p => p.id === 'feather').d[1], P = KZ.player; Object.assign(P, { x: q.x, z: q.z, y: q.y, vx: 0, vy: 0, vz: 0, ground: false }); for (let k = 0; k < 80; k++) { __dbg.sim(10); if (!KZ.lumen.riding() && k > 3) break; } return (KZ.G.wtrial[1].got || []).length; });
+  ok(r === 3, '風の道で 羽が とれない：' + r);
+  const g = await page.evaluate(async () => { const G = KZ.G, t = KZ.REG[0].town; await KZ.travel(0, t.x + 2, t.z + 4); const P = KZ.player; G.stam = 10; __dbg.sim(60); const town = G.stam; const o = KZ.lumen.orbs[0][0]; Object.assign(P, { x: o.x, z: o.z, y: o.y - 1 }); G.stam = 10; __dbg.sim(2); return { town, orb: G.stam, max: G.stamMax }; });
+  ok(g.town > 60 && g.orb >= g.max * .5, '灯りの そば・灯の実で 回復しない：' + JSON.stringify(g));
 });
 
 let fail = 0;

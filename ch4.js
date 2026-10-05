@@ -113,7 +113,7 @@
 
   // ---------- 図鑑コンプの ごほうび：風布・極 ----------
   let dchk = 0; H.frame.push(dt => { dchk -= dt; if (dchk > 0) return; dchk = 3; const G = K.G; if (G.flags.glider3 || !G.flags.glider) return;
-    if (Object.keys(G.dex.got).length >= DATA.speciesOrder.length) { G.flags.glider3 = 1; Music.sfx('friend'); K.tip('<b>図鑑 完成！ 「風布・極」を 手に入れた</b><span>滑空しても がんばりが へらなくなった！</span>', 4000); K.save(); } });
+    if (Object.keys(G.dex.got).length >= DATA.speciesOrder.length) { G.flags.glider3 = 1; Music.sfx('friend'); K.tip('<b>図鑑 完成！ 「風布・極」を 手に入れた</b><span>滑空しても ともしびが へらなくなった！</span>', 4000); K.save(); } });
 
   // ---------- 目的・クエスト・地図・音楽・演出 ----------
   H.objective.push(() => { const G = K.G; if (!F().c3done) return null;

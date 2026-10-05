@@ -23,7 +23,7 @@
     setTimeout(() => st.classList.remove('on'), 1300); });
   // ---------- ⑦ 道場の 段位 ----------
   const DAN = ['見習い', '初段', '二段', '三段', '四段', '五段', '六段', '七段', '八段', '九段', '十段'];
-  const PRIZE = { 3: { give: { ganbari: 3 }, t: 'がんばり串 3こ' }, 6: { give: { hoshikake: 2 }, t: '星のかけら 2こ' }, 10: { give: { stew: 2 }, t: '星のシチュー 2こ と 称号「ブレイブ 十段」' } };
+  const PRIZE = { 3: { give: { ganbari: 3 }, t: 'ともしび串 3こ' }, 6: { give: { hoshikake: 2 }, t: '星のかけら 2こ' }, 10: { give: { stew: 2 }, t: '星のシチュー 2こ と 称号「ブレイブ 十段」' } };
   if (DATA.titles && !DATA.titles.some(t => t.id === 't_dojo10')) DATA.titles.push({ id: 't_dojo10', name: 'ブレイブ 十段', desc: '道場で 十段に なる', ok: g => ((g.stat || {}).dojoWin || 0) >= 10 });
   const NM = (n, t) => K.nm(n, t);
   async function dojo() { const win = (G().stat || {}).dojoWin || 0, dan = Math.min(10, win), next = Math.min(10, dan + 1);

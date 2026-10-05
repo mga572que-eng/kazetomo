@@ -39,12 +39,12 @@
   const K = window.KZ; if (!K || !K.HOOK) return; const H = K.HOOK, G = () => K.G;
   const PERK = {
     minarai: '地図に まだ 開けていない 宝箱が 出る', senshi: '岩を 少ない 回数で こわせる', mahou: '夜の 灯りが 広くなる', souryo: '歩くと 少しずつ HPが 回復',
-    touzoku: '戦闘で「ぬすむ」・ときどき 戦利品', butouka: 'がんばりの 回復が はやい', ginyuu: '敵に 追いかけられにくい', yuutou: '歩くと 少し 回復・戦いの 稼ぎ +10%',
+    touzoku: '戦闘で「ぬすむ」・ときどき 戦利品', butouka: 'ともしびの 回復が はやい', ginyuu: '敵に 追いかけられにくい', yuutou: '歩くと 少し 回復・戦いの 稼ぎ +10%',
     shounin: '売値が 5割に・戦いの 稼ぎ +25%', kariudo: '採取で 1つ 多く 手に入る' };
   for (const j of DATA.jobs || []) { const pk = PERK[j.id] || PERK[j.up]; if (pk && !j.desc.includes('【仲間に いると】')) j.desc += `　【仲間に いると】${pk}`; }
   const jobPerk = id => { const g = G(); if (!g || !g.party || !g.job) return false; return g.party.some(m => { if (m.kind !== 'human' || !g.job[m.id]) return false; const c = g.job[m.id].cur, j = (DATA.jobs || []).find(x => x.id === c); return c === id || !!(j && j.up === id); }); }; // 上位職は もとの 職業の 支援も もつ
   K.jobPerk = jobPerk; K.jobPerkText = PERK;
-  // 歩くと 回復（4m ごとに 僧侶 2%・勇灯 1%）・がんばり（武闘家）
+  // 歩くと 回復（4m ごとに 僧侶 2%・勇灯 1%）・ともしび（武闘家）
   let walkAcc = 0, lastX = null, lastZ = null, wasBattle = false, g0 = 0;
   H.frame.push(dt => { const g = G(), P = K.player; if (!g || !P) return;
     // 戦いの 稼ぎ（開始時の 所持金を おぼえる）
