@@ -67,3 +67,7 @@ PR: https://github.com/mga572que-eng/kazetomo/pull/59
 - homelife.js：家の 部屋に 住人（時刻で 居場所・夜は ねる）、ヒントと 島の ようす、おすそわけ（1日1回）、お使い。interiors.js は 変えない。
 - life.js：家の 中・樹の 中では 釣りを しない（不具合の 修正）。
 - 記録：G.homeGift・G.errands。docs/design/home-life.md。
+
+## 2026-10-05 19:50 Claude：ボスの 間を ダンジョンに・中は 一人称（work/boss-dungeons）
+- bossdun.js：14か所の ボスの 間（しかけ10種の 組みあわせ）、game.js の つなぎ目（bossGate／bossDone・一人称カメラ・towerGateEvent の 公開）、world.js（描く 上限を こえたら 近い 順）、塔の 頂に 屋根。
+- 記録：G.bossDun。docs/design/boss-dungeons.md。tests/main-dungeon-roofs.mjs の カメラの 期待を 一人称に。

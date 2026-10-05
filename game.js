@@ -1031,6 +1031,7 @@ async function beaconEvent(b, atTop) {
   if (b.i === 3 && !b.guard && World.skyInfo(G.tod).night < .5) {
     const c = await menu({ title: '灯の花は かたく 閉じている。 夜にしか ひらかないようだ。', items: [{ label: '夜まで 待つ' }, { label: 'やめておく' }] });
     if (c !== 0) return; await fade(true); G.tod = .82; await wait(300); await fade(false); await say(['……夜に なった。 火皿が ゆっくりと ひらいていく。']); }
+  if (!b.guard && HOOK.bossGate && await HOOK.bossGate('tree', G.order, b, atTop)) return; // 番人は ダンジョンの 奥で（bossdun.js）
   if (!b.guard) {
     const gi = G.order, gid = DATA.guards[gi]; const pre = [`（推奨Lv${DATA.guardLv[gi]}）`];
     if (gi === 0) pre.push('とつぜん、灯の樹の 足もとから 黒い つるが のびてきた！', inParty('mio') ? who('mio', 'worried', 'この子……灯を こわがってる。 でも、とめなきゃ！') : null, who('sora', 'determined', 'だいじょうぶ、こわくないよ。 ……ぼくも ちょっと こわいけど！'));
@@ -1047,6 +1048,7 @@ async function beaconEvent(b, atTop) {
       who('riku', 'smirk', '……リクだ。 勘違いすんなよ。 闇の王を 追うのに 都合が いいだけだ。'), { t: 'リクが なかまに くわわった！', fx: () => { G.party.push(mkHuman('riku', Math.max(G.party[0].lv, 6))); fixTeam(); Music.sfx('friend'); } }]);
     else await say([`${DATA.enemies[gid].name}の やみが はれて、光の 粒に なって 消えていった。`]);
     save();
+    if (HOOK.bossDone && await HOOK.bossDone('tree', gi, b)) return; // ダンジョンから 灯の樹へ もどって 続き
   }
   if (!HOOK.beaconGate && !fuelOk(b)) { await say([`灯の花は しぼんでいる。 燃料が 足りない。`, `（必要：${fuelTxt(b)}）`, '（木を 切ると 薪と 葉っぱ、岩を 掘ると 石、夜の いきものから 夜露の しずくが 手に入る）']); return; }
   if (HOOK.beaconGate) { if (!(await confirm('灯の樹に 灯を ともしますか？'))) return; }
@@ -1074,6 +1076,7 @@ async function finalOpen() {
   G.flags.shrineOpen = true; save();
 }
 async function shrineEvent() {
+  if (HOOK.bossGate && await HOOK.bossGate('yoi', 0, null)) return;
   await say([`（推奨Lv${DATA.bossCfg.yomikage[0]}　連戦に なる。 準備は いいか？）`, who('yomi', 'neutral', '来たか。'), who('yomi', 'angry', '灯が あるから、人は 海へ 出る。 そして 帰ってこない。 ……だから 消した。 もう だれも、見送らなくて すむように。'),
     who('sora', 'determined', 'ちがう！ ぼくは 三年、消えた 灯の樹を 見てた。 灯が ないほうが、待つ 夜は ずっと 長いんだ！'), inParty('mio') ? who('mio', 'sad', 'きこえる……あなたの 中で、ずっと 泣いてる 女の子の こえ。') : null, inParty('riku') ? who('riku', 'angry', 'シオミじゃ、まものを 連れてきたのは おれだって 言われたぜ。 ……見送るのが つらいなら、そう 言えよ。 灯を 消して、だれかの せいに するな！') : null, who('yomi', 'angry', '……黙れ！ 夜よ、すべてを のみこめ！')]);
   let res = await runBattle([{ boss: 'yomikage' }], { boss: true, noFlee: true });
@@ -1195,13 +1198,15 @@ async function windEvent(sh) {
       const res = await runBattle(Array.from({ length: 2 + (w > 0 ? 1 : 0) }, () => ({ sp: pool[Math.floor(R() * pool.length)], lv, shiny: R() < 1 / 64 })), { noFlee: true });
       if (res !== 'win') return defeated(); st.waves = w + 1; save(); }
     await say([{ t: '星の嵐が やんだ。 祠の 風が みんなを いやした。', fx: () => { allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); Music.sfx('heal'); } }]); save(); }
+  if (!st.guard && HOOK.bossGate && await HOOK.bossGate('wind', i, sh)) return;
   if (!st.guard) {
     const gid = WIND_BOSS[i]; const pre = [`（推奨Lv${DATA.bossCfg[gid][0]}）`];
     if (i === 0) pre.push('つむじ風が 渦を まき、風の 番人が 舞いおりた！', inParty('haru') ? who('haru', 'worried', 'ツムジカゼ……！ 風が 怒ってる。 天喰みの 力に あてられて いるんだ。') : null);
     if (i === 1) pre.push('雲の 中から、ふわりと 巨大な くらげが あらわれた！', inParty('mio') ? who('mio', 'worried', 'この子……眠たいのに、眠れないって 泣いてる。') : null);
     if (i === 2) pre.push('星の 光が ゆがみ、黒い 鳥の すがたに なった！', inParty('sana') ? who('sana', 'angry', '星を 喰らった 鳥……星喰いと 同じ 気配です！') : null);
     await say(pre); const res = await runBattle([{ boss: gid }], { boss: true, noFlee: true }); if (res !== 'win') return defeated();
-    st.guard = 1; await say([`${DATA.enemies[gid].name}の やみが はれて、澄んだ 風に なって 空へ かえっていった。`]); save(); }
+    st.guard = 1; await say([`${DATA.enemies[gid].name}の やみが はれて、澄んだ 風に なって 空へ かえっていった。`]); save();
+    if (HOOK.bossDone && await HOOK.bossDone('wind', i, sh)) return; }
   G.wind[i] = 1; if (G.wind.every(Boolean)) { G.flags.c3bridge = true; buildBridge(); } Music.jingle('light', fieldSong()); allMembers().forEach(m => { m.hp = m.st.hp; m.mp = m.st.mp; }); await wait(900);
   const rw = DATA.windRewards[G.wind.filter(Boolean).length - 1]; const M = DATA.haruMem[G.wind.filter(Boolean).length - 1];
   const react = [[inParty('mio') && who('mio', 'worried', 'ハル……その 歌、もしかして——'), who('haru', 'sad', 'わからない。 でも、とても なつかしい。')],
@@ -1216,9 +1221,11 @@ async function windEvent(sh) {
       who('haru', 'determined', '星巣の塔への 道が ひらいた。 ……行こう。 答えは、あそこに ある。')]); save(); }
 }
 async function towerGateEvent() {
+  if (HOOK.bossGate && await HOOK.bossGate('tgate', 0, null)) return;
   await say([`（推奨Lv${DATA.bossCfg.seishouG[0]}）`, '塔の 扉の 前で、星晶の 巨人が 目を ひらいた。', inParty('haru') ? who('haru', 'worried', '塔の 番人……！ 星守さまの 言いつけを、ずっと 守ってるんだ。') : null]);
   const res = await runBattle([{ boss: 'seishouG' }], { boss: true, noFlee: true }); if (res !== 'win') return defeated();
-  G.flags.c3mid = true; await say(['星晶の 巨人は ひざを つき、道を ゆずった。', '（塔の 中の らせん階段を のぼって、頂を めざそう）']); save(); }
+  G.flags.c3mid = true; await say(['星晶の 巨人は ひざを つき、道を ゆずった。', '（塔の 中の らせん階段を のぼって、頂を めざそう）']); save();
+  if (HOOK.bossDone) await HOOK.bossDone('tgate', 0, null); }
 async function finalEvent3() {
   const heal = () => battleParty().forEach(m => { m.hp = Math.max(m.hp, Math.round(m.st.hp * .8)); m.mp = Math.max(m.mp, Math.round(m.st.mp * .6)); });
   await say([`（推奨Lv${DATA.bossCfg.amahami[0]}　連戦に なる。 準備は いいか？）`, '塔の 頂。 星空を 丸ごと 閉じこめたような 巨大な 影が、とぐろを 巻いていた。',
@@ -2403,7 +2410,11 @@ function camReach(tgt, pitch, want) { const cp = Math.cos(pitch), fx = Math.sin(
     if (hit < 0) break; d = Math.max(.5, Math.min(d - .3, hit * d / L - .4)); }
   return d; }
 function camSolve(tgt, dt, md) {
-  if (phase !== 'field') { cam.cd = cam.dist; cam.pa = 0; return camEyeAt(tgt, cam.pitch, cam.dist); }
+  if (phase !== 'field') { cam.cd = cam.dist; cam.pa = 0; cam.fp = false; return camEyeAt(tgt, cam.pitch, cam.dist); }
+  // 屋根の ある ダンジョンの 中は 一人称（HOOK.fpv が どれか true）。目の 高さから、向いている 方へ。上下は ドラッグの 高さ（cam.pitch）で 見る
+  cam.fp = !G.build && md === 'field' && !!(HOOK.fpv && HOOK.fpv.some(f => { try { return f(); } catch (e) { return false; } }));
+  if (cam.fp) { const p = clamp(cam.pitch - .3, -.7, .9), e = [player.x, player.y + 1.55, player.z], cp = Math.cos(p);
+    tgt[0] = e[0] + Math.sin(cam.yaw) * cp * 2; tgt[1] = e[1] - Math.sin(p) * 2; tgt[2] = e[2] + Math.cos(cam.yaw) * cp * 2; cam.cd = .05; cam.pa = 0; return e; }
   // 動いている間、手で さわって 1.2秒 たてば、ゆっくり 背中側へ
   const hs = Math.hypot(player.vx, player.vz);
   if (md === 'field' && !G.build && look.id === null && hs > 1.5 && performance.now() - (cam.inAt || 0) > 1200) { let d = player.yaw - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -2744,7 +2755,7 @@ function startField() { if (G.flags.c3done && !G.flags.c3reunion) setTimeout(() 
   if (G.region === 0 && G.flags.shrineOpen && !G.flags.cleared) { darkTarget = 1; darkness = 1; } if (!G.blk[G.mat]) cycleMat(true); }
 window.KZ = { HOOK, get G() { return G; }, shopUI0, ICON, B, mH, mHP, poseHide, mSp, player, cam, REG, SPC, DEBUG, COARSE, get phase() { return phase; }, set phase(v) { phase = v; }, get busy() { return busy; }, get target(){return target;}, get region() { return G.region; },
   say, who, nm, menu, panel, confirm, run, toast, tip, gain, save, load, hud, fade, wait, R, esc, $, floatText, runBattle, titleCard, cinematic, mkMon, mkHuman, calc, fixTeam, battleParty, allMembers, member, nameOf, inParty,
-  defeated, fieldSong, warpTo, credits, rest, objective, need, regionName: r => REGION_NAME[r], townName: r => TOWN_NAME[r], get enemies() { return enemies; }, set enemies(v) { enemies = v; },
+  defeated, fieldSong, warpTo, beaconEvent, windEvent, shrineEvent, towerGateEvent, credits, rest, objective, need, regionName: r => REGION_NAME[r], townName: r => TOWN_NAME[r], get enemies() { return enemies; }, set enemies(v) { enemies = v; },
   spawnEnemies, talk, surfaceAt, hAt, Blocks, blocked, footAt, depen, faceOf, typeTag, closeMenu, MENUS, releaseInputs, startField, npcAt, NPCS, rankPts, get SLOT() { return SLOT; }, keyOf, slotInfo, buildHouse, cookMenu, craftMenu, monPanel, ranch, mapImage, mapPanel, questLog, get cam2() { return cam; }, travel, shopUI, talkInn, wildLevel, setupCh3, showSlots, get trail() { return trail; }, DEX_N: () => DATA.speciesOrder.length, SEED_N };
 if (DEBUG) window.__dbg = { shrineEvent, cam, calc, skyTravel2: () => skyTravel(2), get busy() { return busy; }, get phase() { return phase; }, setupCh3, skyTravel, fluteEvent, windEvent, towerGateEvent, finalEvent3, talkSoyogi, buildBridge, objective, credits, questLog, mapPanel, skillMenu, statusPanel, G: () => G, player, REG, runBattle, say, run, mkHuman, mkMon, setupCh2, startField, sail, talk, NPCS, beaconEvent, midbossEvent, altarEvent, openMenu, dexMenu, fixTeam, craftMenu,
   tp: (x, z) => { player.x = x; player.z = z; player.y = surfaceAt(x, z, 99); },
