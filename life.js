@@ -32,7 +32,8 @@
   // ---------------- fishing ----------------
   const waterAhead = () => { const p = K.player, fx = Math.sin(p.yaw), fz = Math.cos(p.yaw); const r = K.G.region;
     for (const d of [2.2, 3.2, 4.2]) { const h = K.hAt(p.x + fx * d, p.z + fz * d); if (r === 2 ? h < -18 : h < -.8) return true; } return false; };
-  H.target.push((cand) => { const G = K.G; if (!(G.inv.tsurizao > 0) || G.region === 3 || !K.player.ground || K.player.swim) return; if (G.region !== 2 && K.hAt(K.player.x, K.player.z) < -.2) return;
+  const inside = () => !!((K.interior && K.interior.cur) || (K.lhDungeon && K.lhDungeon.here && K.lhDungeon.here())); // 家の 中・樹の 中では 釣りを しない
+  H.target.push((cand) => { const G = K.G; if (!(G.inv.tsurizao > 0) || G.region === 3 || !K.player.ground || K.player.swim || inside()) return; if (G.region !== 2 && K.hAt(K.player.x, K.player.z) < -.2) return;
     if (waterAhead()) { const p = K.player; cand({ fish: true, y: p.y }, 'fish', p.x + Math.sin(p.yaw) * .01, p.z + Math.cos(p.yaw) * .01, 5); } });
   H.labels.fish = 'つりを する';
   function pickFish(big) { const G = K.G, night = World.skyInfo(G.tod).night > .5;
